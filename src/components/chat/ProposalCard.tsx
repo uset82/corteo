@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import type { Proposal } from '../../agent/proposal';
 import { useT } from '../../i18n/locale';
-import { Icon } from '../icons';
 
 export function ProposalCard({ proposal, onApply, onReject, onPreview, stale, onForceApply, onRePropose }: {
   proposal: Proposal;
@@ -42,9 +41,6 @@ export function ProposalCard({ proposal, onApply, onReject, onPreview, stale, on
     <div className="cc-proposal">
       <header className="cc-proposal-head">
         <div className="cc-proposal-head-left">
-          <span className="cc-proposal-icon" aria-hidden>
-            <Icon name="sparkles" size={14} />
-          </span>
           <div className="cc-proposal-titles">
             <div className="cc-proposal-title-row">
               <h3 className="cc-proposal-title">{proposal.title || t('编辑提案')}</h3>

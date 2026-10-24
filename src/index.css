@@ -1291,11 +1291,6 @@ button, input, select { font: inherit; }
 }
 .cc-proposal-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:11px 12px 9px; }
 .cc-proposal-head-left { display:flex; gap:9px; min-width:0; flex:1; }
-.cc-proposal-icon {
-  width:26px; height:26px; flex:0 0 26px; display:grid; place-items:center;
-  border:0.5px solid rgba(var(--cc-accent-rgb), 0.3); border-radius:3px;
-  color:var(--cc-accent); background:rgba(var(--cc-accent-rgb), 0.1);
-}
 .cc-proposal-titles { min-width:0; flex:1; }
 .cc-proposal-title-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-height:26px; }
 .cc-proposal-title { margin:0; font-size:13px; font-weight:650; line-height:18px; color:var(--cc-text-strong); }

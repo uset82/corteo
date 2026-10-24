@@ -44,7 +44,7 @@ export interface ChatComposerProps {
 
 export const REF_ICON: Record<RefItem['kind'], IconName> = {
   video: 'filePlay', image: 'filePlay', gif: 'image', svg: 'image', document: 'text', file: 'paperclip',
-  audio: 'fileHeadphone', 'motion-graphic': 'sparkles', template: 'sparkles',
-  'library-resource': 'sparkles', item: 'film', timepoint: 'clock', timerange: 'clock',
+  audio: 'fileHeadphone', 'motion-graphic': 'film', template: 'bookOpen',
+  'library-resource': 'bookOpen', item: 'film', timepoint: 'clock', timerange: 'clock',
   'canvas-region': 'aspect', 'transcript-selection': 'text',
 };

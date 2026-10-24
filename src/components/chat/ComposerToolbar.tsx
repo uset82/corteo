@@ -67,7 +67,7 @@ export function ComposerToolbar({
         <button title={t('模式')} onClick={(event) => onTogglePop('mode', event.currentTarget)}
           className="cc-chat-mode-btn"
           style={{ height: 28, display: 'flex', alignItems: 'center', gap: 3, padding: '0 3px', border: 0, borderRadius: 6, background: pop === 'mode' ? theme.panelAlt : 'transparent', color: theme.text, cursor: 'pointer', fontSize: 12, flexShrink: 0 }}>
-          <Icon name="sparkles" size={15} /><span className="cc-chat-mode-label">{mode === 'agent' ? 'Agent' : 'Q&A'}</span><Icon name="chevronDown" size={11} />
+          <span className="cc-chat-mode-label">{mode === 'agent' ? t('Agent') : t('Q&A')}</span><Icon name="chevronDown" size={11} />
         </button>
         <button type="button" className="cc-chat-model-btn"
           disabled={running}
@@ -98,7 +98,7 @@ export function ComposerToolbar({
           <BarBtn icon="plus" title={t('引用媒体池素材')} active={pop === 'assets'} onClick={(event) => onTogglePop('assets', event.currentTarget)} />
           <BarBtn icon="wand" title={activeSkillName ? t('创作模式：{name}', { name: activeSkillName }) : t('创作模式')} active={pop === 'skill' || !!activeSkillName} onClick={(event) => onTogglePop('skill', event.currentTarget)} />
           <BarBtn icon="bookOpen" title={t('引用模板库')} active={pop === 'templates'} onClick={(event) => onTogglePop('templates', event.currentTarget)} />
-          <BarBtn icon="sparkles" title={enhancing ? t('增强中…') : t('增强提示词')} disabled={!canEnhance} onClick={onEnhance} />
+          <BarBtn icon="pencil" title={enhancing ? t('增强中…') : t('增强提示词')} disabled={!canEnhance} onClick={onEnhance} />
         </span>
         <BarBtn icon="more" title={t('更多工具')} className="cc-composer-more-btn"
           active={pop === 'more' || secondaryActive}
@@ -157,7 +157,7 @@ export function ComposerMoreMenu({
       <MoreItem icon="wand" label={activeSkillName ? t('创作模式：{name}', { name: activeSkillName }) : t('创作模式')}
         active={!!activeSkillName} onClick={() => onChoosePopover('skill')} />
       <MoreItem icon="bookOpen" label={t('引用模板库')} onClick={() => onChoosePopover('templates')} />
-      <MoreItem icon="sparkles" label={enhancing ? t('增强中…') : t('增强提示词')}
+      <MoreItem icon="pencil" label={enhancing ? t('增强中…') : t('增强提示词')}
         disabled={!canEnhance} onClick={() => run(onEnhance)} />
     </div>
   );

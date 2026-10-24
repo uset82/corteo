@@ -219,7 +219,7 @@ export function ChatComposer(props: ChatComposerProps) {
     return [
       { key: 'assets', icon: 'filePlay', label: t('引用媒体池素材'), sub: `${assets.length}`, action: go('assets') },
       { key: 'timeline', icon: 'film', label: t('时间线'), sub: `${tracks.length}`, action: go('timeline') },
-      { key: 'templates', icon: 'sparkles', label: t('引用模板库'), action: go('templates') },
+      { key: 'templates', icon: 'bookOpen', label: t('引用模板库'), action: go('templates') },
     ];
   };
 
