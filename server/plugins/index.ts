@@ -58,12 +58,14 @@ import { getKey } from "../keystore.ts";
 
 import { installSystemProxy } from '../net.ts';
 import { requestShapeGatePlugin } from './request-shape-gate';
+import { providersOffPlugin } from './providers-off.ts';
 import { systemFontsPlugin } from './system-fonts.ts';
 
 export function serverPlugins(options: { projectStoreHttp?: boolean } = {}): Plugin[] {
   installSystemProxy();
   return [
     requestShapeGatePlugin(),
+    providersOffPlugin(),
     systemFontsPlugin(),
     crossOriginIsolationPlugin(),
     storageLifecyclePlugin(),

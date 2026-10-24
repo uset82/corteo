@@ -37,6 +37,11 @@ export interface ProxyRoute {
   forceJsonContentType?: boolean;
   /** Replace upstream error bodies with one actionable message. */
   errorMessage?: (status: number, req: IncomingMessage) => string;
+  /**
+   * Replace a connection-level failure (no upstream response, e.g. ECONNREFUSED)
+   * with one actionable message. Returning undefined keeps the generic 502 body.
+   */
+  networkMessage?: (error: Error, req: IncomingMessage) => string | undefined;
 }
 
 export function proxyMiddleware(route: ProxyRoute): Middleware {
@@ -110,8 +115,9 @@ export function proxyMiddleware(route: ProxyRoute): Middleware {
 
     upstream.on('error', (err) => {
       if (!res.headersSent) {
+        const message = route.networkMessage?.(err, req);
         res.writeHead(502, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: `upstream request failed: ${err.message}` }));
+        res.end(JSON.stringify(message ? { error: { message } } : { error: `upstream request failed: ${err.message}` }));
       } else if (!res.writableEnded) {
         res.end();
       }

@@ -6,6 +6,7 @@ import {
 } from '../../shared/llm-providers';
 import { resolveLlmProviderConfig } from '../llm-config';
 import { getKey, type KeyName } from '../keystore';
+import { providersOff, providersOffAllows } from '../plugins/providers-off';
 import { copilotProviderForModel } from '../../shared/model-capabilities';
 import { serverRunBackend, type ServerRunInput } from './executor';
 import type { ValidatedCreateInput } from './request';
@@ -21,6 +22,9 @@ export function resolveRunExecution(
   const provider = typeof body.provider === 'string' ? body.provider.trim() : body.provider;
   const requestedModel = input.model;
   const backend = serverRunBackend(body.backend);
+  // CLI backends never cross an HTTP mount this deployment could block, so the
+  // server turn itself refuses them under the local-only switch.
+  if (providersOff() && backend !== 'api') throw new Error('providers_disabled');
   const readKey = (name: string): string => getKey(name as KeyName);
   const config = backend === 'codex'
     ? { provider: 'openai', model: '' }
@@ -32,6 +36,9 @@ export function resolveRunExecution(
           provider === undefined || provider === null || provider === '' ? getKey('LLM_PROVIDER') : provider,
         ), readKey);
   const effectiveProvider = normalizeLlmProvider(config.provider);
+  if (providersOff() && !providersOffAllows(effectiveProvider)) {
+    throw new Error('providers_disabled');
+  }
   const effectiveModel = backend === 'copilot'
     ? requestedModel
     : requestedModel || config.model || defaultModelForProvider(effectiveProvider);

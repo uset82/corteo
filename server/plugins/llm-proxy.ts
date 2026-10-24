@@ -47,6 +47,17 @@ export function llmErrorMessage(status: number, req?: IncomingMessage): string {
       ? 'xAI 拒绝了订阅会话的 API 访问（当前订阅档位可能未开放）。可升级订阅，或改在“设置 → Agent 模型 → xAI Grok”页配置 API Key 使用。'
       : 'xAI 订阅会话已失效。请在终端运行 grok login 重新登录，然后在“设置 → Agent 模型 → xAI Grok (订阅登录)”页点击导入。';
   }
+  if (provider === 'dsh') {
+    if (status === 401 || status === 403) {
+      return 'DeepSeek Harness rechazó la clave de reenvío. Ejecuta en una terminal '
+        + 'npm run harness:doctor -- --show-key, copia la clave en “Ajustes → Modelo del Agent → '
+        + 'DeepSeek Harness” y pulsa “Probar conexión”.';
+    }
+    if (status === 402 || status === 429) {
+      return 'El modelo gratuito de DeepSeek Harness está ocupado o se ha quedado sin cuota. '
+        + 'Elige otro modelo en el menú de modelos y vuelve a intentarlo en un momento.';
+    }
+  }
   if (status === 401 || status === 403) {
     return `${label} 认证失败。请在“设置 → Agent 模型”中检查 API Key。`;
   }
@@ -60,6 +71,14 @@ export function llmErrorMessage(status: number, req?: IncomingMessage): string {
     return `${label} 服务暂时不可用（HTTP ${status}）。请稍后重试或切换模型。`;
   }
   return `${label} 请求失败（HTTP ${status}）。请检查“设置 → Agent 模型”中的连接配置。`;
+}
+
+/** The forward port refused the connection: the harness process is not running. */
+export function llmNetworkErrorMessage(error: Error, req?: IncomingMessage): string | undefined {
+  if (llmProviderForRequest(req) !== 'dsh') return undefined;
+  return 'DeepSeek Harness no está en marcha: su puerto de reenvío no responde '
+    + `(${error.message}). Arráncalo en una terminal con npm run harness y vuelve a intentarlo; `
+    + 'npm run harness:doctor comprueba la instalación.';
 }
 
 /** One dynamic proxy implementation shared by Vite dev and Electron production. */
@@ -82,6 +101,7 @@ export function llmProxyPlugin(): Plugin {
         headers: llmHeaders,
         forceJsonContentType: true,
         errorMessage: llmErrorMessage,
+        networkMessage: llmNetworkErrorMessage,
       }));
     },
   };

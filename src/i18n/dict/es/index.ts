@@ -133,4 +133,24 @@ export default {
   '视频编码': 'Códec de Video',
   '音频编码': 'Códec de Audio',
   '比特率': 'Tasa de Bits',
+
+  // DeepSeek Harness
+  'DeepSeek Harness 本地网关：先在终端运行 npm run harness 启动，再运行 npm run harness:doctor 获取网关地址与密钥；把地址和密钥粘贴到下面两项后点“测试并读取模型”。':
+    'Gateway local de DeepSeek Harness: inicia el harness en una terminal con npm run harness y luego ejecuta npm run harness:doctor para obtener la dirección y la clave del gateway. Pégalas en los dos campos de abajo y pulsa «Probar y cargar modelos».',
+  '尚未填写 API Key · 填好后再点测试': 'Aún no hay API Key · complétala y vuelve a probar',
+  '连接成功 · 鉴权通过 · 已读取 {n} 个模型 · {ms}ms': 'Conexión correcta · clave aceptada · {n} modelos leídos · {ms} ms',
+  '连接成功 · 鉴权通过 · 接口未返回模型列表 · {ms}ms': 'Conexión correcta · clave aceptada · la interfaz no devolvió una lista de modelos · {ms} ms',
+  '连接成功 · 鉴权通过 · {ms}ms': 'Conexión correcta · clave aceptada · {ms} ms',
+  '鉴权失败（HTTP {status}）· Key 无效、过期或无此接口权限': 'Autenticación fallida (HTTP {status}) · la clave no es válida, caducó o no tiene permiso para esta interfaz',
+  '探测端点 404 · Base URL 可能填错（或该服务不认此探测路径）': 'El endpoint de prueba devolvió 404 · la Base URL puede estar mal (o el servicio no usa esta ruta de prueba)',
+  '鉴权通过（HTTP 429 限流，说明 Key 有效）': 'Clave aceptada (el límite HTTP 429 confirma que es válida)',
+  'HTTP {status}': 'HTTP {status}',
+  'HTTP {status} · {detail}': 'HTTP {status} · {detail}',
+  '连接超时 · 服务不可达或网络受限（可能需代理），不代表 Key 错误': 'Tiempo de conexión agotado · servicio inaccesible o red restringida (puede requerir proxy); no significa que la clave sea incorrecta',
+  '网络不可达 · {detail} · 本机连不上该服务（可能需代理），不代表 Key 错误': 'Red inaccesible · {detail} · este equipo no puede alcanzar el servicio (puede requerir proxy); no significa que la clave sea incorrecta',
+
+  // DeepSeek Harness · modelo del compositor
+  '请先在设置中配置一个模型厂商。': '1. Inicia el harness: npm run harness\n2. Obtén la URL y la clave del gateway: npm run harness:doctor\n3. Pégalas en Ajustes › DeepSeek Harness.',
+  '刷新模型列表': 'Actualizar lista de modelos',
+  'DeepSeek Harness 无响应。用 npm run harness 启动它。': 'DeepSeek Harness no responde. Arráncalo con npm run harness.',
 } as Record<string, string>;

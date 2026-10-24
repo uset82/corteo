@@ -23,6 +23,7 @@ import {
   type ModelIdentity,
 } from '../../shared/model-capabilities';
 import { setLlmConfig } from './providerConfig';
+import { PROVIDERS_OFF, providerAvailable } from './providers-off';
 
 interface KeyStateLike {
   readonly configured: boolean;
@@ -63,6 +64,10 @@ let copilotDiscoveredModels: readonly CopilotAgentModel[] = [];
 let claudeCodeStatus: ClaudeCodeAgentStatus | null = null;
 let claudeCodeSavedModel = '';
 let claudeCodeDiscoveredModels: readonly ClaudeCodeAgentModel[] = [];
+let dshConfigured = false;
+let dshSavedModel = '';
+let dshDiscoveredModels: readonly string[] = [];
+let dshDown = false;
 const listeners = new Set<() => void>();
 
 function emit(): void {
@@ -101,6 +106,11 @@ function apiChoices(
   models: Record<string, string>,
 ): readonly AgentModelChoice[] {
   return LLM_PROVIDER_PRESETS.flatMap((preset): AgentModelChoice[] => {
+    // A local-only deployment keeps DSH and the keyless local runtimes.
+    if (!providerAvailable(preset.id)) return [];
+    // DeepSeek Harness exposes one entry per discovered model instead of the
+    // single saved-model row every other cloud preset gets.
+    if (preset.id === 'dsh') return [];
     const names = llmProviderConfigNames(preset.id);
     const savedModel = models[names.model]?.trim() ?? '';
     if (isLocalLlmProvider(preset.id) ? !savedModel : !keys[names.apiKey]?.configured) return [];
@@ -120,6 +130,35 @@ function apiChoices(
   });
 }
 
+function lastPickedDshModel(): string {
+  const pref = loadAgentModelPref();
+  const prefix = 'dsh:';
+  return pref.startsWith(prefix) ? pref.slice(prefix.length) : '';
+}
+
+/**
+ * While the harness restarts, discovery comes back empty: fall back to the
+ * saved `LLM_DSH_MODEL` and the last pick so the menu never loses the active
+ * model. Model ids can contain `:` (`combo:<name>`), so ids are only ever
+ * compared whole.
+ */
+function dshChoices(): readonly AgentModelChoice[] {
+  if (!dshConfigured && !dshSavedModel) return [];
+  const fallback = [...new Set([dshSavedModel, lastPickedDshModel()].filter(Boolean))];
+  const modelIds = dshDiscoveredModels.length > 0
+    ? dshDiscoveredModels
+    : fallback.length > 0 ? fallback : [defaultModelForProvider('dsh')];
+  const label = LLM_PROVIDER_PRESETS.find((preset) => preset.id === 'dsh')?.label ?? 'DeepSeek Harness';
+  return [...new Set(modelIds)].map((modelId) => ({
+    id: `dsh:${modelId}`,
+    backend: 'api' as const,
+    provider: 'dsh' as const,
+    providerLabel: label,
+    model: modelId,
+    capabilities: modelCapabilities({ backend: 'api', provider: 'dsh', modelId }),
+  }));
+}
+
 function chooseInitialApiId(
   choices: readonly AgentModelChoice[],
   models: Record<string, string>,
@@ -137,7 +176,7 @@ function allChoices(): readonly AgentModelChoice[] {
   ];
 }
 function rebuildClaudeCodeChoices(): void {
-  if (!claudeCodeStatus?.installed || claudeCodeStatus.account?.loggedIn !== true) {
+  if (PROVIDERS_OFF || !claudeCodeStatus?.installed || claudeCodeStatus.account?.loggedIn !== true) {
     claudeCodeModelChoices = [];
     return;
   }
@@ -160,7 +199,7 @@ function rebuildClaudeCodeChoices(): void {
   });
 }
 function rebuildCodexChoices(): void {
-  if (!codexStatus?.installed || codexStatus.account?.type === 'apiKey') {
+  if (PROVIDERS_OFF || !codexStatus?.installed || codexStatus.account?.type === 'apiKey') {
     codexModelChoices = [];
     return;
   }
@@ -191,7 +230,7 @@ function rebuildCodexChoices(): void {
  * every OpenChatCut editing flow needs tool calls.
  */
 function rebuildCopilotChoices(): void {
-  if (!copilotStatus?.installed || !copilotStatus.supported || !copilotStatus.authenticated) {
+  if (PROVIDERS_OFF || !copilotStatus?.installed || !copilotStatus.supported || !copilotStatus.authenticated) {
     copilotModelChoices = [];
     return;
   }
@@ -241,7 +280,9 @@ export function applyAgentModelStatus(
   models: Record<string, string>,
 ): void {
   capabilityOverrides = safeOverrides(models[MODEL_CAPABILITY_OVERRIDES_KEY]);
-  apiModelChoices = apiChoices(keys, models);
+  dshConfigured = Boolean(keys[llmProviderConfigNames('dsh').apiKey]?.configured);
+  dshSavedModel = models.LLM_DSH_MODEL?.trim() ?? dshSavedModel;
+  apiModelChoices = [...apiChoices(keys, models), ...dshChoices()];
   codexSavedModel = models.CODEX_MODEL?.trim() ?? codexSavedModel;
   codexSavedReasoningEffort = models.CODEX_REASONING_EFFORT?.trim() ?? codexSavedReasoningEffort;
   copilotSavedModel = models.COPILOT_MODEL?.trim() ?? copilotSavedModel;
@@ -324,6 +365,28 @@ export function applyClaudeCodeAgentStatus(
   const preserved = choices.some((choice) => choice.id === preferred) ? preferred
     : choices.some((choice) => choice.id === snapshot.activeId) ? snapshot.activeId : '';
   commitChoices(choices, preserved || claudeCodeModelChoices[0]?.id || choices[0]?.id || '', true);
+}
+
+export interface DshHarnessState {
+  readonly down: boolean;
+  readonly configured: boolean;
+  readonly savedModel: string;
+}
+
+export function getDshHarnessState(): DshHarnessState {
+  return { down: dshDown, configured: dshConfigured || Boolean(dshSavedModel), savedModel: dshSavedModel };
+}
+
+/** Discovery result from `POST /api/keys/test`; `down` keeps the harness notice honest. */
+export function applyDshModels(models: readonly string[], down: boolean): void {
+  dshDiscoveredModels = [...new Set(models.map((model) => model.trim()).filter(Boolean))];
+  dshDown = down;
+  apiModelChoices = [...apiModelChoices.filter((choice) => choice.provider !== 'dsh'), ...dshChoices()];
+  const choices = allChoices();
+  const preferred = loadAgentModelPref();
+  const preserved = choices.some((choice) => choice.id === preferred) ? preferred
+    : choices.some((choice) => choice.id === snapshot.activeId) ? snapshot.activeId : '';
+  commitChoices(choices, preserved || choices[0]?.id || '', snapshot.loaded);
 }
 
 export function getAgentModelSnapshot(): AgentModelSnapshot {

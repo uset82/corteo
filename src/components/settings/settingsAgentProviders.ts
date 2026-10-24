@@ -3,8 +3,11 @@ import {
   isLocalLlmProvider,
   llmProviderConfigNames,
 } from '../../../shared/llm-providers';
+import { PROVIDERS_OFF, providerAvailable } from '../../agent/providers-off';
 import type { VendorId } from './vendorIcons';
 import { secret, text, type SettingsVendorPage } from './settingsFields';
+
+const DSH_NOTE = 'DeepSeek Harness 本地网关：先在终端运行 npm run harness 启动，再运行 npm run harness:doctor 获取网关地址与密钥；把地址和密钥粘贴到下面两项后点“测试并读取模型”。';
 
 const llmPage = (preset: (typeof LLM_PROVIDER_PRESETS)[number]): SettingsVendorPage => {
   const names = llmProviderConfigNames(preset.id);
@@ -12,10 +15,12 @@ const llmPage = (preset: (typeof LLM_PROVIDER_PRESETS)[number]): SettingsVendorP
     key: `llm/${preset.id}`,
     vendor: preset.id as VendorId,
     title: preset.label,
-    note: preset.id === 'anthropic'
-      ? '内置 Agent 可使用 Anthropic API Key，也可以在下方「Anthropic · Claude Code」页用 Claude 订阅登录（无需 API Key）。'
-        + '独立运行的 Claude Code 会话也可以通过「外部 Agent 接入 (MCP)」驱动 Claudia。'
-      : '每个厂商独立保存地址、密钥与模型。先测试连接，成功后可从接口返回的模型中选择。',
+    note: preset.id === 'dsh'
+      ? DSH_NOTE
+      : preset.id === 'anthropic'
+        ? '内置 Agent 可使用 Anthropic API Key，也可以在下方「Anthropic · Claude Code」页用 Claude 订阅登录（无需 API Key）。'
+          + '独立运行的 Claude Code 会话也可以通过「外部 Agent 接入 (MCP)」驱动 Claudia。'
+        : '每个厂商独立保存地址、密钥与模型。先测试连接，成功后可从接口返回的模型中选择。',
     ...(preset.id === 'anthropic'
       ? { noteAction: { label: '外部 Agent 接入 (MCP)', action: 'open-mcp-guide' } }
       : {}),
@@ -121,17 +126,23 @@ const XAI_OAUTH_PAGE: SettingsVendorPage = {
 
 // Sponsored placement: OFox sits 4th in Agent 大脑 (Anthropic, OpenAI,
 // OpenAI · Codex, OFox), independent of its position in LLM_PROVIDER_PRESETS.
+// DeepSeek Harness leads the list because it is the free, zero-setup track.
+const DSH_PRESET = LLM_PROVIDER_PRESETS.find((preset) => preset.id === 'dsh');
 const OFOX_PRESET = LLM_PROVIDER_PRESETS.find((preset) => preset.id === 'ofox');
-const AGENT_VENDOR_PAGES: readonly SettingsVendorPage[] = LLM_PROVIDER_PRESETS.flatMap((preset) => {
-  if (preset.id === 'xai-oauth') return [XAI_OAUTH_PAGE];
-  if (preset.id === 'ofox') return [];
-  const page = llmPage(preset);
-  if (preset.id === 'anthropic') return [page, CLAUDE_CODE_PAGE];
-  if (preset.id !== 'openai') return [page];
-  return OFOX_PRESET
-    ? [page, CODEX_PAGE, llmPage(OFOX_PRESET), COPILOT_PAGE]
-    : [page, CODEX_PAGE, COPILOT_PAGE];
-});
+const AGENT_VENDOR_PAGES: readonly SettingsVendorPage[] = [
+  ...(DSH_PRESET ? [llmPage(DSH_PRESET)] : []),
+  ...LLM_PROVIDER_PRESETS.flatMap((preset) => {
+    if (preset.id === 'dsh') return [];
+    if (preset.id === 'xai-oauth') return [XAI_OAUTH_PAGE];
+    if (preset.id === 'ofox') return [];
+    const page = llmPage(preset);
+    if (preset.id === 'anthropic') return [page, CLAUDE_CODE_PAGE];
+    if (preset.id !== 'openai') return [page];
+    return OFOX_PRESET
+      ? [page, CODEX_PAGE, llmPage(OFOX_PRESET), COPILOT_PAGE]
+      : [page, CODEX_PAGE, COPILOT_PAGE];
+  }),
+];
 
 const VISION_PAGE: SettingsVendorPage = {
   key: 'llm/vision', vendor: 'vision', title: '视觉理解', fields: [],
@@ -146,7 +157,13 @@ export const PROXY_PAGE: SettingsVendorPage = {
   fields: [text('PROXY_URL', '代理地址', '例如 http://127.0.0.1:7890')],
 };
 
+// `OPENCHATCUT_PROVIDERS=off` deployments only expose the local harness and
+// the keyless local runtimes; a deep link to a hidden page falls back to the
+// first visible one (seedSelection in SettingsDialog).
+const VISIBLE_AGENT_VENDOR_PAGES: readonly SettingsVendorPage[] = AGENT_VENDOR_PAGES
+  .filter((page) => providerAvailable(page.key.split('/')[1] ?? ''));
+
 export const AGENT_VENDOR_PAGES_WITH_VISION: readonly SettingsVendorPage[] = [
-  ...AGENT_VENDOR_PAGES,
-  VISION_PAGE,
+  ...VISIBLE_AGENT_VENDOR_PAGES,
+  ...(PROVIDERS_OFF ? [] : [VISION_PAGE]),
 ];

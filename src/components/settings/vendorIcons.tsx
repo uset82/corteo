@@ -40,7 +40,7 @@ import visionSvg from '../../../assets/vendor-icons/vision.svg?raw';
 
 export type VendorId =
   | 'llm' | 'anthropic' | 'openai' | 'gemini' | 'kimi' | 'qwen' | 'glm' | 'deepseek' | 'mistral' | 'openrouter' | 'orcarouter' | 'requesty' | 'cheaperinference'
-  | 'ollama' | 'lmstudio' | 'xiaomi' | 'minimax' | 'hailuo' | 'elevenlabs' | 'doubao'
+  | 'ollama' | 'lmstudio' | 'dsh' | 'xiaomi' | 'minimax' | 'hailuo' | 'elevenlabs' | 'doubao'
   | 'seedance' | 'kling' | 'mureka' | 'sonilo' | 'pexels' | 'pixabay' | 'unsplash' | 'freesound'
   | 'assemblyai' | 'deepgram' | 'groq' | 'cartesia' | 'e2b' | 'firecrawl' | 'r2' | 'localdisk' | 'localasr'
   | 'stepfun' | 'byteplus' | 'inworld' | 'fishaudio' | 'speechify' | 'wavespeed'
@@ -87,6 +87,7 @@ const SVG_ICONS: Partial<Record<VendorId, SvgIcon>> = {
   openrouter: { svg: openrouterSvg, tint: '#7624F4' }, // Official OpenRouter mark + primary purple
   ollama: { svg: ollamaSvg, tint: theme.text },        // Official llama mark, adapted for skin contrast
   lmstudio: { svg: lmstudioSvg },                      // Official LM Studio color app icon
+  dsh: { svg: deepseekSvg },                           // DeepSeek Harness serves DeepSeek models behind a local gateway
   proxy: { svg: PROXY_ICON }, // network proxy
   vision: { svg: visionSvg },                          // Vision bypass feature mark (generated)
 };

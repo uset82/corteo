@@ -199,6 +199,45 @@ assert.match(networkMessage(Object.assign(new Error('The operation was aborted d
 }
 
 
+// 7d. DeepSeek Harness: the local forward port answers at <base>/models with
+// the forward key; a wrong key becomes a Spanish-ready messageKey, and a
+// missing key never reaches the network.
+{
+  const originalFetch = globalThis.fetch;
+  const calls: Array<{ url: string; auth: string | null }> = [];
+  let status = 200;
+  globalThis.fetch = async (input, init) => {
+    calls.push({ url: String(input), auth: new Headers(init?.headers).get('authorization') });
+    return status === 200
+      ? Response.json({ data: [{ id: 'combo:recommended-free' }, { id: 'deepseek-v3' }] })
+      : Response.json({ error: 'unauthorized' }, { status });
+  };
+  try {
+    const ok = await runProbe('llm/dsh', { LLM_DSH_API_KEY: 'fw-key' });
+    assert.equal(ok.ok, true);
+    assert.deepEqual(ok.models, ['combo:recommended-free', 'deepseek-v3']);
+    assert.deepEqual(calls, [{ url: 'http://127.0.0.1:18899/v1/models', auth: 'Bearer fw-key' }]);
+    assert.equal(ok.messageKey, '连接成功 · 鉴权通过 · 已读取 {n} 个模型 · {ms}ms');
+    assert.deepEqual(ok.messageParams, { n: 2, ms: ok.latencyMs });
+
+    calls.length = 0;
+    const missing = await runProbe('llm/dsh', {});
+    assert.equal(missing.ok, false);
+    assert.match(missing.message, /尚未填写 API Key/);
+    assert.equal(missing.messageKey, '尚未填写 API Key · 填好后再点测试');
+    assert.equal(calls.length, 0, 'a missing forward key never hits the network');
+
+    status = 401;
+    const rejected = await runProbe('llm/dsh', { LLM_DSH_API_KEY: 'wrong-key' });
+    assert.equal(rejected.ok, false);
+    assert.match(rejected.message, /鉴权失败/);
+    assert.equal(rejected.messageKey, '鉴权失败（HTTP {status}）· Key 无效、过期或无此接口权限');
+    assert.deepEqual(rejected.messageParams, { status: 401 });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
 // 8. Local storage directory probe: empty group needs = can be tested if not filled in (not set = default directory); the relative path is configured
 // Level failure (postCheck copy, no HTTP prefix); success copy goes to okText. Neither case touched the plate.
 {

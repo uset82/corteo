@@ -41,11 +41,13 @@ assert.equal(llmOperationPath('kimi'), '/chat/completions');
 assert.equal(llmOperationPath('orcarouter'), '/chat/completions');
 assert.equal(llmOperationPath('requesty'), '/chat/completions');
 assert.equal(llmOperationPath('cheaperinference'), '/chat/completions');
+assert.equal(resolveLlmBaseUrl('dsh', ''), 'http://127.0.0.1:18899/v1', 'DSH defaults to the local forward port');
+assert.equal(llmOperationPath('dsh'), '/chat/completions');
 
 // ── llmHeaders: Inject upstream authentication according to the protocol (google=x-goog-api-key;anthropic=x-api-key; the rest Bearer) ──
 {
   const { KEY_NAMES, seedKeystore } = await import('./keystore.ts');
-  const { llmErrorMessage, llmHeaders } = await import('./plugins/llm-proxy.ts');
+  const { llmErrorMessage, llmHeaders, llmNetworkErrorMessage } = await import('./plugins/llm-proxy.ts');
   seedKeystore({
     ...Object.fromEntries(KEY_NAMES.map((name) => [name, ''])),
     LLM_PROVIDER: 'anthropic',
@@ -77,6 +79,14 @@ assert.equal(llmOperationPath('cheaperinference'), '/chat/completions');
   assert.deepEqual(llmHeaders(reqFor('xai-oauth')), {}, 'xAI OAuth 不回退到可能失效的持久化 token');
   assert.match(llmErrorMessage(401, reqFor('gemini')), /Gemini.*设置.*API Key/, '认证错误给设置入口');
   assert.match(llmErrorMessage(429, reqFor('openai')), /额度不足.*稍后重试/, '限流错误给额度提示');
+  assert.match(llmErrorMessage(401, reqFor('dsh')), /harness:doctor -- --show-key/,
+    'DSH 401 tells the user to copy the forward key again, in Spanish');
+  assert.match(llmErrorMessage(429, reqFor('dsh')), /menú de modelos/,
+    'DSH 429 tells the user to pick another free model, in Spanish');
+  assert.match(llmNetworkErrorMessage(new Error('connect ECONNREFUSED 127.0.0.1:18899'), reqFor('dsh')) ?? '',
+    /npm run harness/, 'DSH connection refused points at npm run harness');
+  assert.equal(llmNetworkErrorMessage(new Error('connect ECONNREFUSED'), reqFor('openai')), undefined,
+    'other providers keep the generic 502 body');
 }
 
 const switched = expandLlmProviderPatch(new Map([['LLM_PROVIDER', 'openai']]), 'anthropic');
@@ -197,6 +207,65 @@ try {
   assert.deepEqual(await denied.json(), {
     error: { message: 'Friendly provider error (401). Check Agent settings.' },
   }, 'raw provider JSON is replaced with one actionable message');
+
+  // DSH 401: the gateway rejects the forward key; the user gets the Spanish
+  // recovery steps instead of the raw body.
+  seedKeystore({
+    LLM_DSH_API_KEY: 'fw-key',
+    LLM_DSH_BASE_URL: `http://127.0.0.1:${upstreamPort}/v1`,
+  });
+  const dshDenied = await fetch(`http://127.0.0.1:${providerProxyPort}/llm/unauthorized`, {
+    headers: { 'x-openchatcut-provider': 'dsh' },
+  });
+  assert.equal(dshDenied.status, 401);
+  const dshDeniedBody = await dshDenied.json() as { error: { message: string } };
+  assert.match(dshDeniedBody.error.message, /harness:doctor -- --show-key/);
+  assert.match(dshDeniedBody.error.message, /Probar conexión/);
+
+  // Connection refused: DSH gets the Spanish "start the harness" message; other
+  // providers keep today's generic body byte for byte.
+  const closed = createServer();
+  const closedPort = await listen(closed);
+  await close(closed);
+  const closedOrigin = `http://127.0.0.1:${closedPort}/v1`;
+  seedKeystore({ LLM_DSH_BASE_URL: closedOrigin });
+  const harnessDown = await fetch(`http://127.0.0.1:${providerProxyPort}/llm/chat/completions`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-openchatcut-provider': 'dsh' },
+    body: '{"model":"combo:recommended-free"}',
+  });
+  assert.equal(harnessDown.status, 502);
+  const harnessDownBody = await harnessDown.json() as { error?: { message?: string } };
+  assert.match(harnessDownBody.error?.message ?? '', /DeepSeek Harness no está en marcha/);
+  assert.match(harnessDownBody.error?.message ?? '', /npm run harness/);
+
+  seedKeystore({ LLM_ANTHROPIC_BASE_URL: closedOrigin });
+  const genericDown = await fetch(`http://127.0.0.1:${providerProxyPort}/llm/messages`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: '{}',
+  });
+  assert.equal(genericDown.status, 502);
+  const genericDownBody = await genericDown.json() as { error?: unknown };
+  assert.equal(typeof genericDownBody.error, 'string', 'non-DSH network failures stay byte-identical');
+  assert.match(String(genericDownBody.error), /^upstream request failed: /);
+
+  // The 502 is retried once, so the Spanish DSH message is what the user sees
+  // after the retries.
+  const { shouldRetryTransientAgentRequest } = await import('../src/agent/api-retry.ts');
+  const surfaced = Object.assign(new Error(`502 ${harnessDownBody.error?.message ?? ''}`), { statusCode: 502 });
+  assert.equal(shouldRetryTransientAgentRequest({
+    retryAttempted: false,
+    outputStarted: false,
+    aborted: false,
+    error: surfaced,
+  }), true, 'the first DSH connection failure is retried');
+  assert.equal(shouldRetryTransientAgentRequest({
+    retryAttempted: true,
+    outputStarted: false,
+    aborted: false,
+    error: surfaced,
+  }), false, 'the retry budget is one, then the Spanish message surfaces');
 } finally {
   await close(providerProxy);
   await close(proxy);

@@ -3,6 +3,7 @@ import { useT } from '../../i18n/locale';
 import type { AgentContextUsage } from '../../agent/context-compaction';
 import {
   getAgentModelSnapshot,
+  getDshHarnessState,
   isAgentModelReady,
   subscribeAgentModels,
   type AgentModelChoice,
@@ -24,6 +25,7 @@ export interface ComposerModelView {
   readonly contextLabel: string;
   readonly contextTitle: string;
   readonly contextNearLimit: boolean;
+  readonly harnessDown: boolean;
   readonly modelReady: boolean;
   readonly modelState: AgentModelSnapshot;
 }
@@ -38,6 +40,7 @@ export function useComposerModelView(
     getAgentModelSnapshot,
   );
   const activeModel = modelState.choices.find((choice) => choice.id === modelState.activeId);
+  const harnessDown = getDshHarnessState().down;
   // Match a usage record to the active model across execution endpoints.
   // Client-side runs stamp contextUsage.modelId with the AgentModelChoice.id
   // ("provider:model"); serverRun echoes model only ("claude-fable-5") because
@@ -90,6 +93,7 @@ export function useComposerModelView(
     contextLabel,
     contextNearLimit,
     contextTitle,
+    harnessDown,
     modelReady: isAgentModelReady(modelState),
     modelState,
   };

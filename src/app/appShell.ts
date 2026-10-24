@@ -5,7 +5,8 @@ import { applyLiveCaps, applyLiveKeyStatus, applyLiveModels } from '../agent/cap
 import { fetchCodexModels, fetchCodexStatus } from '../agent/codex/client';
 import { fetchCopilotModels, fetchCopilotStatus } from '../agent/copilot/client';
 import { fetchClaudeCodeModels, fetchClaudeCodeStatus } from '../agent/claude-code/client';
-import { applyAgentModelStatus, applyClaudeCodeAgentStatus, applyCodexAgentStatus, applyCopilotAgentStatus, selectAgentModel, getActiveAgentModelChoice, getAgentModelSnapshot } from '../agent/model-selection';
+import { applyAgentModelStatus, applyClaudeCodeAgentStatus, applyCodexAgentStatus, applyCopilotAgentStatus, applyDshModels, selectAgentModel, getActiveAgentModelChoice, getAgentModelSnapshot } from '../agent/model-selection';
+import { PROVIDERS_OFF } from '../agent/providers-off';
 import { loadAgentModelPref } from '../persist/sessionPrefs';
 import type { ProjectDoc, TimelineState } from '../editor/types';
 import {
@@ -47,6 +48,30 @@ function parseHash(): AppRoute {
 
 export function navigateTo(hash: string): void {
   window.location.hash = hash;
+}
+
+/**
+ * The DeepSeek Harness answers `/v1/models` on its forward port, and the
+ * existing provider probe already lists them. Detached from startup and from
+ * the model picker's refresh button; it never rejects so a stopped harness
+ * cannot break either caller.
+ */
+export async function refreshDshModels(): Promise<void> {
+  try {
+    const response = await fetch('/api/keys/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page: 'llm/dsh', overrides: {} }),
+    });
+    const body = await response.json().catch(() => null) as
+      { readonly ok?: boolean; readonly models?: unknown } | null;
+    const models = Array.isArray(body?.models)
+      ? body.models.filter((model): model is string => typeof model === 'string')
+      : [];
+    applyDshModels(models, body?.ok !== true);
+  } catch {
+    applyDshModels([], true);
+  }
 }
 
 async function syncCopilotBackend(
@@ -91,12 +116,14 @@ async function syncClaudeCodeBackend(isActive: () => boolean, savedModel?: strin
 }
 
 export async function syncAgentBackends(isActive: () => boolean): Promise<void> {
+  // A local-only deployment blocks the CLI routes, so probing them on every
+  // launch would only log 403s (and could make Codex the active backend).
   const [keyResult, codexResult] = await Promise.allSettled([
     fetch('/api/keys').then(async (response): Promise<LiveAgentStatus> => {
       if (!response.ok) throw new Error('Agent key status is unavailable.');
       return response.json() as Promise<LiveAgentStatus>;
     }),
-    fetchCodexStatus(),
+    PROVIDERS_OFF ? Promise.resolve(null) : fetchCodexStatus(),
   ]);
   if (!isActive()) return;
   let savedCodexModel: string | undefined;
@@ -112,18 +139,22 @@ export async function syncAgentBackends(isActive: () => boolean): Promise<void> 
       savedCodexModel = models.CODEX_MODEL;
       savedCodexReasoningEffort = models.CODEX_REASONING_EFFORT;
       savedClaudeCodeModel = models.CLAUDE_CODE_MODEL;
-      if (models.COPILOT_MODEL || loadAgentModelPref()?.startsWith('copilot:')) {
+      if (!PROVIDERS_OFF
+        && (models.COPILOT_MODEL || loadAgentModelPref()?.startsWith('copilot:'))) {
         void syncCopilotBackend(isActive, models.COPILOT_MODEL, models.COPILOT_REASONING_EFFORT);
       }
     }
     startUiLocaleSync(models?.UI_LOCALE);
+    // Only a harness with a saved key is probed at launch: an unconfigured
+    // provider would just answer 401 on every boot.
+    if (keys?.LLM_DSH_API_KEY?.configured || models?.LLM_DSH_MODEL) void refreshDshModels();
   }
   // Detached like the Copilot probe: `claude --version` plus `claude auth
   // status` can take seconds, and configured API/Codex models must stay usable
   // while it runs. Unlike Copilot it is never gated on a saved model, because
   // an unconfigured install is exactly the case this has to surface.
-  void syncClaudeCodeBackend(isActive, savedClaudeCodeModel);
-  if (codexResult.status !== 'fulfilled') return;
+  if (!PROVIDERS_OFF) void syncClaudeCodeBackend(isActive, savedClaudeCodeModel);
+  if (codexResult.status !== 'fulfilled' || !codexResult.value) return;
   const modelResult = codexResult.value.installed && codexResult.value.account?.type !== 'apiKey'
     ? await fetchCodexModels().catch(() => null)
     : null;

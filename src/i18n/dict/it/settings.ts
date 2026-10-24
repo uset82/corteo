@@ -224,6 +224,8 @@ const overrides: Record<string, string> = {
   '测试连接': 'Test connessione',
   '测试代理连接': 'Test proxy',
   '测试并读取模型': 'Testa e leggi modelli',
+  'DeepSeek Harness 本地网关：先在终端运行 npm run harness 启动，再运行 npm run harness:doctor 获取网关地址与密钥；把地址和密钥粘贴到下面两项后点“测试并读取模型”。':
+    'Gateway locale DeepSeek Harness: avvia l’harness in un terminale con npm run harness, poi esegui npm run harness:doctor per ottenere indirizzo e chiave del gateway. Incollali nei due campi qui sotto e premi “Testa e leggi modelli”.',
   '验证地址与密钥，并读取该接口可用的模型': 'Verifica endpoint e chiave, poi legge i modelli disponibili',
   '选择模型': 'Scegli modello',
   '测试请求失败 ({n})': 'Richiesta di test non riuscita ({n})',

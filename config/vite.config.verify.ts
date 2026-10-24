@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { applyAuthoritativeLocalProvider } from './vite.config.ts';
+import { applyAuthoritativeLocalProvider, providersOffFromEnv } from './vite.config.ts';
 
 const inherited = { LLM_PROVIDER: 'openai' };
 applyAuthoritativeLocalProvider(
@@ -27,5 +27,10 @@ assert.equal(
 );
 
 assert.equal(absent.LLM_PROVIDER, 'gemini', 'an absent local provider preserves inherited selection');
+
+assert.equal(providersOffFromEnv({}), false, 'the local-only switch stays off by default');
+assert.equal(providersOffFromEnv({ OPENCHATCUT_PROVIDERS: 'on' }), false);
+assert.equal(providersOffFromEnv({ OPENCHATCUT_PROVIDERS: 'off' }), true,
+  'the browser define follows the same exact-match process env value as the server gate');
 
 console.log('Vite dotenv provider precedence verification passed');
