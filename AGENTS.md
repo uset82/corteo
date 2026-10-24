@@ -49,6 +49,7 @@ The product is **Claudia**; the repository and the command are **corteo**.
 - Until P0-2 is done, start it with `NODE_OPTIONS=--max-old-space-size=6144 npm run dev`, or it can run out of heap.
 - `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` hides the long, harmless list of "import without file extension" warnings at startup.
 - Run long-lived processes (dev server, editor host) in their own terminal or tmux session, never in the shell you work in.
+- A session that has to run on Windows over the `\\wsl.localhost` share cannot write to an existing file: `cp`, `dd` and a shell `>` all fail with `Permission denied`, and the editor's own edit tool fails on its backup step. New files and renames inside a directory do work, so the way through is `mv <file> node_modules/<folder>/` for the old copy, then write the new one. Inside WSL there is no such limit.
 - WebGL: on Linux the renderer uses the GPU (`angle-egl`). Without a usable GPU (common in WSL and VMs), server exports silently lose WebGL effects and transitions, and three render tests fail with "WebGL2 not available". Then set `CC_RENDER_GL=swangle` (software WebGL) for the dev server and for `npm test`.
 - Exports, render tests and `npm run editor-host` (P1-5) start a headless Chromium. If it fails with `error while loading shared libraries`, WSL is missing system libraries. Installing them needs `sudo`: record a blocker asking the user to run `npx playwright install-deps chromium` once (it asks for the password itself; `sudo npx` fails under nvm because sudo drops nvm from `PATH`), and continue with tasks that don't render.
 
@@ -130,6 +131,7 @@ curl -s -X POST "$URL" "${H[@]}" -H "mcp-session-id: $SID" -d '{"jsonrpc":"2.0",
 ## Git
 - Work on `cursor/video-editor-mvp-d191`. Don't touch `grok-wip`. No force-push and no history rewrites.
 - Exception, Plan 3's parallel tracks: the Qoder agent works only in `~/corteo-qoder` on branch `harness-qoder`, the WorkBuddy agent only in `~/corteo-workbuddy` on `harness-workbuddy`, both created from `github/main`. Each pushes only its own branch (`git push github harness-qoder` or `git push github harness-workbuddy`), never `main`, never the other track's branch, and never merges the other track: H-9 does.
+- Exception, Plan 4's brand tracks: the DeepSeek and Qoder agents were unavailable, so those eight cards were executed on `harness-workbuddy` too, and the `brand-deepseek` and `brand-qoder` branches the plan names were never created. B-9 merges `harness-workbuddy` into `cursor/video-editor-mvp-d191`, keeping both sides of the conflicts the plan lists.
 - Commit after every task (see the loop). Never commit secrets, media or `test-results/`.
 - Stage files by name (`git add <paths>`), never `git add -A` or `git add .`: the checkout can hold untracked media and leftovers that must not be committed. Check `git status` before each commit.
 - Push at the end of each session (step 7 of the loop) or when the user asks: `git push github cursor/video-editor-mvp-d191:main` (`github` is the user's GitHub fork). If the push is rejected, report it; never force-push.
