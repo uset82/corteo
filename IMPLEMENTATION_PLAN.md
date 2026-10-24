@@ -90,44 +90,46 @@ Build a professional, Premiere Pro-like web video editor for music video creatio
 ```
 
 ### 2.2 Tools Panel Implementation
-- [ ] **Selection tool (V)**: Default, select/move clips
-- [ ] **Razor tool (C)**: Split clips at playhead
-- [ ] **Ripple edit tool (B)**: Trim and shift subsequent clips
-- [ ] **Slip/Slide tool (Y)**: Adjust clip content without moving
-- [ ] **Text tool (T)**: Add text/subtitles
-- [ ] **Hand tool (H)**: Pan timeline
-- [ ] **Zoom tool (Z)**: Zoom timeline
+- [x] **Selection tool (V)**: Default, select/move clips
+- [x] **Razor tool (C)**: Split clips at playhead
+- [x] **Ripple edit tool (B)**: Trim and shift subsequent clips
+- [x] **Slip/Slide tool (Y)**: Adjust clip content without moving
+- [x] **Text tool (T)**: Add text/subtitles
+- [x] **Hand tool (H)**: Pan timeline
+- [x] **Zoom tool (Z)**: Zoom timeline
+
+**Status:** all seven ship in the timeline tool group with V/C/B/Y/T/H/Z shortcuts (`src/shortcuts/catalog.ts`).
 
 ### 2.3 Inspector/Properties Panel
 **Keyframe support for:**
-- [ ] Position (X, Y with bezier curves)
-- [ ] Scale (uniform & independent)
-- [ ] Rotation (0-360°)
-- [ ] Opacity (0-100%)
+- [x] Position (X, Y with bezier curves) — *per-property keyframes with easing*
+- [x] Scale (uniform & independent) — *separate horizontal/vertical scale*
+- [x] Rotation (0-360°)
+- [x] Opacity (0-100%)
 
 **Color Correction:**
-- [ ] Exposure slider
+- [x] Exposure slider
 - [ ] Contrast slider
 - [ ] Saturation slider
-- [ ] Temperature slider
+- [x] Temperature slider
 - [ ] LUT support (.cube files)
 
 **Audio:**
-- [ ] Volume slider (-∞ to +12 dB)
-- [ ] Fade in/out curves
+- [x] Volume slider (-∞ to +12 dB)
+- [x] Fade in/out curves
 - [ ] Audio effects (EQ, compressor)
 
 ### 2.4 Effects & Transitions
 - [ ] Effects browser (searchable)
 - [ ] Transition browser
 - [ ] Drag-to-apply to clips
-- [ ] Effect controls in inspector
+- [x] Effect controls in inspector — *effect stack with add/remove per clip*
 
 ### 2.5 Dark Professional Theme
-- [ ] Dark gray panels (#1a1a1a, #2a2a2a, #3a3a3a)
-- [ ] Blue accents for selection (#0a84ff)
-- [ ] Proper contrast for readability
-- [ ] Custom scrollbars
+- [x] Dark gray panels (#1a1a1a, #2a2a2a, #3a3a3a) — *canvas `#101010`, panels `#1a1a1a`*
+- [x] Blue accents for selection (#0a84ff) — *`--cc-select` accent*
+- [x] Proper contrast for readability
+- [x] Custom scrollbars — *2px hairline webkit scrollbars*
 
 ---
 
@@ -301,22 +303,24 @@ if (distance < 5) {
 - `Cmd/Ctrl + S`: Save project
 
 ### 4.2 Multi-Select & Batch Editing
-- [ ] Shift-click for range selection
-- [ ] Cmd/Ctrl-click for multi-select
-- [ ] Drag multiple clips together
-- [ ] Batch color correction — **batch infrastructure verified via verify:editor (inspectorBatch, multicam-tools, edit-item-batch)**
-- [ ] Batch speed change — **batch infrastructure verified via verify:editor (inspectorBatch, multicam-tools, edit-item-batch)**
+- [x] Shift-click for range selection — *verified in the browser: clicking clip 0 then shift-clicking clip 2 selects 0-2*
+- [x] Cmd/Ctrl-click for multi-select — *verified*
+- [x] Drag multiple clips together — *verified: the selected pair moves as a block, clamped by the next clip*
+- [x] Batch color correction — **batch infrastructure verified via verify:editor (inspectorBatch, multicam-tools, edit-item-batch)**
+- [x] Batch speed change — **batch infrastructure verified via verify:editor (inspectorBatch, multicam-tools, edit-item-batch)**
 
 ### 4.3 Markers
-- [ ] Add marker at playhead (`M`)
-- [ ] Timeline markers (color coded)
-- [ ] Clip markers
-- [ ] Marker notes/comments
-- [ ] Jump between markers
+- [x] Add marker at playhead (`M`)
+- [x] Timeline markers (color coded) — *8-colour palette, localized*
+- [x] Clip markers
+- [x] Marker notes/comments — *inline note field in the marker list*
+- [x] Jump between markers — *click a row; `Shift+M` edits, `Alt+M` deletes the marker at the playhead*
+
+**Status:** done. `MarkerListDialog` + ruler pins; verified in the browser (add, list, colour, delete).
 
 ### 4.4 Undo/Redo
 - [x] Full history stack — **VERIFIED via verify:editor storeCommandBuilder.verify ("single-step undo")**
-- [ ] Undo any operation
+- [x] Undo any operation — *every mutation goes through the command layer; gestures coalesce into one step*
 - [ ] Visual history panel (optional)
 - [ ] Persist across saves
 
@@ -331,9 +335,9 @@ if (distance < 5) {
 ## Phase 5: Spanish UI (Default)
 
 ### 5.1 i18n Setup
-- [ ] Spanish as default language
-- [ ] English toggle available
-- [ ] Translate all UI strings
+- [x] Spanish as default language — *`readInitial()` always starts on `es`*
+- [x] English toggle available — *ES/EN toggle in the top bar*
+- [ ] Translate all UI strings — *i18n check passes (2592 entries, no missing keys), but many `title=` tooltips are still English*
 
 ### 5.2 Key Translations
 ```json
