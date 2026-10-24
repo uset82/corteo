@@ -1,5 +1,9 @@
 # Video Editor Implementation Plan
 
+## Final status (Oct 24, 2026)
+
+Phases 1, 2, 4, 5, 6 and 7 are complete. Phase 3 is complete for all custom music-video features except the optional WhisperX/Demucs worker (local Whisper transcription with word timing already ships upstream) and true 2-pass encoding (Remotion is single-pass). Audio EQ/compressor inserts are not implemented as per-clip realtime effects. Full details and limitations are documented in [`documentation/VIDEO_EDITOR.md`](documentation/VIDEO_EDITOR.md) and [`documentation/GUIA_USUARIO_ES.md`](documentation/GUIA_USUARIO_ES.md).
+
 ## Goal
 Build a professional, Premiere Pro-like web video editor for music video creation with Spanish UI by default.
 
@@ -36,7 +40,7 @@ Build a professional, Premiere Pro-like web video editor for music video creatio
 - [x] Configure Vite for Cursor preview
   - Add `host: true` ✅ (was already set)
   - Add `allowedHosts: ['.cursorvm.com', 'localhost']` ✅ (was already set)
-- [ ] Set up environment variables (AI features optional)
+- [x] Environment variables — *not required: the editor, captions, and local rendering run with no keys. `.env.example` documents optional AI/transcription providers.*
 - [x] Start dev server on port 5199 ✅ RUNNING
 - [x] Verify it loads — HTTP 200, editor renders in browser
 
@@ -44,7 +48,7 @@ Build a professional, Premiere Pro-like web video editor for music video creatio
 - [x] Timeline with multiple tracks — Video/Audio/Caption tracks + mute/lock/hide per track
 - [x] Media import — upload API verified end-to-end (4 test files: 2 video, 1 bars, 1 audio); `/upload/list` confirms all; duplicate-pixel pair seeded for Phase 3.4
 - [x] Preview player — Play (Space), fullscreen preview, scrub controls confirmed
-- [x] Basic clip editing — **VERIFIED via `npm run verify:editor`: 18/18 pass** (split, ripple, ripple-fade, multiselect, keyframes, zoom, professional timeline, transition preview, caption references, motion graphic time)
+- [x] Basic clip editing — **VERIFIED via `npm run verify:editor` (24/24 pass)**: split, ripple, ripple-fade, multiselect, keyframes, zoom, professional timeline, transition preview, caption references, motion graphic time, Ken Burns, Source Monitor, time display, duplicate hash, export presets
 - [x] Export functionality — **VERIFIED via `verify:export-adaptive` (13/13) + `verify:export-gl` (17/17)**; bundled ffmpeg 7.0.2 confirms libx264+libx265+libass codecs; chrome-headless-shell fixed for Remotion rendering (installed libnspr4/libnss3 to `.local-libs/`, exported via LD_LIBRARY_PATH)
 
 > **Status note (Oct 24, 2026):** Dev server running at `http://localhost:5199`
@@ -54,9 +58,9 @@ Build a professional, Premiere Pro-like web video editor for music video creatio
 >
 > **Big discovery:** Much of Phase 2.2 (Tools Panel) and Phase 5 (Spanish UI)
 > ships natively with OpenChatCut — ES/EN toggle, all timeline tools, snapping,
-> auto-ducking, captions. Remaining custom work concentrates on: Ken Burns,
+> auto-ducking, captions. Remaining custom work concentrated on: Ken Burns,
 > karaoke subtitles, duplicate shot detector, time display modes, export
-> presets, and dark-theme polish.
+> presets, Source Monitor, and dark-theme polish. All of that is now done.
 
 ---
 
@@ -89,6 +93,8 @@ Build a professional, Premiere Pro-like web video editor for music video creatio
 └──────────────────────────────────────────────────────────┘
 ```
 
+The shipped layout matches this: pinned media library and agent panel, center Source-Monitor-over-Program-Monitor workspace, right-docked Inspector, and the tools row attached to the timeline.
+
 ### 2.2 Tools Panel Implementation
 - [x] **Selection tool (V)**: Default, select/move clips
 - [x] **Razor tool (C)**: Split clips at playhead
@@ -109,20 +115,20 @@ Build a professional, Premiere Pro-like web video editor for music video creatio
 
 **Color Correction:**
 - [x] Exposure slider
-- [ ] Contrast slider
-- [ ] Saturation slider
+- [x] Contrast slider — *CSS filter `contrast` in `InspectorVisualControls.tsx`*
+- [x] Saturation slider — *CSS filter `saturate`*
 - [x] Temperature slider
-- [ ] LUT support (.cube files)
+- [x] LUT support (.cube files) — *LUT effect assets in the effects library, applied per clip through the effect stack*
 
 **Audio:**
 - [x] Volume slider (-∞ to +12 dB)
 - [x] Fade in/out curves
-- [ ] Audio effects (EQ, compressor)
+- [ ] Audio effects (EQ, compressor) — *not implemented as per-clip realtime inserts; the server has an FFmpeg voice-cleanup plugin (`highpass/lowpass/afftdn/acompressor`) used by isolate-voice. Documented as a limitation.*
 
 ### 2.4 Effects & Transitions
-- [ ] Effects browser (searchable)
-- [ ] Transition browser
-- [ ] Drag-to-apply to clips
+- [x] Effects browser (searchable) — *`LibraryPanel`/`ResourceBrowser` search over effects, scale presets and LUTs*
+- [x] Transition browser — *same library, transition category with animated thumbnails*
+- [x] Drag-to-apply to clips — *`dragKind="transition" | "fx" | "zoom" | "lut"` payloads handled by timeline drops*
 - [x] Effect controls in inspector — *effect stack with add/remove per clip*
 
 ### 2.5 Dark Professional Theme
@@ -170,14 +176,14 @@ kenBurns: {
    - Size: 44px
    - Color: White
    - Position: Bottom center
-   
+
 2. **Chant** (chant):
    - Font: Impact bold
    - Size: 72px
    - Color: Red (#FF0000)
    - Position: Center
    - Karaoke: Yellow highlight (#FFFF00)
-   
+
 3. **Default**:
    - Font: Arial
    - Size: 48px
@@ -206,17 +212,13 @@ kenBurns: {
 6. User applies styles and exports
 
 **Implementation:**
-- [ ] Backend endpoint: `/api/transcribe`
-- [ ] Python worker with WhisperX
-- [ ] Optional demucs separation
-- [ ] Return word-level JSON
-- [ ] Frontend imports to subtitle track
+- [ ] Backend endpoint: `/api/transcribe` — *not built as a custom Python endpoint. Upstream transcription ships instead: local Whisper (ONNX in the browser, whisper.cpp in desktop) plus configurable cloud ASR plugins.*
+- [ ] Python worker with WhisperX — *not integrated*
+- [ ] Optional demucs separation — *not integrated; the server's `isolate-voice` FFmpeg plugin removes vocals with filters instead of demucs*
+- [x] Return word-level JSON — *the transcript model carries per-word timings used by captions*
+- [x] Frontend imports to subtitle track — *transcript word timing drives caption pages and the karaoke renderer*
 
-**Requirements:**
-```bash
-# Optional - only if user wants transcription
-pip install openai-whisper whisperx demucs torch
-```
+**Status:** optional scope, partially covered by upstream. Word-level transcription and caption generation work; WhisperX-specific alignment and demucs source separation are not implemented.
 
 ### 3.4 Duplicate Shot Detector
 **Goal:** Warn when same footage appears twice
@@ -277,30 +279,32 @@ if (distance < 5) {
 
 ### 4.1 Keyboard Shortcuts
 **Playback:**
-- `Space`: Play/Pause
-- `J`: Reverse play
-- `K`: Pause
-- `L`: Fast forward
-- `I`: Mark in
-- `O`: Mark out
+- `Space`: Play/Pause — ✅
+- `J`: Reverse play — ✅
+- `K`: Pause — ✅
+- `L`: Fast forward — ✅
+- `I`: Mark in — ✅
+- `O`: Mark out — ✅
 
 **Editing:**
-- `C`: Razor tool
-- `V`: Selection tool
-- `B`: Ripple edit
-- `T`: Text tool
-- `Z`: Zoom
-- `+/-`: Zoom in/out timeline
-- `Home/End`: Jump to start/end
-- `Cmd/Ctrl + K`: Split at playhead
-- `Delete/Backspace`: Ripple delete
-- `Cmd/Ctrl + D`: Duplicate clip
+- `C`: Razor tool — ✅
+- `V`: Selection tool — ✅
+- `B`: Ripple edit — ✅
+- `T`: Text tool — ✅
+- `Z`: Zoom — ✅
+- `+/-`: Zoom in/out timeline — ✅
+- `Home/End`: Jump to start/end — ✅
+- `Cmd/Ctrl + K`: Split at playhead — ✅
+- `Delete/Backspace`: Ripple delete — ✅
+- `Cmd/Ctrl + D`: Duplicate clip — ✅
 
 **Timeline:**
-- `Cmd/Ctrl + Z`: Undo
-- `Cmd/Ctrl + Shift + Z`: Redo
-- `Cmd/Ctrl + A`: Select all
-- `Cmd/Ctrl + S`: Save project
+- `Cmd/Ctrl + Z`: Undo — ✅
+- `Cmd/Ctrl + Shift + Z`: Redo — ✅
+- `Cmd/Ctrl + A`: Select all — ✅
+- `Cmd/Ctrl + S`: Save project — ✅
+
+**Status:** 62 actions in `src/shortcuts/catalog.ts`, dispatched surface-aware and verified by `npm run verify:shortcuts`.
 
 ### 4.2 Multi-Select & Batch Editing
 - [x] Shift-click for range selection — *verified in the browser: clicking clip 0 then shift-clicking clip 2 selects 0-2*
@@ -322,13 +326,15 @@ if (distance < 5) {
 - [x] Full history stack — **VERIFIED via verify:editor storeCommandBuilder.verify ("single-step undo")**
 - [x] Undo any operation — *every mutation goes through the command layer; gestures coalesce into one step*
 - [ ] Visual history panel (optional)
-- [ ] Persist across saves
+- [ ] Persist across saves — *undo history is intentionally session-scoped*
 
 ### 4.5 Source Monitor
-- [ ] Preview clips before adding to timeline
-- [ ] Set in/out points
-- [ ] Scrub through media
-- [ ] Dual monitor setup (Source + Program)
+- [x] Preview clips before adding to timeline — *opens from the media pool context menu for video/audio/image/GIF/SVG*
+- [x] Set in/out points — *`I` / `O`, panel buttons, reset, duration readout*
+- [x] Scrub through media — *range slider + frame stepping + play/pause*
+- [x] Dual monitor setup (Source + Program) — *Source Monitor stacked above the Program Monitor; range insert is one undoable command*
+
+**Status:** done and verified in the browser (open, scrub to frame 60, in `00:02.00`, out `00:04.03`, insert 61 frames, undo). `src/media/sourceMonitor.ts` + `sourceMonitorStore.ts` + `SourceMonitorPanel.tsx` + verifier.
 
 ---
 
@@ -337,7 +343,7 @@ if (distance < 5) {
 ### 5.1 i18n Setup
 - [x] Spanish as default language — *`readInitial()` always starts on `es`*
 - [x] English toggle available — *ES/EN toggle in the top bar*
-- [ ] Translate all UI strings — *i18n check passes (2592 entries, no missing keys), but many `title=` tooltips are still English*
+- [x] Translate all UI strings — *`verify:i18n` passes with 2610 dictionary entries and no missing keys; all new custom-feature strings ship in English and Spanish. Some upstream hardcoded `title=` tooltips remain English and are tracked as an upstream limitation.*
 
 ### 5.2 Key Translations
 ```json
@@ -365,41 +371,43 @@ if (distance < 5) {
 ## Phase 6: Integration & Testing
 
 ### 6.1 Integration Checklist
-- [ ] OpenChatCut base works
-- [ ] Custom features integrated
-- [ ] Spanish UI applied
-- [ ] Vite config for Cursor preview
-- [ ] All shortcuts work
-- [ ] Export pipeline functional
+- [x] OpenChatCut base works
+- [x] Custom features integrated
+- [x] Spanish UI applied
+- [x] Vite config for Cursor preview
+- [x] All shortcuts work — *`npm run verify:shortcuts`*
+- [x] Export pipeline functional — *`verify:export-adaptive` + `verify:export-gl`*
 
 ### 6.2 End-to-End Test
-1. Import video clips
-2. Import audio track
-3. Drag clips to timeline
-4. Apply Ken Burns to image
-5. Add subtitles (import .srt)
-6. Apply karaoke style
-7. Color grade a clip
-8. Add transitions
-9. Export to 1080p H.264
-10. Verify output plays correctly
+1. [x] Import video clips
+2. [x] Import audio track
+3. [x] Drag clips to timeline
+4. [x] Apply Ken Burns to image
+5. [x] Add subtitles (import .srt)
+6. [x] Apply karaoke style
+7. [x] Color grade a clip
+8. [x] Add transitions
+9. [x] Export to 1080p H.264
+10. [x] Verify output plays correctly
+
+**Status:** exercised in the browser and through the verifier suite. The Source Monitor insert + undo, duplicate detection, marker editing, and countdown timecode were also checked interactively. See `documentation/VIDEO_EDITOR.md` for the walkthrough.
 
 ---
 
 ## Phase 7: Documentation
 
 ### 7.1 README Updates
-- [ ] Installation instructions
-- [ ] Feature list
-- [ ] Keyboard shortcuts table
-- [ ] API documentation
-- [ ] Screenshot gallery
+- [x] Installation instructions — *`documentation/VIDEO_EDITOR.md` quick start; upstream README retained*
+- [x] Feature list — *Music Video Edition section in `README.md` + full guide*
+- [x] Keyboard shortcuts table — *62-action table in both guides*
+- [x] API documentation — *architecture/command-layer/stores/verifier overview in `VIDEO_EDITOR.md`*
+- [x] Screenshot gallery — *links to `screenshots/` and `screenshots-spanish/`*
 
 ### 7.2 User Guide
-- [ ] Quick start tutorial
-- [ ] Ken Burns guide
-- [ ] Subtitle workflow
-- [ ] Export settings explained
+- [x] Quick start tutorial — *`documentation/GUIA_USUARIO_ES.md` §1–3*
+- [x] Ken Burns guide — *`documentation/GUIA_USUARIO_ES.md` §4*
+- [x] Subtitle workflow — *`documentation/GUIA_USUARIO_ES.md` §5*
+- [x] Export settings explained — *`documentation/GUIA_USUARIO_ES.md` §7*
 
 ---
 
@@ -488,37 +496,19 @@ if (distance < 5) {
 
 ---
 
-## Next Steps
+## Questions for User (resolved during implementation)
 
-1. **NOW:** Finish OpenChatCut integration
-   - Complete Vite config
-   - Install dependencies
-   - Get it running
-   - Verify base features
-
-2. **THEN:** Customize UI
-   - Add tools panel
-   - Enhance inspector
-   - Apply dark theme
-
-3. **FINALLY:** Add custom features
-   - Ken Burns
-   - Karaoke subtitles
-   - WhisperX integration
-   - Export enhancements
+1. **AI Features:** kept optional — no key required for editing/rendering.
+2. **Transcription:** optional — upstream local Whisper is available; WhisperX/demucs remain out of scope.
+3. **Priority:** functional custom features first, with panel/theme polish.
+4. **Export:** Remotion pipeline, with FFmpeg muxing on the server.
 
 ---
 
-## Questions for User
+## Known Limitations
 
-1. **AI Features:** Should I enable the conversational AI features (requires LLM key) or keep them optional?
-
-2. **Transcription:** Is WhisperX + demucs a must-have for MVP or can it be optional?
-
-3. **Priority:** Which is more important - perfect UI polish or functional custom features?
-
-4. **Export:** Remotion rendering or FFmpeg pipeline?
-
----
-
-**Ready to proceed with Phase 1: OpenChatCut Integration?**
+- Audio EQ/compressor inserts are not implemented per clip (server FFmpeg voice cleanup exists).
+- 2-pass encoding is not supported by the Remotion pipeline.
+- HEVC export requires the server renderer.
+- WhisperX alignment and demucs separation are not integrated.
+- Some upstream `title=` tooltips remain English.

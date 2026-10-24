@@ -63,6 +63,21 @@
 </p>
 
 ---
+
+## Music Video Edition (Spanish-first)
+
+This fork extends OpenChatCut with a Premiere-style music-video workflow and a default Spanish UI:
+
+- **Ken Burns** pan/zoom on stills with sub-pixel smooth preview and export
+- **Karaoke subtitles** (ASS/SRT word timing, balada/grito/relleno presets)
+- **Source Monitor** with in/out points and range insert
+- **Duplicate shot detector** using perceptual hashing
+- **Elapsed/countdown timecode**, markers, multi-select, and a 62-action shortcut catalog
+- **Advanced export**: 720p/1080p/4K, H.264/HEVC, CRF or bitrate, AAC 192 kbps, `+faststart`
+
+New to the editor? Start with the [English guide](documentation/VIDEO_EDITOR.md) or the [Guía de usuario en español](documentation/GUIA_USUARIO_ES.md). Everything below is the upstream OpenChatCut documentation.
+
+---
 ## Sponsors
 
 <p align="center">
