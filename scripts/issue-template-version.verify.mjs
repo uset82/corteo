@@ -4,7 +4,7 @@
 // through v0.2.14). Tie the newest option to package.json so a version bump
 // fails the suite until both forms list it.
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const root = new URL('../', import.meta.url);
 const { version } = JSON.parse(readFileSync(new URL('package.json', root), 'utf8'));
@@ -12,6 +12,11 @@ const FORMS = [
   '.github/ISSUE_TEMPLATE/bug_report_en.yml',
   '.github/ISSUE_TEMPLATE/bug_report_zh.yml',
 ];
+// Forks that do not carry the upstream .github/ folder have no bug forms to keep in sync.
+if (!FORMS.some((path) => existsSync(new URL(path, root)))) {
+  console.log('issue-template-version.verify: no .github/ISSUE_TEMPLATE bug forms in this checkout, skipped');
+  process.exit(0);
+}
 
 /** Options of the `id: version` dropdown, in form order (the forms are flat YAML lists). */
 function versionOptions(path) {

@@ -77,19 +77,23 @@ assert.ok(
 
 // Linux intentionally skips exact frame mapping. At least one required CI job
 // must execute the existing render fixture on a platform that keeps it enabled.
-const workflow = yaml.load(readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8'));
-assert.ok(Object.hasOwn(workflow.on, 'pull_request'), 'verification must run on pull requests');
-const frameSync = workflow.jobs['frame-sync'];
-assert.match(frameSync['runs-on'], /^macos-/);
-assert.equal(frameSync.if, undefined, 'the render gate cannot be optional on PRs');
-assert.equal(frameSync['continue-on-error'], undefined);
-assert.ok(frameSync.steps.some((step) => /^actions\/checkout@/.test(step.uses ?? '')));
-assert.ok(frameSync.steps.some((step) => step.run === 'npm ci --loglevel=error'));
-assert.ok(frameSync.steps.some((step) => step.run === 'brew install ffmpeg'));
-const renderStep = frameSync.steps.find((step) => step.run === 'node src/gl/clipFxExport.verify.mjs');
-assert.ok(renderStep, 'macOS must run the complete effect and transition render fixture');
-assert.equal(renderStep.if, undefined);
-assert.equal(renderStep['continue-on-error'], undefined);
+// Forks without the upstream .github/ CI have no such job to check.
+const ciWorkflowPath = join(root, '.github/workflows/ci.yml');
+if (existsSync(ciWorkflowPath)) {
+  const workflow = yaml.load(readFileSync(ciWorkflowPath, 'utf8'));
+  assert.ok(Object.hasOwn(workflow.on, 'pull_request'), 'verification must run on pull requests');
+  const frameSync = workflow.jobs['frame-sync'];
+  assert.match(frameSync['runs-on'], /^macos-/);
+  assert.equal(frameSync.if, undefined, 'the render gate cannot be optional on PRs');
+  assert.equal(frameSync['continue-on-error'], undefined);
+  assert.ok(frameSync.steps.some((step) => /^actions\/checkout@/.test(step.uses ?? '')));
+  assert.ok(frameSync.steps.some((step) => step.run === 'npm ci --loglevel=error'));
+  assert.ok(frameSync.steps.some((step) => step.run === 'brew install ffmpeg'));
+  const renderStep = frameSync.steps.find((step) => step.run === 'node src/gl/clipFxExport.verify.mjs');
+  assert.ok(renderStep, 'macOS must run the complete effect and transition render fixture');
+  assert.equal(renderStep.if, undefined);
+  assert.equal(renderStep['continue-on-error'], undefined);
+}
 
 // AGENTS.md's 500-line source ceiling applies to new files too. Ask Git for
 // tracked + nonignored untracked paths, excluding local generated scratch files.

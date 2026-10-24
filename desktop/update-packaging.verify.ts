@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 
 interface PublishConfig {
@@ -157,7 +158,13 @@ assert.match(
   'Linux packaging must pass the categorized electron-builder config path',
 );
 
-const workflow = await readFile(new URL('../.github/workflows/desktop.yml', import.meta.url), 'utf8');
+const workflowUrl = new URL('../.github/workflows/desktop.yml', import.meta.url);
+// Forks without the upstream release pipeline (no .github/) still check the packaging config above.
+if (!existsSync(workflowUrl)) {
+  console.log('update-packaging.verify: packaging config OK; no .github/workflows/desktop.yml, release workflow checks skipped');
+  process.exit(0);
+}
+const workflow = await readFile(workflowUrl, 'utf8');
 for (const metadata of ['latest-arm64-mac.yml', 'latest-x64-mac.yml', 'latest-x64.yml', 'latest-x64-linux.yml']) {
   assert.ok(workflow.includes(`release/${metadata}`), `desktop jobs must upload ${metadata}`);
 }
