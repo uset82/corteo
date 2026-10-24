@@ -8,7 +8,7 @@ Two parallel tracks, plus a merge:
 - **Qoder (BQ-1 to BQ-4):** the old name out of the text, the fork's links and the assistant's identity, the chat panel, the last cleanups.
 - **B-9 (Cursor):** merges both.
 
-> **Status, 2026-10-24.** The Qoder and DeepSeek agents were unavailable, so the WorkBuddy agent executed all eight cards in `~/corteo-workbuddy`. What is done, and what is still open, is in `docs/plans/PROGRESS.md` › "Brand track · DeepSeek (BD)" and "Brand track · Qoder (BQ)". This file stays the binding brief for the work that is left and for B-9.
+> **Status, 2026-10-24.** The Qoder and DeepSeek agents were unavailable, so the WorkBuddy agent executed all eight cards in `~/corteo-workbuddy` and pushed them on its harness branch, `harness-workbuddy`. B-9 merged them the same day. The record is in `docs/plans/PROGRESS.md` › B-9, "Brand track · DeepSeek (BD)" and "Brand track · Qoder (BQ)". This file stays the brief for any later work on the name and the look.
 
 ## Defaults
 
@@ -120,9 +120,11 @@ Remove the decorative conic-gradient account circle in `src/components/TopBar.ts
 
 ## B-9 · Merge the brand tracks (Cursor agent only)
 
-1. Read both progress tables (`git show github/brand-deepseek:docs/plans/PROGRESS.md`, `git show github/brand-qoder:docs/plans/PROGRESS.md`) and look at the screenshots.
+Done on 2026-10-24. The `brand-deepseek` and `brand-qoder` branches this card expected were never created: all eight cards arrived on `harness-workbuddy` (`1fabc26`), so steps 1 and 3 became reading that branch's BD and BQ tables and one fast-forward. The card as written:
+
+1. Read both progress tables and look at the screenshots.
 2. Review both diffs against the brief and the AI-tells list.
-3. Merge `brand-deepseek`, then `brand-qoder` once H-9 is done, keeping both sides of the expected conflicts.
+3. Merge the brand work into `cursor/video-editor-mvp-d191`, keeping both sides of the expected conflicts.
 4. Rewrite the README and AGENTS prose: the product is Claudia; corteo stays the repository and command name; the two font licences go into the credits.
 5. `npx tsc -b`, `npm run lint`, `npm test`, `npm run build`. Check the projects page and the chat at 1440 and 390 px wide, push, and ask Carlos to publish.
 

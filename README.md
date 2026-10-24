@@ -1,27 +1,29 @@
-# corteo
+# Claudia
 
-**El brazo de Claudia para editar videoclips.**
+**El editor de videoclips de Claudia.**
 
-corteo es el editor de video de Claudia, la asistente de IA de Carlos. Es un fork de [OpenChatCut](https://github.com/0xsline/OpenChatCut) con una línea de tiempo al estilo de Premiere, corre en WSL en http://localhost:5199 y está pensado para que Claudia lo maneje por MCP.
+Claudia es un editor de video en español para hacer videoclips. Es un fork de [OpenChatCut](https://github.com/0xsline/OpenChatCut) con una línea de tiempo al estilo de Premiere, corre en WSL en http://localhost:5199 y está pensado para que Claudia, la asistente de IA de Carlos, lo maneje por MCP. El repositorio, sus carpetas y el comando que lo arranca se siguen llamando **corteo**.
 
 ## Qué es y por qué
 
-[Claudia](https://claudia.gallery) es una popstar de IA abierta: un personaje que cualquiera puede usar. Para Carlos es además su asistente, un bot de Grok. Claudia puede pensar un videoclip y generar material con Grok, pero para editarlo necesita un brazo: eso es corteo.
+[Claudia](https://claudia.gallery) es una popstar de IA abierta: un personaje que cualquiera puede usar. Para Carlos es además su asistente, un bot de Grok. Claudia puede pensar un videoclip y generar material con Grok, pero para editarlo necesita un brazo: este editor, que por eso lleva su nombre.
 
 El reparto es simple:
 
 - **Claudia decide**: qué imagen acompaña cada verso, dónde entra el coro, cómo se mueve cada plano.
-- **corteo ejecuta**: importa, corta, anima, subtitula y exporta en una línea de tiempo real, que Carlos puede revisar y retocar a mano.
+- **El editor ejecuta**: importa, corta, anima, subtitula y exporta en una línea de tiempo real, que Carlos puede revisar y retocar a mano.
 
 El primer objetivo son los videoclips de Carlos, como el de «Perú», su canción de protesta.
 
 ## Estado
 
-El estado de cada tarea está en [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md), y los planes completos en [`docs/plans/01-editor-claudia.md`](docs/plans/01-editor-claudia.md) (el editor y la conexión con Claudia), [`docs/plans/02-claudia-escucha.md`](docs/plans/02-claudia-escucha.md) (Claudia escucha la canción) y [`docs/plans/03-deepseek-harness.md`](docs/plans/03-deepseek-harness.md) (modelos gratis para el chat del editor). Si este README y `PROGRESS.md` no coinciden, vale `PROGRESS.md`.
+El estado de cada tarea está en [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md), y los planes completos en [`docs/plans/01-editor-claudia.md`](docs/plans/01-editor-claudia.md) (el editor y la conexión con Claudia), [`docs/plans/02-claudia-escucha.md`](docs/plans/02-claudia-escucha.md) (Claudia escucha la canción), [`docs/plans/03-deepseek-harness.md`](docs/plans/03-deepseek-harness.md) (modelos gratis para el chat del editor) y [`docs/plans/04-claudia-brand.md`](docs/plans/04-claudia-brand.md) (el nombre y la imagen de Claudia). Si este README y `PROGRESS.md` no coinciden, vale `PROGRESS.md`.
 
 ### Lo que funciona hoy
 
-Todo viene de OpenChatCut:
+El nombre y la imagen son de Claudia: la piel «Claudia» por defecto, con el color y las tipografías de claudia.gallery; la página de proyectos, la barra superior y el panel de chat con la nueva cabecera; el título de la pestaña; los nombres de las exportaciones a Final Cut y CapCut, y la página para subir medios desde el móvil.
+
+Las funciones vienen todas de OpenChatCut:
 
 - Línea de tiempo multipista con herramientas y atajos al estilo de Premiere (V, B, N, U, P, Q/W, I/O, J/K/L).
 - Fotogramas clave con curvas de aceleración, que se ven igual en la vista previa y en el video exportado.
@@ -33,7 +35,7 @@ Todo viene de OpenChatCut:
 
 Con dos salvedades:
 
-- La interfaz arranca en español, pero solo unos 100 de sus 2.520 textos están traducidos; el resto sale en inglés.
+- La interfaz arranca en español, pero solo unos 200 de sus 2.520 textos están traducidos: la página de proyectos, la barra superior y lo primero que se ve del chat. El resto sale en inglés.
 - OpenChatCut trae su propio chat de IA y funciones de generación, que piden claves de API. Siguen ahí. El plan apaga la generación y los modelos de pago; el chat se queda, pero solo con modelos gratis a través de DeepSeek Harness, o con Ollama y LM Studio en tu PC.
 
 ### Lo que falta
@@ -42,8 +44,7 @@ Con dos salvedades:
 |---|---|
 | Que el servidor tenga memoria suficiente sin `NODE_OPTIONS` | P0-2 |
 | Conectar a Claudia desde fuera de tu PC: `npm run start:claudia`, token fijo, túnel, tarjeta «Conectar Claudia» y una pestaña del editor sin pantalla para exportar por MCP | P0-3, P1-3 a P1-5 |
-| Claudia en el chat del editor con modelos gratis a través de [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) y el plugin [Our Free Model](https://github.com/Ebony-Vinyl/dsh-our-free-model), todos en el menú de modelos; el chat de DeepSeek Harness también podrá editar en corteo por MCP | HQ-1 a HQ-5, HW-1 a HW-5, H-9 |
-| Llamarse Claudia y tener la identidad de claudia.gallery: tipografía de marca, piel por defecto, tarjetas de proyecto sin marco y chat con la nueva cabecera | BD-1 a BD-4, BQ-1 a BQ-4, B-9 |
+| Claudia en el chat del editor con modelos gratis a través de [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) y el plugin [Our Free Model](https://github.com/Ebony-Vinyl/dsh-our-free-model), todos en el menú de modelos; el chat de DeepSeek Harness también podrá manejar el editor por MCP | HQ-1 a HQ-5, HW-1 a HW-5, H-9 |
 | Apagar la generación de imágenes, voz, video y música dentro del editor; skill `videoclip-musical` para Claudia | P1-1, P1-2, P1-6 |
 | «Claudia escucha la canción»: ritmo, secciones, emoción y coros, para que los efectos y movimientos sigan la música | L-01 a L-13 |
 | Ken Burns, subtítulos de verso y coro, importar ASS/VTT, detector de tomas repetidas, exportación HEVC, cuenta regresiva, atajos de Premiere | P2-1 a P2-6 |
@@ -75,7 +76,7 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
 source ~/.bashrc
 ```
 
-**2. corteo**
+**2. El repositorio, corteo**
 
 Clónalo dentro de Linux (`~/corteo`), no en `/mnt/c`: allí es mucho más lento.
 
@@ -128,7 +129,7 @@ Desde entonces, escribir `corteo` en cualquier terminal de WSL arranca el editor
 ### Conectar un cliente MCP
 
 - Dirección: `http://localhost:5199/api/external-mcp/mcp`, con el encabezado `Authorization: Bearer <token>`.
-- Token: en la pantalla de inicio, el botón de arriba a la derecha «Conexión Agent Externa (MCP)» (el nombre aparece al pasar el ratón), o el archivo `mcp-token` de la carpeta de tu perfil.
+- Token: en la página de proyectos, el botón de arriba a la derecha «Agentes externos (MCP)» (el nombre aparece al pasar el ratón), o el archivo `mcp-token` de la carpeta de tu perfil.
 
 Hoy esto sirve para clientes que corren en el mismo PC. Claudia no corre en tu PC: para llegar al editor necesita un túnel (Cloudflare Tunnel o Tailscale Funnel), que el editor todavía no acepta, y la tarjeta «Conectar Claudia». Son las tareas P1-3 y P1-4.
 
@@ -170,21 +171,22 @@ Las reglas, los comandos y el ciclo de trabajo están en [`AGENTS.md`](AGENTS.md
 
 ## In English
 
-corteo is the video editor of Claudia, Carlos's AI assistant: the open AI pop star from [claudia.gallery](https://claudia.gallery), running as a Grok bot. It's a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut) with a Premiere-style timeline that runs in WSL at http://localhost:5199. Claudia decides; corteo edits and exports, on a real timeline Carlos can still adjust by hand.
+Claudia is a Spanish music-video editor, named after the one who drives it over MCP: Claudia, Carlos's AI assistant, the open AI pop star from [claudia.gallery](https://claudia.gallery), running as a Grok bot. The repository, its folders and the command that starts it are still called corteo. It's a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut) with a Premiere-style timeline that runs in WSL at http://localhost:5199. Claudia decides; the editor edits and exports, on a real timeline Carlos can still adjust by hand.
 
-What works today is upstream OpenChatCut: the multitrack timeline, keyframes, word-level captions, local Whisper transcription, 4K export, and an MCP server for clients on the same machine. Most of the interface is still in English. Connecting Claudia from outside the PC, free models for the built-in chat through DeepSeek Harness, song listening, platform import, version comparison and the full Spanish UI are planned; [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md) tracks them.
+The features that work today are upstream OpenChatCut's: the multitrack timeline, keyframes, word-level captions, local Whisper transcription, 4K export, and an MCP server for clients on the same machine. The name and the look are Claudia's, from claudia.gallery. The projects page, the top bar and the chat's first view are in Spanish; most of the rest is still in English. Connecting Claudia from outside the PC, free models for the built-in chat through DeepSeek Harness, song listening, platform import, version comparison and the full Spanish UI are planned; [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md) tracks them.
 
 Quick start (WSL, Node 24 via nvm): `npm install`, then `NODE_OPTIONS=--max-old-space-size=6144 npm run dev`, and open http://localhost:5199.
 
 ## Créditos y licencia
 
-- corteo es un fork de [OpenChatCut](https://github.com/0xsline/OpenChatCut), creado por OpenChatCut Contributors. OpenChatCut se apoya a su vez en [Remotion](https://www.remotion.dev/), el [Model Context Protocol](https://modelcontextprotocol.io/), [Vercel AI SDK](https://ai-sdk.dev/) y las skills de [ChatCut-Inc/agent-plugin](https://github.com/ChatCut-Inc/agent-plugin) (ver [`src/agent/skills/NOTICE.md`](src/agent/skills/NOTICE.md)).
+- Claudia (este repositorio, corteo) es un fork de [OpenChatCut](https://github.com/0xsline/OpenChatCut), creado por OpenChatCut Contributors. OpenChatCut se apoya a su vez en [Remotion](https://www.remotion.dev/), el [Model Context Protocol](https://modelcontextprotocol.io/), [Vercel AI SDK](https://ai-sdk.dev/) y las skills de [ChatCut-Inc/agent-plugin](https://github.com/ChatCut-Inc/agent-plugin) (ver [`src/agent/skills/NOTICE.md`](src/agent/skills/NOTICE.md)).
 - Claudia es un personaje abierto de [claudia.gallery](https://claudia.gallery).
+- Las dos tipografías de marca están en `public/fonts/claudia/` con sus licencias: TeX Gyre Heros, del GUST e-foundry, en el logotipo, bajo la [GUST Font License](public/fonts/claudia/GUST-FONT-LICENSE.txt); y DINish Condensed, de The DINish Project Authors, en los títulos, bajo la [SIL Open Font License 1.1](public/fonts/claudia/OFL-DINish.txt).
 - [`README_ZH.md`](README_ZH.md) es el README original de OpenChatCut, en chino.
 
-OpenChatCut se publica bajo la [GNU Affero General Public License v3.0 o posterior](LICENSE) (AGPL-3.0-or-later), y corteo, como obra derivada, también. En resumen (vale el texto de [`LICENSE`](LICENSE)):
+OpenChatCut se publica bajo la [GNU Affero General Public License v3.0 o posterior](LICENSE) (AGPL-3.0-or-later), y este editor, como obra derivada, también. En resumen (vale el texto de [`LICENSE`](LICENSE)):
 
-- Puedes usar, estudiar, modificar y compartir corteo.
+- Puedes usar, estudiar, modificar y compartir este editor.
 - Si lo compartes, con o sin cambios, o dejas que otras personas usen por la red una versión modificada (por ejemplo, como servicio web), tienes que ofrecerles su código fuente bajo la misma licencia.
 - Se ofrece sin ninguna garantía.
 
