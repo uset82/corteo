@@ -43,6 +43,13 @@ async function fetchDicts(locale: Locale): Promise<LocaleDicts> {
     ]);
     return { ui: en.EN, uiFallback: EMPTY, data: enData.default, dataFallback: EMPTY };
   }
+  if (locale === 'es') {
+    // Spanish UI with English fallback, English data names
+    const [es, en, enData] = await Promise.all([
+      import('./dict/es'), import('./dict/en'), import('./dict/en/templates-data'),
+    ]);
+    return { ui: es.default, uiFallback: en.EN, data: enData.default, dataFallback: EMPTY };
+  }
   if (locale === 'ru') {
     // Russian UI has no English fallback (untranslated keys stay Chinese), but
     // its data names come from the English table, matching tData() before.
