@@ -39,7 +39,7 @@ These three files are the only plan. Any other plan, status report or TODO list 
 - `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` hides the long, harmless list of "import without file extension" warnings at startup.
 - Run long-lived processes (dev server, editor host) in their own terminal or tmux session, never in the shell you work in.
 - WebGL: on Linux the renderer uses the GPU (`angle-egl`). Without a usable GPU (common in WSL and VMs), server exports silently lose WebGL effects and transitions, and three render tests fail with "WebGL2 not available". Then set `CC_RENDER_GL=swangle` (software WebGL) for the dev server and for `npm test`.
-- Exports, render tests and `npm run editor-host` (P1-5) start a headless Chromium. If it fails with `error while loading shared libraries`, WSL is missing system libraries. Installing them needs `sudo`: record a blocker asking the user to run `sudo npx playwright install-deps chromium` once, and continue with tasks that don't render.
+- Exports, render tests and `npm run editor-host` (P1-5) start a headless Chromium. If it fails with `error while loading shared libraries`, WSL is missing system libraries. Installing them needs `sudo`: record a blocker asking the user to run `npx playwright install-deps chromium` once (it asks for the password itself; `sudo npx` fails under nvm because sudo drops nvm from `PATH`), and continue with tasks that don't render.
 
 ## Commands
 | Command | What it does |
@@ -65,7 +65,7 @@ These three files are the only plan. Any other plan, status report or TODO list 
 3. Implement the smallest complete version that meets "Done when".
 4. Check: `npx tsc -b`, `npm run lint`, `npm run verify:affected`, plus the card's Verify commands. Fix what you broke.
 5. Try it for real when the card asks: in the browser at http://localhost:5199 and/or through MCP (smoke test below).
-6. Set the task to `done` in `PROGRESS.md` (add output paths or numbers worth keeping) and commit the task's files together with `PROGRESS.md`, with the task ID first in the message, for example `P1-3: accept OPENCHATCUT_ALLOWED_HOSTS in allowedHosts`. A big task may take a few commits.
+6. Set the task to `done` in `PROGRESS.md` (add output paths or numbers worth keeping) and commit the task's files together with `PROGRESS.md`, with the task ID first in the message, for example `P1-3: accept OPENCHATCUT_ALLOWED_HOSTS in allowedHosts`. A big task may take a few commits. If the task changes what works or how to run the editor, update the "Estado" section (and the run steps) of `README.md` in the same commit: it is in Spanish and must never claim a feature that isn't wired.
 7. After every 5 finished tasks: `npm test` and `npm run build`, push (see Git), report (see Reporting) and end the session. Long sessions lose track; the next session starts fresh from `PROGRESS.md`.
 
 ## When something fails

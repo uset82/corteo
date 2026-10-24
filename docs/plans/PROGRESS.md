@@ -11,6 +11,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 - Baseline checks on this commit, on a 4-core Linux VM without a GPU: `npx tsc -b` passes, `npm run lint` passes (warnings only, all from upstream), `npm run verify:i18n` passes, `npm run build` passes (the "chunks larger than 2500 kB" warning is upstream's), and `CC_RENDER_GL=swangle npm test` passes: exit 0, 197 test segments plus the pre- and post-test chains, about 6 minutes. Without `CC_RENDER_GL=swangle` on a machine without GPU WebGL2, three render tests fail with "WebGL2 not available" (`remotion/video-decoder-render.verify.mjs`, `src/gl/clipFxExport.verify.mjs`, `src/gl/clipFxExport.offthread.verify.mjs`); that is the environment, not a code failure.
 - If a test fails on your machine before you have changed anything, it is a baseline difference: record it under Blockers with its output, and don't count it against your task.
 - Grok's attempt: Grok worked in `~/corteo` from the old `IMPLEMENTATION_PLAN.md` (a first-draft plan with Python WhisperX/demucs, Zustand, i18next and a UI redesign) and got stuck. That file is deleted. None of Grok's work is on this branch: the user parks it on a branch `grok-wip` for review. Do not merge, cherry-pick or build on `grok-wip`; if something there is worth keeping, it comes back as a task card here.
+- Qoder and WorkBuddy's attempt: the GitHub fork's branch `cursor/video-editor-mvp-d191` (https://github.com/uset82/corteo, at `56676ff` on 2026-10-24) was built from `1d00e0a` with the old `IMPLEMENTATION_PLAN.md`. It has first versions of P2-1 to P2-5 plus extras, with known bugs found in a review on 2026-10-24: duplicate detection samples the middle of the whole file, ASS import ignores `\kf` and drops text before the first tag, HEVC files are tagged `hev1` instead of `hvc1`, the cool white balance rotates every hue, the tool catalog is stale so `npm run build` fails, and three files are over 500 lines. It is not merged: the user decides whether it comes in. Until then, the same rule as `grok-wip` applies.
 
 ## Task table
 
@@ -85,8 +86,10 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 
 ### P0-4 · Spanish README
 - Plan: Plan 1 › Phase 0.
-- Files: `README.md` (replace the upstream English README; leave `README_ZH.md` alone).
+- State: `README.md` was rewritten in Spanish on 2026-10-24, before P0-3 (what corteo is, status, requirements, install, the `corteo` alias, data and token locations, syncing Cursor's branch to GitHub, credits and AGPL). Don't replace it: extend it.
+- Files: `README.md` (leave `README_ZH.md` alone).
 - Do: in Spanish: what corteo is (a fork of OpenChatCut for music videos, driven by Claudia over MCP), requirements (WSL/Linux, Node 24, ffmpeg comes with npm), `npm install`, `npm run dev`, `npm run start:claudia`, how to connect Claudia (URL, token, `.env.claudia`), where data lives (`~/.openchatcut`), AGPL v3 note with a link to upstream OpenChatCut (https://github.com/0xsline/OpenChatCut).
+- Remaining: once P0-3 and P1-4 are done, add `npm run start:claudia`, `.env.claudia` and the steps to connect Claudia, and update its "Estado" section.
 - Done when: a new user can go from clone to the running editor and a connected Claudia with only the README.
 
 ### P1-1 · Providers off: server block
