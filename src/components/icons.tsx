@@ -140,27 +140,23 @@ export function BrandMark({ size = 16 }: { size?: number }) {
   );
 }
 
-/** OpenChatCut word mark: OPEN reverse white badge + Chat Cut solid word mark. */
+/** Claudia word mark. */
 export function OpenChatCutWordmark({ width = 126 }: { width?: number }) {
   return (
     <svg
-      aria-label="OpenChatCut"
+      aria-label="Claudia"
       role="img"
       width={width}
       height={width / 4}
       viewBox="0 0 504 126"
       style={{ display: 'block', flexShrink: 0 }}
     >
-      <rect x="0" y="13" width="166" height="92" rx="14" fill="currentColor" />
       <text
         fontFamily="Inter, Geist, system-ui, sans-serif"
         dominantBaseline="alphabetic"
       >
-        <tspan x="83" y="82" textAnchor="middle" fill="var(--cc-panel)" fontSize="58" fontWeight="850" letterSpacing="-0.045em">
-          OPEN
-        </tspan>
-        <tspan x="188" y="79" fill="currentColor" fontSize="62" fontWeight="720" letterSpacing="-0.045em">
-          Chat Cut
+        <tspan x="252" y="87" textAnchor="middle" fill="currentColor" fontSize="82" fontWeight="750" letterSpacing="-0.045em">
+          Claudia
         </tspan>
       </text>
     </svg>
