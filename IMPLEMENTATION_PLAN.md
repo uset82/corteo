@@ -2,7 +2,7 @@
 
 ## Final status (Oct 24, 2026)
 
-Phases 1, 2, 4, 5, 6 and 7 are complete. Phase 3 is complete for all custom music-video features except the optional WhisperX/Demucs worker (local Whisper transcription with word timing already ships upstream) and true 2-pass encoding (Remotion is single-pass). Audio EQ/compressor inserts are not implemented as per-clip realtime effects. Full details and limitations are documented in [`documentation/VIDEO_EDITOR.md`](documentation/VIDEO_EDITOR.md) and [`documentation/GUIA_USUARIO_ES.md`](documentation/GUIA_USUARIO_ES.md).
+Phases 1, 2, 4, 5, 6 and 7 are complete. Phase 3 is complete for all custom music-video features except the optional WhisperX/Demucs worker (local Whisper transcription with word timing already ships upstream). 2-pass encoding ships as a post-render FFmpeg pass pair. Audio EQ/compressor inserts are not implemented as per-clip realtime effects. Full details and limitations are documented in [`documentation/VIDEO_EDITOR.md`](documentation/VIDEO_EDITOR.md) and [`documentation/GUIA_USUARIO_ES.md`](documentation/GUIA_USUARIO_ES.md).
 
 ## Goal
 Build a professional, Premiere Pro-like web video editor for music video creation with Spanish UI by default.
@@ -263,11 +263,11 @@ if (distance < 5) {
 
 **Settings:**
 - [x] CRF quality (18-28) — *`crf` validated server-side, mutually exclusive with bitrate*
-- [ ] 2-pass encoding — *not implemented; Remotion renders single-pass CRF or bitrate*
+- [x] 2-pass encoding — *post-render FFmpeg pass pair (`src/export/twoPass.ts`, `encodeTwoPass`): Remotion renders a CRF-18 intermediate, then `libx264`/`libx265` encodes it twice against the bitrate target. H.264/H.265 + bitrate modes only; folds the fps filter into the pass chain; opt-in per export*
 - [x] +faststart flag — *mux paths pass `-movflags +faststart`*
 - [x] Audio: AAC 192kbps — *AAC encoder-delay path, audio bitrate presets*
 
-**Status:** done except 2-pass. Estimated output size (`exportPresets.ts`) is shown in the export summary.
+**Status:** done. Estimated output size (`exportPresets.ts`) is shown in the export summary.
 
 **Backend:**
 - Use Remotion's rendering engine
@@ -508,7 +508,7 @@ if (distance < 5) {
 ## Known Limitations
 
 - Audio EQ/compressor inserts are not implemented per clip (server FFmpeg voice cleanup exists).
-- 2-pass encoding is not supported by the Remotion pipeline.
+- 2-pass encoding is a post-render FFmpeg step, so it costs a full extra encode and needs a bitrate target; Remotion itself still renders single-pass.
 - HEVC export requires the server renderer.
 - WhisperX alignment and demucs separation are not integrated.
 - Some upstream `title=` tooltips remain English.

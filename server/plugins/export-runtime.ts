@@ -5,6 +5,7 @@ import { ffmpegBin } from '../media-binaries.ts';
 import { ffmpegThreadArgs, spawnMediaProcess } from '../media-process.ts';
 import { isSafeUploadName } from '../media-dir.ts';
 import { H264_HARDWARE_MAX_DIMENSION } from '../../src/export/mediaSettings.ts';
+import { twoPassArgs, type TwoPassCodec } from '../../src/export/twoPass.ts';
 import {
   h264EncoderAttempts,
   h264EncoderFallbackReason,
@@ -228,7 +229,7 @@ export async function withExportPermit<T>(
   }
 }
 
-function runFfmpeg(args: string[], signal?: AbortSignal): Promise<void> {
+function runFfmpeg(args: string[], signal?: AbortSignal, label = 'fps retime'): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawnMediaProcess(ffmpegBin(), [...ffmpegThreadArgs(), ...args], { stdio: ['ignore', 'ignore', 'pipe'], signal });
     let stderr = '';
@@ -241,7 +242,7 @@ function runFfmpeg(args: string[], signal?: AbortSignal): Promise<void> {
       if (error) reject(error); else resolve();
     };
     const timer = setTimeout(() => {
-      timeoutError = new Error('ffmpeg fps retime timed out');
+      timeoutError = new Error(`ffmpeg ${label} timed out`);
       child.kill('SIGKILL');
     }, FFMPEG_TIMEOUT_MS);
     child.stderr?.on('data', (chunk: Buffer) => {
@@ -251,7 +252,7 @@ function runFfmpeg(args: string[], signal?: AbortSignal): Promise<void> {
     child.once('error', (error) => finish(error));
     child.once('close', (code) => finish(timeoutError ?? (code === 0
       ? undefined
-      : new Error(`ffmpeg fps retime failed (${code}): ${stderr.slice(-600)}`))));
+      : new Error(`ffmpeg ${label} failed (${code}): ${stderr.slice(-600)}`))));
   });
 }
 
@@ -370,6 +371,56 @@ async function retimeH264(
     }
   }
   throw lastError instanceof Error ? lastError : new Error('ffmpeg fps retime failed');
+}
+
+/**
+ * ffmpeg's two-pass statistics files. ffmpeg writes `<passlogfile>-0.log` plus a
+ * `.mbtree` sidecar; both are scratch and must not outlive the encode.
+ */
+export function twoPassLogPaths(passLogFile: string): string[] {
+  return [`${passLogFile}-0.log`, `${passLogFile}-0.log.mbtree`];
+}
+
+export interface EncodeTwoPassOptions {
+  input: string;
+  output: string;
+  codec: TwoPassCodec;
+  /** Target video bitrate in bits per second. */
+  bitrate: number;
+  /** Shared stats prefix; must be identical across the two passes. */
+  passLogFile: string;
+  /** Filters applied to both passes (e.g. fps resampling). */
+  filters?: readonly string[];
+  signal?: AbortSignal;
+}
+
+/**
+ * Encode `input` to `output` in two passes at a fixed bitrate. Pass 1 only
+ * collects statistics; pass 2 writes the file and copies the already-encoded
+ * audio through untouched.
+ */
+export async function encodeTwoPass(options: EncodeTwoPassOptions): Promise<void> {
+  await unlink(options.output).catch(() => {});
+  const shared = {
+    input: options.input,
+    output: options.output,
+    codec: options.codec,
+    bitrate: options.bitrate,
+    passLogFile: options.passLogFile,
+    ...(options.filters?.length ? { filters: options.filters } : {}),
+  };
+  try {
+    await runFfmpeg(twoPassArgs({ ...shared, pass: 1 }), options.signal, 'two-pass first pass');
+    await runFfmpeg(twoPassArgs({ ...shared, pass: 2 }), options.signal, 'two-pass second pass');
+  } catch (error) {
+    await unlink(options.output).catch(() => {});
+    throw error;
+  }
+}
+
+/** Best-effort removal of the two-pass statistics scratch files. */
+export async function removeTwoPassLogs(passLogFile: string): Promise<void> {
+  await Promise.all(twoPassLogPaths(passLogFile).map((path) => unlink(path).catch(() => {})));
 }
 
 export function finalH264EncoderOutcome(

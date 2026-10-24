@@ -89,6 +89,11 @@ export interface ExportVideoSettings {
   setCustomBitrateMbps: Dispatch<SetStateAction<number>>;
   crf: number;
   setCrf: Dispatch<SetStateAction<number>>;
+  /** Encode twice against the bitrate target instead of once. */
+  twoPass: boolean;
+  setTwoPass: Dispatch<SetStateAction<boolean>>;
+  /** Two-pass needs a bitrate target and an encoder that has a second pass. */
+  twoPassAvailable: boolean;
   audioBitrateKbps: ExportAudioBitrate;
   setAudioBitrateKbps: Dispatch<SetStateAction<ExportAudioBitrate>>;
   dimensions: { width: number; height: number };
@@ -157,6 +162,7 @@ function useVideoSettings(state: TimelineState, qualityMode: QualityMode): Expor
   const [bitrateMode, setBitrateMode] = useState<VideoBitrateMode>(() => defaultBitrateModeForQuality(qualityMode));
   const [customBitrateMbps, setCustomBitrateMbps] = useState(DEFAULT_CUSTOM_BITRATE_MBPS);
   const [crf, setCrf] = useState<number>(CRF_RANGE.default);
+  const [twoPass, setTwoPass] = useState(false);
   const [audioBitrateKbps, setAudioBitrateKbps] = useState<ExportAudioBitrate>(192);
   // Re-apply quality defaults when the user toggles balanced ↔ master.
   useEffect(() => {
@@ -176,11 +182,20 @@ function useVideoSettings(state: TimelineState, qualityMode: QualityMode): Expor
   const resolvedBitrate = resolveVideoBitrateBps(bitrateInput);
   // ProRes is mezzanine: remotion ignores bitrate; do not send a false target.
   const requestedBitrate = codec === 'prores' ? undefined : requestedVideoBitrateBps(bitrateInput);
+  // Two-pass only exists where ffmpeg has a second pass AND a bitrate to hit:
+  // VP8/ProRes have no two-pass path, and CRF/auto modes carry no target.
+  const twoPassAvailable = (codec === 'h264' || codec === 'hevc') && requestedBitrate !== undefined;
+  // Switching away from a bitrate mode must not leave a stale two-pass flag on
+  // a request the server would reject.
+  useEffect(() => {
+    if (!twoPassAvailable) setTwoPass(false);
+  }, [twoPassAvailable]);
   const durationSeconds = timelineDuration(state) / (state.fps || 30);
   const estimatedSize = estimateFileSize(codec === 'prores' ? undefined : resolvedBitrate, durationSeconds);
   return {
     codec, setCodec, resolution, setResolution, fps, setFps, bitrateMode, setBitrateMode,
     customBitrateMbps, setCustomBitrateMbps, crf, setCrf,
+    twoPass: twoPass && twoPassAvailable, setTwoPass, twoPassAvailable,
     audioBitrateKbps, setAudioBitrateKbps, dimensions,
     resolvedBitrate,
     requestedBitrate,
@@ -238,6 +253,7 @@ export function useExportDialogModel({ state, project, projectId, projectName, e
     state, project, timelineId: project.activeTimelineId, projectId, projectName, base, tab, codec: video.codec, resolution: video.resolution,
     fps: video.fps, requestedVideoBitrate: video.requestedBitrate,
     videoCrf: video.codec !== 'prores' && video.bitrateMode === 'crf' ? video.crf : undefined,
+    videoTwoPass: video.twoPass,
     videoAudioBitrateKbps: video.codec === 'prores' ? undefined : video.audioBitrateKbps,
     subtitleFormat: subtitles.format, subtitleCaptions: subtitles.captions,
     nleFormat, includeMg: includeAvailableMg, mgItems, onClose,

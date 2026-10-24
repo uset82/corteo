@@ -12,11 +12,15 @@ interface ExportBitrateControlProps {
   crf: number;
   /** VP8/ProRes have no CRF path in the server renderer. */
   allowCrf: boolean;
+  /** H.264/H.265 with a bitrate target: ffmpeg can run a real second pass. */
+  allowTwoPass: boolean;
+  twoPass: boolean;
   resolvedBps: number;
   disabled: boolean;
   onModeChange: (mode: VideoBitrateMode) => void;
   onCustomMbpsChange: (value: number) => void;
   onCrfChange: (value: number) => void;
+  onTwoPassChange: (enabled: boolean) => void;
 }
 
 const MODES: Array<{ value: VideoBitrateMode; label: string }> = [
@@ -33,11 +37,14 @@ export function ExportBitrateControl({
   customMbps,
   crf,
   allowCrf,
+  allowTwoPass,
+  twoPass,
   resolvedBps,
   disabled,
   onModeChange,
   onCustomMbpsChange,
   onCrfChange,
+  onTwoPassChange,
 }: ExportBitrateControlProps) {
   const t = useT();
   const modes = allowCrf ? MODES : MODES.filter((entry) => entry.value !== 'crf');
@@ -87,6 +94,22 @@ export function ExportBitrateControl({
           ? t('CRF 18–28，数值越小画质越高、文件越大；仅在本机渲染生效。')
           : t('预计视频码率：{value} Mbps', { value: (resolvedBps / 1_000_000).toFixed(1) })}
       </small>
+      {allowTwoPass && (
+        <label className="cc-export-twopass">
+          <input
+            type="checkbox"
+            checked={twoPass}
+            disabled={disabled}
+            onChange={(event) => onTwoPassChange(event.target.checked)}
+          />
+          <span>{t('双遍编码')}</span>
+        </label>
+      )}
+      {allowTwoPass && twoPass && (
+        <small className="cc-export-twopass-note">
+          {t('按目标码率编码两遍，码率分布更均匀、体积更可控；导出时间约翻倍，仅本机渲染生效。')}
+        </small>
+      )}
     </div>
   );
 }

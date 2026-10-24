@@ -108,7 +108,7 @@ function submissionBody(
   codec: ExportCodec,
   operationId: string,
 ) {
-  const { state, project, timelineId, base, resolution, fps, requestedVideoBitrate, videoCrf, videoAudioBitrateKbps } = context.options;
+  const { state, project, timelineId, base, resolution, fps, requestedVideoBitrate, videoCrf, videoTwoPass, videoAudioBitrateKbps } = context.options;
   const body: Record<string, unknown> = {
     state, format, codec, name: base, operationId,
     ...(project && timelineId ? { project, timelineId } : {}),
@@ -118,6 +118,8 @@ function submissionBody(
   if (fps !== state.fps) body.fps = fps;
   if (requestedVideoBitrate !== undefined) body.videoBitrate = requestedVideoBitrate;
   if (videoCrf !== undefined) body.crf = videoCrf;
+  // Only meaningful alongside a bitrate target; the server rejects the rest.
+  if (videoTwoPass && requestedVideoBitrate !== undefined) body.twoPass = true;
   if (videoAudioBitrateKbps !== undefined) body.audioBitrate = videoAudioBitrateKbps;
   return body;
 }

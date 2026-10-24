@@ -1047,6 +1047,11 @@ button, input, select { font: inherit; }
 .cc-export-bitrate-custom input { width:66px; height:32px; padding:0 8px; border:0; outline:0; background:transparent; color:var(--cc-text); font:12px Geist Mono, ui-monospace, SFMono-Regular, Menlo, monospace; }
 .cc-export-bitrate-custom span { padding-right:8px; color:var(--cc-text-muted); font-size:10px; }
 .cc-export-bitrate > small { grid-column:1 / -1; color:var(--cc-text-muted); font:10px/1.35 Geist Mono, ui-monospace, SFMono-Regular, Menlo, monospace; }
+.cc-export-twopass { grid-column:1 / -1; display:flex; align-items:center; gap:6px; color:var(--cc-text-muted); font-size:11px; cursor:pointer; }
+.cc-export-twopass input { width:12px; height:12px; margin:0; accent-color:var(--cc-accent); cursor:inherit; }
+.cc-export-twopass input:disabled { cursor:default; }
+.cc-export-twopass:has(input:checked) span { color:var(--cc-text); }
+.cc-export-twopass-note { grid-column:1 / -1; color:var(--cc-text-muted); font:10px/1.35 Geist Mono, ui-monospace, SFMono-Regular, Menlo, monospace; }
 .cc-export-segmented { min-width:0; display:flex; gap:2px; padding:2px; border:0.5px solid var(--cc-border); border-radius:4px; background:var(--cc-bg); }
 .cc-export-seg { min-width:0; flex:1; border:0.5px solid transparent; border-radius:2px; padding:7px 5px; background:transparent; color:var(--cc-text-muted); font-size:11px; cursor:pointer; }
 .cc-export-seg:hover:not(.active) { background:var(--cc-panel-alt); color:var(--cc-text); }

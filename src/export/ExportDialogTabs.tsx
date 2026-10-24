@@ -94,11 +94,14 @@ function VideoSettings({ video, busy, qualityMode, setQualityMode }: VideoSettin
             customMbps={video.customBitrateMbps}
             crf={video.crf}
             allowCrf={video.codec === 'h264' || video.codec === 'hevc'}
+            allowTwoPass={video.twoPassAvailable}
+            twoPass={video.twoPass}
             resolvedBps={video.resolvedBitrate}
             disabled={busy}
             onModeChange={video.setBitrateMode}
             onCustomMbpsChange={(value) => video.setCustomBitrateMbps(clampBitrate(value))}
             onCrfChange={video.setCrf}
+            onTwoPassChange={video.setTwoPass}
           />
         </Row>
       )}

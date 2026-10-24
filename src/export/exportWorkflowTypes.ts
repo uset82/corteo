@@ -78,6 +78,8 @@ export interface UseExportWorkflowOptions {
   requestedVideoBitrate?: number;
   /** Constant-quality value (18–28); mutually exclusive with requestedVideoBitrate. */
   videoCrf?: number;
+  /** Encode twice against the bitrate target (H.264/H.265, bitrate modes only). */
+  videoTwoPass?: boolean;
   /** Audio bitrate (kbps) for MP4/WebM exports. */
   videoAudioBitrateKbps?: number;
   subtitleFormat: 'srt' | 'txt' | 'ass';

@@ -11,6 +11,7 @@ import {
   type ExportResolution,
 } from '../../src/export/mediaSettings.ts';
 import { MAX_VIDEO_BITRATE_BPS, MIN_VIDEO_BITRATE_BPS } from '../../src/export/bitrate.ts';
+import { twoPassUnavailableReason } from '../../src/export/twoPass.ts';
 import { sanitizeFileName } from '../file-name.ts';
 
 export { EXPORT_FPS_OPTIONS, EXPORT_RESOLUTIONS, exportScale } from '../../src/export/mediaSettings.ts';
@@ -33,6 +34,8 @@ export type ExportRequest = {
   videoBitrate?: number;
   crf?: number;
   audioBitrate?: number;
+  /** Encode twice against the bitrate target instead of once (H.264/H.265). */
+  twoPass?: boolean;
 };
 
 export type ExportTimeline = {
@@ -65,6 +68,8 @@ export interface ExportPlan {
   videoBitrate: number | undefined;
   crf: number | undefined;
   audioBitrate: number | undefined;
+  /** True when the render must be re-encoded twice against `videoBitrate`. */
+  twoPass: boolean;
 }
 
 /** AAC bitrate presets the encoder accepts. */
@@ -205,6 +210,19 @@ export function planExport(body: ExportRequest | null): ExportPlan {
   const frameRange = normalizeFrameRange(totalFrames, startFrame, endFrame);
   const frames = frameRange ? frameRange[1] - frameRange[0] + 1 : totalFrames;
   const media = EXPORT_MEDIA[codec];
+  if (body?.twoPass !== undefined && typeof body.twoPass !== 'boolean') {
+    throw new ExportRequestError('twoPass must be a boolean');
+  }
+  const twoPass = body?.twoPass === true;
+  if (twoPass) {
+    if (format !== 'video') throw new ExportRequestError('twoPass applies to video exports only');
+    const reason = twoPassUnavailableReason({
+      codec: media.codec,
+      videoBitrate: body?.videoBitrate,
+      crf: body?.crf,
+    });
+    if (reason) throw new ExportRequestError(reason);
+  }
   // ProRes is mezzanine-only: no fps retime pass (that path is H.264/VP8).
   const retimeFps = format === 'video' && codec !== 'prores'
     && body?.fps !== undefined && body.fps !== fps
@@ -241,5 +259,6 @@ export function planExport(body: ExportRequest | null): ExportPlan {
     videoBitrate: format === 'video' && codec !== 'prores' ? body?.videoBitrate : undefined,
     crf: format === 'video' && codec !== 'prores' && codec !== 'vp8' ? body?.crf : undefined,
     audioBitrate: format === 'video' && codec !== 'prores' ? body?.audioBitrate : undefined,
+    twoPass,
   };
 }

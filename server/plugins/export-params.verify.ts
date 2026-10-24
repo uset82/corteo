@@ -138,4 +138,16 @@ assert.equal(planExport({ state: planState, codec: 'vp8', audioBitrate: 320 }).a
 assert.equal(planExport({ state: planState, codec: 'prores', audioBitrate: 192 }).audioBitrate, undefined);
 assert.equal(planExport({ state: planState, codec: 'h264' }).audioBitrate, undefined);
 
+// Two-pass is a bitrate-target mode: it needs H.264/H.265 plus a real bitrate,
+// and it cannot coexist with CRF (which already replaces the bitrate target).
+assert.equal(planExport({ state: planState, codec: 'h264', videoBitrate: 12_000_000, twoPass: true }).twoPass, true);
+assert.equal(planExport({ state: planState, codec: 'hevc', videoBitrate: 12_000_000, twoPass: true }).twoPass, true);
+assert.equal(planExport({ state: planState, codec: 'h264', videoBitrate: 12_000_000 }).twoPass, false, 'two-pass is opt-in');
+assert.throws(() => planExport({ state: planState, codec: 'vp8', videoBitrate: 12_000_000, twoPass: true }), /supports h264 and h265 only/);
+assert.throws(() => planExport({ state: planState, codec: 'prores', twoPass: true }), /supports h264 and h265 only/);
+assert.throws(() => planExport({ state: planState, codec: 'h264', crf: 20, twoPass: true }), /cannot be combined with CRF/);
+assert.throws(() => planExport({ state: planState, codec: 'h264', twoPass: true }), /needs a target video bitrate/);
+assert.throws(() => planExport({ state: planState, format: 'audio', codec: 'mp3', twoPass: true }), /video exports only/);
+assert.throws(() => planExport({ state: planState, codec: 'h264', videoBitrate: 12_000_000, twoPass: 'yes' }), /must be a boolean/);
+
 console.log('export params verification passed');
