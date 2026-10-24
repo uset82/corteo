@@ -356,7 +356,7 @@ Only the WorkBuddy agent edits this section, in `~/corteo-workbuddy` on branch `
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
 | HW-1 | Pin and install | done | |
-| HW-2 | `npm run harness` and `npm run harness:doctor` | todo | HW-1 |
+| HW-2 | `npm run harness` and `npm run harness:doctor` | done | HW-1 |
 | HW-3 | Which free models can edit | todo | HW-2 |
 | HW-4 | DeepSeek Harness edits corteo over MCP | todo | HW-2 |
 | HW-5 | Guide for Carlos | todo | HW-2, HW-3, HW-4 |
@@ -364,6 +364,9 @@ Only the WorkBuddy agent edits this section, in `~/corteo-workbuddy` on branch `
 ### WorkBuddy: decisions
 - 2026-10-25 · HW-1 · `config/harness.json` holds the pins once; `scripts/harness/lib.mjs` reads them, so no script repeats `0.2.1-rc.2`, `v2.5.9` or the commit. The installer refuses the settings rewrite only when a write is needed: a re-run that already finds `distribution: managed` is a no-op even with the harness running. Reason: the harness stays up for hours and must not force a stop just to confirm the pins.
 - 2026-10-25 · HW-1 · `0.2.1-rc.2` stays. The manual install from HQ-5 already runs with the plugin, so the `0.1.7-rc.2` fallback is documented but unused.
+- 2026-10-25 · HW-2 · "Harness is up" means any HTTP answer on 3080: dsh web answers 401 until its login link is opened, so a status-code check would refuse to start next to a live instance. The doctor finds the forward port the same way it is configured: 401 without the key and 200 with it on each port, which also proves the plugin loaded.
+- 2026-10-25 · HW-2 · `npm run harness` omits the MCP patch when no token exists yet, instead of sending `Bearer undefined`; it says why and asks for a restart once corteo created the token. Reason: a broken MCP server in the DSH chat is worse than no server.
+- 2026-10-25 · HW-2 · Real run on 2026-10-25: `npm run harness:doctor` passed all five steps against the running harness (34 models, `http://127.0.0.1:18899/v1`, key ending `arcM`), and `npm run harness` with the instance up reported it and exited 0 without spawning a second one.
 
 ### WorkBuddy: blockers
 None yet. Same format as "Blockers".
