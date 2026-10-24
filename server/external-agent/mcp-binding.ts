@@ -42,12 +42,12 @@ function defaultBrowserProjectId(): string {
   if (!connected.length) {
     throw new ExternalEditorCallError(
       'rejected',
-      'No OpenChatCut editor is connected. Call target_project with an existing project id for offline editing, or open the editor.',
+      'No Claudia editor is connected. Call target_project with an existing project id for offline editing, or open the editor.',
     );
   }
   throw new ExternalEditorCallError(
     'rejected',
-    'Multiple OpenChatCut projects are open; call target_project with the intended project.',
+    'Multiple Claudia projects are open; call target_project with the intended project.',
   );
 }
 
@@ -120,7 +120,7 @@ export function bindBrowserForCall(
   }
   const binding = editorBinding(projectId);
   if (!binding || !editorBindingMatches(binding)) {
-    throw new ExternalEditorCallError('rejected', `Project ${projectId} is not open in a connected OpenChatCut editor.`);
+    throw new ExternalEditorCallError('rejected', `Project ${projectId} is not open in a connected Claudia editor.`);
   }
   session.binding = binding;
   return binding;
@@ -144,7 +144,7 @@ export async function targetMcpProject(
   if (session.binding) {
     const browser = editorBinding(projectId);
     if (!browser || !editorBindingMatches(browser)) {
-      throw new ExternalEditorCallError('rejected', `Project ${projectId} is not open in a connected OpenChatCut editor.`);
+      throw new ExternalEditorCallError('rejected', `Project ${projectId} is not open in a connected Claudia editor.`);
     }
     if (session.id) orphanStaleEditorSessions(session.id, browser);
     session.binding = browser;

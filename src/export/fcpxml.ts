@@ -382,7 +382,7 @@ export function timelineToFcpxml(
   validateState(state);
   const fps = state.fps;
   const total = timelineDuration(state);
-  const title = escapeXml((opts.title ?? '').trim() || 'OpenChatCut Timeline');
+  const title = escapeXml((opts.title ?? '').trim() || 'Claudia Timeline');
   const nle: NleFormat = opts.nleFormat === 'fcp_xml_resolve' ? 'fcp_xml_resolve' : 'fcp_xml';
   const laneOf = buildLaneOf(state);
   const assets = planAssets(collectAssets(state), opts.mediaDir, opts.mediaSources);
@@ -404,7 +404,7 @@ export function timelineToFcpxml(
     return laneDiff !== 0 ? laneDiff : a.startFrame - b.startFrame;
   });
   const backgroundFillWarning = fcpxmlBackgroundFillCount(state) > 0
-    ? xmlComment('WARNING: backgroundFill settings are preserved as OpenChatCut metadata, but this exporter does not synthesize a portable blurred layer; render a video master to preserve the exact appearance.')
+    ? xmlComment('WARNING: backgroundFill settings are preserved as Claudia metadata, but this exporter does not synthesize a portable blurred layer; render a video master to preserve the exact appearance.')
     : '';
   const itemXml = sortedItems
     .map((item) => itemToSpineElement(
@@ -413,7 +413,7 @@ export function timelineToFcpxml(
   const spineChildren = [backgroundFillWarning, ...itemXml].filter(Boolean).join('\n        ');
 
   const backgroundGap = `<gap name="Background" offset="${rationalTime(0, fps)}" duration="${rationalTime(total, fps)}">\n        ${spineChildren}\n      </gap>`;
-  const eventName = nle === 'fcp_xml_resolve' ? 'OpenChatCut Export (Resolve)' : 'OpenChatCut Export';
+  const eventName = nle === 'fcp_xml_resolve' ? 'Claudia Export (Resolve)' : 'Claudia Export';
 
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',

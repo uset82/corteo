@@ -1,16 +1,19 @@
 # Progress
 
-The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2) and `docs/plans/03-deepseek-harness.md` (Plan 3). Rules and the work loop: `AGENTS.md`.
+The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2), `docs/plans/03-deepseek-harness.md` (Plan 3) and `docs/plans/04-claudia-brand.md` (Plan 4). Rules and the work loop: `AGENTS.md`.
 
 **Picking the next task:** if a task is `doing`, a previous session stopped in the middle of it: resume it first. Otherwise go down the table and take the first task whose status is `todo` and whose "Needs" are all `done`. Change its status to `doing`, finish it, set `done`, and commit this file together with the work.
 
 **Harness tracks (Plan 3):** the HQ and HW tasks have their own tables at the end of this file. Only the Qoder agent takes HQ tasks and only the WorkBuddy agent takes HW tasks, each in its own worktree and branch (see `docs/plans/03-deepseek-harness.md` › Parallel work), with the same picking rule applied to its own table. Every other agent skips both tables. Their task cards are in the plan doc.
+
+**Brand tracks (Plan 4):** the BD and BQ tables are also at the end of this file, with the same rule. Because the Qoder and DeepSeek agents were unavailable on 2026-10-24, the WorkBuddy agent executed all eight cards itself in `~/corteo-workbuddy`; the tables say who wrote each card, not who was supposed to. B-9 merged the work into this branch the same day (see its card).
 
 Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if the user asks).
 
 ## State at handoff (2026-10-24)
 - Branch `cursor/video-editor-mvp-d191`. The app runs with `npm run dev` on http://localhost:5199.
 - Baseline checks on this commit, on a 4-core Linux VM without a GPU: `npx tsc -b` passes, `npm run lint` passes (warnings only, all from upstream), `npm run verify:i18n` passes, `npm run build` passes (the "chunks larger than 2500 kB" warning is upstream's), and `CC_RENDER_GL=swangle npm test` passes: exit 0, 197 test segments plus the pre- and post-test chains, about 6 minutes. Without `CC_RENDER_GL=swangle` on a machine without GPU WebGL2, three render tests fail with "WebGL2 not available" (`remotion/video-decoder-render.verify.mjs`, `src/gl/clipFxExport.verify.mjs`, `src/gl/clipFxExport.offthread.verify.mjs`); that is the environment, not a code failure.
+- After B-9 (Plan 4 merged, 2026-10-24, same VM): `npx tsc -b`, `npm run lint` (warnings only, none on lines B-9 changed) and `npm run verify:i18n` pass. At `8ee1061`, `CC_RENDER_GL=swangle npm test` passes (exit 0, 203 test segments, that is the 197 plus the six brand verifies, plus the pre- and post-test chains, about 6½ minutes) and `npm run build` passes with upstream's chunk-size warning. The commits after it change one Spanish string and the docs. Screenshots, not committed: the projects page at 1440x900 and 390x844 and a card on hover, the editor with the chat open and collapsed at 1440x900, and the phone upload page in Spanish at 390x844.
 - If a test fails on your machine before you have changed anything, it is a baseline difference: record it under Blockers with its output, and don't count it against your task.
 - Grok's attempt: Grok worked in `~/corteo` from the old `IMPLEMENTATION_PLAN.md` (a first-draft plan with Python WhisperX/demucs, Zustand, i18next and a UI redesign) and got stuck. That file is deleted. None of Grok's work is on this branch: the user parks it on a branch `grok-wip` for review. Do not merge, cherry-pick or build on `grok-wip`; if something there is worth keeping, it comes back as a task card here.
 - Qoder and WorkBuddy's attempt: the GitHub fork's branch `cursor/video-editor-mvp-d191` (https://github.com/uset82/corteo, at `56676ff` on 2026-10-24) was built from `1d00e0a` with the old `IMPLEMENTATION_PLAN.md`. It has first versions of P2-1 to P2-5 plus extras, with known bugs found in a review on 2026-10-24: duplicate detection samples the middle of the whole file, ASS import ignores `\kf` and drops text before the first tag, HEVC files are tagged `hev1` instead of `hvc1`, the cool white balance rotates every hue, the tool catalog is stale so `npm run build` fails, and three files are over 500 lines. It is not merged: the user decides whether it comes in. Until then, the same rule as `grok-wip` applies.
@@ -25,6 +28,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P0-3 | `npm run start:claudia` and `.env.claudia.example` | todo | P0-2 |
 | P0-4 | Spanish README | todo | P0-3 |
 | H-9 | Merge the harness tracks (Cursor agent only) | todo | HQ-1 to HQ-5 and HW-1 to HW-5 `done` or `blocked` on their own branches |
+| B-9 | Merge the brand tracks (Cursor agent only) | done | BD-1 to BD-4 and BQ-1 to BQ-4 |
 | P1-1 | Providers off: server block | todo | P0-3, H-9 |
 | P1-2 | Providers off: hide UI, filter MCP tools | todo | P1-1 |
 | P1-3 | Allowed hosts from env | todo | P0-3 |
@@ -74,6 +78,23 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Plan: Plan 3 › H-9. Only a Cursor agent takes it.
 - Needs: check both tracks' tables on GitHub, not here: `git fetch github`, then `git show github/harness-qoder:docs/plans/PROGRESS.md` and `git show github/harness-workbuddy:docs/plans/PROGRESS.md`.
 - Do and Done when: the five steps in the plan doc.
+- After B-9 (checked with `git merge-tree` against `harness-qoder` at `4a7abc7`): only `package.json` (the `test:serial` line: keep both sides) and `src/components/settings/settingsAgentProviders.ts` conflict. In the second, keep the harness's `preset.id === 'dsh'` branch, but the Anthropic note must end in `驱动 Claudia。`, not `驱动 OpenChatCut。`: BQ-1 renamed that key and the dictionaries only have the Claudia one. `server/agent-runs/executor.verify.ts` and `es/index.ts` merge cleanly (the latter keeps the Claudia header), and `es/brand.ts` shadows none of the 15 harness keys; check that again if either branch moves.
+
+### B-9 · Merge the brand tracks — done
+- Plan: Plan 4 › B-9. Done by the Cursor agent on 2026-10-24.
+- What came in: the brand work was on GitHub's `harness-workbuddy` at `1fabc26` (`1ddc7bd` BD-1 to BD-4, `f179f63` BQ-1 to BQ-4, `01bbb02` B-0, `1fabc26` this file). This branch was its ancestor, so the merge was a fast-forward. `harness-workbuddy` holds no HW work yet; H-9 still merges it, and `harness-qoder`, later.
+- Fixed in the review, one commit each:
+  - `087d1f8`: the executable bit of `cli/occ.mjs` and `dev-with-mcp.sh`, dropped because the commits were made from Windows over `\\wsl.localhost`.
+  - `f56a084`: a project missing from the index was copied as "Copia de 工程"; now "Copia de proyecto".
+  - `f4b5165`: two verifies still expected the old name (`src/agent/tools/font-tools.verify.ts` the FCPXML "ChatCut Export" event, `server/agent-runs/executor.verify.ts` "You are OpenChatCut"), so `npm test` failed in its first minute. The brand work had never been through the full suite.
+  - `7fbf2b3`: the card's hidden action buttons shared the name's row, so names were cut to "Exampl…" at 1440 px and vanished at 390 px. The name now has its own line.
+  - `e37d259`: new empty projects were auto-named in Chinese ("流光序曲"); now in Spanish ("Latido nocturno").
+  - `4b61d1c`: AI tell 4. Sparkles were left on the top bar's generation tasks button, the composer's mode chip, prompt enhancement, template references and the import note, and the proposal card had an icon tile.
+  - `1b12607`: AI tell 8. English and title case on screens this plan owns: the card times ("11 hr ago"), the import/export note, the header and top-bar tooltips, the capability banner (English capability names, no space after the colon), and the composer, workflow picker and model picker.
+  - `8ee1061`: the phone upload page said "Send media to OpenChatCut", had the old orange look, and served Chinese to Spanish users because the server only accepted `en`, `it` and `ru`. Now Claudia, Spanish, and the Claudia palette.
+  - `8d29d9c`: the demo project's Spanish name was title case ("Proyecto de Ejemplo").
+- README and AGENTS prose rewritten for step 4: Claudia is the product, corteo the repository and the command; the two brand font licences are in the README credits.
+- Checks and screenshots: see "State at handoff".
 
 ### P0-2 · Raise the dev server heap
 - Plan: Plan 1 › Phase 0.
@@ -95,9 +116,9 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 
 ### P0-4 · Spanish README
 - Plan: Plan 1 › Phase 0.
-- State: `README.md` was rewritten in Spanish on 2026-10-24, before P0-3 (what corteo is, status, requirements, install, the `corteo` alias, data and token locations, syncing Cursor's branch to GitHub, credits and AGPL). Don't replace it: extend it.
+- State: `README.md` was rewritten in Spanish on 2026-10-24, before P0-3 (what the editor is, status, requirements, install, the `corteo` alias, data and token locations, syncing Cursor's branch to GitHub, credits and AGPL). B-9 then renamed its prose: the product is Claudia, corteo is the repository and the command, and the brand fonts' licences are in the credits. Don't replace it: extend it, with the same naming.
 - Files: `README.md` (leave `README_ZH.md` alone).
-- Do: in Spanish: what corteo is (a fork of OpenChatCut for music videos, driven by Claudia over MCP), requirements (WSL/Linux, Node 24, ffmpeg comes with npm), `npm install`, `npm run dev`, `npm run start:claudia`, how to connect Claudia (URL, token, `.env.claudia`), where data lives (`~/.openchatcut`), AGPL v3 note with a link to upstream OpenChatCut (https://github.com/0xsline/OpenChatCut).
+- Do: in Spanish: what the editor is (Claudia, a fork of OpenChatCut for music videos, driven by Claudia over MCP; the repository is corteo), requirements (WSL/Linux, Node 24, ffmpeg comes with npm), `npm install`, `npm run dev`, `npm run start:claudia`, how to connect Claudia (URL, token, `.env.claudia`), where data lives (`~/.openchatcut`), AGPL v3 note with a link to upstream OpenChatCut (https://github.com/0xsline/OpenChatCut).
 - Remaining: once P0-3 and P1-4 are done, add `npm run start:claudia`, `.env.claudia` and the steps to connect Claudia, and update its "Estado" section.
 - Done when: a new user can go from clone to the running editor and a connected Claudia with only the README.
 
@@ -294,6 +315,8 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Files: `src/i18n/dict/es/` (mirror the 19 modules of `src/i18n/dict/en/`, then make `src/i18n/dict/es/index.ts` assemble them like `src/i18n/dict/it/index.ts`), `src/i18n/dictRegistry.ts`.
 - Do: one commit per module. Keys stay the Chinese originals; keep every `{placeholder}`.
 - Pitfall: source files may not exceed 500 lines (`scripts/verify-gate-coverage.verify.mjs`). Split a long module into parts, or add it to that file's `dataModules` list like `src/i18n/dict/en/settings.ts`.
+- Fold `es/brand.ts` (about 120 keys from Plan 4 and B-9) into the modules too. Where `es/index.ts` has a harness entry for the same key (Plan 3), the harness text wins. Its sentence-case style is the one to follow.
+- Already in Spanish: the projects page, the editor's top bar (button labels), the chat's header, onboarding, starters and quick actions, the composer with its workflow and model pickers, and the capability banner. Still English: the rest of the chat (165 keys under `src/components/chat/`), the run inspector, the generation-task and export-history panels, and the media (including 手机传素材), preview, timeline, inspector and export panels.
 - Verify: `npm run verify:i18n`.
 
 ### P5-2 · i18n coverage + placeholder gate
@@ -313,6 +336,10 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 Add a line when you choose something the plans leave open: date, task ID, decision, reason.
 
 - 2026-10-24 · Plan 3 · The built-in chat stays, with free models through the local DeepSeek Harness (plus Ollama and LM Studio); `AGENTS.md` rule 1 changed accordingly. P1-1 and P1-2 now only cover generation, stock and cloud transcription, and P1-1 waits for H-9 so `server/plugins/providers-off.ts` is created once (by HQ-3). Reason: Carlos wants Claudia's chat in the editor on free models, without paid APIs.
+- 2026-10-24 · B-9 · Settings is "Ajustes" in Spanish (`设置`, `设置 · API 密钥`), replacing "Configuración". Reason: the harness strings already say "Pégalas en Ajustes › DeepSeek Harness" and the banner says "Ir a ajustes".
+- 2026-10-24 · B-9 · A copy of a project with no name is "Copia de proyecto", and new empty projects get a Spanish noun and adjective ("Latido nocturno"; every noun is masculine so any adjective agrees). Reason: the Chinese fallbacks showed on Spanish screens.
+- 2026-10-24 · B-9 · `es/brand.ts` never defines a key the harness translates in `es/index.ts` (written into `AGENTS.md` › UI text). Reason: it is spread last and would hide the harness text after H-9.
+- 2026-10-24 · B-9 · The Spanish pass covers the screens Plan 4 owns, read literally: the projects page with its tooltips, the top bar's button labels, the chat's first view (header, onboarding, starters, composer, workflow and model pickers, capability banner) and the phone upload page. The panels those buttons open stay for P5-1. Reason: the plan's scope line, and P5-1 is the full dictionary.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.
@@ -358,3 +385,67 @@ None yet. Same format as "Blockers".
 
 ### WorkBuddy: model results (HW-3, HW-4)
 The top three models with their checks and latency, and the model used for the MCP edit.
+
+---
+
+## Brand track · DeepSeek (BD)
+Executed by the WorkBuddy agent on 2026-10-24 (the DeepSeek agent was not available). Task cards: `docs/plans/04-claudia-brand.md` › DeepSeek track.
+
+| ID | Task | Status | Needs |
+|----|------|--------|-------|
+| BD-1 | Brand fonts | done | |
+| BD-2 | The Claudia skin | done | BD-1 |
+| BD-3 | Marks, favicon and tab | done | BD-2 |
+| BD-4 | The projects page | done | BD-3 |
+
+### DeepSeek: decisions
+- Both brand faces are self-hosted, because the gallery relies on the system's Helvetica and DIN Condensed and Windows ships neither. The four files match the pinned byte counts exactly.
+- `claudia` is `SKINS[0]` and `DEFAULT_SKIN`; `applySkin()` deletes the `data-cc-skin` attribute for the default, so the default is the `:root` block and Graphite became an override.
+- The Graphite → Claudia migration runs once per profile behind `cc.skin.claudia`. A Graphite the user picks again afterwards sticks; any other saved skin is left alone.
+- The empty library's two buttons are outlined, not clay: the toolbar above already carries the page's one primary button, and the brief allows exactly one.
+- `en/brand.ts` and `es/brand.ts` exist so this track never edits `es/index.ts` or the per-module English files; `dictRegistry.ts` spreads the Spanish one over `es.default`.
+
+### DeepSeek: blockers
+None.
+
+### DeepSeek: review
+- AI-tells pass on the projects page: no gradients, glows or glass; clay only on the wordmark streak, the star, one primary button and focus; no kicker; no arrows; no card kit; no dashed "+" tile; motion is colour and opacity only, ≤120 ms, off under reduced motion; targets 30 px.
+- Screenshots were not taken: the dev server needs WSL, which was unavailable (`wsl.exe` blocked by the sandbox). `test-results/brand/` is empty.
+- B-9 took them on Linux on 2026-10-24. The page passed the list except for the card: the hidden action buttons squeezed the name to "Exampl…" at 1440 px and hid it at 390 px, and the times were English ("11 hr ago"). Both are fixed (B-9 card).
+
+---
+
+## Brand track · Qoder (BQ)
+Executed by the WorkBuddy agent on 2026-10-24 (the Qoder agent was not available). Task cards: `docs/plans/04-claudia-brand.md` › Qoder track.
+
+| ID | Task | Status | Needs |
+|----|------|--------|-------|
+| BQ-1 | The old name out of the text | done | |
+| BQ-2 | The fork's links and the assistant's identity | done | |
+| BQ-3 | The chat panel | done | BD-3 |
+| BQ-4 | Cleanups and the review | done | BQ-3 |
+
+### Qoder (brand): decisions
+- The dictionary sweep changed 40 lines and kept the 10 lines of the five desktop-updater keys, which name upstream's release on purpose.
+- `src/export/fcpxml.ts` writes "Claudia Timeline" and "Claudia Export"/"Claudia Export (Resolve)"; CapCut drafts default to `Claudia-<date>`.
+- Chat expand/collapse became the generic 展开助手/收起助手 ("Mostrar asistente"), since the panel is the editor's assistant, not the artist.
+- Nine chat-panel strings had no Spanish entry and fell back to English; they now have one in `es/brand.ts`.
+- `src/brand/brand-text.verify.ts` reads string literals, not raw lines, so the old name may still appear in comments, header constants, URL literals and the bundled agent skill docs. Getting that right needed a scanner with comment and regex states: a single apostrophe in a comment (`// don't`) or a regex holding a quote (`/'/g`) otherwise swallows the rest of the file, and the gate silently passes on nothing.
+- The FCPXML `backgroundFill` warning is a literal that ships inside the exported file, so it says "Claudia metadata" too; `fcpxml-background-fill.verify.ts` moved with it.
+- `.cc-chat-starter-copy` stayed: the presets still render a title over a description. Only the kicker, the icon tile and the arrow went, with the reduced-motion block that existed solely for the last two.
+- BQ-2's second half landed after its first: `mcp-instructions.ts` now opens with "In its UI this editor is called Claudia; tool names keep the openchatcut_ prefix", and the four `mcp-controls.ts` tool descriptions and the four `mcp-binding.ts` errors say Claudia. `product-help/SKILL.md` renamed its title and description only; its body still quotes upstream feature names, which the plan leaves alone.
+- The gate now also covers those six identity files and `product-help/SKILL.md`, so BQ-2 cannot silently regress.
+
+### Qoder (brand): blockers
+- `npm test` and `npm run build` need WSL, which the sandbox refused for the whole session (`wsl.exe` on the Program Blacklist). Git itself works over the UNC path, so the three commits below are real: `1ddc7bd` (BD), `f179f63` (BQ), `01bbb02` (B-0). The work was verified over UNC instead: `tsc` on both projects, `check-i18n`, and the affected verifies, run individually.
+- `scripts/verify-registration.verify.mjs` fails until the six new verify files are committed: it compares `package.json` against `git ls-files`, and untracked files read as "registered but not tracked". `scripts/verify-gate-coverage.verify.mjs` already passes (636 verify files, all reachable).
+- `vite build` was attempted on Windows and cannot work from the UNC path: the win32 `@rolldown/binding` and `lightningcss` binaries load, but rolldown's native resolver fails on `\\wsl.localhost\...` ("Failed to resolve entry for package @vitejs/plugin-react"), and the share cannot be mapped to a drive (`net use` → system error 64). The client bundle stays unbuilt until WSL is back.
+- Resolved by B-9 on 2026-10-24, on Linux: `npx tsc -b` passes (the 87 "SDK-drift" errors seen on the node project over UNC don't reproduce), `scripts/verify-registration.verify.mjs` passes now that the files are committed, and `npm test` and `npm run build` ran (results under "State at handoff"). `wsl.exe` is still blocked for the WorkBuddy agent, which also blocks its HW tasks.
+
+### Qoder (brand): review
+- Still open from BQ-4: the visual review of the top bar, chat and the dialogs they open against the AI-tells list, and the screenshots, both for the same WSL reason.
+- B-9 did that review on Linux on 2026-10-24 and fixed what it found (B-9 card): sparkles on the top bar and in the composer, the proposal card's icon tile, English on the composer and the capability banner, and the phone upload page. Recorded, not fixed:
+  - The workflow picker (`WorkflowPickerContent.tsx`, `.cc-creative-mode-icon`, `.cc-creative-picker-head > span`) still shows icon tiles, with a sparkles icon in its header. It is a popover the composer opens; removing the tiles is a layout change for a later task.
+  - The editor has no phone layout upstream: at 390 px the chat is a column about 95 px wide. The plan only asks for the projects page to work at 390 px.
+  - The panels the top bar and the chat open (generation tasks, export history, run inspector, settings) are still mostly English: P5-1.
+- Known remainder, deliberately out of scope: the old name still appears in `src/agent/skills/**/SKILL.md`, in `X-OpenChatCut-*` header constants, in `assets/agent/openchatcut-tool-schemas.json` and in the agent tool descriptions in `src/agent/external-tool-shape.ts`. Those are identifiers and agent-facing contract text, not product copy; renaming the headers or the schema path would break the desktop and MCP bridges.

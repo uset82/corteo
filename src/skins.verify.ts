@@ -3,7 +3,8 @@
 // textMuted/panel ≥ 4.5, onAccent/accent ≥ 4.5 (WCAG AA).
 // `npx tsx src/skins.verify.ts`
 import assert from 'node:assert/strict';
-import { DEFAULT_SKIN, SKINS, buildSkinsCss } from './skins';
+import { DEFAULT_SKIN, SKINS, buildSkinsCss, initSkins } from './skins';
+import type { SkinTokens } from './skins';
 
 function luminance(hex: string): number {
   const f = (c: number): number => {
@@ -73,5 +74,64 @@ for (const s of SKINS) {
 assert.ok(css.includes('--cc-on-accent:'), 'on-accent 变量输出');
 assert.ok(css.includes('--cc-shadow-rgb:'), 'shadow-rgb 变量输出');
 assert.ok(css.includes('body { background: var(--cc-bg)'), 'body 跟随皮肤');
+
+// ── Claudia is first, is the default, and carries the brief's tokens (BD-2) ──
+assert.equal(SKINS[0].id, 'claudia', 'claudia 排在第一位');
+assert.equal(DEFAULT_SKIN, 'claudia', 'claudia 是默认皮肤');
+const CLAUDIA_BRIEF: Partial<Record<keyof SkinTokens, string>> = {
+  bg: '#0a0b0d', inset: '#0e0f11', panel: '#111317', panelAlt: '#181b20', hover: '#20242a',
+  border: '#2a2e35', borderLight: '#3b4048',
+  text: '#ece9e2', textMuted: '#a9adb3', textDim: '#7a7f86', textStrong: '#fffaf0',
+  accent: '#d97757', accentDeep: '#c2603f', accentRgb: '217,119,87', onAccent: '#0a0b0d',
+  inkRgb: '236,233,226', shadowRgb: '0,0,0', colorScheme: 'dark',
+  tlTrack: '#1a1d23', tlSidePanel: '#15181d',
+};
+for (const [name, value] of Object.entries(CLAUDIA_BRIEF)) {
+  assert.equal(SKINS[0].tokens[name as keyof SkinTokens], value, `claudia.${name} 与设计稿一致`);
+}
+
+// ── The one-time Graphite → Claudia migration ──
+// applySkin() saves the skin on every boot, so an install that existed before Claudia
+// has 'graphite' stored. It must move to claudia once, and only once.
+interface TestProfile { store: Map<string, string>; boot: () => void }
+
+function profile(saved: string | null): TestProfile {
+  const store = new Map<string, string>();
+  if (saved !== null) store.set('cc.skin', saved);
+  const boot = (): void => {
+    (globalThis as { localStorage?: Storage }).localStorage = {
+      getItem: (key: string): string | null => store.get(key) ?? null,
+      setItem: (key: string, value: string): void => { store.set(key, value); },
+      removeItem: (key: string): void => { store.delete(key); },
+      clear: (): void => { store.clear(); },
+      key: (index: number): string | null => [...store.keys()][index] ?? null,
+      get length(): number { return store.size; },
+    } as Storage;
+    (globalThis as Record<string, unknown>).document = {
+      getElementById: (): unknown => ({}),
+      documentElement: { dataset: {} as Record<string, string> },
+    };
+    initSkins();
+  };
+  return { store, boot };
+}
+
+const fresh = profile(null);
+fresh.boot();
+assert.equal(fresh.store.get('cc.skin'), 'claudia', '空配置直接落在 claudia');
+
+const legacy = profile('graphite');
+legacy.boot();
+assert.equal(legacy.store.get('cc.skin'), 'claudia', '旧的 graphite 迁到 claudia');
+assert.equal(legacy.store.get('cc.skin.claudia'), '1', '迁移标记写下了');
+
+// The user picks Graphite again after the migration: that choice sticks.
+legacy.store.set('cc.skin', 'graphite');
+legacy.boot();
+assert.equal(legacy.store.get('cc.skin'), 'graphite', '迁移后再选 graphite 不再被改');
+
+const other = profile('mocha');
+other.boot();
+assert.equal(other.store.get('cc.skin'), 'mocha', '别的皮肤原样保留');
 
 process.stdout.write(`skins.verify: ok (${SKINS.length} skins, 对比度门全过)\n`);

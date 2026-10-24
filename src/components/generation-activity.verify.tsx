@@ -7,7 +7,7 @@ const topBarButton = await readFile(new URL('./TopBarIconButton.tsx', import.met
 
 assert.match(
   component,
-  /<TopBarIconButton[\s\S]*?icon="sparkles"[\s\S]*?label=\{t\('生成任务'\)\}/,
+  /<TopBarIconButton[\s\S]*?icon="list"[\s\S]*?label=\{t\('生成任务'\)\}/,
   '生成任务按钮应复用顶部栏图标按钮',
 );
 assert.doesNotMatch(

@@ -99,7 +99,7 @@ export function GenerationActivity({ projectId, onResume }: GenerationActivityPr
   return (
     <>
       <TopBarIconButton
-        icon="sparkles"
+        icon="list"
         label={t('生成任务')}
         onClick={() => setOpen(true)}
         badge={activeCount > 0 ? (

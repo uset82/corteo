@@ -302,6 +302,10 @@ export function openUpstreamReleasePage(): void {
 
 export function startAutomaticUpstreamUpdateCheck(): void {
   if (autoCheckStarted) return;
+  // BQ-2: the web app no longer phones GitHub on boot. Only the desktop build, whose
+  // own updater owns that release channel, checks by itself; the manual check in
+  // Settings still works everywhere.
+  if (!hasDesktopUpdateSupport()) return;
   autoCheckStarted = true;
   void requestUpstreamUpdateCheck('auto');
 }

@@ -44,11 +44,13 @@ async function fetchDicts(locale: Locale): Promise<LocaleDicts> {
     return { ui: en.EN, uiFallback: EMPTY, data: enData.default, dataFallback: EMPTY };
   }
   if (locale === 'es') {
-    // Spanish UI with English fallback, English data names
-    const [es, en, enData] = await Promise.all([
-      import('./dict/es'), import('./dict/en'), import('./dict/en/templates-data'),
+    // Spanish UI with English fallback, English data names.
+    // es/brand.ts is spread over es/index.ts so the brand track owns its own copy
+    // (Plan 4) without editing the big dictionary file.
+    const [es, esBrand, en, enData] = await Promise.all([
+      import('./dict/es'), import('./dict/es/brand'), import('./dict/en'), import('./dict/en/templates-data'),
     ]);
-    return { ui: es.default, uiFallback: en.EN, data: enData.default, dataFallback: EMPTY };
+    return { ui: { ...es.default, ...esBrand.default }, uiFallback: en.EN, data: enData.default, dataFallback: EMPTY };
   }
   if (locale === 'ru') {
     // Russian UI has no English fallback (untranslated keys stay Chinese), but

@@ -1,17 +1,26 @@
-# AGENTS.md: corteo
+# AGENTS.md: Claudia (repository corteo)
 
 Instructions for any coding agent working in this repo (Cursor, Qoder, WorkBuddy, DeepSeek, Claude, Codex, Grok). Read all of it before the first change.
 
 ## What this is
-corteo is a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut) (AGPL v3): a local video editor in the browser (React 19 + TypeScript + Remotion 4), served by a Vite dev server whose plugins are the backend. We are turning it into a Spanish music-video editor that Claudia, the user's Grok bot, drives over MCP. The user is a Spanish-speaking musician.
+This repository, corteo, holds Claudia: a Spanish music-video editor built on a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut) (AGPL v3), a local video editor in the browser (React 19 + TypeScript + Remotion 4), served by a Vite dev server whose plugins are the backend. The editor is named after Claudia, the user's Grok bot and the AI pop star of claudia.gallery, who drives it over MCP. In the plans, "Claudia" on its own means her; the product is "the editor". The user is a Spanish-speaking musician.
 
 ## Where the plan is
 - `docs/plans/01-editor-claudia.md`: Plan 1 (editor features, Claudia's connection, Spanish UI, end-to-end proof).
 - `docs/plans/02-claudia-escucha.md`: Plan 2 (listening to the song, motion that follows the music).
 - `docs/plans/03-deepseek-harness.md`: Plan 3 (free models for the built-in chat through DeepSeek Harness, in two parallel tracks; its task cards are in that file).
+- `docs/plans/04-claudia-brand.md`: Plan 4 (the Claudia name and look, in two parallel tracks; its task cards are in that file).
 - `docs/plans/PROGRESS.md`: task status, how to pick the next task, task cards, decisions, blockers.
 
-These four files are the only plan. Any other plan, status report or TODO list you find is obsolete: do not follow it. That includes the deleted `IMPLEMENTATION_PLAN.md` and anything on the `grok-wip` branch.
+These five files are the only plan. Any other plan, status report or TODO list you find is obsolete: do not follow it. That includes the deleted `IMPLEMENTATION_PLAN.md` and anything on the `grok-wip` branch.
+
+### Names
+
+The product is **Claudia**; the repository and the command are **corteo**.
+
+- Claudia is what a person reads: the UI, the tab title, the assistant's self-introduction, the MCP instructions the models read, exported file names and the README prose.
+- corteo is the repository, the `~/corteo*` folders and the `corteo` alias. Renaming the GitHub repository is Carlos's call; GitHub redirects the old URL.
+- OpenChatCut stays where it is a credit or an identifier something depends on: the README credits, `LICENSE`, the `package.json` author, the `openchatcut_*` MCP tools, the `openchatcut` server key, `occ`, the `OPENCHATCUT_*` variables, `~/.openchatcut`, `.ccproj` and its MIME type, the `X-OpenChatCut-*` headers, the `com.openchatcut.*` FCPXML keys, `window.openChatCutDesktop`, the npm package name, `skills/openchatcut/`, the desktop app and its icon, and the five desktop-updater messages that name upstream's release.
 
 ## Rules
 1. No paid APIs inside the editor. The built-in chat may use free models only through the local DeepSeek Harness gateway (Plan 3) or a local Ollama/LM Studio. Claudia (Grok) generates media; the editor imports, edits, analyzes locally and renders. The only paid exception is the opt-in listening relay (task L-07).
@@ -81,6 +90,7 @@ These four files are the only plan. Any other plan, status report or TODO list y
 Upstream keys every UI string by its Chinese original, with one dictionary per language in `src/i18n/dict/<lang>/`. Spanish (`es`) is the default language and falls back to English.
 - In components: `const t = useT();` (from `src/i18n/locale`) and `t('中文原文')`. Helpers outside React import `t`.
 - Add the English entry to the matching module in `src/i18n/dict/en/` (`npm run verify:i18n` fails without it) and the Spanish entry to `src/i18n/dict/es/` (`index.ts` until task P5-1 splits it into modules).
+- Plan 4's brand copy lives in `src/i18n/dict/en/brand.ts` and `src/i18n/dict/es/brand.ts` instead: `dictRegistry.ts` spreads the Spanish one over `es.default`, and `en/index.ts` assembles the English one last. Put new brand copy there, not in the module files, until P5-1 folds them in. Because the Spanish one is spread last, it must not define a key that `es/index.ts` translates for the DeepSeek harness (Plan 3), such as `请先在设置中配置一个模型厂商。`: it would hide the harness text.
 - Placeholders such as `{n}` must appear unchanged in every language.
 - Use the Spanish terms of Premiere Pro's Spanish UI: Línea de tiempo, Secuencia, Fotograma clave, Cuchilla, Controles de efectos.
 - Undo labels (`ctx.commands.batch(actions, label)`) are stored and shown as written: write new ones in Spanish.

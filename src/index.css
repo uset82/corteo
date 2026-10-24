@@ -63,6 +63,35 @@
   font-style: normal;
   font-display: swap;
 }
+/* Claudia brand faces (docs/plans/04-claudia-brand.md, BD-1). Each is used in
+ * exactly one place:
+ * - 'Heros' = TeX Gyre Heros Bold (GUST Font License, see
+ *   public/fonts/claudia/GUST-FONT-LICENSE.txt). A Helvetica look-alike, for the
+ *   wordmark only, through --cc-font-brand.
+ * - 'DINish Condensed' Black (OFL-1.1, see
+ *   public/fonts/claudia/OFL-DINish.txt). Display type only — the projects page
+ *   title and the title cards of projects without a thumbnail — through
+ *   --cc-font-display.
+ * Both are self-hosted because the gallery relies on the system's Helvetica and
+ * DIN Condensed, and Windows ships neither. */
+@font-face {
+  font-family: 'Heros';
+  src: url('/fonts/claudia/texgyreheros-bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DINish Condensed';
+  src: url('/fonts/claudia/DINishCondensed-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --cc-font-brand: 'Heros', 'Helvetica Neue', Arial, sans-serif;
+  --cc-font-display: 'DINish Condensed', 'Arial Narrow', sans-serif;
+}
 :root { color-scheme: dark; }   /* tell the browser we're already dark → skip force-dark-mode */
 * { box-sizing: border-box; }
 html, body, #root { margin: 0; height: 100%; }
@@ -156,6 +185,107 @@ button, input, select { font: inherit; }
 /* header icon button (settings) — dim at rest, brighten on hover */
 .cc-header-btn { transition: color 0.12s, background 0.12s; }
 .cc-header-btn:hover { color: var(--cc-text) !important; background: rgba(var(--cc-ink-rgb), 0.06); }
+
+/* Claudia's marks (docs/plans/04-claudia-brand.md, BD-3). Token-only: the streak
+ * takes the accent and the letters take textStrong, so every skin repaints them. */
+.cc-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.78em;
+  margin-right: -0.2em;            /* cancels the trailing letter-space of the 0.2em tracking */
+  font-family: var(--cc-font-brand);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--cc-text-strong);
+  white-space: nowrap;
+  user-select: none;
+}
+.cc-wordmark-streak {
+  flex: none;
+  width: 3px;
+  height: 1.15em;
+  background: var(--cc-accent);
+}
+
+/* Projects page (docs/plans/04-claudia-brand.md, BD-4). Frameless cards: the
+ * thumbnail is the object, the chrome is a hairline. The title is the page's one
+ * bold move — condensed black, uppercase — and "Nuevo proyecto" is its one clay
+ * button. Motion is color and opacity only, and off under reduced motion. */
+.cc-projects-content { max-width: 1120px; margin: 0 auto; padding: 40px 32px 80px; }
+.cc-projects-head { padding-bottom: 18px; border-bottom: 0.5px solid var(--cc-border); }
+.cc-projects-title-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.cc-projects-heading { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.cc-projects-title {
+  margin: 0;
+  font-family: var(--cc-font-display);
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 0.9;
+  text-transform: uppercase;
+  color: var(--cc-text-strong);
+}
+.cc-projects-count { font-size: 13px; color: var(--cc-text-dim); font-variant-numeric: tabular-nums; }
+.cc-projects-actions { margin-left: auto; display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cc-projects-note { margin: 10px 0 0; font-size: 12px; color: var(--cc-text-dim); }
+.cc-projects-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  min-height: 30px; padding: 0 12px;
+  font-family: inherit; font-size: 12px; font-weight: 500;
+  color: var(--cc-text); background: none;
+  border: 0.5px solid var(--cc-border); border-radius: 4px; cursor: pointer;
+  transition: color 120ms, border-color 120ms, background-color 120ms;
+}
+.cc-projects-btn:hover { color: var(--cc-text-strong); border-color: var(--cc-border-light); }
+.cc-projects-btn:disabled { color: var(--cc-text-dim); cursor: default; }
+.cc-projects-btn--primary { color: var(--cc-on-accent); background: var(--cc-accent); border-color: var(--cc-accent); }
+.cc-projects-btn--primary:hover { color: var(--cc-on-accent); background: var(--cc-accent-deep); border-color: var(--cc-accent-deep); }
+.cc-projects-btn--icon { width: 30px; padding: 0; color: var(--cc-text-dim); border-color: transparent; }
+.cc-projects-btn--icon:hover { color: var(--cc-text); background: rgba(var(--cc-ink-rgb), 0.06); border-color: transparent; }
+.cc-projects-model-note { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 12.5px; color: var(--cc-text-muted); }
+.cc-projects-model-note > span:first-child { flex: 1; min-width: 0; }
+.cc-projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); align-items: start; gap: 28px 20px; margin-top: 24px; }
+.cc-projects-card { position: relative; min-width: 0; }
+.cc-projects-thumb {
+  position: relative; display: grid; place-items: center;
+  width: 100%; aspect-ratio: 16 / 9; padding: 0; overflow: hidden; cursor: pointer;
+  background: var(--cc-inset);
+  border: 0.5px solid var(--cc-border); border-radius: 3px;
+  transition: border-color 120ms;
+}
+.cc-projects-thumb:hover { border-color: var(--cc-border-light); }
+.cc-projects-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.cc-projects-titlecard {
+  position: absolute; left: 12px; right: 12px; bottom: 10px;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+  font-family: var(--cc-font-display); font-size: 22px; font-weight: 900; line-height: 0.95;
+  text-transform: uppercase; text-align: left; color: var(--cc-text-muted);
+}
+/* The name gets the whole first line. The actions share the second line with the
+ * time and keep their space while hidden, so hovering never reflows the card; on a
+ * narrow card they wrap under the time instead of squeezing it. */
+.cc-projects-meta { display: flex; flex-direction: column; gap: 2px; margin-top: 9px; min-width: 0; }
+.cc-projects-name { min-width: 0; font-size: 13px; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cc-projects-sub { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: 8px; min-height: 30px; }
+.cc-projects-time { flex: none; font-size: 11px; color: var(--cc-text-dim); font-variant-numeric: tabular-nums; }
+.cc-projects-acts { flex: none; display: inline-flex; gap: 2px; opacity: 0; transition: opacity 120ms; }
+.cc-projects-card:hover .cc-projects-acts,
+.cc-projects-card:focus-within .cc-projects-acts { opacity: 1; }
+.cc-projects-acts button { min-width: 30px; min-height: 30px; }
+.cc-projects-empty { margin-top: 40px; max-width: 420px; }
+.cc-projects-empty h2 { margin: 0; font-family: var(--cc-font-display); font-size: 22px; font-weight: 900; text-transform: uppercase; color: var(--cc-text-muted); }
+.cc-projects-empty p { margin: 8px 0 0; font-size: 12.5px; color: var(--cc-text-dim); }
+.cc-projects-empty-actions { display: flex; gap: 10px; margin-top: 16px; }
+@media (hover: none) { .cc-projects-acts { opacity: 1; } }
+@media (max-width: 720px) {
+  .cc-projects-content { padding: 24px 16px 64px; }
+  .cc-projects-title { font-size: 32px; }
+  .cc-projects-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cc-projects-btn, .cc-projects-thumb, .cc-projects-acts { transition: none; }
+}
 
 /* macOS custom titlebar: retain native placement and behavior at renderer scale. */
 .cc-window-titlebar--mac {
@@ -300,30 +430,25 @@ button, input, select { font: inherit; }
 .cc-chat-brand { min-width:0; flex:1; display:flex; align-items:center; gap:8px; }
 .cc-chat-brand-copy { min-width:0; display:flex; flex-direction:column; color:var(--cc-text); line-height:1.15; }
 .cc-chat-brand-copy small { margin-top:2px; color:var(--cc-text-dim); font-size:9.5px; }
-.cc-chat-collapsed-brand { writing-mode:vertical-rl; color:var(--cc-text-dim); font-size:10px; letter-spacing:1.5px; }
+.cc-chat-collapsed-brand { writing-mode:vertical-rl; color:var(--cc-text-dim); font-family:var(--cc-font-brand); font-size:10px; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; }
 @container chat-panel (max-width:220px) {
   .cc-chat-header { gap:4px; padding-inline:8px; }
   .cc-chat-brand { gap:4px; }
-  .cc-chat-brand-copy svg { width:86px; height:auto; }
+  .cc-chat-brand-copy .cc-wordmark { font-size:11px; }
   .cc-chat-brand-copy small { display:none; }
   .cc-chat-messages { padding-inline:8px; }
   .cc-chat-onboarding h2 { font-size:16px; line-height:21px; }
 }
 .cc-chat-onboarding { width:100%; max-width:348px; transform:translateY(-4px); }
-.cc-chat-onboarding-kicker { margin-bottom:7px; color:var(--cc-accent); font-size:10.5px; font-weight:650; letter-spacing:0.3px; }
 .cc-chat-onboarding h2 { margin:0; color:var(--cc-text); font-size:18px; font-weight:650; letter-spacing:-0.25px; line-height:24px; }
 .cc-chat-onboarding > p { margin:5px 0 17px; color:var(--cc-text-dim); font-size:11.5px; line-height:18px; }
 .cc-chat-starter-list { display:flex; flex-direction:column; border-top:0.5px solid var(--cc-border); }
 .cc-chat-starter-list button { min-width:0; min-height:52px; display:flex; align-items:center; gap:10px; padding:7px 4px; overflow:hidden; border:0; border-bottom:0.5px solid var(--cc-border); border-radius:0; background:transparent; color:var(--cc-text); cursor:pointer; text-align:left; }
 .cc-chat-starter-list button:hover { background:rgba(var(--cc-ink-rgb),0.035); }
 .cc-chat-starter-list button:focus-visible { outline:1px solid var(--cc-accent); outline-offset:-1px; }
-.cc-chat-starter-icon { width:30px; height:30px; flex:0 0 30px; display:grid; place-items:center; border-radius:4px; background:var(--cc-panel-alt); color:var(--cc-text-muted); transition:background-color 160ms ease-out,color 160ms ease-out; }
-.cc-chat-starter-list button:hover .cc-chat-starter-icon { background:rgba(var(--cc-accent-rgb),0.14); color:var(--cc-accent); }
 .cc-chat-starter-copy { min-width:0; flex:1; display:flex; flex-direction:column; gap:3px; }
 .cc-chat-starter-copy strong { overflow:hidden; font-size:12.5px; font-weight:600; line-height:16px; text-overflow:ellipsis; white-space:nowrap; }
 .cc-chat-starter-copy small { overflow:hidden; color:var(--cc-text-dim); font-size:10.5px; line-height:14px; text-overflow:ellipsis; white-space:nowrap; }
-.cc-chat-starter-arrow { color:var(--cc-text-dim); font-size:14px; transform:translateX(-3px); opacity:0; transition:opacity 160ms ease-out,transform 160ms ease-out; }
-.cc-chat-starter-list button:hover .cc-chat-starter-arrow { transform:translateX(0); opacity:1; }
 .cc-creative-picker-head { display:flex; align-items:center; gap:9px; padding:6px 7px 10px; }
 .cc-creative-picker-head > span { width:30px; height:30px; flex:0 0 30px; display:grid; place-items:center; border-radius:4px; background:rgba(var(--cc-accent-rgb),0.15); color:var(--cc-accent); }
 .cc-creative-picker-head > div { min-width:0; display:flex; flex-direction:column; gap:2px; }
@@ -362,11 +487,6 @@ button, input, select { font: inherit; }
 .cc-skill-actions .cc-skill-delete-confirm { border-color:var(--cc-danger); background:var(--cc-danger); color:var(--cc-on-accent); }
 .cc-chat-popover-backdrop { position:fixed; inset:0; z-index:80; }
 .cc-chat-popover { position:fixed; z-index:81; overflow-y:auto; padding:6px; border:0.5px solid; border-radius:6px; }
-
-@media (prefers-reduced-motion: reduce) {
-  .cc-chat-starter-icon,
-  .cc-chat-starter-arrow { transition:none; }
-}
 
 /* Editor asset panel. */
 .cc-library-panel { display:flex; flex-direction:column; height:100%; min-height:0; overflow:hidden; background:var(--cc-panel); border-right:0.5px solid var(--cc-border); container:library-panel / inline-size; font-family:Geist, system-ui,-apple-system,sans-serif; }
@@ -1171,11 +1291,6 @@ button, input, select { font: inherit; }
 }
 .cc-proposal-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:11px 12px 9px; }
 .cc-proposal-head-left { display:flex; gap:9px; min-width:0; flex:1; }
-.cc-proposal-icon {
-  width:26px; height:26px; flex:0 0 26px; display:grid; place-items:center;
-  border:0.5px solid rgba(var(--cc-accent-rgb), 0.3); border-radius:3px;
-  color:var(--cc-accent); background:rgba(var(--cc-accent-rgb), 0.1);
-}
 .cc-proposal-titles { min-width:0; flex:1; }
 .cc-proposal-title-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-height:26px; }
 .cc-proposal-title { margin:0; font-size:13px; font-weight:650; line-height:18px; color:var(--cc-text-strong); }

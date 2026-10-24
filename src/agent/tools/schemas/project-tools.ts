@@ -70,7 +70,7 @@ export const PROJECT_TOOL_SCHEMAS: AgentToolSchema[] = [
       type: 'object',
       properties: {
         projectId: { type: 'string', description: 'Source project id; defaults to current project.' },
-        name: { type: 'string', description: 'Copy display name; default "[Copy] <source>".' },
+        name: { type: 'string', description: 'Copy display name; default "Copia de <source>".' },
         activate: { type: 'boolean', description: 'Open the copy in the editor (default true).' },
         editorBaseUrl: { type: 'string' },
       },

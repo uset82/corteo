@@ -71,7 +71,7 @@ function ImportStatus({ pending, reason, error, onDismiss }: {
       style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, fontSize: 11.5 }}>
       {pending && (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: theme.accent }}>
-          <Icon name="sparkles" size={12} /> {reason}
+          <Icon name="clock" size={12} /> {reason}
         </span>
       )}
       {error && (

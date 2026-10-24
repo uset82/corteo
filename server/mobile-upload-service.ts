@@ -51,7 +51,7 @@ interface MobileUploadSession extends MobileUploadSessionSnapshot {
   activeUploads: Set<Promise<void>>;
 }
 
-export type MobilePageLocale = 'zh' | 'en' | 'it' | 'ru';
+export type MobilePageLocale = 'zh' | 'en' | 'it' | 'ru' | 'es';
 
 interface MobileUploadServiceOptions {
   bindHost?: string;
@@ -155,30 +155,36 @@ function mobilePage(locale: MobilePageLocale): string {
   const copyLocale = locale === 'it' ? 'en' : locale;
   const copy = {
     en: {
-      pageTitle: 'Upload from phone', title: 'Send media to OpenChatCut',
+      pageTitle: 'Upload from phone', title: 'Send media to Claudia',
       hint: 'Choose video, images, or audio from your phone. Keep both devices on the same local network.',
       choose: 'Choose media', multiple: 'Multiple files supported. Keep this page open until all uploads finish.',
       waiting: 'Waiting to upload', sent: 'Sent', failed: 'Upload failed', interrupted: 'Network interrupted',
     },
     ru: {
-      pageTitle: 'Загрузка с телефона', title: 'Отправить медиафайлы в OpenChatCut',
+      pageTitle: 'Загрузка с телефона', title: 'Отправить медиафайлы в Claudia',
       hint: 'Выберите видео, изображения или аудио на телефоне. Оба устройства должны быть в одной локальной сети.',
       choose: 'Выбрать файлы', multiple: 'Можно выбрать несколько файлов. Не закрывайте страницу до завершения загрузки.',
       waiting: 'Ожидание загрузки', sent: 'Отправлено', failed: 'Ошибка загрузки', interrupted: 'Соединение прервано',
     },
     zh: {
-      pageTitle: '手机传素材', title: '发送素材到 OpenChatCut',
+      pageTitle: '手机传素材', title: '发送素材到 Claudia',
       hint: '选择手机里的视频、图片或音频。电脑和手机需连接同一局域网。',
       choose: '选择素材', multiple: '支持多选，页面保持打开直到全部完成',
       waiting: '等待上传', sent: '已发送', failed: '上传失败', interrupted: '网络中断',
+    },
+    es: {
+      pageTitle: 'Subir desde el móvil', title: 'Enviar medios a Claudia',
+      hint: 'Elige vídeos, imágenes o audio del móvil. El móvil y el ordenador tienen que estar en la misma red local.',
+      choose: 'Elegir archivos', multiple: 'Puedes elegir varios. No cierres esta página hasta que terminen de subirse.',
+      waiting: 'Esperando para subir', sent: 'Enviado', failed: 'Error al subir', interrupted: 'Se cortó la conexión',
     },
   }[copyLocale];
   const scriptCopy = JSON.stringify({ waiting: copy.waiting, sent: copy.sent, failed: copy.failed, interrupted: copy.interrupted });
   return `<!doctype html>
 <html lang="${locale === 'zh' ? 'zh-CN' : locale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OpenChatCut · ${copy.pageTitle}</title><style>
-:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0b0b0c;color:#f5f5f5}
-body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;box-sizing:border-box}.card{width:min(460px,100%);background:#171719;border:1px solid #303034;border-radius:18px;padding:24px;box-sizing:border-box;box-shadow:0 24px 80px #0008}h1{font-size:23px;margin:0 0 8px}.hint{color:#aaa;margin:0 0 20px;line-height:1.5}.drop{display:grid;place-items:center;min-height:160px;border:1px dashed #555;border-radius:14px;background:#111;padding:18px;text-align:center}.pick{display:inline-block;background:#f26a2e;color:#fff;border:0;border-radius:10px;padding:12px 18px;font-weight:700}input{display:none}.status{display:grid;gap:8px;margin-top:16px}.row{background:#202024;border-radius:9px;padding:10px 12px;overflow-wrap:anywhere}.ok{color:#65d6a3}.bad{color:#ff7b72}small{color:#888}</style></head>
+<title>${copy.pageTitle} – Claudia</title><style>
+:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0a0b0d;color:#ece9e2}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;box-sizing:border-box}.card{width:min(460px,100%);background:#111317;border:1px solid #2a2e35;border-radius:8px;padding:24px;box-sizing:border-box}h1{font-size:22px;font-weight:650;margin:0 0 8px;color:#fffaf0}.hint{color:#a9adb3;margin:0 0 20px;line-height:1.5}.drop{position:relative;display:grid;place-items:center;min-height:160px;border:1px solid #2a2e35;border-radius:6px;background:#0e0f11;padding:18px;text-align:center;line-height:1.5}.drop:focus-within{outline:2px solid #d97757;outline-offset:2px}.pick{display:inline-block;background:#d97757;color:#0a0b0d;border-radius:6px;padding:12px 18px;margin-bottom:10px;font-weight:650}input{position:absolute;width:1px;height:1px;opacity:0}.status{display:grid;gap:8px;margin-top:16px}.row{background:#181b20;border-radius:6px;padding:10px 12px;overflow-wrap:anywhere}.ok{color:#3fae6a}.bad{color:#e06c60}small{color:#a9adb3}</style></head>
 <body><main class="card"><h1>${copy.title}</h1><p class="hint">${copy.hint}</p><label class="drop"><span><span class="pick">${copy.choose}</span><br><small>${copy.multiple}</small></span><input id="files" type="file" multiple accept="video/*,image/jpeg,image/png,image/gif,image/webp,image/avif,image/heic,image/heif,.heic,.heif,audio/*"></label><section id="status" class="status" aria-live="polite"></section></main>
 <script>const COPY=${scriptCopy},input=document.querySelector('#files'),status=document.querySelector('#status');
 function row(name){const el=document.createElement('div');el.className='row';el.textContent=name+' · '+COPY.waiting;status.prepend(el);return el}

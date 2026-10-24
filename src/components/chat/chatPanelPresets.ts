@@ -1,10 +1,10 @@
-import type { IconName } from '../icons';
-
+// The chat panel's four starters and four quick actions (Plan 4, BQ-3).
+// Text only, and the musician's words: montar, cortar, letra, golpes, plano.
+// There is no `icon` field on purpose — the rows carry no icon tiles.
 interface ProjectStarter {
   readonly label: string;
   readonly description: string;
   readonly prompt: string;
-  readonly icon: IconName;
 }
 
 interface QuickAction {
@@ -13,20 +13,15 @@ interface QuickAction {
 }
 
 export const EMPTY_PROJECT_STARTERS: readonly ProjectStarter[] = [
-  { label: '口播净剪', description: '去停顿、赘词并同步字幕', prompt: '精剪当前口播：去掉无效停顿和赘词，并生成同步字幕', icon: 'scissors' },
-  { label: '动态包装', description: '标题、数据卡与转场动效', prompt: '为当前内容设计动态包装，包含标题、信息卡和转场动效', icon: 'film' },
-  { label: '长片拆条', description: '提炼高光并重排为短视频', prompt: '从当前长视频中提炼高光，重排成适合发布的短视频', icon: 'video' },
-  { label: '产品故事', description: '围绕卖点组织脚本和镜头', prompt: '围绕产品卖点组织脚本和镜头，制作一支产品宣传短片', icon: 'sparkles' },
-  { label: 'AI 影像', description: '从概念生成镜头与声音', prompt: '根据我的概念策划一支 AI 影像，补全镜头、声音和节奏', icon: 'image' },
-  { label: '知识成片', description: '把主题整理成清晰讲解', prompt: '把主题整理成结构清晰、带字幕和视觉提示的讲解视频', icon: 'play' },
+  { label: '按节拍剪辑', description: '在歌曲的鼓点上切换镜头', prompt: '按歌曲的鼓点切换镜头，做出有节奏的剪辑' },
+  { label: '歌词上屏', description: '与歌声同步的歌词字幕', prompt: '生成与歌声同步的歌词字幕并应用到时间线' },
+  { label: '竖版预告', description: '9:16 的 15 秒高光片段', prompt: '挑出最精彩的部分，做一支 9:16 的 15 秒竖版预告' },
+  { label: '片头与片尾字幕', description: '开场标题与结尾字幕', prompt: '为这支片子做开场标题和结尾字幕' },
 ];
 
 export const QUICK_ACTIONS: readonly QuickAction[] = [
-  { label: '删除填充词', prompt: '删除当前口播中的填充词，并保持字幕与画面同步' },
-  { label: '删除静音', prompt: '删除当前时间线中的静音停顿，并收紧空隙' },
-  { label: '跳切', prompt: '把当前口播剪成节奏紧凑的跳切版本' },
-  { label: '生成字幕', prompt: '为当前口播生成并应用同步字幕' },
-  { label: '响度标准化', prompt: '将当前时间线中的人声音量标准化' },
-  { label: '横转竖', prompt: '将当前工程转换为 9:16 竖屏，并调整主要画面构图' },
+  { label: '在鼓点上切分', prompt: '在当前时间线的鼓点位置切分片段' },
+  { label: '添加歌词', prompt: '为当前片段添加歌词字幕' },
+  { label: '转为竖屏', prompt: '把当前工程转换为 9:16 竖屏，并调整主要画面构图' },
+  { label: '裁掉首尾', prompt: '裁掉当前片段开头和结尾的多余部分' },
 ];
-
