@@ -173,7 +173,7 @@ export const LLM_PROVIDER_PRESETS = [
     label: 'DeepSeek Harness',
     protocol: 'openai-compatible',
     baseUrl: 'http://127.0.0.1:18899/v1',
-    defaultModel: 'combo:recommended-free',
+    defaultModel: 'nvidia/nemotron-3.5-lightning:free',
   },
 ] as const satisfies readonly LlmProviderPreset[];
 
