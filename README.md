@@ -17,7 +17,7 @@ El primer objetivo son los videoclips de Carlos, como el de «Perú», su canci�
 
 ## Estado
 
-El estado de cada tarea está en [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md), y los planes completos en [`docs/plans/01-editor-claudia.md`](docs/plans/01-editor-claudia.md) (el editor y la conexión con Claudia) y [`docs/plans/02-claudia-escucha.md`](docs/plans/02-claudia-escucha.md) (Claudia escucha la canción). Si este README y `PROGRESS.md` no coinciden, vale `PROGRESS.md`.
+El estado de cada tarea está en [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md), y los planes completos en [`docs/plans/01-editor-claudia.md`](docs/plans/01-editor-claudia.md) (el editor y la conexión con Claudia), [`docs/plans/02-claudia-escucha.md`](docs/plans/02-claudia-escucha.md) (Claudia escucha la canción) y [`docs/plans/03-deepseek-harness.md`](docs/plans/03-deepseek-harness.md) (modelos gratis para el chat del editor). Si este README y `PROGRESS.md` no coinciden, vale `PROGRESS.md`.
 
 ### Lo que funciona hoy
 
@@ -34,7 +34,7 @@ Todo viene de OpenChatCut:
 Con dos salvedades:
 
 - La interfaz arranca en español, pero solo unos 100 de sus 2.520 textos están traducidos; el resto sale en inglés.
-- OpenChatCut trae su propio chat de IA y funciones de generación, que piden claves de API. Siguen ahí: el plan los apaga para que el editor no llame a ninguna IA y solo Claudia lo dirija.
+- OpenChatCut trae su propio chat de IA y funciones de generación, que piden claves de API. Siguen ahí. El plan apaga la generación y los modelos de pago; el chat se queda, pero solo con modelos gratis a través de DeepSeek Harness, o con Ollama y LM Studio en tu PC.
 
 ### Lo que falta
 
@@ -42,7 +42,8 @@ Con dos salvedades:
 |---|---|
 | Que el servidor tenga memoria suficiente sin `NODE_OPTIONS` | P0-2 |
 | Conectar a Claudia desde fuera de tu PC: `npm run start:claudia`, token fijo, túnel, tarjeta «Conectar Claudia» y una pestaña del editor sin pantalla para exportar por MCP | P0-3, P1-3 a P1-5 |
-| Apagar las IAs propias del editor; skill `videoclip-musical` para Claudia | P1-1, P1-2, P1-6 |
+| Claudia en el chat del editor con modelos gratis a través de [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) y el plugin [Our Free Model](https://github.com/Ebony-Vinyl/dsh-our-free-model), todos en el menú de modelos; el chat de DeepSeek Harness también podrá editar en corteo por MCP | HQ-1 a HQ-5, HW-1 a HW-5, H-9 |
+| Apagar la generación de imágenes, voz, video y música dentro del editor; skill `videoclip-musical` para Claudia | P1-1, P1-2, P1-6 |
 | «Claudia escucha la canción»: ritmo, secciones, emoción y coros, para que los efectos y movimientos sigan la música | L-01 a L-13 |
 | Ken Burns, subtítulos de verso y coro, importar ASS/VTT, detector de tomas repetidas, exportación HEVC, cuenta regresiva, atajos de Premiere | P2-1 a P2-6 |
 | Importar desde YouTube, Vimeo o Bilibili con sus créditos (yt-dlp) | P3-1 a P3-4 |
@@ -170,7 +171,7 @@ Las reglas, los comandos y el ciclo de trabajo están en [`AGENTS.md`](AGENTS.md
 
 corteo is the video editor of Claudia, Carlos's AI assistant: the open AI pop star from [claudia.gallery](https://claudia.gallery), running as a Grok bot. It's a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut) with a Premiere-style timeline that runs in WSL at http://localhost:5199. Claudia decides; corteo edits and exports, on a real timeline Carlos can still adjust by hand.
 
-What works today is upstream OpenChatCut: the multitrack timeline, keyframes, word-level captions, local Whisper transcription, 4K export, and an MCP server for clients on the same machine. Most of the interface is still in English. Connecting Claudia from outside the PC, song listening, platform import, version comparison and the full Spanish UI are planned; [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md) tracks them.
+What works today is upstream OpenChatCut: the multitrack timeline, keyframes, word-level captions, local Whisper transcription, 4K export, and an MCP server for clients on the same machine. Most of the interface is still in English. Connecting Claudia from outside the PC, free models for the built-in chat through DeepSeek Harness, song listening, platform import, version comparison and the full Spanish UI are planned; [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md) tracks them.
 
 Quick start (WSL, Node 24 via nvm): `npm install`, then `NODE_OPTIONS=--max-old-space-size=6144 npm run dev`, and open http://localhost:5199.
 
