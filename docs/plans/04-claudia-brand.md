@@ -8,7 +8,7 @@ Two parallel tracks, plus a merge:
 - **Qoder (BQ-1 to BQ-4):** the old name out of the text, the fork's links and the assistant's identity, the chat panel, the last cleanups.
 - **B-9 (Cursor):** merges both.
 
-> **Status, 2026-10-24.** The Qoder and DeepSeek agents were unavailable, so the WorkBuddy agent executed all eight cards in `~/corteo-workbuddy`. What is done, and what is still open, is in `docs/plans/PROGRESS.md` › "Brand track · DeepSeek (BD)" and "Brand track · Qoder (BQ)". This file stays the binding brief for the work that is left and for B-9.
+> **Status, 2026-10-24.** The Qoder and DeepSeek agents were unavailable, so the WorkBuddy agent executed all eight cards in `~/corteo-workbuddy`. What is done and what is still open is in `docs/plans/PROGRESS.md` › "Brand track · DeepSeek (BD)" and "Brand track · Qoder (BQ)". This file stays the binding brief for B-9 and for the review: the cards as they were written, the wireframes, the Chinese key for every string the tracks added, and the two kickoff prompts, kept for the record.
 
 ## Defaults
 
@@ -69,6 +69,50 @@ Spanish, sentence case, the "tú" form, plain verbs: "Nuevo proyecto", "Importar
 
 **Chat panel (BQ-3).** Header: `ClaudiaWordmark size={13}` with "Asistente de edición" below it. Collapsed rail: `ClaudiaMark` at 14 px over a vertical CLAUDIA in the brand font (10 px, 0.2em tracking, textDim). Onboarding: no kicker; the h2 reads "¿Qué quieres montar?", followed by "Describe el vídeo que quieres o empieza por una de estas ideas.". Four starters, text-only rows with no icon tile and no arrow: Montar al ritmo (Cambia de plano en los golpes de la canción), Letra en pantalla (Subtítulos de la letra sincronizados con la voz), Teaser vertical (15 segundos en 9:16 con el mejor momento), Títulos y créditos (Título de apertura y créditos finales). Four quick actions: Cortar en los golpes, Añadir la letra, Pasar a vertical, Recortar inicio y final. Composer placeholders: "Describe lo que quieres crear…" and "Dime qué cambiar. Usa @ para citar un medio.". Quick-action menu label: "Acciones rápidas…". Starter rows at least 44 px high, label 12.5px/600, description 11 px in textDim, hover ink at 3.5% with the label turning textStrong.
 
+### Wireframes
+
+Projects page (BD-4) at 1440 px wide. At 390 px the toolbar wraps under the title and the cards go two across. `T` is the icon-only media cleanup button.
+
+```text
++------------------------------------------------------------------------------+
+| |CLAUDIA                                  source  mcp  keys  ES  skin  gear  |
++------------------------------------------------------------------------------+
+|  PROYECTOS 12     [Buscar proyectos] [Importar proyecto] [Nuevo proyecto] [T] |
+|  --------------------------------------------------------------------------  |
+|  Configura un modelo para usar el asistente.            [Configurar modelo]  |
+|                                                                              |
+|  +--------------+  +--------------+  +--------------+  +--------------+      |
+|  |  thumbnail   |  |              |  |  thumbnail   |  |              |      |
+|  |              |  | VERANO EN    |  |              |  | LUNA         |      |
+|  |              |  | LA PLAYA     |  |              |  | LLENA        |      |
+|  +--------------+  +--------------+  +--------------+  +--------------+      |
+|  Corazón roto      Verano en la playa  Demo 3            Luna llena          |
+|  hace 2 h          hace 3 d            hace 1 sem        hace 2 sem          |
++------------------------------------------------------------------------------+
+```
+
+Chat panel (BQ-3), open and collapsed:
+
+```text
++-----------------------------------+    +--+
+| |CLAUDIA            runs trash  < |    |> |
+|  Asistente de edición             |    |* |  star, clay
++-----------------------------------+    |C |
+|  ¿Qué quieres montar?             |    |L |  CLAUDIA set
+|  Describe el vídeo que quieres o  |    |A |  vertically,
+|  empieza por una de estas ideas.  |    |U |  dim
+|  -------------------------------  |    |D |
+|  Montar al ritmo                  |    |I |
+|  Cambia de plano en los golpes…   |    |A |
+|  -------------------------------  |    +--+
+|  Letra en pantalla                |
+|  Teaser vertical                  |
+|  Títulos y créditos               |
++-----------------------------------+
+| Describe lo que quieres crear…    |
++-----------------------------------+
+```
+
 ## Names: what changes and what stays
 
 - **Claudia:** everything a person reads in the app; the assistant's self-introduction and the MCP instructions; exported names (the FCPXML title and events, CapCut drafts); the README prose.
@@ -82,7 +126,24 @@ Spanish, sentence case, the "tú" form, plain verbs: "Nuevo proyecto", "Importar
 - **Both:** add entries to `test:serial` in `package.json` and to `CHROME_FILES` in `src/theme-tokenization.verify.ts`. Neither appends at the end of `src/index.css`.
 - **Spanish text:** DeepSeek puts new and corrected Spanish in `es/brand.ts`, which `dictRegistry.ts` spreads over `es/index.ts`. Qoder uses `es/index.ts`. P5-1 later folds `es/brand.ts` into the per-module files.
 
-**Merging** only goes one way: DeepSeek never merges; Qoder merges `github/brand-deepseek` once, before BQ-3, and only after BD-3 is done; B-9 merges both branches into `cursor/video-editor-mvp-d191`.
+**Merging** only goes one way: DeepSeek never merges; Qoder merges `github/brand-deepseek` once, before BQ-3, and only after BD-3 is done; B-9 merges both branches into `cursor/video-editor-mvp-d191`. None of it ran as drawn — both tracks were executed on `harness-workbuddy` — so B-9 merges that branch; see Where this stands.
+
+```mermaid
+flowchart LR
+  B0["B-0: plan in repo, published to main"] --> BD1["BD-1 fonts"]
+  BD1 --> BD2["BD-2 skin"]
+  BD2 --> BD3["BD-3 marks and tab"]
+  BD3 --> BD4["BD-4 projects page"]
+  HQ["Qoder Plan 3: HQ-1 to HQ-5"] --> BQ1["BQ-1 old name out"]
+  B0 --> BQ1
+  BQ1 --> BQ2["BQ-2 links and identity"]
+  BQ2 --> BQ3["BQ-3 chat panel"]
+  BD3 -->|"one merge of brand-deepseek"| BQ3
+  BQ3 --> BQ4["BQ-4 cleanups and review"]
+  H9["H-9 harness merge"] --> B9["B-9 brand merge"]
+  BD4 --> B9
+  BQ4 --> B9
+```
 
 **Expected conflicts:** the `test:serial` line, `CHROME_FILES`, `src/index.css`, the import list in `en/index.ts`, and the PROGRESS sections. Keep both sides every time.
 
@@ -118,13 +179,126 @@ The header, the collapsed rail, the onboarding and the four starters with no ico
 ### BQ-4 · Cleanups and the review
 Remove the decorative conic-gradient account circle in `src/components/TopBar.tsx` and add the file to `CHROME_FILES` if no raw colours remain. Spanish: "Volver a proyectos". The default name of a copied project becomes `Copia de <name>` in `src/persist/projectStore.ts:415` and in `src/agent/tools/schemas/project-tools.ts:73`, then run `npm run generate:server-tool-catalog`. Review the editor's top bar, the chat and the dialogs they open against the AI-tells list; fix small misses on the spot and record the rest under "Qoder (brand): review".
 
+## New strings: the Chinese key for each one
+
+Upstream keys every UI string by its Chinese original, so the key stays Chinese even where the copy is new. The Spanish entry for all of these lives in `src/i18n/dict/es/brand.ts`; the English entry lives in `src/i18n/dict/en/brand.ts` unless the last column says otherwise. Placeholders such as `{n}` must appear unchanged in every language.
+
+### Projects page (BD-4)
+
+| Key | English | Spanish | English file |
+|---|---|---|---|
+| `工程` | Projects | Proyectos | `components.ts` |
+| `新建工程` | New Project | Nuevo proyecto | `components.ts` |
+| `导入工程` | Import Project | Importar proyecto | `components.ts` |
+| `搜索工程` | Search projects | Buscar proyectos | `components.ts` |
+| `清除搜索` | Clear search | Limpiar búsqueda | `components.ts` |
+| `清理素材` | Clean Up Media | Limpiar medios | `components.ts` (the dashboard one) |
+| `配置模型` | Configure Model | Configurar modelo | `components.ts` |
+| `{n} 个` | {n} total | {n} | `components.ts` |
+| `{n} / {total} 个` | {n} of {total} | {n} de {total} | `components.ts` |
+| `配置模型后即可使用助手。` | Set up a model to use the assistant. | Configura un modelo para usar el asistente. | `brand.ts` |
+| `还没有工程` | No projects yet | Todavía no hay proyectos | `brand.ts` |
+| `新建一个工程，或导入一个 .ccproj 文件。` | Create a new project or import a .ccproj file. | Crea un proyecto nuevo o importa un archivo .ccproj. | `brand.ts` |
+| `没有找到匹配“{query}”的工程` | No projects match “{query}” | No hay proyectos que coincidan con “{query}” | `components.ts` |
+
+### Fork links (BQ-2)
+
+| Key | English | Spanish | English file |
+|---|---|---|---|
+| `源代码 (AGPL)` | Source code (AGPL) | Código fuente (AGPL) | `brand.ts` |
+
+### Chat panel labels (BQ-1)
+
+The two keys that used to name the old product. The value changes; the key is the new one.
+
+| Key | English | Spanish | English file |
+|---|---|---|---|
+| `展开助手` | Show assistant | Mostrar asistente | `chat.ts` |
+| `收起助手` | Hide assistant | Ocultar asistente | `chat.ts` |
+
+### Chat panel (BQ-3)
+
+| Key | English | Spanish | English file |
+|---|---|---|---|
+| `编辑助手` | Editing assistant | Asistente de edición | `brand.ts` |
+| `你想剪什么？` | What do you want to cut? | ¿Qué quieres montar? | `brand.ts` |
+| `描述你想要的视频，或从下面挑一个开始。` | Describe the video you want, or start from one of these ideas. | Describe el vídeo que quieres o empieza por una de estas ideas. | `brand.ts` |
+
+### Starters and quick actions (BQ-3)
+
+Four starters and four quick actions, each with a label, a one-line description and the prompt the button sends.
+
+| Key | English | Spanish | English file |
+|---|---|---|---|
+| `按节拍剪辑` | Cut to the beat | Montar al ritmo | `brand.ts` |
+| `在歌曲的鼓点上切换镜头` | Change shots on the hits | Cambia de plano en los golpes de la canción | `brand.ts` |
+| `按歌曲的鼓点切换镜头，做出有节奏的剪辑` | Cut the shots on the hits and give the edit a rhythm | Monta los planos en los golpes de la canción y dale ritmo al corte | `brand.ts` |
+| `歌词上屏` | Lyrics on screen | Letra en pantalla | `brand.ts` |
+| `与歌声同步的歌词字幕` | Lyric subtitles synced to the vocal | Subtítulos de la letra sincronizados con la voz | `brand.ts` |
+| `生成与歌声同步的歌词字幕并应用到时间线` | Generate lyric subtitles synced to the vocal and apply them to the timeline | Genera los subtítulos de la letra sincronizados con la voz y aplícalos a la línea de tiempo | `brand.ts` |
+| `竖版预告` | Vertical teaser | Teaser vertical | `brand.ts` |
+| `9:16 的 15 秒高光片段` | 15 seconds in 9:16 with the best moment | 15 segundos en 9:16 con el mejor momento | `brand.ts` |
+| `挑出最精彩的部分，做一支 9:16 的 15 秒竖版预告` | Pick the best moment and make a 15-second 9:16 teaser | Elige el mejor momento y monta un teaser vertical de 15 segundos en 9:16 | `brand.ts` |
+| `片头与片尾字幕` | Titles and credits | Títulos y créditos | `brand.ts` |
+| `开场标题与结尾字幕` | Opening title and closing credits | Título de apertura y créditos finales | `brand.ts` |
+| `为这支片子做开场标题和结尾字幕` | Add an opening title and closing credits to this piece | Pon un título de apertura y créditos finales a esta pieza | `brand.ts` |
+| `在鼓点上切分` | Cut on the hits | Cortar en los golpes | `brand.ts` |
+| `在当前时间线的鼓点位置切分片段` | Split the clips on the hits in the current timeline | Corta los clips en los golpes de la línea de tiempo actual | `brand.ts` |
+| `添加歌词` | Add the lyrics | Añadir la letra | `brand.ts` |
+| `为当前片段添加歌词字幕` | Add lyric subtitles to the current clips | Añade los subtítulos de la letra a los clips actuales | `brand.ts` |
+| `转为竖屏` | Go vertical | Pasar a vertical | `brand.ts` |
+| `把当前工程转换为 9:16 竖屏，并调整主要画面构图` | Turn the project into 9:16 and reframe the main shot | Pasa el proyecto a 9:16 y reencuadra el plano principal | `brand.ts` |
+| `裁掉首尾` | Trim head and tail | Recortar inicio y final | `brand.ts` |
+| `裁掉当前片段开头和结尾的多余部分` | Trim the extra material at the start and end of the current clips | Recorta lo que sobra al principio y al final de los clips actuales | `brand.ts` |
+
+### Chat strings that only had an English fallback (BQ-3)
+
+Spanish users were reading these in English before the track touched them.
+
+| Key | English | Spanish | English file |
+|---|---|---|---|
+| `清空对话` | Clear chat | Vaciar la conversación | `chat.ts` |
+| `加载更早消息` | Load earlier messages | Cargar mensajes anteriores | `chat.ts` |
+| `聊天滚动快捷操作` | Chat scroll shortcuts | Atajos de desplazamiento del chat | `chat.ts` |
+| `快速操作` | Quick actions | Acciones rápidas | `chat.ts` |
+| `快速操作…` | Quick actions… | Acciones rápidas… | `chat.ts` |
+| `描述你想要创建的内容...` | Describe what you want to create... | Describe lo que quieres crear… | `chat.ts` |
+| `告诉 AI 要做哪些修改 - @ 引用素材` | Tell the AI what to change — @ to reference assets | Dime qué cambiar. Usa @ para citar un medio. | `chat.ts` |
+| `以下能力未配置，相关功能暂不可用：` | These capabilities are not configured; related features are unavailable: | Estas capacidades no están configuradas y no están disponibles: | `chat.ts` |
+| `去设置配置` | Open settings | Ir a ajustes | `chat.ts` |
+
+### Top bar (BQ-4)
+
+| Key | English | Spanish | English file |
+|---|---|---|---|
+| `返回工程列表` | Back to projects | Volver a proyectos | `topbar.ts` |
+
 ## B-9 · Merge the brand tracks (Cursor agent only)
 
-1. Read both progress tables (`git show github/brand-deepseek:docs/plans/PROGRESS.md`, `git show github/brand-qoder:docs/plans/PROGRESS.md`) and look at the screenshots.
+The plan drew two branches to merge. They were never created: both tracks ran on `harness-workbuddy`, so that is what this merges.
+
+1. Read the brand tables with `git show github/harness-workbuddy:docs/plans/PROGRESS.md` and the harness table with `git show github/harness-qoder:docs/plans/PROGRESS.md`. Look at the screenshots the cards report.
 2. Review both diffs against the brief and the AI-tells list.
-3. Merge `brand-deepseek`, then `brand-qoder` once H-9 is done, keeping both sides of the expected conflicts.
+3. Merge `harness-workbuddy` into `cursor/video-editor-mvp-d191`, and `harness-qoder` once H-9 is done. The two lines diverged at `1d00e0a`, so this is a real merge: keep both sides of the conflicts listed under Parallel work.
 4. Rewrite the README and AGENTS prose: the product is Claudia; corteo stays the repository and command name; the two font licences go into the credits.
 5. `npx tsc -b`, `npm run lint`, `npm test`, `npm run build`. Check the projects page and the chat at 1440 and 390 px wide, push, and ask Carlos to publish.
+
+## Where this stands
+
+Facts as of 2026-10-24, so the next session does not redo a card:
+
+- The eight cards and B-0 are on `github/harness-workbuddy`, at `1fabc26`: `1ddc7bd` (BD-1 to BD-4), `f179f63` (BQ-1 to BQ-4), `01bbb02` (B-0) and `1fabc26` (the PROGRESS entry). That branch is `github/main` (`97a23e6`) plus those four commits, and it carries no HW work yet (HW-1 to HW-5 are `todo`).
+- `github/main` and `origin/cursor/video-editor-mvp-d191` are both still at `97a23e6`. None of the brand work is on either remote yet.
+- The local checkout `~/corteo` is on `cursor/video-editor-mvp-d191` at `2625c77`, 17 commits that are on neither remote. That line and `harness-workbuddy` diverged at `1d00e0a`, so bringing the brand work into it is a real merge, not a fast-forward. B-9 does it.
+- BQ-4 is `blocked`, not `done`: its review, the screenshots and the full gate need a dev server and `npm test`, and this sandbox refuses `wsl.exe`.
+
+Before B-9 can finish, someone needs a WSL session:
+
+```bash
+cd ~/corteo && git fetch github
+git log --oneline --graph HEAD...github/harness-workbuddy   # the two lines, side by side
+npm test && npm run build                                   # the gate BQ-4 could not run
+```
 
 ## Not in this plan
 
@@ -134,3 +308,71 @@ Remove the decorative conic-gradient account circle in `src/components/TopBar.ts
 - Redesigning the timeline, inspector, media or export panels beyond the new skin.
 - Sentence-case fixes in English, Italian and Russian beyond the keys this plan touches.
 - `README_ZH.md`, which stays upstream's.
+
+
+## Appendix: the two kickoff prompts
+
+Written when the plan was approved, and kept for the record. **Do not paste them again.** The DeepSeek and Qoder agents were unavailable on 2026-10-24, the branches `brand-deepseek` and `brand-qoder` were never created, and the WorkBuddy agent executed all eight cards on `harness-workbuddy`. Running these now would redo finished work. The kickoffs still in use are Plan 3's (`docs/plans/03-deepseek-harness.md`).
+
+### DeepSeek (never used)
+
+```text
+You are the DeepSeek agent on corteo, a music-video editor in the browser (a fork of OpenChatCut) that is being renamed Claudia. Your job is Plan 4's DeepSeek track: BD-1 to BD-4 (brand fonts, the Claudia skin, the marks and tab, the projects page).
+
+Where you work
+- Only in ~/corteo-deepseek, on branch brand-deepseek. Don't touch ~/corteo, ~/corteo-qoder or ~/corteo-workbuddy.
+- Every command (git, npm, node, npx, curl) runs inside WSL. If your app runs on Windows, wrap each one:
+  wsl.exe -e bash -lc 'source ~/.nvm/nvm.sh && cd ~/corteo-deepseek && <command>'
+  If wsl.exe is blocked, stop and ask Carlos to allow it. Never run git or npm from Windows on a \\wsl$ path.
+
+First
+1. git status must be clean. Then: git fetch github && git merge --ff-only github/main
+2. docs/plans/04-claudia-brand.md must exist. If it doesn't, stop and tell Carlos to publish Cursor's branch to GitHub main.
+3. If node_modules is missing: ONNXRUNTIME_NODE_INSTALL=skip npm install
+4. Read AGENTS.md, then docs/plans/04-claudia-brand.md (design brief, Names, Parallel work, cards BD-1 to BD-4), then the "Brand track · DeepSeek (BD)" section at the end of docs/plans/PROGRESS.md.
+
+Rules
+- The design brief is binding: tokens, type, sizes, copy and the AI-tells list. Where something is open, pick what fits the brief and log it under "DeepSeek: decisions".
+- Edit only the files the plan assigns to the DeepSeek track. Never edit src/i18n/dict/es/index.ts, src/components/chat/, src/components/TopBar.tsx, src/components/DashboardHeaderLinks.tsx, src/components/icons.tsx, src/ui/, src/agent/, server/, README.md, AGENTS.md, or the Qoder sections of PROGRESS.md.
+- Fonts only from the URLs in BD-1. No new npm dependencies, no global tools, no system packages.
+- Dev server, in its own terminal: NODE_OPTIONS=--max-old-space-size=6144 npm run dev -- --port 5203, then open http://localhost:5203
+- Per task: the checks of the work loop in AGENTS.md plus the card's Verify; set the task done in your table; commit with the task ID first, staging files by name (never git add -A or git add .); then git push github brand-deepseek. Push BD-3 as soon as it is done: Qoder waits for it.
+- Never push main or any other branch, never force-push, never merge or rebase.
+- BD-3 and BD-4 end with the AI-tells check from the brief; write the result in your table's notes.
+- At most three attempts per failure, then set the task blocked with an entry under "DeepSeek: blockers" and go on.
+
+Finish
+After BD-4, or when nothing is left that you can do: npm test (with CC_RENDER_GL=swangle if there is no GPU) and npm run build, push, and report to Carlos: tasks done, tasks blocked and why, the screenshots in test-results/brand/, and the real npm test result (pass count or failing test names).
+```
+
+### Qoder (never used)
+
+```text
+You are the Qoder agent on corteo. Start this only after your Plan 3 track (HQ-1 to HQ-5) is done or blocked and reported to Carlos. Your job now is Plan 4's Qoder track: BQ-1 to BQ-4 (the old name out of the text, the fork's links and the assistant's identity, the chat panel, the last cleanups and the review).
+
+Where you work
+- Only in ~/corteo-qoder, on a new branch brand-qoder. Don't touch ~/corteo, ~/corteo-deepseek or ~/corteo-workbuddy.
+- Same WSL rule as Plan 3: if your IDE runs on Windows, wrap each command:
+  wsl.exe -e bash -lc 'source ~/.nvm/nvm.sh && cd ~/corteo-qoder && <command>'
+  If wsl.exe is blocked, stop and ask Carlos.
+
+First
+1. git status must be clean and harness-qoder fully pushed.
+2. git fetch github && git switch -c brand-qoder harness-qoder && git merge --no-edit github/main
+   If docs/plans/PROGRESS.md conflicts, keep both sides.
+3. docs/plans/04-claudia-brand.md must exist now.
+4. Read AGENTS.md, then docs/plans/04-claudia-brand.md (design brief, Names, Parallel work, cards BQ-1 to BQ-4), then the "Brand track · Qoder (BQ)" section of docs/plans/PROGRESS.md.
+
+Rules
+- The design brief is binding. Log open choices under "Qoder (brand): decisions".
+- Don't edit the files the plan assigns to the DeepSeek track.
+- Your one allowed merge, right before BQ-3: git fetch github && git show github/brand-deepseek:docs/plans/PROGRESS.md
+  - If BD-3 is done there: git merge --no-edit github/brand-deepseek. On conflicts keep both sides (test:serial in package.json, CHROME_FILES in src/theme-tokenization.verify.ts, src/index.css, src/i18n/dict/en/index.ts), then run npx tsc -b and npm run verify:i18n.
+  - If BD-3 is not done: set BQ-3 blocked ("waiting for BD-3"), do BQ-4, push and report. Carlos restarts you when BD-3 is done.
+- Dev server: NODE_OPTIONS=--max-old-space-size=6144 npm run dev -- --port 5202
+- Per task: the work-loop checks plus the card's Verify, set it done, commit with the task ID first (stage files by name), then git push github brand-qoder. Never push main or another branch, never force-push, never merge anything except the one merge above.
+- At most three attempts per failure, then set the task blocked with an entry under "Qoder (brand): blockers".
+
+Finish
+npm test and npm run build, push, and report to Carlos: tasks done, tasks blocked and why, the BQ-4 review, the screenshots in test-results/brand/, and the real npm test result.
+```
