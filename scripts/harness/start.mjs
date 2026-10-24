@@ -14,9 +14,15 @@ import {
 
 const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 
+export const DEFAULT_CORTEO_MCP_URL = 'http://localhost:5199/api/external-mcp/mcp';
+
 export function buildHarnessArgs({ webPort, patchPath }) {
-  const args = ['web', '--no-open', '--host', '127.0.0.1', '--port', String(webPort)];
+  // `--patch` is a launcher flag: the first token the launcher does not know
+  // starts the web app's own arguments, so it has to come before `--no-open`.
+  // Appended after `--port` the web app would receive and reject it.
+  const args = ['web'];
   if (patchPath) args.push('--patch', patchPath);
+  args.push('--no-open', '--host', '127.0.0.1', '--port', String(webPort));
   return args;
 }
 
@@ -98,14 +104,14 @@ export async function startHarness({
   logStep(`Arrancando DeepSeek Harness en http://127.0.0.1:${web}`);
   logStep('Abre el enlace que imprima dsh tal cual: lleva el token de acceso.');
   logStep('La clave del reenvío sale de: npm run harness:doctor');
-  if (patch) logStep(`corteo entra por MCP en ${env.CORTEO_MCP_URL ?? 'http://localhost:5199/api/external-mcp/mcp?toolExposure=progressive'}`);
+  if (patch) logStep(`corteo entra por MCP en ${env.CORTEO_MCP_URL ?? DEFAULT_CORTEO_MCP_URL}`);
 
   const args = buildHarnessArgs({ webPort: web, patchPath: patch });
   const child = spawnFn(paths.dshBin, args, {
     env: {
       ...env,
       DSH_HOME: paths.home,
-      CORTEO_MCP_URL: env.CORTEO_MCP_URL ?? 'http://localhost:5199/api/external-mcp/mcp?toolExposure=progressive',
+      CORTEO_MCP_URL: env.CORTEO_MCP_URL ?? DEFAULT_CORTEO_MCP_URL,
       ...(mcp.token ? { CORTEO_MCP_TOKEN: mcp.token } : {}),
     },
     stdio: 'inherit',

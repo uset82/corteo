@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  buildHarnessArgs, ensureForwardEnabled, resolveCorteoMcp, startHarness,
+  buildHarnessArgs, DEFAULT_CORTEO_MCP_URL, ensureForwardEnabled, resolveCorteoMcp, startHarness,
 } from './start.mjs';
 
 const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
@@ -37,8 +37,8 @@ try {
       ['web', '--no-open', '--host', '127.0.0.1', '--port', '3080'],
     );
     assert.deepEqual(
-      buildHarnessArgs({ webPort: 3081, patchPath: '/tmp/corteo.yml' }).slice(-2),
-      ['--patch', '/tmp/corteo.yml'],
+      buildHarnessArgs({ webPort: 3081, patchPath: '/tmp/corteo.yml' }),
+      ['web', '--patch', '/tmp/corteo.yml', '--no-open', '--host', '127.0.0.1', '--port', '3081'],
     );
   }
 
@@ -134,10 +134,12 @@ try {
     });
     assert.equal(result.code, 0);
     assert.equal(captured.cmd, join(home, 'runtime/node_modules/.bin/dsh'));
-    assert.deepEqual(captured.args.slice(-2), ['--patch', patchPath]);
+    assert.deepEqual(captured.args.slice(0, 3), ['web', '--patch', patchPath]);
+    assert.equal(captured.args.indexOf('--patch') < captured.args.indexOf('--no-open'), true);
     assert.equal(captured.options.env.DSH_HOME, home);
     assert.equal(captured.options.env.CORTEO_MCP_TOKEN, 'token-para-mcp');
-    assert.match(captured.options.env.CORTEO_MCP_URL, /^http:\/\/localhost:5199\//);
+    // Full exposure: progressive hides the recovery tools a long chat needs.
+    assert.equal(captured.options.env.CORTEO_MCP_URL, DEFAULT_CORTEO_MCP_URL);
     const settings = JSON.parse(await readFile(join(home, 'our-free-model/settings.json'), 'utf8'));
     assert.equal(settings.forward.enabled, true);
     assert.equal(settings.forwardKey, 'clave-larga-1234');

@@ -1,0 +1,15 @@
+# Extra dsh layer that gives DeepSeek Harness's own chat the corteo tools over
+# streamable HTTP. Loaded with `npm run harness` (--patch); the URL and bearer
+# token come from corteo's dev profile, never from this file.
+# Full tool exposure: progressive hides list_edit_sessions/recover_edit_session,
+# so a chat that rebinds or reloads the editor cannot free its old session.
+- insert:
+    - id: corteo-mcp
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: corteo
+        transport: streamable-http
+        url: !!js process.env.CORTEO_MCP_URL || 'http://localhost:5199/api/external-mcp/mcp'
+        headers:
+          Authorization: !!js '`Bearer ${process.env.CORTEO_MCP_TOKEN}`'
+        toolCallTimeoutMs: 600000

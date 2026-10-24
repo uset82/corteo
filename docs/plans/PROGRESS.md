@@ -358,7 +358,7 @@ Only the WorkBuddy agent edits this section, in `~/corteo-workbuddy` on branch `
 | HW-1 | Pin and install | done | |
 | HW-2 | `npm run harness` and `npm run harness:doctor` | done | HW-1 |
 | HW-3 | Which free models can edit | done | HW-2 |
-| HW-4 | DeepSeek Harness edits corteo over MCP | todo | HW-2 |
+| HW-4 | DeepSeek Harness edits corteo over MCP | done | HW-2 |
 | HW-5 | Guide for Carlos | todo | HW-2, HW-3, HW-4 |
 
 ### WorkBuddy: decisions
@@ -369,6 +369,10 @@ Only the WorkBuddy agent edits this section, in `~/corteo-workbuddy` on branch `
 - 2026-10-25 · HW-2 · Real run on 2026-10-25: `npm run harness:doctor` passed all five steps against the running harness (34 models, `http://127.0.0.1:18899/v1`, key ending `arcM`), and `npm run harness` with the instance up reported it and exited 0 without spawning a second one.
 - 2026-10-25 · HW-3 · The report ranks only models that returned a schema-valid `split_item` call with the right arguments, then by latency. A 429 is the lane's quota, not a model defect, so those rows stay in the report as "rate limit" instead of being retried; retrying would burn the same shared quota.
 - 2026-10-25 · HW-3 · The five tool schemas come from corteo's own `assets/agent/openchatcut-tool-schemas.json`, so a model is judged against what the editor really exposes. One request per model with 300 ms between them; the sweep takes ~4 minutes.
+- 2026-10-25 · HW-4 · `--patch` has to be the first app argument. dsh's launcher stops parsing at the first token it does not own, so `web --no-open --host … --port … --patch <file>` hands `--patch` to the web app, which rejects it. The start script now emits `web --patch <file> --no-open …` and the verify pins that order.
+- 2026-10-25 · HW-4 · The MCP client uses full tool exposure, not `?toolExposure=progressive`. Progressive's boot set leaves out `list_edit_sessions` and `recover_edit_session`, and ToolSearch cannot activate them, so any session orphaned by a `target_project` rebind or an editor reload wedges the chat on "An edit session is already active" with no way out. Reproduced live; with full exposure the client loaded 103 tools and `list_edit_sessions` answered directly.
+- 2026-10-25 · HW-4 · The chat applies edits with `approvalMode: "auto"` and `review_edit_session`; manual mode only publishes a proposal and waits for a click in the editor. The edit session id returned by `begin_edit_session` must be reused for every later call — a `target_project` in between orphans it, so the guide tells the model to bind once and then stay put.
+- 2026-10-25 · HW-4 · Real run on 2026-10-25: `npm run harness` bound project `97e6d98d` at `http://localhost:5201`; the dsh chat read the timeline, opened an auto session and applied `split_item` at frame 60; the editor showed V1 as 00:02 + 00:01 (Video2 unchanged at 00:03) and the store recorded proposal `cad8879c` as `applied` with 1 operation.
 
 ### WorkBuddy: blockers
 None yet. Same format as "Blockers".
@@ -382,7 +386,9 @@ Sweep of 2026-10-25 22:54Z over all 34 models on `127.0.0.1:18899`, one request 
 | 2 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | yes | `split_item` | yes | yes | 1256 ms |
 | 3 | `nvidia/nemotron-3-ultra-550b-a55b:free` | yes | `split_item` | yes | yes | 1769 ms |
 
-Also correct: `nvidia/nemotron-3.5-super-vl:free` (1810 ms), `kilo-auto/free` (2026 ms), `cohere/north-mini-code:free` (2700 ms), `dots-studio/dots-3-note-preview:free` (3555 ms), `nvidia/nemotron-3.5-lightning:free` (6184 ms), `openrouter/free` (8882 ms). Four lanes knew the schema but called `read_timeline` instead of splitting; `stealth/glyph-cluster` emitted no call. Model used for the HW-4 MCP edit: pending.
+Also correct: `nvidia/nemotron-3.5-super-vl:free` (1810 ms), `kilo-auto/free` (2026 ms), `cohere/north-mini-code:free` (2700 ms), `dots-studio/dots-3-note-preview:free` (3555 ms), `nvidia/nemotron-3.5-lightning:free` (6184 ms), `openrouter/free` (8882 ms). Four lanes knew the schema but called `read_timeline` instead of splitting; `stealth/glyph-cluster` emitted no call.
+
+Model used for the HW-4 MCP edit: `nvidia/nemotron-3-ultra-550b-a55b:free` («Kilo Nemotron 3 Ultra», reasoning High) in the dsh chat. It read the timeline, opened an auto session and applied `split_item` at frame 60 of `seed_1` in project `97e6d98d`; the editor then showed V1 as 00:02 + 00:01 and the store marked the proposal `applied` with 1 operation. Two earlier models did not get there: `liquid/lfm-2.5-2.6b:free` hit its lane quota (429) on the first turn, and `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` read «línea de tiempo» as the workspace's task list and opened `PROGRESS.md` instead of the MCP tools.
 
 ---
 
