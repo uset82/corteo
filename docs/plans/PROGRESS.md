@@ -355,14 +355,15 @@ Only the WorkBuddy agent edits this section, in `~/corteo-workbuddy` on branch `
 
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
-| HW-1 | Pin and install | todo | |
+| HW-1 | Pin and install | done | |
 | HW-2 | `npm run harness` and `npm run harness:doctor` | todo | HW-1 |
 | HW-3 | Which free models can edit | todo | HW-2 |
 | HW-4 | DeepSeek Harness edits corteo over MCP | todo | HW-2 |
 | HW-5 | Guide for Carlos | todo | HW-2, HW-3, HW-4 |
 
 ### WorkBuddy: decisions
-None yet. Same format as "Decisions made during the work".
+- 2026-10-25 · HW-1 · `config/harness.json` holds the pins once; `scripts/harness/lib.mjs` reads them, so no script repeats `0.2.1-rc.2`, `v2.5.9` or the commit. The installer refuses the settings rewrite only when a write is needed: a re-run that already finds `distribution: managed` is a no-op even with the harness running. Reason: the harness stays up for hours and must not force a stop just to confirm the pins.
+- 2026-10-25 · HW-1 · `0.2.1-rc.2` stays. The manual install from HQ-5 already runs with the plugin, so the `0.1.7-rc.2` fallback is documented but unused.
 
 ### WorkBuddy: blockers
 None yet. Same format as "Blockers".
