@@ -1,0 +1,64 @@
+name: 缺陷报告
+description: 桌面端或编辑器出现了异常行为
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。请填写版本号并写清复现步骤，这两项决定问题能被多快定位。
+  - type: dropdown
+    id: version
+    attributes:
+      label: 版本
+      description: 选择出现问题的构建（最新 Release 排在最前）。
+      options:
+        - v0.2.17
+        - v0.2.16
+        - v0.2.14
+        - v0.2.12
+        - v0.2.9
+        - 更早
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 平台
+      options:
+        - macOS（Apple 芯片）
+        - macOS（Intel）
+        - Windows
+        - Linux
+        - 浏览器版本
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 打开包含……的工程
+        2. 把片段拖到……
+        3. ……
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期行为
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志或录屏
+      description: 可以直接拖入文件，或粘贴控制台输出。
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 已搜索过现有 issue。
+          required: true
+        - label: 上面填写的是能稳定复现的构建版本。
+          required: true

@@ -1,0 +1,45 @@
+name: CI
+
+# The unit and integration verifiers run on every platform push; the render
+# fixture additionally needs a real GPU-backed Chromium, which only the macOS
+# runner provides (Linux intentionally skips exact frame mapping).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci --loglevel=error
+      - run: npm run lint
+      - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: npm test
+
+  frame-sync:
+    name: Render fixture (frame mapping)
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci --loglevel=error
+      - run: brew install ffmpeg
+      - run: node src/gl/clipFxExport.verify.mjs

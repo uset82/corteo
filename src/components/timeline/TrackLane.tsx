@@ -15,7 +15,6 @@ import { canRateStretchItem, rateStretchGeometry } from '../../editor/rateStretc
 import { sourceWindowForTimelineRange } from '../../editor/sourceLimit';
 import { planSlip } from '../../editor/slip';
 import type { EditorCommands } from '../../editor/store';
-import { hasLibraryDrag, parseLibraryDrag, type LibraryDragPayload } from '../../library/drag';
 import { ALL_FX, FX_EFFECTS, LUT_EFFECTS } from '../../gl/fx/effects';
 import { ZOOM_SHAPE_LABELS } from '../../editor/types';
 import { useT } from '../../i18n/locale';
@@ -26,15 +25,15 @@ import {
 } from './timelineUtil';
 import { ClipMediaLayers } from './ClipMediaLayers';
 import { isPreviewable } from '../../media/clipPreview';
-import { canDropMediaAsset, hasCompatibleMediaDrag, parseMediaAssetDrag } from '../../media/drag';
 import { useDuplicateIds } from '../../duplicates/duplicateHighlightStore';
+import { hasLibraryDrag, parseLibraryDrag, type LibraryDragPayload } from '../../library/drag';
+import { laneDragHandlers } from './laneDrop';
 import type { useTimelinePointer } from './useTimelinePointer';
 import { topClipOverlapSpans } from './trackOverlap';
 import {
   selectionMovePreviewDeltaForItem,
   type TimelineSelectionMovePreview,
 } from '../../captions/captionGroupMove';
-import { droppedFiles, hasExternalFiles } from '../../media/externalFileDrop';
 
 /** corner chips so applied fx / lut / zoom / denoise / transition are visible on the clip */
 function ClipEffectBadges({
@@ -194,55 +193,10 @@ export function TrackLane({
         e.stopPropagation();
         onTrackContextMenu({ trackId, x: e.clientX, y: e.clientY, frame: frameFromClientX(e.clientX) });
       }}
-      onDragOver={(e) => {
-        if (locked || (!hasLibraryDrag(e)
-          && !hasCompatibleMediaDrag(e, laneKind)
-          && !hasExternalFiles(e.dataTransfer))) return;
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
-        setLibDropTarget(`track:${trackId}`);
-      }}
-      onDragLeave={() => setLibDropTarget((t) => (t === `track:${trackId}` ? null : t))}
-      onDrop={(e) => {
-        const files = droppedFiles(e.dataTransfer);
-        if (files.length) {
-          setLibDropTarget(null);
-          if (locked || !onDropExternalFiles) return;
-          e.preventDefault();
-          e.stopPropagation();
-          onDropExternalFiles(files, trackId, frameFromClientX(e.clientX));
-          return;
-        }
-        const mediaAssetId = parseMediaAssetDrag(e);
-        if (mediaAssetId) {
-          setLibDropTarget(null);
-          e.preventDefault();
-          e.stopPropagation();
-          const asset = (state.assets ?? []).find((item) => item.id === mediaAssetId);
-          if (!locked && asset && canDropMediaAsset(asset, laneKind)) {
-            commands.addMediaItem(asset, {
-              track: trackId,
-              startFrame: frameFromClientX(e.clientX),
-              ripple: rippleOnDrop,
-              overwrite: overwriteOnDrop,
-            });
-          }
-          return;
-        }
-        const payload = parseLibraryDrag(e);
-        setLibDropTarget(null);
-        if (!payload || locked) return;
-        e.preventDefault();
-        e.stopPropagation();
-        // Prefer clip under cursor if any (fx/lut/zoom/transition)
-        const f = frameFromClientX(e.clientX);
-        const hit = items.find((it) => f >= it.startFrame && f < it.startFrame + it.durationInFrames);
-        if (hit && (payload.kind === 'fx' || payload.kind === 'lut' || payload.kind === 'zoom' || payload.kind === 'transition')) {
-          applyLibraryToClip(payload, hit);
-          return;
-        }
-        applyLibraryToTrack(payload, trackId, f);
-      }}
+      {...laneDragHandlers({
+        state, commands, trackId, laneKind, locked, items, rippleOnDrop, overwriteOnDrop,
+        setLibDropTarget, frameFromClientX, onDropExternalFiles, applyLibraryToClip, applyLibraryToTrack,
+      })}
     >
       {renderedItems.map((it) => {
         const selected = isItemSelected(state, it.id);

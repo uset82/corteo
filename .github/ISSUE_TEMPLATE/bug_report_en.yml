@@ -1,0 +1,64 @@
+name: Bug report
+description: Something in the desktop app or the editor misbehaves
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please fill in the version and the exact steps — both decide how fast this can be reproduced.
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: Pick the build you hit the bug on (the newest Release is listed first).
+      options:
+        - v0.2.17
+        - v0.2.16
+        - v0.2.14
+        - v0.2.12
+        - v0.2.9
+        - older
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS (Apple silicon)
+        - macOS (Intel)
+        - Windows
+        - Linux
+        - Browser build
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a project with …
+        2. Drag the clip to …
+        3. …
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screen recording
+      description: Drag a file in, or paste the relevant console output.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before filing
+      options:
+        - label: I searched the existing issues.
+          required: true
+        - label: The version above is the build I could actually reproduce this on.
+          required: true

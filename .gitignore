@@ -114,3 +114,4 @@ public/whisper-cli/
 
 # Probe scratch media
 test-media/probe.txt
+.local-bin/
