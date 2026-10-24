@@ -226,4 +226,23 @@ export default {
   // Inspector color correction
   '曝光': 'Exposición',
   '色温': 'Temperatura de color',
+
+  // Source Monitor
+  '源监视器': 'Monitor de origen',
+  '关闭源监视器': 'Cerrar monitor de origen',
+  '在源监视器中打开': 'Abrir en el monitor de origen',
+  '音频源': 'Fuente de audio',
+  '上一帧': 'Fotograma anterior',
+  '下一帧': 'Fotograma siguiente',
+  '浏览源素材': 'Explorar material de origen',
+  '插入所选范围': 'Insertar el rango seleccionado',
+  '重置': 'Restablecer',
+  '入点': 'Entrada',
+  '出点': 'Salida',
+  '在播放头设置入点 (I)': 'Marcar entrada en el cabezal (I)',
+  '在播放头设置出点 (O)': 'Marcar salida en el cabezal (O)',
+  '空格播放 · I/O 设入出点 · 方向键逐帧': 'Espacio reproduce · I/O marcan entrada/salida · flechas avanzan fotogramas',
+  '范围 {value}': 'Rango {value}',
+  '已插入': 'Insertado',
+  '插入时间线': 'Insertar en la línea de tiempo',
 } as Record<string, string>;

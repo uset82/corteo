@@ -4,6 +4,7 @@ import { TopBar } from '../components/TopBar';
 import { ChatPanel } from '../components/chat/ChatPanel';
 import { LibraryPanel } from '../library/LibraryPanel';
 import { PreviewPanel } from '../components/PreviewPanel';
+import { SourceMonitorPanel } from '../components/preview/SourceMonitorPanel';
 import { InspectorPanel } from '../components/InspectorPanel';
 import { Timeline } from '../components/timeline/Timeline';
 import { TimelineTabs } from '../components/timeline/TimelineTabs';
@@ -48,7 +49,12 @@ function renderLibrary(props: EditorWorkspaceViewProps) {
 function renderPreview(props: EditorWorkspaceViewProps) {
   return (
     <div className="cc-preview-workspace" style={{ gridColumn: 5, gridRow: 2 }}>
-      <PreviewPanel {...props.previewPanel} />
+      <div className="cc-preview-main">
+        <SourceMonitorPanel fps={props.previewPanel.state.fps} commands={props.timeline.commands} />
+        <div className="cc-preview-program">
+          <PreviewPanel {...props.previewPanel} />
+        </div>
+      </div>
       {props.inspectorPanel && <InspectorPanel {...props.inspectorPanel} />}
     </div>
   );
