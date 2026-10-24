@@ -1,4 +1,4 @@
-// Spanish UI translations - complete OpenChatCut translation
+// Spanish UI translations - complete Claudia translation
 // Chinese text is the key, Spanish is the value
 export default {
   // Dashboard

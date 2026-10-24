@@ -2,8 +2,9 @@ import { Suspense, useEffect } from 'react';
 import type { ProjectMeta } from '../../persist/projectStoreCoordinators';
 import { theme } from '../../theme';
 import { useT } from '../../i18n/locale';
+import { ClaudiaWordmark } from '../../brand/ClaudiaMarks';
 import { DashboardHeaderLinks } from '../DashboardHeaderLinks';
-import { BrandMark, Icon, OpenChatCutWordmark } from '../icons';
+import { Icon } from '../icons';
 import { bindAction } from '../../shortcuts/actionRegistry';
 // Opened on demand, so they load on demand — see dashboardDialogs.tsx.
 import {
@@ -13,24 +14,21 @@ import { useDashboardDialogPrefetch } from './dashboardDialogLoaders';
 import { SkinPicker } from '../settings/SkinPicker';
 import { LocaleToggle } from '../TopBar';
 import {
-  card, importBtn, miniBtn, modelSetupButton, modelSetupCard, modelSetupIcon,
-  nameInput, newCard, searchBox, searchClear, searchEmpty, searchIcon, searchInput,
-  settingsBtn, thumb,
+  miniBtn, nameInput, searchBox, searchClear, searchEmpty, searchIcon, searchInput, settingsBtn,
 } from './dashboardStyles';
 import { relativeProjectTime, type DashboardModel, type DashboardProps } from './useDashboardModel';
 
-function ModelSetupCard({ onOpen }: { onOpen: () => void }) {
+// Layout lives in the .cc-projects-* rules in src/index.css (BD-4): frameless cards,
+// a hairline that closes the title row, and one clay button on the page.
+
+/** One quiet line when no model is configured. No icon and no clay: this is a note,
+ * not a call to action competing with "Nuevo proyecto". */
+function ModelNotice({ onOpen }: { onOpen: () => void }) {
   const t = useT();
   return (
-    <section role="status" style={modelSetupCard}>
-      <span style={modelSetupIcon}><Icon name="sparkles" size={18} /></span>
-      <span style={{ flex: 1, minWidth: 0 }}>
-        <strong style={{ display: 'block', color: theme.textStrong, fontSize: 13.5 }}>{t('配置模型后开始使用 Agent')}</strong>
-        <span style={{ display: 'block', marginTop: 3, color: theme.textDim, fontSize: 11.5, lineHeight: 1.5 }}>
-          {t('配置任一云端或本地模型，即可在编辑器中使用对话式剪辑。')}
-        </span>
-      </span>
-      <button type="button" onClick={onOpen} style={modelSetupButton}>{t('配置模型')}</button>
+    <section role="status" className="cc-projects-model-note">
+      <span>{t('配置模型后即可使用助手。')}</span>
+      <button type="button" onClick={onOpen} className="cc-projects-btn">{t('配置模型')}</button>
     </section>
   );
 }
@@ -60,9 +58,7 @@ export function DashboardTitlebarContent({ model }: { model: DashboardModel }) {
   const t = useT();
   return (
     <>
-      <BrandMark size={20} />
-      <OpenChatCutWordmark />
-      <span style={{ color: theme.textDim, fontSize: 13 }}>{t('· 我的工程')}</span>
+      <ClaudiaWordmark size={13} />
       <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
         <DashboardHeaderLinks />
         <button onClick={() => model.setDialog('mcp', true)} data-tip={t('外部 Agent 接入 (MCP)')} aria-label={t('外部 Agent 接入 (MCP)')} className="cc-header-btn cc-tip cc-tip-r" style={settingsBtn}><Icon name="plug" size={16} /></button>
@@ -75,24 +71,29 @@ export function DashboardTitlebarContent({ model }: { model: DashboardModel }) {
   );
 }
 
-function ProjectToolbar({ projects, model }: { projects: ProjectMeta[]; model: DashboardModel }) {
+function ProjectToolbar({ projects, model, onNew }: { projects: ProjectMeta[]; model: DashboardModel; onNew: () => void }) {
   const t = useT();
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-      <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>{t('工程')}</h1>
-      {model.transfer.note && <span style={{ color: theme.textDim, fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{model.transfer.note}</span>}
-      <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-        <ProjectSearch value={model.query} onChange={model.setQuery} />
-        <button onClick={() => model.setDialog('cleanup', true)} style={importBtn} title={t('清理所有工程都不引用的上传素材(测试/已删工程残留)')}><Icon name="trash" size={13} /> {t('清理素材')}</button>
-        <button onClick={() => model.transfer.fileRef.current?.click()} disabled={model.transfer.busy} style={importBtn} title={t('导入 .ccproj 工程文件(兼容旧 .ccproj.json)')}><Icon name="upload" size={13} /> {t('导入工程')}</button>
-        <input ref={model.transfer.fileRef} type="file" accept=".ccproj,.json,application/json,application/x-openchatcut-project" onChange={model.transfer.pickImport} style={{ display: 'none' }} />
-        <span style={{ color: theme.textDim, fontSize: 12.5 }}>
-          {model.normalizedQuery
-            ? t('{n} / {total} 个', { n: model.visibleProjects.length, total: projects.length })
-            : t('{n} 个', { n: projects.length })}
-        </span>
-      </span>
-    </div>
+    <header className="cc-projects-head">
+      <div className="cc-projects-title-row">
+        <div className="cc-projects-heading">
+          <h1 className="cc-projects-title">{t('工程')}</h1>
+          <span className="cc-projects-count">
+            {model.normalizedQuery
+              ? t('{n} / {total} 个', { n: model.visibleProjects.length, total: projects.length })
+              : t('{n} 个', { n: projects.length })}
+          </span>
+        </div>
+        <div className="cc-projects-actions">
+          <ProjectSearch value={model.query} onChange={model.setQuery} />
+          <button onClick={() => model.transfer.fileRef.current?.click()} disabled={model.transfer.busy} className="cc-projects-btn" title={t('导入 .ccproj 工程文件(兼容旧 .ccproj.json)')}>{t('导入工程')}</button>
+          <button onClick={onNew} className="cc-projects-btn cc-projects-btn--primary" title={t('新建工程')}>{t('新建工程')}</button>
+          <button onClick={() => model.setDialog('cleanup', true)} className="cc-projects-btn cc-projects-btn--icon" aria-label={t('清理素材')} title={t('清理所有工程都不引用的上传素材(测试/已删工程残留)')}><Icon name="trash" size={14} /></button>
+          <input ref={model.transfer.fileRef} type="file" accept=".ccproj,.json,application/json,application/x-openchatcut-project" onChange={model.transfer.pickImport} style={{ display: 'none' }} />
+        </div>
+      </div>
+      {model.transfer.note && <p className="cc-projects-note">{model.transfer.note}</p>}
+    </header>
   );
 }
 
@@ -111,7 +112,7 @@ function ProjectName({ project, model }: { project: ProjectMeta; model: Dashboar
       style={nameInput}
     />;
   }
-  return <div onDoubleClick={() => model.rename.start(project)} title={t('双击重命名')} style={{ fontSize: 13, fontWeight: 550, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project.name}</div>;
+  return <div onDoubleClick={() => model.rename.start(project)} title={t('双击重命名')} className="cc-projects-name">{project.name}</div>;
 }
 
 function ProjectActions({ project, props, model }: { project: ProjectMeta; props: DashboardProps; model: DashboardModel }) {
@@ -139,35 +140,46 @@ function ProjectActions({ project, props, model }: { project: ProjectMeta; props
 
 function ProjectCard({ project, props, model }: { project: ProjectMeta; props: DashboardProps; model: DashboardModel }) {
   const t = useT();
+  const thumb = model.thumbs[project.id];
   return (
-    <div style={card}>
-      <button onClick={() => props.onOpen(project.id)} style={thumb} title={t('打开 {name}', { name: project.name })}>
-        {model.thumbs[project.id]
-          ? <img src={model.thumbs[project.id]} alt="" draggable={false} loading="lazy" decoding="async" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
-          : <span style={{ color: theme.borderLight, display: 'inline-flex' }}><Icon name="play" size={26} /></span>}
+    <article className="cc-projects-card">
+      <button onClick={() => props.onOpen(project.id)} className="cc-projects-thumb" title={t('打开 {name}', { name: project.name })}>
+        {thumb
+          ? <img src={thumb} alt="" draggable={false} loading="lazy" decoding="async" />
+          // No thumbnail: the name becomes a title card, like a music video's
+          // opening frame, instead of a play icon floating in an empty box.
+          : <span className="cc-projects-titlecard">{project.name}</span>}
       </button>
-      <div style={{ padding: '9px 11px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div className="cc-projects-meta">
         <ProjectName project={project} model={model} />
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 11, color: theme.textDim, fontVariantNumeric: 'tabular-nums' }}>{relativeProjectTime(project.updatedAt, t)}</span>
-          <div style={{ display: 'flex', gap: 2 }} className="acts"><ProjectActions project={project} props={props} model={model} /></div>
-        </div>
+        <span className="cc-projects-time">{relativeProjectTime(project.updatedAt, t)}</span>
+        <div className="cc-projects-acts"><ProjectActions project={project} props={props} model={model} /></div>
       </div>
-    </div>
+    </article>
   );
 }
 
 function ProjectGrid({ props, model }: { props: DashboardProps; model: DashboardModel }) {
   const t = useT();
+  const empty = props.projects.length === 0;
   return (
     <>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(232px, 1fr))', alignItems: 'start', gap: 16 }}>
-        <button onClick={props.onNew} style={newCard} title={t('新建工程')}>
-          <span style={{ fontSize: 30, color: theme.textDim, lineHeight: 1 }}>＋</span>
-          <span style={{ fontSize: 13, color: theme.textDim }}>{t('新建工程')}</span>
-        </button>
-        {model.visibleProjects.map((project) => <ProjectCard key={project.id} project={project} props={props} model={model} />)}
-      </div>
+      {empty ? (
+        <div className="cc-projects-empty">
+          <h2>{t('还没有工程')}</h2>
+          <p>{t('新建一个工程，或导入一个 .ccproj 文件。')}</p>
+          <div className="cc-projects-empty-actions">
+            {/* Outlined, not clay: the toolbar above already carries the page's one
+                primary button, and a second one would compete with it. */}
+            <button onClick={props.onNew} className="cc-projects-btn">{t('新建工程')}</button>
+            <button onClick={() => model.transfer.fileRef.current?.click()} disabled={model.transfer.busy} className="cc-projects-btn">{t('导入工程')}</button>
+          </div>
+        </div>
+      ) : (
+        <div className="cc-projects-grid">
+          {model.visibleProjects.map((project) => <ProjectCard key={project.id} project={project} props={props} model={model} />)}
+        </div>
+      )}
       {model.normalizedQuery && model.visibleProjects.length === 0 && (
         <div role="status" style={searchEmpty}><Icon name="search" size={14} />{t('没有找到匹配“{query}”的工程', { query: model.query.trim() })}</div>
       )}
@@ -178,9 +190,9 @@ function ProjectGrid({ props, model }: { props: DashboardProps; model: Dashboard
 export function DashboardContent({ props, model }: { props: DashboardProps; model: DashboardModel }) {
   return (
     <main style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-      <div style={{ maxWidth: 1120, margin: '0 auto', padding: '28px 24px 80px' }}>
-        {model.modelSnapshot.loaded && model.modelSnapshot.choices.length === 0 && <ModelSetupCard onOpen={() => model.setDialog('settings', true)} />}
-        <ProjectToolbar projects={props.projects} model={model} />
+      <div className="cc-projects-content">
+        <ProjectToolbar projects={props.projects} model={model} onNew={props.onNew} />
+        {model.modelSnapshot.loaded && model.modelSnapshot.choices.length === 0 && <ModelNotice onOpen={() => model.setDialog('settings', true)} />}
         <ProjectGrid props={props} model={model} />
       </div>
     </main>
