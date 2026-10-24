@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import {
-  applyClaudeCodeAgentStatus, getAgentModelSnapshot, isAgentModelReady, type AgentModelSnapshot,
+  applyAgentModelStatus, applyClaudeCodeAgentStatus, applyDshModels, getAgentModelSnapshot,
+  getDshHarnessState, isAgentModelReady, selectAgentModel, type AgentModelSnapshot,
 } from './model-selection';
+import { MODEL, PROVIDER } from './providerConfig';
 import {
   parseModelCapabilityOverrides,
   resolveModelCapabilities,
@@ -147,5 +149,57 @@ assert.equal(claudeCodeChoice!.provider, 'anthropic');
 assert.equal(claudeCodeChoice!.model, 'sonnet');
 assert.equal(claudeCodeSnapshot.activeId, 'claude-code:sonnet',
   'the sole claude-code choice becomes active when nothing else is configured');
+
+// ── DeepSeek Harness: one choice per discovered model, with fallbacks ───────
+const prefStore = new Map<string, string>();
+Object.defineProperty(globalThis, 'localStorage', {
+  configurable: true,
+  value: {
+    getItem: (key: string) => prefStore.get(key) ?? null,
+    setItem: (key: string, value: string) => { prefStore.set(key, value); },
+    removeItem: (key: string) => { prefStore.delete(key); },
+  },
+});
+const dshChoices = () => getAgentModelSnapshot().choices.filter((choice) => choice.provider === 'dsh');
+
+applyAgentModelStatus({}, {});
+assert.equal(dshChoices().length, 0, 'an unconfigured harness adds no entries');
+
+applyAgentModelStatus({ LLM_DSH_API_KEY: { configured: true } }, {});
+assert.deepEqual(dshChoices().map((choice) => choice.id), ['dsh:combo:recommended-free'],
+  'a configured harness lists its default model before discovery runs');
+
+applyDshModels(['combo:recommended-free', 'deepseek-v3', 'qwen3-free'], false);
+assert.deepEqual(
+  dshChoices().map((choice) => choice.id),
+  ['dsh:combo:recommended-free', 'dsh:deepseek-v3', 'dsh:qwen3-free'],
+  'discovery replaces the single row with one entry per model (ids keep their colons)',
+);
+assert.equal(getDshHarnessState().down, false);
+const secondDsh = dshChoices()[1]!;
+assert.equal(secondDsh.model, 'deepseek-v3');
+assert.equal(secondDsh.capabilities.contextWindowTokens.value, 131_072);
+assert.equal(secondDsh.capabilities.maxOutputTokens.value, 16_384);
+assert.equal(secondDsh.capabilities.supportsTools.value, true,
+  'unknown harness models must keep tool calling enabled');
+selectAgentModel(secondDsh.id);
+assert.equal(getAgentModelSnapshot().activeId, 'dsh:deepseek-v3');
+assert.equal(PROVIDER, 'dsh', 'picking a harness choice switches the runtime provider');
+assert.equal(MODEL, 'deepseek-v3', 'the picked model is what /llm runs will request');
+
+applyDshModels([], true);
+assert.equal(getDshHarnessState().down, true);
+assert.ok(dshChoices().some((choice) => choice.id === 'dsh:deepseek-v3'),
+  'a failed discovery keeps the last pick selectable');
+assert.equal(getAgentModelSnapshot().activeId, 'dsh:deepseek-v3');
+
+applyAgentModelStatus({ LLM_DSH_API_KEY: { configured: true } }, { LLM_DSH_MODEL: 'saved-model' });
+assert.ok(dshChoices().some((choice) => choice.id === 'dsh:saved-model'),
+  'a failed discovery also keeps the saved LLM_DSH_MODEL');
+assert.ok(dshChoices().some((choice) => choice.id === 'dsh:deepseek-v3'));
+
+applyDshModels(['alpha', 'beta'], false);
+assert.deepEqual(dshChoices().map((choice) => choice.id), ['dsh:alpha', 'dsh:beta'],
+  'refresh replaces the list with the newly discovered models');
 
 console.log('model-selection.verify: ok');

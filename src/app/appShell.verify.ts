@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { loadInitialProjects, syncAgentBackends, type ProjectStartupSource } from './appShell';
-import { getActiveAgentModelChoice, getAgentModelSnapshot, subscribeAgentModels } from '../agent/model-selection';
+import { loadInitialProjects, refreshDshModels, syncAgentBackends, type ProjectStartupSource } from './appShell';
+import { getActiveAgentModelChoice, getAgentModelSnapshot, getDshHarnessState, selectAgentModel, subscribeAgentModels } from '../agent/model-selection';
 import type { ProjectMeta } from '../persist/projectStoreCoordinators';
 import { syncDesktopNativeInferenceEnabled } from '../transcript/desktop-inference-preference';
 
@@ -173,6 +173,79 @@ try {
     'a signed-in account has its models listed without a manual "read models" click');
 } finally {
   globalThis.fetch = startupFetch;
+}
+
+// ── DeepSeek Harness: launch discovery, refresh, saved model while down ─────
+const dshPrefs = new Map<string, string>();
+const dshLocalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+Object.defineProperty(globalThis, 'localStorage', {
+  configurable: true,
+  value: {
+    getItem: (key: string) => dshPrefs.get(key) ?? null,
+    setItem: (key: string, value: string) => { dshPrefs.set(key, value); },
+    removeItem: (key: string) => { dshPrefs.delete(key); },
+  },
+});
+const dshFetch = globalThis.fetch;
+let dshProbe: { ok: boolean; models?: string[] } = {
+  ok: true, models: ['combo:recommended-free', 'deepseek-v3', 'qwen3-free'],
+};
+const probeBodies: string[] = [];
+const dshIds = (): string[] => getAgentModelSnapshot().choices
+  .filter((choice) => choice.provider === 'dsh')
+  .map((choice) => choice.id);
+const waitFor = async (predicate: () => boolean): Promise<boolean> => {
+  const deadline = Date.now() + 1_000;
+  while (!predicate() && Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  return predicate();
+};
+try {
+  globalThis.fetch = async (input, init) => {
+    const path = String(input);
+    if (path === '/api/keys') {
+      return Response.json({ keys: { LLM_DSH_API_KEY: { configured: true } }, models: {} });
+    }
+    if (path === '/api/keys/test') {
+      probeBodies.push(typeof init?.body === 'string' ? init.body : '');
+      return Response.json(dshProbe);
+    }
+    if (path === '/api/codex/status') return Response.json({ installed: false });
+    if (path === '/api/claude-code/status') return Response.json({ installed: false, version: null, account: null });
+    return Response.json({ keys: {}, models: {} });
+  };
+  await syncAgentBackends(() => true);
+  assert.equal(
+    await waitFor(() => dshIds().length === 3),
+    true,
+    'launch discovery lists one entry per forward-port model',
+  );
+  assert.deepEqual(dshIds(), [
+    'dsh:combo:recommended-free', 'dsh:deepseek-v3', 'dsh:qwen3-free',
+  ], 'model ids keep their colons in the whole choice id');
+  assert.deepEqual(JSON.parse(probeBodies[0]!), { page: 'llm/dsh', overrides: {} },
+    'discovery uses the provider probe without staged overrides');
+
+  selectAgentModel('dsh:deepseek-v3');
+  assert.equal(getActiveAgentModelChoice()?.model, 'deepseek-v3',
+    'the selected entry carries the model a run will request');
+
+  dshProbe = { ok: false };
+  await refreshDshModels();
+  assert.equal(getDshHarnessState().down, true, 'a failed probe surfaces the harness-down state');
+  assert.ok(dshIds().includes('dsh:deepseek-v3'), 'the last model stays selectable while the harness is down');
+  assert.equal(getActiveAgentModelChoice()?.id, 'dsh:deepseek-v3');
+
+  dshProbe = { ok: true, models: ['alpha', 'beta'] };
+  await refreshDshModels();
+  assert.equal(getDshHarnessState().down, false);
+  assert.deepEqual(dshIds(), ['dsh:alpha', 'dsh:beta'],
+    'the refresh path rebuilds the menu from the new list');
+} finally {
+  globalThis.fetch = dshFetch;
+  if (dshLocalStorage) Object.defineProperty(globalThis, 'localStorage', dshLocalStorage);
+  else Reflect.deleteProperty(globalThis, 'localStorage');
 }
 
 console.log('appShell.verify: project startup and optional-backend isolation passed');

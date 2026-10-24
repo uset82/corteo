@@ -323,7 +323,7 @@ Only the Qoder agent edits this section, in `~/corteo-qoder` on branch `harness-
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
 | HQ-1 | DeepSeek Harness provider | done | |
-| HQ-2 | Every harness model in the Model menu | todo | HQ-1 |
+| HQ-2 | Every harness model in the Model menu | done | HQ-1 |
 | HQ-3 | Only DeepSeek Harness under `OPENCHATCUT_PROVIDERS=off` | todo | HQ-1 |
 | HQ-4 | Gateway behaviour tests and Spanish errors | todo | HQ-1 |
 | HQ-5 | Real proof from the chat (needs a running harness) | todo | HQ-2, HQ-3, HQ-4 |

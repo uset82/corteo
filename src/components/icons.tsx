@@ -8,7 +8,7 @@ export type IconName =
   | 'eye' | 'eyeOff' | 'volume' | 'volumeOff' | 'lock' | 'unlock'
   | 'home' | 'sparkles' | 'sliders' | 'bookOpen' | 'thumbUp' | 'thumbDown' | 'arrowUp'
   | 'paperclip' | 'cornerDownLeft' | 'filePlay' | 'fileHeadphone' | 'clock'
-  | 'undo' | 'redo' | 'history' | 'layoutPanel' | 'keyboard' | 'users'
+  | 'undo' | 'redo' | 'history' | 'refresh' | 'layoutPanel' | 'keyboard' | 'users'
   | 'download' | 'film' | 'clipboard' | 'plug' | 'github' | 'mail' | 'database'
   | 'music' | 'video' | 'image' | 'swap' | 'star' | 'pencil' | 'x' | 'diamond'
   | 'search' | 'upload' | 'folder' | 'folderPlus' | 'grid' | 'list' | 'sort' | 'filter' | 'more' | 'bug'
@@ -76,6 +76,7 @@ const P: Record<IconName, string> = {
   undo: 'M9 14 4 9l5-5 M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5 5.5 5.5 0 0 1-5.5 5.5H11',
   redo: 'm15 14 5-5-5-5 M20 9H9.5a5.5 5.5 0 0 0 0 11H13',
   history: 'M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8 M3 3v5h5 M12 7v5l4 2',
+  refresh: 'M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8 M21 3v5h-5 M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16 M3 21v-5h5',
   layoutPanel: 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M15 3v18',
   keyboard: 'M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z M6 10h.01 M10 10h.01 M14 10h.01 M18 10h.01 M6 14h.01 M10 14h8',
   // `users` uses a path-only shape so the single-<path> Icon can render it.

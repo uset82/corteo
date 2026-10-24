@@ -5,7 +5,7 @@ import { applyLiveCaps, applyLiveKeyStatus, applyLiveModels } from '../agent/cap
 import { fetchCodexModels, fetchCodexStatus } from '../agent/codex/client';
 import { fetchCopilotModels, fetchCopilotStatus } from '../agent/copilot/client';
 import { fetchClaudeCodeModels, fetchClaudeCodeStatus } from '../agent/claude-code/client';
-import { applyAgentModelStatus, applyClaudeCodeAgentStatus, applyCodexAgentStatus, applyCopilotAgentStatus, selectAgentModel, getActiveAgentModelChoice, getAgentModelSnapshot } from '../agent/model-selection';
+import { applyAgentModelStatus, applyClaudeCodeAgentStatus, applyCodexAgentStatus, applyCopilotAgentStatus, applyDshModels, selectAgentModel, getActiveAgentModelChoice, getAgentModelSnapshot } from '../agent/model-selection';
 import { loadAgentModelPref } from '../persist/sessionPrefs';
 import type { ProjectDoc, TimelineState } from '../editor/types';
 import {
@@ -47,6 +47,30 @@ function parseHash(): AppRoute {
 
 export function navigateTo(hash: string): void {
   window.location.hash = hash;
+}
+
+/**
+ * The DeepSeek Harness answers `/v1/models` on its forward port, and the
+ * existing provider probe already lists them. Detached from startup and from
+ * the model picker's refresh button; it never rejects so a stopped harness
+ * cannot break either caller.
+ */
+export async function refreshDshModels(): Promise<void> {
+  try {
+    const response = await fetch('/api/keys/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page: 'llm/dsh', overrides: {} }),
+    });
+    const body = await response.json().catch(() => null) as
+      { readonly ok?: boolean; readonly models?: unknown } | null;
+    const models = Array.isArray(body?.models)
+      ? body.models.filter((model): model is string => typeof model === 'string')
+      : [];
+    applyDshModels(models, body?.ok !== true);
+  } catch {
+    applyDshModels([], true);
+  }
 }
 
 async function syncCopilotBackend(
@@ -117,6 +141,9 @@ export async function syncAgentBackends(isActive: () => boolean): Promise<void> 
       }
     }
     startUiLocaleSync(models?.UI_LOCALE);
+    // Only a harness with a saved key is probed at launch: an unconfigured
+    // provider would just answer 401 on every boot.
+    if (keys?.LLM_DSH_API_KEY?.configured || models?.LLM_DSH_MODEL) void refreshDshModels();
   }
   // Detached like the Copilot probe: `claude --version` plus `claude auth
   // status` can take seconds, and configured API/Codex models must stay usable

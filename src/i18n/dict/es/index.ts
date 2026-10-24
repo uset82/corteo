@@ -148,4 +148,9 @@ export default {
   'HTTP {status} · {detail}': 'HTTP {status} · {detail}',
   '连接超时 · 服务不可达或网络受限（可能需代理），不代表 Key 错误': 'Tiempo de conexión agotado · servicio inaccesible o red restringida (puede requerir proxy); no significa que la clave sea incorrecta',
   '网络不可达 · {detail} · 本机连不上该服务（可能需代理），不代表 Key 错误': 'Red inaccesible · {detail} · este equipo no puede alcanzar el servicio (puede requerir proxy); no significa que la clave sea incorrecta',
+
+  // DeepSeek Harness · modelo del compositor
+  '请先在设置中配置一个模型厂商。': '1. Inicia el harness: npm run harness\n2. Obtén la URL y la clave del gateway: npm run harness:doctor\n3. Pégalas en Ajustes › DeepSeek Harness.',
+  '刷新模型列表': 'Actualizar lista de modelos',
+  'DeepSeek Harness 无响应。用 npm run harness 启动它。': 'DeepSeek Harness no responde. Arráncalo con npm run harness.',
 } as Record<string, string>;
