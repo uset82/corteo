@@ -17,7 +17,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 - If a test fails on your machine before you have changed anything, it is a baseline difference: record it under Blockers with its output, and don't count it against your task.
 - Grok's attempt: Grok worked in `~/corteo` from the old `IMPLEMENTATION_PLAN.md` (a first-draft plan with Python WhisperX/demucs, Zustand, i18next and a UI redesign) and got stuck. That file is deleted. None of Grok's work is on this branch: the user parks it on a branch `grok-wip` for review. Do not merge, cherry-pick or build on `grok-wip`; if something there is worth keeping, it comes back as a task card here.
 - Qoder and WorkBuddy's attempt: the GitHub fork's branch `cursor/video-editor-mvp-d191` (https://github.com/uset82/corteo, at `56676ff` on 2026-10-24) was built from `1d00e0a` with the old `IMPLEMENTATION_PLAN.md`. It has first versions of P2-1 to P2-5 plus extras, with known bugs found in a review on 2026-10-24: duplicate detection samples the middle of the whole file, ASS import ignores `\kf` and drops text before the first tag, HEVC files are tagged `hev1` instead of `hvc1`, the cool white balance rotates every hue, the tool catalog is stale so `npm run build` fails, and three files are over 500 lines. It is not merged: the user decides whether it comes in. Until then, the same rule as `grok-wip` applies.
-- Plan 3 (approved 2026-10-24): the built-in chat moves to free models through DeepSeek Harness. Qoder (HQ) and WorkBuddy (HW) work on it in parallel in the worktrees `~/corteo-qoder` and `~/corteo-workbuddy`, on the GitHub branches `harness-qoder` and `harness-workbuddy`; H-9 merges them into this branch.
+- Plan 3 (approved 2026-10-24): the built-in chat moves to free models through DeepSeek Harness. Qoder (HQ) and WorkBuddy (HW) work on it in parallel in the worktrees `~/corteo-qoder` and `~/corteo-workbuddy`, on the GitHub branches `harness-qoder` and `harness-workbuddy`; H-9 merges them into this branch. H-9 is done (2026-10-25): the Qoder track is in, and the WorkBuddy track is blocked (see Blockers), so DeepSeek Harness is still installed and started by hand.
 
 ## Task table
 
@@ -27,7 +27,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P0-2 | Raise the dev server heap | todo | |
 | P0-3 | `npm run start:claudia` and `.env.claudia.example` | todo | P0-2 |
 | P0-4 | Spanish README | todo | P0-3 |
-| H-9 | Merge the harness tracks (Cursor agent only) | todo | HQ-1 to HQ-5 and HW-1 to HW-5 `done` or `blocked` on their own branches |
+| H-9 | Merge the harness tracks (Cursor agent only) | done | HQ-1 to HQ-5 and HW-1 to HW-5 `done` or `blocked` on their own branches |
 | B-9 | Merge the brand tracks (Cursor agent only) | done | BD-1 to BD-4 and BQ-1 to BQ-4 |
 | P1-1 | Providers off: server block | todo | P0-3, H-9 |
 | P1-2 | Providers off: hide UI, filter MCP tools | todo | P1-1 |
@@ -74,11 +74,14 @@ Each card says where the plan describes it, which files to start from, when it c
 ### P0-1 · Remove first-attempt leftovers — done
 Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the first attempt left in `src/i18n/locale.ts`).
 
-### H-9 · Merge the harness tracks
-- Plan: Plan 3 › H-9. Only a Cursor agent takes it.
-- Needs: check both tracks' tables on GitHub, not here: `git fetch github`, then `git show github/harness-qoder:docs/plans/PROGRESS.md` and `git show github/harness-workbuddy:docs/plans/PROGRESS.md`.
-- Do and Done when: the five steps in the plan doc.
-- After B-9 (checked with `git merge-tree` against `harness-qoder` at `4a7abc7`): only `package.json` (the `test:serial` line: keep both sides) and `src/components/settings/settingsAgentProviders.ts` conflict. In the second, keep the harness's `preset.id === 'dsh'` branch, but the Anthropic note must end in `驱动 Claudia。`, not `驱动 OpenChatCut。`: BQ-1 renamed that key and the dictionaries only have the Claudia one. `server/agent-runs/executor.verify.ts` and `es/index.ts` merge cleanly (the latter keeps the Claudia header), and `es/brand.ts` shadows none of the 15 harness keys; check that again if either branch moves.
+### H-9 · Merge the harness tracks — done
+- Plan: Plan 3 › H-9. Done by the Cursor agent on 2026-10-25, with the Qoder track `done` and the WorkBuddy track `blocked` (see Blockers).
+- What came in: first a fast-forward to GitHub's `main` at `b9d5752` (the install script, `README.es.md` and the English README). `harness-workbuddy` had nothing past B-9 to merge. Then `eb7faac` merged `harness-qoder` at `4a7abc7` (HQ-1 to HQ-5). The two predicted conflicts were the only ones: `package.json` keeps every `test:serial` segment from both sides (`providers-off.verify` after `llm-proxy.verify`, `dsh-gateway.verify` before `acceptance-loop.verify`), and `settingsAgentProviders.ts` keeps the `dsh` note with the Anthropic note ending in `驱动 Claudia。`. `es/brand.ts` still shadows none of the 15 harness keys.
+- `f65458f`: the `dsh` default model is `nvidia/nemotron-3.5-lightning:free`, not `combo:recommended-free`. HW-3 never ran, and HQ-5 found it is the only free lane that completed edits.
+- `eed3137`: a `dsh`-only fix in the `/llm` proxy for HQ-5's finding. Most free lanes open a tool call with `{"tool_calls":[{"index":0}]}`, which `@ai-sdk/openai-compatible` 3.0.75 rejects for the whole stream; the SDK already buffers a call until its name arrives, so the proxy only adds `function: {}` to deltas without one (`server/sse-tool-call-fix.ts`, a new `sseLineFix` hook on `ProxyRoute`). Other providers stream byte for byte. `dsh-gateway.verify`'s stub now opens its call that way, split across two writes; with the fix off it fails with the same `invalid_union` error HQ-5 saw. Not yet tried against the real lanes: they may still fail for other reasons (429s, tool calls without arguments).
+- README step 4: `README.es.md` says the chat runs on free models, adds `OPENCHATCUT_PROVIDERS=off` to the `corteo` alias, and gives the manual start steps (start `dsh web`, read the forward key, paste URL and key in Settings), since `npm run harness` doesn't exist yet. `README.md`'s Status says the same in English.
+- Left over from the Qoder track: HQ-5's two-model coverage was only partly met (one free model edited), and the `dsh` error messages, the settings note and the picker notice tell the user to run `npm run harness` and `npm run harness:doctor`, which are HW-2. Until HW-2 lands, the README has the manual commands.
+- Checks: see "State at handoff".
 
 ### B-9 · Merge the brand tracks — done
 - Plan: Plan 4 › B-9. Done by the Cursor agent on 2026-10-24.
@@ -339,10 +342,13 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-24 · B-9 · Settings is "Ajustes" in Spanish (`设置`, `设置 · API 密钥`), replacing "Configuración". Reason: the harness strings already say "Pégalas en Ajustes › DeepSeek Harness" and the banner says "Ir a ajustes".
 - 2026-10-24 · B-9 · A copy of a project with no name is "Copia de proyecto", and new empty projects get a Spanish noun and adjective ("Latido nocturno"; every noun is masculine so any adjective agrees). Reason: the Chinese fallbacks showed on Spanish screens.
 - 2026-10-24 · B-9 · `es/brand.ts` never defines a key the harness translates in `es/index.ts` (written into `AGENTS.md` › UI text). Reason: it is spread last and would hide the harness text after H-9.
+- 2026-10-25 · H-9 · The repair for free lanes' bare-index tool-call deltas lives in corteo's `/llm` proxy, for `dsh` only, not in the gateway. Reason: the gateway is upstream's plugin at a pinned tag and must not be patched, and every server agent run already goes through `/llm`.
 - 2026-10-24 · B-9 · The Spanish pass covers the screens Plan 4 owns, read literally: the projects page with its tooltips, the top bar's button labels, the chat's first view (header, onboarding, starters, composer, workflow and model pickers, capability banner) and the phone upload page. The panels those buttons open stay for P5-1. Reason: the plan's scope line, and P5-1 is the full dictionary.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.
+
+- HW-1 to HW-5 (recorded by H-9, 2026-10-25). The WorkBuddy agent can't run any command in WSL: `wsl.exe` is on its sandbox's Program Blacklist, the same refusal recorded under both brand tracks' blockers below (WorkBuddy ran those cards too). Its card says to stop and ask rather than run git or npm over `\\wsl$`, so `harness-workbuddy` has no HW commits. H-9 merged without them. Unblock: Carlos removes `wsl.exe` from WorkBuddy's Security Center → Command Security → Program Blacklist; then WorkBuddy rebases `harness-workbuddy` on this branch and starts at HW-1. HW-3 should retest the free lanes now that the proxy repairs bare-index tool-call deltas (H-9 card).
 
 ## Harness track · Qoder (HQ)
 Only the Qoder agent edits this section, in `~/corteo-qoder` on branch `harness-qoder`. Task cards: `docs/plans/03-deepseek-harness.md` › Qoder track.
@@ -387,11 +393,11 @@ Only the WorkBuddy agent edits this section, in `~/corteo-workbuddy` on branch `
 
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
-| HW-1 | Pin and install | todo | |
-| HW-2 | `npm run harness` and `npm run harness:doctor` | todo | HW-1 |
-| HW-3 | Which free models can edit | todo | HW-2 |
-| HW-4 | DeepSeek Harness edits corteo over MCP | todo | HW-2 |
-| HW-5 | Guide for Carlos | todo | HW-2, HW-3, HW-4 |
+| HW-1 | Pin and install | blocked | |
+| HW-2 | `npm run harness` and `npm run harness:doctor` | blocked | HW-1 |
+| HW-3 | Which free models can edit | blocked | HW-2 |
+| HW-4 | DeepSeek Harness edits corteo over MCP | blocked | HW-2 |
+| HW-5 | Guide for Carlos | blocked | HW-2, HW-3, HW-4 |
 
 ### WorkBuddy: decisions
 None yet. Same format as "Decisions made during the work".
