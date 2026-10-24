@@ -262,8 +262,12 @@ button, input, select { font: inherit; }
   font-family: var(--cc-font-display); font-size: 22px; font-weight: 900; line-height: 0.95;
   text-transform: uppercase; text-align: left; color: var(--cc-text-muted);
 }
-.cc-projects-meta { display: flex; align-items: center; gap: 8px; margin-top: 9px; }
-.cc-projects-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The name gets the whole first line. The actions share the second line with the
+ * time and keep their space while hidden, so hovering never reflows the card; on a
+ * narrow card they wrap under the time instead of squeezing it. */
+.cc-projects-meta { display: flex; flex-direction: column; gap: 2px; margin-top: 9px; min-width: 0; }
+.cc-projects-name { min-width: 0; font-size: 13px; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cc-projects-sub { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: 8px; min-height: 30px; }
 .cc-projects-time { flex: none; font-size: 11px; color: var(--cc-text-dim); font-variant-numeric: tabular-nums; }
 .cc-projects-acts { flex: none; display: inline-flex; gap: 2px; opacity: 0; transition: opacity 120ms; }
 .cc-projects-card:hover .cc-projects-acts,

@@ -152,8 +152,10 @@ function ProjectCard({ project, props, model }: { project: ProjectMeta; props: D
       </button>
       <div className="cc-projects-meta">
         <ProjectName project={project} model={model} />
-        <span className="cc-projects-time">{relativeProjectTime(project.updatedAt, t)}</span>
-        <div className="cc-projects-acts"><ProjectActions project={project} props={props} model={model} /></div>
+        <div className="cc-projects-sub">
+          <span className="cc-projects-time">{relativeProjectTime(project.updatedAt, t)}</span>
+          <div className="cc-projects-acts"><ProjectActions project={project} props={props} model={model} /></div>
+        </div>
       </div>
     </article>
   );
