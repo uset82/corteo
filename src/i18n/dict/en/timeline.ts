@@ -200,6 +200,13 @@ export default {
   '（区间）': ' (range)',
   '（点）': ' (point)',
   '完成': 'Done',
+  // ── MarkerListDialog.tsx / clip markers ──
+  '标记列表': 'Marker list',
+  '点击标记跳转；批注和颜色可直接修改': 'Click a marker to jump; edit notes and colors inline',
+  '还没有标记。按 M 在播放头添加项目标记。': 'No markers yet. Press M to add a project marker at the playhead.',
+  '区间 {n}s': 'Range {n}s',
+  '删除标记': 'Delete marker',
+  '片段标记': 'Clip marker',
   // ── TimelineRuler.tsx ──
   '入出点区间': 'In/out range',
   '入点 (I)': 'In point (I)',

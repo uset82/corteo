@@ -8,23 +8,29 @@ export const clampNum = (v: number, lo: number, hi: number): number => Math.max(
 
 export function parseFiltersArg(raw: unknown): { filters?: ClipFilters; error?: string } {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-    return { error: 'filters must be an object {brightness?,contrast?,saturate?,blur?}' };
+    return { error: 'filters must be an object {brightness?,contrast?,saturate?,exposure?,temperature?,blur?}' };
   }
   const src = raw as Record<string, unknown>;
   const out: ClipFilters = {};
-  for (const key of ['brightness', 'contrast', 'saturate', 'blur'] as const) {
+  for (const key of ['brightness', 'contrast', 'saturate', 'exposure', 'temperature', 'blur'] as const) {
     if (src[key] === undefined) continue;
     const n = finiteNum(src[key]);
     if (n === undefined) return { error: `filters.${key} must be a finite number` };
     if (key === 'blur') {
       if (n < 0 || n > 30) return { error: 'filters.blur must be 0..30 (px)' };
       out.blur = Math.round(n * 10) / 10;
+    } else if (key === 'exposure') {
+      if (n < -2 || n > 2) return { error: 'filters.exposure must be -2..2 (stops, 0 = neutral)' };
+      out.exposure = Math.round(n * 100) / 100;
+    } else if (key === 'temperature') {
+      if (n < -100 || n > 100) return { error: 'filters.temperature must be -100..100 (0 = neutral)' };
+      out.temperature = Math.round(n);
     } else {
       if (n < 0 || n > 2) return { error: `filters.${key} must be 0..2 (1 = normal)` };
       out[key] = Math.round(n * 1000) / 1000;
     }
   }
-  if (!Object.keys(out).length) return { error: 'filters needs at least one of brightness/contrast/saturate/blur' };
+  if (!Object.keys(out).length) return { error: 'filters needs at least one of brightness/contrast/saturate/exposure/temperature/blur' };
   return { filters: out };
 }
 

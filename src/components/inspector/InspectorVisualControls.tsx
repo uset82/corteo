@@ -94,10 +94,14 @@ export function FilterControl({ item, mixed, onChange, autoGrade }: {
       )}
       <SliderRow label={t('亮度')} val={fl.brightness ?? 1} min={0} max={2} step={0.05} fmt={`${compactNumber((fl.brightness ?? 1) * 100)}%`} inputScale={100} mixed={mixed?.brightness}
         onReset={() => onChange({ brightness: 1 })} resetDisabled={Math.abs((fl.brightness ?? 1) - 1) < 1e-6} onChange={(v) => onChange({ brightness: v })} />
+      <SliderRow label={t('曝光')} val={fl.exposure ?? 0} min={-2} max={2} step={0.1} fmt={`${(fl.exposure ?? 0) > 0 ? '+' : ''}${compactNumber(fl.exposure ?? 0)} EV`} mixed={mixed?.exposure}
+        onReset={() => onChange({ exposure: 0 })} resetDisabled={Math.abs(fl.exposure ?? 0) < 1e-6} onChange={(v) => onChange({ exposure: v })} />
       <SliderRow label={t('对比')} val={fl.contrast ?? 1} min={0} max={2} step={0.05} fmt={`${compactNumber((fl.contrast ?? 1) * 100)}%`} inputScale={100} mixed={mixed?.contrast}
         onReset={() => onChange({ contrast: 1 })} resetDisabled={Math.abs((fl.contrast ?? 1) - 1) < 1e-6} onChange={(v) => onChange({ contrast: v })} />
       <SliderRow label={t('饱和')} val={fl.saturate ?? 1} min={0} max={2} step={0.05} fmt={`${compactNumber((fl.saturate ?? 1) * 100)}%`} inputScale={100} mixed={mixed?.saturate}
         onReset={() => onChange({ saturate: 1 })} resetDisabled={Math.abs((fl.saturate ?? 1) - 1) < 1e-6} onChange={(v) => onChange({ saturate: v })} />
+      <SliderRow label={t('色温')} val={fl.temperature ?? 0} min={-100} max={100} step={1} fmt={`${(fl.temperature ?? 0) > 0 ? '+' : ''}${compactNumber(fl.temperature ?? 0)}`} mixed={mixed?.temperature}
+        onReset={() => onChange({ temperature: 0 })} resetDisabled={Math.abs(fl.temperature ?? 0) < 1e-6} onChange={(v) => onChange({ temperature: v })} />
       <SliderRow label={t('模糊')} val={fl.blur ?? 0} min={0} max={30} step={1} fmt={`${compactNumber(fl.blur ?? 0)}px`} mixed={mixed?.blur}
         onReset={() => onChange({ blur: 0 })} resetDisabled={(fl.blur ?? 0) === 0} onChange={(v) => onChange({ blur: v })} />
     </div>

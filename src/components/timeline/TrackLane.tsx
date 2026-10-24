@@ -6,7 +6,7 @@ import { type Dispatch, type RefObject, type SetStateAction, useMemo } from 'rea
 import { theme, themeAlpha } from '../../theme';
 import { Icon } from '../icons';
 import {
-  TRANSITION_LABELS, isItemSelected, timelineTrackIds, trackKind,
+  MARKER_HEX, TRANSITION_LABELS, isItemSelected, timelineTrackIds, trackKind,
   type TimelineItem, type TimelineState, type TrackId, type TransitionItem, type TransitionType,
 } from '../../editor/types';
 import { upsertKeyframe } from '../../editor/keyframes';
@@ -27,6 +27,7 @@ import {
 import { ClipMediaLayers } from './ClipMediaLayers';
 import { isPreviewable } from '../../media/clipPreview';
 import { canDropMediaAsset, hasCompatibleMediaDrag, parseMediaAssetDrag } from '../../media/drag';
+import { useDuplicateIds } from '../../duplicates/duplicateHighlightStore';
 import type { useTimelinePointer } from './useTimelinePointer';
 import { topClipOverlapSpans } from './trackOverlap';
 import {
@@ -137,6 +138,7 @@ export function TrackLane({
   frameFromClientX, onContextMenu, onTransitionContextMenu, onTrackContextMenu, scrollRef, onDropExternalFiles,
 }: TrackLaneProps) {
   const t = useT();
+  const duplicateIds = useDuplicateIds();
   const { drag, penDrag, setPenDrag, startDrag, startPick, startMarquee } = pointer;
   const trackIds = timelineTrackIds(state);
   const items = indexes.itemsByTrack.get(trackId) ?? [];
@@ -289,7 +291,7 @@ export function TrackLane({
         return (
           <div
             key={it.id}
-            className={`cc-timeline-clip${selected ? ' is-selected' : ''}${isLibOver ? ' is-library-over' : ''}${audioMuted ? ' is-audio-muted' : ''}`}
+            className={`cc-timeline-clip${selected ? ' is-selected' : ''}${isLibOver ? ' is-library-over' : ''}${audioMuted ? ' is-audio-muted' : ''}${duplicateIds.has(it.id) ? ' is-duplicate' : ''}`}
             data-timeline-clip
             title={clipTitle}
             data-clip-kind={it.kind}
@@ -407,6 +409,23 @@ export function TrackLane({
             })()}
             <span className="cc-clip-duration" data-cc-live-duration={dur}>{fmt(dur, state.fps)}</span>
             <ClipEffectBadges item={it} inTransition={indexes.transitionByIncomingId.get(it.id) ?? null} />
+            {(state.markers ?? []).filter((marker) => marker.scope === 'item' && marker.itemId === it.id).map((marker) => {
+              const offset = (marker.fromFrame - start) * px;
+              if (offset < 0 || offset > dur * px) return null;
+              return (
+                <span
+                  key={marker.id}
+                  title={marker.note || t('片段标记')}
+                  aria-hidden
+                  style={{
+                    position: 'absolute', left: offset, top: 0, bottom: 0,
+                    width: marker.durationFrames > 0 ? Math.max(2, marker.durationFrames * px) : 2,
+                    background: MARKER_HEX[marker.color], opacity: 0.9,
+                    pointerEvents: 'none', zIndex: 2,
+                  }}
+                />
+              );
+            })}
             {/* pen mode: keyframe rubber band on the selected clip (vertical = value; audio = volume 0..2, rest = transparency 0..1)*/}
             {editMode === 'pen' && selected && (() => {
               const prop = it.kind === 'audio' ? 'volume' as const : 'opacity' as const;

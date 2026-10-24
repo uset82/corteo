@@ -143,6 +143,7 @@ export default {
   '模糊强度': 'Blur Strength',
   '模糊侧(0双/1上/2下)': 'Blur Side (0 both / 1 top / 2 bottom)',
   '饱和度': 'Saturation',
+  '曝光': 'Exposure',
   '键色': 'Key Color',
   '容差': 'Similarity',
   '溢色抑制': 'Spill Suppression',

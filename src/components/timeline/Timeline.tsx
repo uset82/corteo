@@ -161,6 +161,7 @@ export function Timeline(props: TimelineProps) {
         captionsVisible={captionsVisible}
         zoom={zoom} setZoom={setZoom}
         frameRateLock={props.frameRateLock ?? null}
+        onSeekFrame={(frame) => playerRef.current?.seekTo(Math.max(0, Math.min(total - 1, frame)))}
       />
 
       {/* selection-mode hint strip (subtle banner while picking refs) */}

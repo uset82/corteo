@@ -58,6 +58,16 @@ export function appearanceAt(
   const clipPath = hasFlexCrop(crop) ? flexCropClipPath(crop, canvas.width, canvas.height) : undefined;
   const opacity = clipOpacityAt(item, frame, hiddenByCaptions);
   const filters = item.filters;
+  const exposureFactor = 2 ** (filters?.exposure ?? 0);
+  const temperature = filters?.temperature ?? 0;
+  const tint = Math.min(1, Math.abs(temperature) / 100);
+  // CSS has no white-balance filter: sepia moves the whole frame toward the
+  // warm end, then hue-rotate bends it further warm or across to cool.
+  const temperatureFilter = temperature === 0
+    ? ''
+    : temperature > 0
+      ? ` sepia(${(tint * 0.35).toFixed(3)}) saturate(${(1 + tint * 0.15).toFixed(3)}) hue-rotate(${(-tint * 8).toFixed(2)}deg)`
+      : ` sepia(${(tint * 0.6).toFixed(3)}) saturate(${(1 + tint * 0.1).toFixed(3)}) hue-rotate(${(tint * 170).toFixed(2)}deg)`;
   return {
     opacity,
     borderRadius: Math.max(0, keyframeValue('borderRadius') ?? transform?.borderRadius ?? 0),
@@ -66,7 +76,7 @@ export function appearanceAt(
       transformOrigin: '50% 50%',
       transformBox: 'border-box',
       filter: filters
-        ? `brightness(${filters.brightness ?? 1}) contrast(${filters.contrast ?? 1}) saturate(${filters.saturate ?? 1}) blur(${filters.blur ?? 0}px)`
+        ? `brightness(${((filters.brightness ?? 1) * exposureFactor).toFixed(4)}) contrast(${filters.contrast ?? 1}) saturate(${filters.saturate ?? 1}) blur(${filters.blur ?? 0}px)${temperatureFilter}`
         : undefined,
       clipPath,
     },

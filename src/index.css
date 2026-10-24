@@ -930,6 +930,14 @@ button, input, select { font: inherit; }
   border-color:var(--cc-select);
   box-shadow:inset 0 0 0 0.5px var(--cc-select);
 }
+/* Duplicate-shot detector: yellow outline persists after the scan dialog closes. */
+.cc-timeline-clip.is-duplicate {
+  border-color:#f5c518;
+  box-shadow:inset 0 0 0 2px #f5c518;
+}
+.cc-timeline-clip.is-duplicate.is-selected {
+  box-shadow:inset 0 0 0 2px #f5c518, inset 0 0 0 1px var(--cc-accent);
+}
 .cc-clip-overlap-region {
   position:absolute; top:0; bottom:0; z-index:1; pointer-events:none;
   background:

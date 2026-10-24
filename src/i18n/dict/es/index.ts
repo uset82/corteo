@@ -202,4 +202,20 @@ export default {
   '音频码率': 'Tasa de bits de audio',
   '搜索效果与转场': 'Buscar efectos y transiciones',
   '没有匹配的结果': 'Sin resultados',
+  '清除高亮 ({n})': 'Quitar resaltado ({n})',
+
+  // Markers
+  '标记': 'Marcador',
+  '标记列表': 'Lista de marcadores',
+  '点击标记跳转；批注和颜色可直接修改': 'Haz clic en un marcador para saltar; edita notas y colores aquí mismo',
+  '还没有标记。按 M 在播放头添加项目标记。': 'Aún no hay marcadores. Pulsa M para añadir un marcador de proyecto en el cabezal.',
+  '区间 {n}s': 'Intervalo {n}s',
+  '颜色': 'Color',
+  '删除标记': 'Eliminar marcador',
+  '片段': 'Clip',
+  '片段标记': 'Marcador de clip',
+
+  // Inspector color correction
+  '曝光': 'Exposición',
+  '色温': 'Temperatura de color',
 } as Record<string, string>;

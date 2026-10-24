@@ -7,6 +7,10 @@ export interface ClipFilters {
   brightness?: number;
   contrast?: number;
   saturate?: number;
+  /** exposure in stops (-2..2, 0 = neutral); multiplied into brightness */
+  exposure?: number;
+  /** white balance: -100 (cool) … 100 (warm), 0 = neutral */
+  temperature?: number;
   /** gaussian blur radius in px (0 = none) */
   blur?: number;
 }

@@ -10,6 +10,7 @@ import { Icon } from '../components/icons';
 import { useT } from '../i18n/locale';
 import { DEFAULT_DUPLICATE_THRESHOLD } from '../duplicates/perceptualHash';
 import { isSampledItem, scanForDuplicates, type DuplicateScanResult } from '../duplicates/duplicateScan';
+import { clearDuplicateIds, setDuplicateIds, useDuplicateIds } from '../duplicates/duplicateHighlightStore';
 import '../scene-detection/scene-detection.css';
 
 interface DuplicateDetectorDialogProps {
@@ -32,6 +33,7 @@ export function DuplicateDetectorDialog({ state, onSelect, onClose }: DuplicateD
   const [error, setError] = useState<string | null>(null);
   const [threshold, setThreshold] = useState(DEFAULT_DUPLICATE_THRESHOLD);
   const abortRef = useRef<AbortController | null>(null);
+  const highlighted = useDuplicateIds();
 
   const sampled = useMemo(() => state.items.filter(isSampledItem), [state.items]);
   const byId = useMemo(() => new Map(state.items.map((item) => [item.id, item])), [state.items]);
@@ -51,7 +53,10 @@ export function DuplicateDetectorDialog({ state, onSelect, onClose }: DuplicateD
         signal: controller.signal,
         onProgress: setProgress,
       });
-      if (!controller.signal.aborted) setResult(scanResult);
+      if (!controller.signal.aborted) {
+        setResult(scanResult);
+        setDuplicateIds(scanResult.groups.flatMap((group) => group.clips));
+      }
     } catch (cause) {
       if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
@@ -111,7 +116,14 @@ export function DuplicateDetectorDialog({ state, onSelect, onClose }: DuplicateD
                   ? t('找到 {n} 组重复片段，点击一组即可选中', { n: groups.length })
                   : t('扫描完成后会列出相似镜头')}</p>
               </div>
-              {result && <span>{t('已扫描 {n} 个', { n: result.scanned })}</span>}
+              <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {result && <span>{t('已扫描 {n} 个', { n: result.scanned })}</span>}
+                {highlighted.size > 0 && (
+                  <button type="button" className="cc-scene-button" onClick={clearDuplicateIds}>
+                    {t('清除高亮 ({n})', { n: highlighted.size })}
+                  </button>
+                )}
+              </span>
             </div>
 
             <div className="cc-scene-list">

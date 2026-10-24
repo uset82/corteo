@@ -16,6 +16,7 @@ import { SceneDetectionDialog } from '../../scene-detection/SceneDetectionDialog
 import { MotionTrackingDialog } from '../../tracking/MotionTrackingDialog';
 import { TrackCreateControl } from './TrackCreateControl';
 import { DuplicateDetectorDialog } from '../DuplicateDetector';
+import { MarkerListDialog } from './MarkerListDialog';
 import { TimelineFrameRateControl } from './TimelineFrameRateControl';
 
 // Group spacing between toolbar clusters uses gaps without a visible divider.
@@ -59,6 +60,7 @@ function TimelineMoreControl(props: {
   onScene: (restoreFocus: () => void) => void;
   onTracking: (restoreFocus: () => void) => void;
   onDuplicates: (restoreFocus: () => void) => void;
+  onMarkers: (restoreFocus: () => void) => void;
   onPlaceMode: (mode: 'insert' | 'overwrite') => void;
 }) {
   const t = useT();
@@ -93,6 +95,9 @@ function TimelineMoreControl(props: {
         <button onClick={(event) => runMenuAction(event, () => props.onDuplicates(restoreFocus), false)}>
           <Icon name="film" size={15} />{t('重复片段检测')}
         </button>
+        <button onClick={(event) => runMenuAction(event, () => props.onMarkers(restoreFocus), false)}>
+          <Icon name="bookmark" size={15} />{t('标记列表')}
+        </button>
         <div className="cc-track-create-separator" />
         <button className={props.placeMode === 'insert' ? 'selected' : ''} onClick={(event) => runMenuAction(event, () => props.onPlaceMode('insert'))}>
           <Icon name="insert" size={15} />{t('插入落轨')}
@@ -126,12 +131,14 @@ interface TimelineToolbarProps {
   setZoom: (z: number) => void;
   /** projectFrameRateLock(doc): null while the frame rate can still change */
   frameRateLock: string | null;
+  /** seek to an absolute timeline frame (marker list jumps) */
+  onSeekFrame: (frame: number) => void;
 }
 
 export function TimelineToolbar({
   state, commands, editMode, placeMode, setPlaceMode, snapping,
   recorder, canRecord, playing, timecodeRef, getPlayheadFrame, playheadFrame, total, captionsVisible,
-  zoom, setZoom, frameRateLock,
+  zoom, setZoom, frameRateLock, onSeekFrame,
 }: TimelineToolbarProps) {
   const t = useT();
   const timeDisplayMode = useTimeDisplayMode();
@@ -149,6 +156,7 @@ export function TimelineToolbar({
   const [sceneDetectionOpen, setSceneDetectionOpen] = useState(false);
   const [motionTrackingOpen, setMotionTrackingOpen] = useState(false);
   const [duplicatesOpen, setDuplicatesOpen] = useState(false);
+  const [markersOpen, setMarkersOpen] = useState(false);
   const modalFocus = useFocusReturn();
   const captionTracks = captionTrackEntries(state).filter((entry) => entry.captions);
   // On-screen text clips count as captions for the toggle (render-layer hidden with them).
@@ -195,6 +203,7 @@ export function TimelineToolbar({
           onScene={(restoreFocus) => { modalFocus.remember(restoreFocus); setSceneDetectionOpen(true); }}
           onTracking={(restoreFocus) => { modalFocus.remember(restoreFocus); setMotionTrackingOpen(true); }}
           onDuplicates={(restoreFocus) => { modalFocus.remember(restoreFocus); setDuplicatesOpen(true); }}
+          onMarkers={(restoreFocus) => { modalFocus.remember(restoreFocus); setMarkersOpen(true); }}
           onPlaceMode={setPlaceMode}
         />
         <ToolSep />
@@ -279,6 +288,14 @@ export function TimelineToolbar({
           state={state}
           onSelect={(ids) => commands.selectItems(ids)}
           onClose={() => { setDuplicatesOpen(false); modalFocus.restore(); }}
+        />
+      )}
+      {markersOpen && (
+        <MarkerListDialog
+          state={state}
+          commands={commands}
+          onSeek={onSeekFrame}
+          onClose={() => { setMarkersOpen(false); modalFocus.restore(); }}
         />
       )}
       {motionTrackingOpen && trackingItem && (
