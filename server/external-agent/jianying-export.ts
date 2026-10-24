@@ -369,7 +369,7 @@ export async function exportJianyingDraft(
   if (missing.length > 0) {
     return { ok: false, draftName: '', draftPath: '', addedVideos: 0, addedAudios: 0, captions: 0, warnings, error: `media files not found locally: ${missing.slice(0, 3).join(', ')}` };
   }
-  const named = String(request.draftName || `OpenChatCut-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, '')}`)
+  const named = String(request.draftName || `Claudia-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, '')}`)
     .replace(/[\\/]/g, '')
     .replaceAll('\0', '');
   // The name becomes a folder. Windows forbids : * ? " < > | and control

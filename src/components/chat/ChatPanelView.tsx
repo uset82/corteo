@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom';
 import { theme } from '../../theme';
-import { BrandMark, Icon, OpenChatCutWordmark } from '../icons';
+import { Icon } from '../icons';
+import { ClaudiaMark, ClaudiaWordmark } from '../../brand/ClaudiaMarks';
 import { AgentChangeLogMenu } from './AgentChangeLogMenu';
 import { AgentRunInspector } from './AgentRunInspector';
 import { ChatComposer } from './ChatComposer';
@@ -38,11 +39,12 @@ function CollapsedPanel({ controller }: { controller: ChatPanelController }) {
     <ChangeLogPortal controller={controller} />
     <aside className="cc-chat-panel collapsed" data-cc-shortcut-surface="agent-chat" tabIndex={-1}
       style={{ gridColumn: 1, gridRow: '2 / 5', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '10px 0', borderRight: `0.5px solid ${theme.border}`, background: theme.panel }}>
-      <button type="button" onClick={props.onToggleCollapse} title={t('展开 OpenChatCut Agent')}
+      <button type="button" onClick={props.onToggleCollapse} title={t('展开助手')}
         style={{ background: 'none', border: 'none', color: theme.textDim, cursor: 'pointer', fontSize: 14 }}>
         <span style={{ transform: 'rotate(-90deg)', display: 'inline-flex' }}><Icon name="chevronDown" size={14} /></span>
       </button>
-      <div className="cc-chat-collapsed-brand">OpenChatCut</div>
+      <ClaudiaMark size={14} />
+      <div className="cc-chat-collapsed-brand">Claudia</div>
     </aside>
   </>;
 }
@@ -51,10 +53,9 @@ function ChatHeader({ controller }: { controller: ChatPanelController }) {
   const { props, t, agent } = controller;
   return <div className="cc-chat-header">
     <div className="cc-chat-brand">
-      <BrandMark size={20} />
       <span className="cc-chat-brand-copy">
-        <OpenChatCutWordmark width={102} />
-        <small>{t('Agent 工作台')}</small>
+        <ClaudiaWordmark size={13} />
+        <small>{t('编辑助手')}</small>
       </span>
     </div>
     <AgentRunInspector projectId={props.projectId} />
@@ -62,7 +63,7 @@ function ChatHeader({ controller }: { controller: ChatPanelController }) {
       style={{ background: 'none', border: 'none', color: theme.textDim, cursor: agent.running ? 'default' : 'pointer', opacity: agent.running ? 0.4 : 1, padding: 2, lineHeight: 0 }}>
       <Icon name="trash" size={14} />
     </button>
-    <button type="button" onClick={props.onToggleCollapse} title={t('收起 OpenChatCut Agent')}
+    <button type="button" onClick={props.onToggleCollapse} title={t('收起助手')}
       style={{ background: 'none', border: 'none', color: theme.textDim, cursor: 'pointer', fontSize: 13 }}>
       <span style={{ transform: 'rotate(90deg)', display: 'inline-flex' }}><Icon name="chevronDown" size={14} /></span>
     </button>
@@ -72,20 +73,17 @@ function ChatHeader({ controller }: { controller: ChatPanelController }) {
 function ChatOnboarding({ controller }: { controller: ChatPanelController }) {
   const { composer, t } = controller;
   return <div className="cc-chat-onboarding">
-    <div className="cc-chat-onboarding-kicker">{t('从这里开工')}</div>
-    <h2>{t('从一个剪辑目标开始')}</h2>
-    <p>{t('选择工作流，或直接描述你想得到的成片。')}</p>
+    <h2>{t('你想剪什么？')}</h2>
+    <p>{t('描述你想要的视频，或从下面挑一个开始。')}</p>
     <div className="cc-chat-starter-list">
       {EMPTY_PROJECT_STARTERS.map((starter) => (
         <button type="button" key={starter.label} onClick={() => {
           composer.setInput(t(starter.prompt));
           requestAnimationFrame(() => composer.taRef.current?.focus());
         }}>
-          <span className="cc-chat-starter-icon"><Icon name={starter.icon} size={16} /></span>
           <span className="cc-chat-starter-copy">
             <strong>{t(starter.label)}</strong><small>{t(starter.description)}</small>
           </span>
-          <span className="cc-chat-starter-arrow" aria-hidden="true">→</span>
         </button>
       ))}
     </div>

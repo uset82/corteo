@@ -4149,7 +4149,7 @@
           },
           "name": {
             "type": "string",
-            "description": "Copy display name; default \"[Copy] <source>\"."
+            "description": "Copy display name; default \"Copia de <source>\"."
           },
           "activate": {
             "type": "boolean",
