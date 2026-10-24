@@ -1,6 +1,6 @@
 # Music Video Editor Guide
 
-A Spanish-first, Premiere Pro-style editing workspace built on top of [OpenChatCut](https://github.com/0xsline/OpenChatCut) (AGPL v3). This fork keeps the upstream agent-native architecture and adds the tools a music-video workflow needs: smooth Ken Burns moves on stills, karaoke subtitles, duplicate-shot detection, dual time display, advanced export presets, and a Source Monitor.
+**Claudia** — a Spanish-first, Premiere Pro-style editing workspace built on top of [OpenChatCut](https://github.com/0xsline/OpenChatCut) (AGPL v3). This fork keeps the upstream agent-native architecture and adds the tools a music-video workflow needs: smooth Ken Burns moves on stills, karaoke subtitles, duplicate-shot detection, dual time display, advanced export presets, and a Source Monitor.
 
 <p align="center">
   <img src="../screenshots/03-full-editor.png" alt="Editor overview" width="900" />

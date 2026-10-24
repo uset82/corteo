@@ -66,7 +66,7 @@
 
 ## Music Video Edition (Spanish-first)
 
-This fork extends OpenChatCut with a Premiere-style music-video workflow and a default Spanish UI:
+This fork ships as **Claudia** and extends OpenChatCut with a Premiere-style music-video workflow and a default Spanish UI:
 
 - **Ken Burns** pan/zoom on stills with sub-pixel smooth preview and export
 - **Karaoke subtitles** (ASS/SRT word timing, balada/grito/relleno presets)

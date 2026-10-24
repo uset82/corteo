@@ -1,6 +1,6 @@
 # Guía de usuario — Editor de videoclips
 
-Esta guía cubre el flujo completo para montar un videoclip musical con la interfaz en español. El editor está construido sobre OpenChatCut (AGPL v3) y añade herramientas específicas: Ken Burns, subtítulos karaoke, detección de fragmentos duplicados, doble visualización de tiempo, Monitor de origen y exportación avanzada.
+**Claudia** es este editor. Esta guía cubre el flujo completo para montar un videoclip musical con la interfaz en español. El editor está construido sobre OpenChatCut (AGPL v3) y añade herramientas específicas: Ken Burns, subtítulos karaoke, detección de fragmentos duplicados, doble visualización de tiempo, Monitor de origen y exportación avanzada.
 
 <p align="center">
   <img src="../screenshots-spanish/dashboard-spanish.png" alt="Interfaz en español" width="900" />
