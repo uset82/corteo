@@ -2,7 +2,8 @@
 // proxy and the same server model the agent runs use. It proves the gateway
 // contract the editor depends on: forward-key auth, a model list, heartbeat
 // comments, a silent start, reasoning deltas, one tool call split across SSE
-// frames, and the follow-up tool-result turn.
+// frames (opened by a bare-index delta the proxy repairs), and the follow-up
+// tool-result turn.
 import assert from 'node:assert/strict';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -10,6 +11,7 @@ import { jsonSchema, stepCountIs, streamText, tool } from 'ai';
 import { createMiniConnect } from '../../desktop/mini-connect.ts';
 import { KEY_NAMES, seedKeystore } from '../keystore.ts';
 import { llmProxyPlugin } from '../plugins/llm-proxy.ts';
+import { fixToolCallDeltaLine, sseLineTransform } from '../sse-tool-call-fix.ts';
 import { createServerLanguageModel } from './model.ts';
 
 const FORWARD_KEY = 'fw-key';
@@ -76,6 +78,11 @@ const stub = createServer(async (req, res) => {
     } else {
       res.write(sseChunk({ role: 'assistant', content: null, reasoning_content: 'Voy a usar la ' }));
       res.write(sseChunk({ reasoning_content: 'herramienta de prueba.' }));
+      // Free lanes open the call with a bare index; the proxy must repair it.
+      const opener = sseChunk({ tool_calls: [{ index: 0 }] });
+      res.write(opener.slice(0, 40));
+      await delay(20);
+      res.write(opener.slice(40));
       res.write(sseChunk({
         tool_calls: [{
           index: 0,
@@ -109,6 +116,31 @@ async function listen(server: ReturnType<typeof createServer>): Promise<number> 
 
 async function close(server: ReturnType<typeof createServer>): Promise<void> {
   await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+}
+
+{
+  const bare = 'data: {"choices":[{"index":0,"delta":{"tool_calls":[{"index":0}]}}]}';
+  assert.equal(fixToolCallDeltaLine(bare),
+    'data: {"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{}}]}}]}');
+  const whole = 'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"name":"x"}}]}}]}';
+  assert.equal(fixToolCallDeltaLine(whole), whole, 'complete deltas keep their exact bytes');
+  for (const line of [': heartbeat', 'data: [DONE]', 'data: {not json "tool_calls"', '']) {
+    assert.equal(fixToolCallDeltaLine(line), line);
+  }
+
+  const transform = sseLineTransform(fixToolCallDeltaLine);
+  const out: Buffer[] = [];
+  transform.on('data', (chunk: Buffer) => out.push(Buffer.from(chunk)));
+  const input = Buffer.from(`: ping\r\n\r\n${bare}\r\n\r\ndata: {"choices":[{"delta":{"content":"título"}}]}\n\ndata: [DONE]`);
+  const accent = input.indexOf(Buffer.from('í'));
+  for (const piece of [input.subarray(0, 25), input.subarray(25, accent + 1), input.subarray(accent + 1)]) {
+    transform.write(piece);
+  }
+  transform.end();
+  await new Promise((resolve) => transform.on('end', resolve));
+  assert.equal(Buffer.concat(out).toString('utf8'),
+    `: ping\r\n\r\n${fixToolCallDeltaLine(bare)}\r\n\r\ndata: {"choices":[{"delta":{"content":"título"}}]}\n\ndata: [DONE]`,
+    'lines split across chunks and multi-byte characters survive; CRLF and comments are kept');
 }
 
 const stubPort = await listen(stub);

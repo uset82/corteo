@@ -10,6 +10,7 @@ import {
 import { resolveLlmProviderConfig } from '../llm-config.ts';
 import { xaiOauthAccessToken } from '../xai-oauth-session.ts';
 import { proxyMiddleware } from '../proxy.ts';
+import { fixToolCallDeltaLine } from '../sse-tool-call-fix.ts';
 
 function keyReader(name: string): string {
   return getKey(name as KeyName);
@@ -102,6 +103,7 @@ export function llmProxyPlugin(): Plugin {
         forceJsonContentType: true,
         errorMessage: llmErrorMessage,
         networkMessage: llmNetworkErrorMessage,
+        sseLineFix: (req) => llmProviderForRequest(req) === 'dsh' ? fixToolCallDeltaLine : undefined,
       }));
     },
   };

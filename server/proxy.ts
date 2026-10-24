@@ -5,6 +5,7 @@ import { request as httpRequest, type IncomingMessage, type ServerResponse } fro
 import { request as httpsRequest } from 'node:https';
 import type { Agent as HttpAgent } from 'node:http';
 import { outboundHttpAgent } from './outbound-proxy.ts';
+import { sseLineTransform } from './sse-tool-call-fix.ts';
 
 type Middleware = (req: IncomingMessage, res: ServerResponse, next: () => void) => unknown;
 
@@ -42,6 +43,8 @@ export interface ProxyRoute {
    * with one actionable message. Returning undefined keeps the generic 502 body.
    */
   networkMessage?: (error: Error, req: IncomingMessage) => string | undefined;
+  /** Rewrite each line of a successful `text/event-stream` response. Returning undefined streams it untouched. */
+  sseLineFix?: (req: IncomingMessage) => ((line: string) => string) | undefined;
 }
 
 export function proxyMiddleware(route: ProxyRoute): Middleware {
@@ -109,8 +112,13 @@ export function proxyMiddleware(route: ProxyRoute): Middleware {
           outHeaders['content-type'] = 'application/json';
         }
       }
+      const lineFix = String(outHeaders['content-type'] ?? '').includes('text/event-stream')
+        ? route.sseLineFix?.(req)
+        : undefined;
+      if (lineFix) delete outHeaders['content-length'];
       res.writeHead(status, outHeaders);
-      upRes.pipe(res);
+      if (lineFix) upRes.pipe(sseLineTransform(lineFix)).pipe(res);
+      else upRes.pipe(res);
     });
 
     upstream.on('error', (err) => {
