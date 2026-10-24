@@ -357,7 +357,7 @@ Only the WorkBuddy agent edits this section, in `~/corteo-workbuddy` on branch `
 |----|------|--------|-------|
 | HW-1 | Pin and install | done | |
 | HW-2 | `npm run harness` and `npm run harness:doctor` | done | HW-1 |
-| HW-3 | Which free models can edit | todo | HW-2 |
+| HW-3 | Which free models can edit | done | HW-2 |
 | HW-4 | DeepSeek Harness edits corteo over MCP | todo | HW-2 |
 | HW-5 | Guide for Carlos | todo | HW-2, HW-3, HW-4 |
 
@@ -367,12 +367,22 @@ Only the WorkBuddy agent edits this section, in `~/corteo-workbuddy` on branch `
 - 2026-10-25 · HW-2 · "Harness is up" means any HTTP answer on 3080: dsh web answers 401 until its login link is opened, so a status-code check would refuse to start next to a live instance. The doctor finds the forward port the same way it is configured: 401 without the key and 200 with it on each port, which also proves the plugin loaded.
 - 2026-10-25 · HW-2 · `npm run harness` omits the MCP patch when no token exists yet, instead of sending `Bearer undefined`; it says why and asks for a restart once corteo created the token. Reason: a broken MCP server in the DSH chat is worse than no server.
 - 2026-10-25 · HW-2 · Real run on 2026-10-25: `npm run harness:doctor` passed all five steps against the running harness (34 models, `http://127.0.0.1:18899/v1`, key ending `arcM`), and `npm run harness` with the instance up reported it and exited 0 without spawning a second one.
+- 2026-10-25 · HW-3 · The report ranks only models that returned a schema-valid `split_item` call with the right arguments, then by latency. A 429 is the lane's quota, not a model defect, so those rows stay in the report as "rate limit" instead of being retried; retrying would burn the same shared quota.
+- 2026-10-25 · HW-3 · The five tool schemas come from corteo's own `assets/agent/openchatcut-tool-schemas.json`, so a model is judged against what the editor really exposes. One request per model with 300 ms between them; the sweep takes ~4 minutes.
 
 ### WorkBuddy: blockers
 None yet. Same format as "Blockers".
 
 ### WorkBuddy: model results (HW-3, HW-4)
-The top three models with their checks and latency, and the model used for the MCP edit.
+Sweep of 2026-10-25 22:54Z over all 34 models on `127.0.0.1:18899`, one request each («Corta el clip c1 en el fotograma 120»), schemas from `assets/agent/openchatcut-tool-schemas.json`. Report: `~/.corteo-harness/reports/harness-models-2026-10-24T22-54-13.{json,md}`. Nine lanes answered 200, nine of those returned a valid `split_item` call and eight got the arguments right; nine lanes are quota-exhausted (429), eight need an account key (401) and two no longer exist (404).
+
+| # | Model | Schema | Tool | Args valid | Correct | Latency |
+|---|-------|--------|------|------------|---------|---------|
+| 1 | `liquid/lfm-2.5-2.6b:free` | yes | `split_item` | yes | yes | 1185 ms |
+| 2 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | yes | `split_item` | yes | yes | 1256 ms |
+| 3 | `nvidia/nemotron-3-ultra-550b-a55b:free` | yes | `split_item` | yes | yes | 1769 ms |
+
+Also correct: `nvidia/nemotron-3.5-super-vl:free` (1810 ms), `kilo-auto/free` (2026 ms), `cohere/north-mini-code:free` (2700 ms), `dots-studio/dots-3-note-preview:free` (3555 ms), `nvidia/nemotron-3.5-lightning:free` (6184 ms), `openrouter/free` (8882 ms). Four lanes knew the schema but called `read_timeline` instead of splitting; `stealth/glyph-cluster` emitted no call. Model used for the HW-4 MCP edit: pending.
 
 ---
 
