@@ -4,7 +4,6 @@
 // Security invariant: The result only contains ok / message / status / latencyMs, and never echoes any key value;
 // The provider's error copy is flattened and truncated before entering the message. Align the endpoints and authentication headers of each provider call one by one
 // (Doubao audio-generation X-Api-Key / MiniMax base_resp / Gemini x-goog-api-key...).
-import { proxyDispatcher } from './outbound-proxy.ts';
 import { getKey, KEY_NAMES, type KeyName } from './keystore.ts';
 import { r2Probe } from './r2.ts';
 import { mediaDirProbe, mediaDirPostCheck, mediaDirOkText } from './media-dir.ts';
@@ -19,14 +18,11 @@ import {
   protocolForProvider,
   type LlmProvider,
 } from '../shared/llm-providers.ts';
-import { versionedApiBaseUrl } from './plugins/media-provider-config.ts';
 import { resolveDoubaoSpeaker } from './plugins/voice-providers.ts';
-import { xaiOauthAccessToken } from './xai-oauth-session.ts';
 import {
   classifyStatus,
   classifyStatusTemplate,
   doubaoPostCheck,
-  minimaxPostCheck,
   networkMessage,
   networkMessageTemplate,
   parseModelCatalog,
@@ -35,61 +31,31 @@ import {
   type ProbeMessageTemplate,
   type ProbeResult,
 } from './key-probe-result.ts';
-import { PROBE_TIMEOUT_MS, runDataDirProbe, runProxyProbe } from './key-probe-local.ts';
+import { runDataDirProbe, runProxyProbe } from './key-probe-local.ts';
+import {
+  atlasMusicProbe,
+  base,
+  bearer,
+  byteplusProbe,
+  cartesiaProbe,
+  deepgramProbe,
+  elevenLabsProbe,
+  fetchWithProxy,
+  geminiMediaProbe,
+  groqProbe,
+  minimaxProbe,
+  mistralMediaProbe,
+  openAiMediaProbe,
+  t,
+  xaiMediaProbe,
+  type Get,
+  type ProbeDef,
+} from './key-probe-media.ts';
 export { classifyStatus, networkMessage, parseModelCatalog, type ProbeResult } from './key-probe-result.ts';
 export { doubaoPostCheck, minimaxPostCheck } from './key-probe-result.ts';
+export { probeUrlError } from './key-probe-media.ts';
 export { runDataDirProbe, runProxyProbe } from './key-probe-local.ts';
-// Proxy-aware fetch: attaches the configured outbound proxy (keystore
-// PROXY_URL or HTTPS_PROXY/HTTP_PROXY env) via undici dispatcher.
-type FetchInit = Parameters<typeof fetch>[1] & { dispatcher?: unknown };
 
-// Probes send REAL stored credentials to a user/agent-settable base URL.
-// Loopback and private hosts stay allowed (local models and LAN gateways are
-// legitimate), but cloud metadata / link-local targets and credential-bearing
-// or non-http(s) URLs never are — those only appear in SSRF exfil attempts.
-export function probeUrlError(url: RequestInfo | URL): string | null {
-  let parsed: URL;
-  try {
-    parsed = new URL(String(url));
-  } catch {
-    return '探测地址不是合法 URL';
-  }
-  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    return `探测地址协议不支持:${parsed.protocol}`;
-  }
-  if (parsed.username || parsed.password) return '探测地址不允许携带内嵌凭据';
-  const host = parsed.hostname.replace(/^\[|\]$/g, '').toLowerCase();
-  if (/^169\.254\.\d{1,3}\.\d{1,3}$/.test(host) || host.startsWith('fe80:')
-    || host === 'metadata.google.internal') {
-    return '探测地址指向云元数据/链路本地网段,已拒绝';
-  }
-  return null;
-}
-
-const fetchWithProxy = (url: RequestInfo | URL, init?: FetchInit): Promise<Response> => {
-  const unsafe = probeUrlError(url);
-  if (unsafe) return Promise.reject(new Error(unsafe));
-  return fetch(url, { ...init, dispatcher: proxyDispatcher() } as RequestInit);
-};
-
-
-type Get = (name: KeyName) => string;
-
-interface ProbeDef {
-  /** Starting test threshold: OR of AND-groups (every name in one inner list must be present) */
-  readonly needs: readonly (readonly KeyName[])[];
-  readonly run: (get: Get) => Promise<Response>;
-  /** 2xx may also be a provider-level failure (MiniMax base_resp); return error text, null = true success */
-  readonly postCheck?: (bodyText: string) => string | null;
-  /** Custom conclusion when successful (non-network check such as local disk probe); null/default = general "connection successful" */
-  readonly okText?: (bodyText: string) => string | null;
-  /** Parse a successful model-catalog response. Only LLM provider pages use this. */
-  readonly models?: (bodyText: string) => string[];
-}
-
-const t = (): AbortSignal => AbortSignal.timeout(PROBE_TIMEOUT_MS);
-const base = (get: Get, name: KeyName, def: string): string => (get(name) || def).replace(/\/+$/, '');
-const bearer = (key: string): Record<string, string> => ({ Authorization: `Bearer ${key}` });
 function llmProbe(provider: LlmProvider): ProbeDef {
   const names = llmProviderConfigNames(provider);
   const protocol = protocolForProvider(provider);
@@ -117,117 +83,6 @@ export function sanitize(text: string): string {
   return sanitizeProbeText(text);
 }
 
-// The four capability pages of MiniMax share one detection: POST /v1/get_voice (free read-only;
-// The voice_cloning list is usually empty, minimal response).
-const minimaxProbe: ProbeDef = {
-  needs: [['MINIMAX_API_KEY']],
-  run: (get) => fetch(`${base(get, 'MINIMAX_BASE_URL', 'https://api.minimaxi.com')}/v1/get_voice`, {
-    method: 'POST', signal: t(),
-    headers: { 'Content-Type': 'application/json', ...bearer(get('MINIMAX_API_KEY')) },
-    body: JSON.stringify({ voice_type: 'voice_cloning' }),
-  }),
-  postCheck: minimaxPostCheck,
-};
-const atlasMusicProbe: ProbeDef = {
-  needs: [['ATLASCLOUD_API_KEY']],
-  run: async (get) => {
-    const root = base(get, 'ATLASCLOUD_API_BASE', 'https://api.atlascloud.ai/api/v1');
-    const response = await fetchWithProxy(`${root}/model/prediction/openchatcut-credential-probe`, {
-      signal: t(), headers: bearer(get('ATLASCLOUD_API_KEY')),
-    });
-    if (response.status !== 404) return response;
-    const body = await response.text().catch(() => '');
-    try {
-      const payload = JSON.parse(body) as { code?: number; message?: string };
-      if (payload.code === 404 && payload.message === 'not found') {
-        return new Response('{"authenticated":true}', { status: 200, headers: { 'Content-Type': 'application/json' } });
-      }
-    } catch {
-      // Preserve an unrecognized 404 so the common classifier reports a bad Base URL.
-    }
-    return new Response(body, { status: 404, headers: response.headers });
-  },
-};
-
-// BytePlus ModelArk: one account/key serves image (Seedream) and video (Seedance) alike —
-// both capability pages share this /models detection, same as minimaxProbe above.
-const byteplusProbe: ProbeDef = {
-  needs: [['BYTEPLUS_API_KEY']],
-  run: (get) => fetch(`${base(get, 'BYTEPLUS_BASE_URL', 'https://ark.ap-southeast.bytepluses.com/api/v3')}/models`, {
-    signal: t(), headers: bearer(get('BYTEPLUS_API_KEY')),
-  }),
-  models: parseModelCatalog,
-};
-
-const openAiMediaProbe: ProbeDef = {
-  needs: [['OPENAI_API_KEY']],
-  run: (get) => fetch(`${versionedApiBaseUrl(base(get, 'IMAGE_BASE_URL', 'https://api.openai.com'), 'v1')}/models`, {
-    signal: t(), headers: bearer(get('OPENAI_API_KEY')),
-  }),
-};
-
-const geminiMediaProbe: ProbeDef = {
-  needs: [['GEMINI_API_KEY']],
-  run: (get) => fetch(`${versionedApiBaseUrl(base(get, 'GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com'), 'v1beta')}/models?pageSize=1`, {
-    signal: t(), headers: { 'x-goog-api-key': get('GEMINI_API_KEY') },
-  }),
-};
-
-const mistralMediaProbe: ProbeDef = {
-  needs: [['LLM_MISTRAL_API_KEY']],
-  run: (get) => fetch(`${versionedApiBaseUrl(base(get, 'LLM_MISTRAL_BASE_URL', 'https://api.mistral.ai/v1'), 'v1')}/models`, {
-    signal: t(), headers: bearer(get('LLM_MISTRAL_API_KEY')),
-  }),
-};
-
-const deepgramProbe: ProbeDef = {
-  needs: [['DEEPGRAM_API_KEY']],
-  run: (get) => fetch('https://api.deepgram.com/v1/projects', {
-    signal: t(), headers: { Authorization: `Token ${get('DEEPGRAM_API_KEY')}` },
-  }),
-};
-
-const groqProbe: ProbeDef = {
-  needs: [['GROQ_API_KEY']],
-  run: (get) => fetch(`${base(get, 'GROQ_BASE_URL', 'https://api.groq.com/openai/v1')}/models`, {
-    signal: t(), headers: bearer(get('GROQ_API_KEY')),
-  }),
-};
-
-/** xAI media pages: one probe for image and video; the subscription session
- * token takes priority over the configured LLM API key. */
-const xaiMediaProbe: ProbeDef = {
-  needs: [['LLM_XAI_OAUTH_API_KEY'], ['LLM_XAI_API_KEY']],
-  run: (get) => {
-    const token = xaiOauthAccessToken() || get('LLM_XAI_API_KEY');
-    return fetchWithProxy(`${base(get, 'LLM_XAI_BASE_URL', 'https://api.x.ai/v1')}/models`, {
-      signal: t(), headers: token ? bearer(token) : {},
-    });
-  },
-  models: parseModelCatalog,
-};
-
-const elevenLabsProbe: ProbeDef = {
-  needs: [['ELEVENLABS_API_KEY']],
-  run: (get) => fetch(`${base(get, 'ELEVENLABS_BASE_URL', 'https://api.elevenlabs.io')}/v1/models`, {
-    signal: t(), headers: { 'xi-api-key': get('ELEVENLABS_API_KEY') },
-  }),
-};
-
-const cartesiaProbe: ProbeDef = {
-  needs: [['CARTESIA_API_KEY']],
-  run: (get) => fetch('https://api.cartesia.ai/voices?limit=1', {
-    signal: t(),
-    headers: {
-      Authorization: `Bearer ${get('CARTESIA_API_KEY')}`,
-      'Cartesia-Version': '2026-03-01',
-    },
-  }),
-};
-
-/** Requesty: the authenticated /models call checks the key, then the model list
- * comes from /models/managed, whose ids match the bundled capability catalog.
- * Falls back to the full /models list if the managed list is unavailable. */
 const requestyLlmProbe = llmProbe('requesty');
 const requestyProbe: ProbeDef = {
   ...requestyLlmProbe,
