@@ -10,9 +10,9 @@ import { ensureLocaleDict, localeDictReady, localeDicts } from './dictRegistry';
 
 export { ensureLocaleDict } from './dictRegistry';
 
-export type Locale = 'zh' | 'en' | 'it' | 'ru';
+export type Locale = 'zh' | 'en' | 'it' | 'ru' | 'es';
 
-export const ALL_LOCALES: readonly Locale[] = ['zh', 'en', 'it', 'ru'];
+export const ALL_LOCALES: readonly Locale[] = ['zh', 'en', 'it', 'ru', 'es'];
 
 const STORAGE_KEY = 'cc.locale';
 const DOCUMENT_LANG: Record<Locale, string> = {
@@ -20,6 +20,7 @@ const DOCUMENT_LANG: Record<Locale, string> = {
   en: 'en',
   it: 'it',
   ru: 'ru',
+  es: 'es',
 };
 
 function systemLocale(): Locale {
@@ -28,6 +29,7 @@ function systemLocale(): Locale {
     if (tag.startsWith('zh')) return 'zh';
     if (tag.startsWith('it')) return 'it';
     if (tag.startsWith('ru')) return 'ru';
+    if (tag.startsWith('es')) return 'es';
     return 'en';
   } catch {
     return 'en';
@@ -37,11 +39,12 @@ function systemLocale(): Locale {
 function readInitial(): Locale {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'zh' || stored === 'en' || stored === 'it' || stored === 'ru') return stored;
+    if (stored === 'zh' || stored === 'en' || stored === 'it' || stored === 'ru' || stored === 'es') return stored;
   } catch {
     // Private mode / storage disabled → system language below.
   }
-  return systemLocale();
+  // Default to Spanish for music video editor
+  return 'es';
 }
 
 let current: Locale = readInitial();
@@ -58,10 +61,11 @@ export function subscribeLocale(onChange: () => void): () => void {
   return () => { subscribers.delete(onChange); };
 }
 
-export function localeLanguageName(locale: Locale): 'Chinese' | 'English' | 'Italian' | 'Russian' {
+export function localeLanguageName(locale: Locale): 'Chinese' | 'English' | 'Italian' | 'Russian' | 'Spanish' {
   if (locale === 'zh') return 'Chinese';
   if (locale === 'it') return 'Italian';
   if (locale === 'ru') return 'Russian';
+  if (locale === 'es') return 'Spanish';
   return 'English';
 }
 
