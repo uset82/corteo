@@ -14,6 +14,10 @@ export interface VerifiedFile {
 }
 
 const verifiedFingerprints = new Map<string, string>();
+// A same-size rewrite within one filesystem timestamp tick keeps every
+// fingerprint field, so only files that have been still for a while are
+// trusted from the cache; recently written ones are always re-hashed.
+const RACY_FINGERPRINT_MS = 2_000;
 
 function pathIsWithin(root: string, candidate: string): boolean {
   const local = relative(root, candidate);
@@ -48,7 +52,9 @@ export async function openVerifiedFile(
     const fingerprint = `${info.dev}:${info.ino}:${info.size}:${info.mtimeMs}:${info.ctimeMs}`;
     if (verifiedFingerprints.get(key) !== fingerprint) {
       if (await sha256File(handle) !== expected.sha256) return null;
-      verifiedFingerprints.set(key, fingerprint);
+      if (Date.now() - Math.max(info.mtimeMs, info.ctimeMs) > RACY_FINGERPRINT_MS) {
+        verifiedFingerprints.set(key, fingerprint);
+      }
     }
     const verified = { handle, size: info.size };
     handle = null;
