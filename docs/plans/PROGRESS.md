@@ -326,7 +326,7 @@ Only the Qoder agent edits this section, in `~/corteo-qoder` on branch `harness-
 | HQ-2 | Every harness model in the Model menu | done | HQ-1 |
 | HQ-3 | Only DeepSeek Harness under `OPENCHATCUT_PROVIDERS=off` | done | HQ-1 |
 | HQ-4 | Gateway behaviour tests and Spanish errors | done | HQ-1 |
-| HQ-5 | Real proof from the chat (needs a running harness) | todo | HQ-2, HQ-3, HQ-4 |
+| HQ-5 | Real proof from the chat (needs a running harness) | done | HQ-2, HQ-3, HQ-4 |
 
 ### Qoder: decisions
 - 2026-10-24 · HQ-3 · The allowlist (`dsh`, `ollama`, `lmstudio`) and the `providersOffEnv` helper live in `shared/providers-off.ts`; `server/plugins/providers-off.ts` re-exports them so P1-1 can extend the blocked-prefix list in the same file without a second middleware. Reason: the server gate and the client UI must not drift apart.
@@ -338,6 +338,19 @@ Only the Qoder agent edits this section, in `~/corteo-qoder` on branch `harness-
 
 ### Qoder: HQ-5 results
 Model ids, the result of each edit and the latency per message.
+
+Environment (2026-10-24): DSH `@deepseek-ai/dsh@0.2.1-rc.2` installed under `~/.corteo-harness/runtime`, free-model plugin `dsh-our-free-model` tag `v2.5.9` (commit `25ab765`), `dsh web` on `127.0.0.1:3080`, forward gateway `http://127.0.0.1:18899/v1` listing 34 models. Editor on `http://127.0.0.1:5202` in Spanish. The forward key was entered only in Settings; it is not recorded here. `Probar conexión` reported `34 modelos leídos · 3 ms`, `Guardar` persisted it and the model `deepseek-v4.1-flash-free`. Project: `[Copy] Proyecto de Ejemplo` (`d16b751b-6376-4321-a1a1-8cf998ca3f30`), a throwaway copy of the sample (V1: two 3 s clips, 6 s total).
+
+Edits (Claudia asked in Spanish, one message each):
+1. Title, `nvidia/nemotron-3.5-lightning:free` — **partly, ≈250 s**. First try with `reflection/beam-free` failed at once with the 429 branch (`El modelo gratuito … está ocupado o se ha quedado sin cuota`, correct Spanish). The retry called `read_timeline`, `ToolSearch`, `search_templates`, `add_motion_graphic` and `create_motion_graphic_from_code`: it added `Black Title - Box Title` to V2 at frames 0–90 (visible 0–3 s), but that template has no editable text and stayed on `WARM LIVING`; the code MG `Title Perú` landed in the media pool and was never put on the timeline. The model then told the user to change the text by hand and misreported the V1 clip lengths. One undo/change-log entry.
+2. Cut, `nvidia/nemotron-3.5-lightning:free` — **worked, ≈75 s**. The card's `Corta el primer clip en el segundo 5` cannot apply here (the first clip ends at 3 s), so the message was `Corta el clip Dark Tech en el segundo 4.` `edit_item` changed `seed_2.durationInFrames` 90 → 30: the clip now covers 3–4 s and 4–6 s is empty (a trim, not a split) — verified in IndexedDB. Before it, `poolside/laguna-s-2.1:free` answered that it had cut the clip in ≈25 s **without calling any tool** (Run Inspector: 1 request, 7 tool schemas, no tool outcomes; timeline unchanged). `cohere/north-mini-code:free` and `reflection/beam-free` died on a stream parse error (below).
+3. Keyframe, `nvidia/nemotron-3.5-lightning:free` — **worked, ≈40 s**. `edit_item` wrote `keyframes.scale = [{frame 0, value 1}, {frame 89, value 1.19778}]` on the title clip (100 % → 120 % over its three seconds) — verified in IndexedDB; the same run also passed the animation panel.
+
+Second-model attempts for the extra edit (keyframe of opacity 60 % at frame 45): `dots-studio/dots-3-note-preview:free`, `recursive/flint-v1.0:free` and `openrouter/free` all failed with the same stream parse error in under 2 s, so only `nvidia/nemotron-3.5-lightning:free` actually edited. Two-model coverage is therefore only partly met: three free models were picked and asked, one can drive tools.
+
+Other checks: streaming and tool round trip worked throughout (step chips `Thinking` → tool → `Thinking`, context `≈10k / ≈131k`, 7 tools). `Detener` cancels a run after the first tool (≈3 s, no reply, `Reintentar` offered). With `dsh` stopped, the picker shows `DeepSeek Harness no responde. Arráncalo con npm run harness.` and keeps the last models selectable; sending returns the Spanish `connect ECONNREFUSED 127.0.0.1:18899` message after one retry (≈6 s); restarting `dsh` and pressing the refresh control brings back all 34 models and clears the notice.
+
+Finding / follow-up: most free lanes (`openrouter/free`, `reflection/beam-free`, `cohere/north-mini-code:free`, `dots-studio/dots-3-note-preview:free`, `recursive/flint-v1.0:free`) open a tool call with a delta `{"tool_calls":[{"index":0}]}` that has no `function`, and `@ai-sdk/openai-compatible` rejects the whole stream (`invalid_union … delta.tool_calls.0.function`). `nvidia/nemotron-3.5-lightning:free` streams compliant frames. Fix belongs to the gateway (HW) or to a dsh-only SSE normalizer in the proxy; neither is in this track's cards. Other lanes (`deepseek-v4.1-flash-free`, `glm-5.3-flash-free`, `mimo-v2.6-flash-free`, `beam-free`, `big-pickle`, `flint-40b-free`, `jev-1.13-free`, `liquid/…`, `nemotron-3.5-lightning-free`, `xingchen-…`) answered 429 (`Free usage limit reached`) and `opencode/…`, `z-ai/glm-5.3-flash`, `openai/gpt-oss-20b` answered 401 on this key.
 
 ---
 
