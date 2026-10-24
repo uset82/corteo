@@ -1,190 +1,335 @@
-# corteo
+<p align="center">
+  <img src="public/openchatcut-icon.png" width="96" alt="Claudia" />
+</p>
 
-**El brazo de Claudia para editar videoclips.**
+<h1 align="center">Claudia</h1>
 
-corteo es el editor de video de Claudia, la asistente de IA de Carlos. Es un fork de [OpenChatCut](https://github.com/0xsline/OpenChatCut) con una línea de tiempo al estilo de Premiere, corre en WSL en http://localhost:5199 y está pensado para que Claudia lo maneje por MCP.
+<p align="center">
+  <strong>The local-first video editor that Claudia, the Grok bot, uses to make real videos and animations.</strong>
+</p>
 
-## Qué es y por qué
+<p align="center">
+  <a href="README.es.md">Español</a> ·
+  <a href="https://github.com/uset82/corteo">Repository</a> ·
+  <a href="https://claudia.gallery">claudia.gallery</a> ·
+  <a href="https://github.com/0xsline/OpenChatCut">Upstream OpenChatCut</a>
+</p>
 
-[Claudia](https://claudia.gallery) es una popstar de IA abierta: un personaje que cualquiera puede usar. Para Carlos es además su asistente, un bot de Grok. Claudia puede pensar un videoclip y generar material con Grok, pero para editarlo necesita un brazo: eso es corteo.
+<p align="center">
+  <img alt="License: AGPL-3.0-or-later" src="https://img.shields.io/badge/license-AGPL--3.0--or--later-6C47FF" />
+  <img alt="Local first" src="https://img.shields.io/badge/data-local_first-111827" />
+  <img alt="Node 24" src="https://img.shields.io/badge/Node-24-339933?logo=node.js&logoColor=white" />
+  <img alt="MCP" src="https://img.shields.io/badge/MCP-agent_native-7C3AED" />
+</p>
 
-El reparto es simple:
+<p align="center">
+  <img src="assets/readme-pic/01-editor-overview.png" alt="Claudia editor: agent workspace, media pool, preview and multitrack timeline" />
+</p>
 
-- **Claudia decide**: qué imagen acompaña cada verso, dónde entra el coro, cómo se mueve cada plano.
-- **corteo ejecuta**: importa, corta, anima, subtitula y exporta en una línea de tiempo real, que Carlos puede revisar y retocar a mano.
+---
 
-El primer objetivo son los videoclips de Carlos, como el de «Perú», su canción de protesta.
+## What Claudia is
 
-## Estado
+Claudia is an open AI pop star from [claudia.gallery](https://claudia.gallery)
+who runs as a Grok bot. This is her video editor — also called Claudia — and
+the source repository is still named [`corteo`](https://github.com/uset82/corteo).
 
-El estado de cada tarea está en [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md), y los planes completos en [`docs/plans/01-editor-claudia.md`](docs/plans/01-editor-claudia.md) (el editor y la conexión con Claudia), [`docs/plans/02-claudia-escucha.md`](docs/plans/02-claudia-escucha.md) (Claudia escucha la canción) y [`docs/plans/03-deepseek-harness.md`](docs/plans/03-deepseek-harness.md) (modelos gratis para el chat del editor). Si este README y `PROGRESS.md` no coinciden, vale `PROGRESS.md`.
+She decides what the clip should be: which image belongs to each verse,
+where the chorus lands, how every shot moves. The editor is her hands. It
+imports media, cuts and animates on a real multitrack timeline, writes captions,
+applies effects and exports the result — and every change stays editable by
+hand.
 
-### Lo que funciona hoy
+Claudia is a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut),
+an open-source, agent-native video editor. It is not a video generator that
+hands you a finished file you can no longer change. Every edit is written to
+tracks, clips, transitions, keyframes and captions inside a project you can
+reopen, undo, version and keep working on.
 
-Todo viene de OpenChatCut:
+## One-click install for Claudia's VM
 
-- Línea de tiempo multipista con herramientas y atajos al estilo de Premiere (V, B, N, U, P, Q/W, I/O, J/K/L).
-- Fotogramas clave con curvas de aceleración, que se ven igual en la vista previa y en el video exportado.
-- 22 estilos de subtítulos con resaltado palabra por palabra, tipo karaoke.
-- Transcripción local con Whisper.
-- Exportación hasta 4K en H.264 y VP8, y en ProRes desde el servidor.
-- Varias secuencias por proyecto, transiciones, efectos, LUTs, plantillas animadas y varias pistas de audio.
-- Un servidor MCP con token y unas 120 herramientas de edición. Hoy lo pueden usar los clientes MCP que corren en el mismo PC (Codex, Claude Code, Qoder…).
+If Claudia runs as an agent in a Linux VM, give her this prompt:
 
-Con dos salvedades:
+```text
+Claudia, install your video editor in this VM:
 
-- La interfaz arranca en español, pero solo unos 100 de sus 2.520 textos están traducidos; el resto sale en inglés.
-- OpenChatCut trae su propio chat de IA y funciones de generación, que piden claves de API. Siguen ahí. El plan apaga la generación y los modelos de pago; el chat se queda, pero solo con modelos gratis a través de DeepSeek Harness, o con Ollama y LM Studio en tu PC.
+    curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/install.sh | bash
 
-### Lo que falta
-
-| Qué | Tareas |
-|---|---|
-| Que el servidor tenga memoria suficiente sin `NODE_OPTIONS` | P0-2 |
-| Conectar a Claudia desde fuera de tu PC: `npm run start:claudia`, token fijo, túnel, tarjeta «Conectar Claudia» y una pestaña del editor sin pantalla para exportar por MCP | P0-3, P1-3 a P1-5 |
-| Claudia en el chat del editor con modelos gratis a través de [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) y el plugin [Our Free Model](https://github.com/Ebony-Vinyl/dsh-our-free-model), todos en el menú de modelos; el chat de DeepSeek Harness también podrá editar en corteo por MCP | HQ-1 a HQ-5, HW-1 a HW-5, H-9 |
-| Apagar la generación de imágenes, voz, video y música dentro del editor; skill `videoclip-musical` para Claudia | P1-1, P1-2, P1-6 |
-| «Claudia escucha la canción»: ritmo, secciones, emoción y coros, para que los efectos y movimientos sigan la música | L-01 a L-13 |
-| Ken Burns, subtítulos de verso y coro, importar ASS/VTT, detector de tomas repetidas, exportación HEVC, cuenta regresiva, atajos de Premiere | P2-1 a P2-6 |
-| Importar desde YouTube, Vimeo o Bilibili con sus créditos (yt-dlp) | P3-1 a P3-4 |
-| Varias versiones de un videoclip y la vista «Comparar versiones» | P4-1 a P4-3 |
-| Toda la interfaz en español | P5-1 a P5-3 |
-| Prueba completa con Claudia, de la canción al video exportado | P6-1 |
-
-Otros agentes hicieron una primera versión de varias funciones de P2 (Ken Burns, karaoke, duplicados, HEVC, cuenta regresiva) en una rama aparte. Tiene errores conocidos y está pendiente de revisión, así que no está en `main` y esas tareas siguen pendientes.
-
-## Requisitos
-
-- Windows 10 u 11 con WSL 2 y Ubuntu (en Linux funciona igual).
-- Node.js 24, instalado con [nvm](https://github.com/nvm-sh/nvm). El repo trae `.nvmrc`, y `package.json` pide Node 24.
-- Git (Ubuntu ya lo trae).
-- Memoria: el servidor puede usar hasta 6 GB, así que conviene que WSL tenga 8 GB o más. WSL toma por defecto la mitad de la RAM de Windows; se cambia con `memory=` en `%UserProfile%\.wslconfig`.
-- Chrome o Edge en Windows para abrir el editor.
-
-ffmpeg no hace falta instalarlo: viene con las dependencias de npm. Tampoco hacen falta claves de API.
-
-## Instalación
-
-Una sola vez, en una terminal de WSL.
-
-**1. nvm y Node 24**
-
-```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
-source ~/.bashrc
+Then connect over MCP using the CLAUDIA_MCP_URL and CLAUDIA_MCP_TOKEN it prints.
+The full procedure is in documentation/CLAUDIA_INSTALL.md inside the installed app.
 ```
 
-**2. corteo**
+The script is non-interactive and safe to re-run. It:
 
-Clónalo dentro de Linux (`~/corteo`), no en `/mnt/c`: allí es mucho más lento.
+1. checks the machine and installs Node.js 24 privately if the system Node is not 24;
+2. clones or updates the app in `~/claudia/app`;
+3. installs dependencies without the CUDA and Electron binaries a headless VM does not need;
+4. builds the `occ` command line;
+5. starts the editor as a `systemd --user` service, or with `nohup` when systemd is unavailable;
+6. waits until `http://127.0.0.1:5199` and the MCP endpoint answer, then prints the connection values.
+
+Pass options after `--`, for example:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/install.sh | bash -s -- --dir ~/claudia --port 5199
+```
+
+| Flag | Meaning |
+|---|---|
+| `--dir <path>` | Install root (default `~/claudia`) |
+| `--host <addr>` | Bind address (default `127.0.0.1`) |
+| `--port <port>` | Editor port (default `5199`) |
+| `--ref <branch\|tag>` | Git ref to install (default `main`) |
+| `--no-start` | Install everything but do not start the service |
+| `--with-desktop` | Also download the Electron binary for desktop development |
+| `--skip-system-deps` | Do not try to install the Chromium libraries used by exports |
+| `--clone` | Ignore the surrounding checkout and clone into `--dir` |
+| `--uninstall` | Stop and remove the service; keep data and app |
+| `--uninstall --purge` | Also delete the app and the profile data |
+| `--dry-run` | Print the plan and exit without changing anything |
+
+The final output is written to be read by an agent:
+
+```text
+CLAUDIA_STATUS=ok
+CLAUDIA_URL=http://127.0.0.1:5199
+CLAUDIA_MCP_URL=http://127.0.0.1:5199/api/external-mcp/mcp
+CLAUDIA_MCP_TOKEN=<token>
+CLAUDIA_OCC=/home/you/claudia/bin/occ
+CLAUDIA_DATA_DIR=/home/you/.openchatcut/dev-profiles/<id>
+CLAUDIA_GUIDE=/home/you/claudia/app/documentation/CLAUDIA_INSTALL.md
+CLAUDIA_LOG=/home/you/claudia/logs/claudia.log
+CLAUDIA_MANAGER=systemd
+```
+
+Both Claudia and the editor run on the same machine, so MCP over `localhost`
+needs no tunnel. If you want to open the editor from your own computer, forward
+the port (`ssh -L 5199:127.0.0.1:5199 you@vm`) and open
+`http://localhost:5199`; browsers only enable the video APIs the editor needs in
+a secure context, which means `localhost` or HTTPS — not a plain-HTTP LAN IP.
+
+## Status
+
+Claudia tracks OpenChatCut's work in progress. The task list in
+[`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md) is the source of truth; if
+this README and `PROGRESS.md` disagree, `PROGRESS.md` wins.
+
+**Working today** (inherited from OpenChatCut):
+
+- A multitrack timeline with Premiere-style tools and shortcuts (`V`, `B`, `N`, `U`, `P`, `Q`/`W`, `I`/`O`, `J`/`K`/`L`).
+- Keyframes with easing curves that look the same in the preview and in the exported file.
+- 22 caption styles with word-by-word karaoke highlighting.
+- Transcription with Whisper where the `whisper.cpp` binary is provisioned (the desktop build ships one); otherwise AssemblyAI with a key.
+- Export up to 4K in H.264 and VP8, plus ProRes from the server.
+- Multiple sequences per project, transitions, effects, LUTs, animated templates and multiple audio tracks.
+- A token-protected MCP server with more than 120 editing tools, usable by MCP clients on the same machine (Codex, Claude Code, Qoder and others).
+
+**Not there yet:**
+
+- The interface opens in Spanish, but only part of it is translated: untranslated strings show in English. English is complete and Chinese is the source language; Italian and Russian are also partial.
+- The built-in chat needs a model provider (hosted or a local OpenAI-compatible server such as Ollama). Generation tools — images, voice, video, music — need their own paid API keys and stay off until configured.
+- Claudia is a single-machine tool. Browser and MCP clients on another host need a tunnel and an HTTPS setup.
+- Ken Burns, duplicate detection and countdown live on a separate development branch and are not in `main` yet.
+
+## Requirements
+
+- Linux, or Windows 10/11 with WSL 2 and Ubuntu. Clone inside Linux (`~/corteo`, not `/mnt/c`): the filesystem is much faster there.
+- Node.js 24. `.nvmrc` and `package.json` both pin that major version. The installer takes care of it.
+- Git.
+- 8 GB of RAM or more is recommended. The server may use up to 6 GB, which is why the manual start sets `--max-old-space-size=6144`.
+- A current Chrome or Edge on the same machine to open the editor.
+
+`ffmpeg` does not need to be installed separately: it ships with the npm
+dependencies. Editing works without any API key.
+
+## Manual install
+
+Use the installer above unless you want to work on the code. The manual path
+below assumes `nvm`; the one-click installer does not need it:
 
 ```bash
 git clone https://github.com/uset82/corteo.git ~/corteo
 cd ~/corteo
-nvm install            # lee .nvmrc e instala Node 24
-nvm alias default 24   # para que cada terminal nueva use Node 24
+nvm install            # reads .nvmrc and installs Node 24
+nvm alias default 24   # so new terminals keep using Node 24
 npm install
 ```
 
-En Linux, `npm install` también descarga un complemento CUDA de varios cientos de MB para ONNX Runtime. Si no tienes GPU NVIDIA, puedes saltártelo con `ONNXRUNTIME_NODE_INSTALL=skip npm install`.
+On Linux, `npm install` also downloads a CUDA provider for ONNX Runtime that is
+several hundred megabytes. Without an NVIDIA GPU you can skip it:
 
-**3. Librerías para el Chromium de las exportaciones**
+```bash
+ONNXRUNTIME_NODE_INSTALL=skip npm install
+```
 
-Las exportaciones desde el servidor y los tests usan un Chromium sin pantalla, que necesita algunas librerías del sistema. El comando pide tu contraseña de WSL:
+Server-side exports and project thumbnails use a headless Chromium (Chrome
+Headless Shell), which needs system libraries:
 
 ```bash
 npx playwright install-deps chromium
 ```
 
-No le pongas `sudo` delante: con nvm, `sudo` no encuentra `npx`, y el comando ya pide permisos por su cuenta.
+Do not put `sudo` in front of that command: with `nvm`, `sudo` cannot find
+`npx`, and the command already asks for permissions when it needs them. The
+first render downloads Chrome Headless Shell (about 100 MB). Without these
+libraries, editing works but renders and thumbnails fail.
 
-## Uso
+Start the editor:
 
 ```bash
-cd ~/corteo
 NODE_OPTIONS=--max-old-space-size=6144 npm run dev
 ```
 
-Abre **http://localhost:5199** en Chrome o Edge en Windows. Usa `localhost` y no la IP de WSL: el navegador solo activa las funciones de video que necesita el editor (WebCodecs, Web Crypto) en `localhost` o con HTTPS. Para parar el servidor, Ctrl+C en esa terminal.
+Open **http://localhost:5199**. Use `localhost`, not the WSL IP: browsers only
+enable WebCodecs, Web Crypto and the clipboard in a secure context. Stop the
+server with Ctrl+C.
 
-`NODE_OPTIONS=--max-old-space-size=6144` le da al servidor 6 GB de memoria; sin eso se puede caer por falta de memoria. La tarea P0-2 lo hará automático.
-
-### El alias `corteo`
-
-Ejecuta esto una vez:
+Optional shell shortcut:
 
 ```bash
-echo 'alias corteo="cd ~/corteo && VITE_CONFIG_NATIVE_IGNORE_WARNING=true NODE_OPTIONS=--max-old-space-size=6144 npm run dev"' >> ~/.bashrc
+echo 'alias claudia="cd ~/corteo && NODE_OPTIONS=--max-old-space-size=6144 npm run dev"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-Desde entonces, escribir `corteo` en cualquier terminal de WSL arranca el editor. `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` solo oculta una lista larga de avisos inofensivos de Vite al arrancar.
+## Connect Claudia over MCP
 
-### Tus datos
+Claudia exposes a Streamable HTTP MCP endpoint:
 
-`npm run dev` guarda los proyectos, los medios importados, los ajustes y el token MCP en `~/.openchatcut/dev-profiles/<id>/`, una carpeta por cada copia del repo (la línea `[OpenChatCut] isolated profile <id>` del arranque dice cuál). Para hacer una copia de seguridad, copia `~/.openchatcut`.
-
-### Conectar un cliente MCP
-
-- Dirección: `http://localhost:5199/api/external-mcp/mcp`, con el encabezado `Authorization: Bearer <token>`.
-- Token: en la pantalla de inicio, el botón de arriba a la derecha «Conexión Agent Externa (MCP)» (el nombre aparece al pasar el ratón), o el archivo `mcp-token` de la carpeta de tu perfil.
-
-Hoy esto sirve para clientes que corren en el mismo PC. Claudia no corre en tu PC: para llegar al editor necesita un túnel (Cloudflare Tunnel o Tailscale Funnel), que el editor todavía no acepta, y la tarjeta «Conectar Claudia». Son las tareas P1-3 y P1-4.
-
-## Sincronizar la rama de Cursor con GitHub
-
-Esto es para el flujo de Carlos: el repo clonado desde Cursor con la CLI `origin`, con dos remotos.
-
-- `origin`: la copia de Cursor. Los agentes de Cursor suben su trabajo a la rama `cursor/video-editor-mvp-d191`.
-- `github`: este repositorio, https://github.com/uset82/corteo. Su `main` es lo que se ve en GitHub.
-
-Si te falta el remoto `github`, agrégalo una vez:
-
-```bash
-git remote add github https://github.com/uset82/corteo.git
+```text
+http://127.0.0.1:5199/api/external-mcp/mcp
 ```
 
-Para publicar en GitHub lo último de Cursor:
+Every request needs a Bearer token. The installer generates one and stores it
+in `~/claudia/secrets.env`; a manual install finds the automatically minted
+token in the profile directory:
 
-```bash
-cd ~/corteo
-git fetch origin
-git push github origin/cursor/video-editor-mvp-d191:main
+```text
+~/.openchatcut/dev-profiles/<id>/mcp-token
 ```
 
-Esto no toca tus archivos ni tus ramas locales. Si GitHub pide usuario y contraseña, la contraseña es un token personal de GitHub, no la de tu cuenta. Si rechaza el push por `non-fast-forward`, `main` en GitHub tiene commits que la rama de Cursor no tiene: no uses `--force`, primero hay que integrarlos.
+The profile id is printed at startup as `[OpenChatCut] isolated profile <id>`.
+A ready-to-paste client entry looks like this:
 
-Para poner tu copia local al día con la de Cursor:
-
-```bash
-git switch cursor/video-editor-mvp-d191
-git merge --ff-only origin/cursor/video-editor-mvp-d191
+```json
+{
+  "mcpServers": {
+    "claudia": {
+      "type": "http",
+      "url": "http://127.0.0.1:5199/api/external-mcp/mcp",
+      "headers": { "Authorization": "Bearer <token>" }
+    }
+  }
+}
 ```
 
-Si tu rama local tiene commits que Cursor no tiene (por ejemplo, de agentes locales), `--ff-only` se niega y no cambia nada; hay que integrar esos commits primero.
+The dev server must be running. MCP timeline edits go through an offline edit
+session when no editor has the project open; they apply atomically and leave an
+undoable version. When a browser does have the project open, the edit follows
+the live editor's validated commands. Cross-machine access is not part of this
+release.
 
-## Para agentes y desarrolladores
+### The `occ` command line
 
-Las reglas, los comandos y el ciclo de trabajo están en [`AGENTS.md`](AGENTS.md). Antes de dar algo por terminado: `npx tsc -b`, `npm run lint`, `npm test` (unos 6 minutos; en una máquina sin GPU, `CC_RENDER_GL=swangle npm test`) y `npm run build`.
+`occ` is the headless path. It works against the local project library with no
+browser and no MCP session, and it uses the same edit-session contract:
 
-## In English
+```bash
+npm run build:cli
 
-corteo is the video editor of Claudia, Carlos's AI assistant: the open AI pop star from [claudia.gallery](https://claudia.gallery), running as a Grok bot. It's a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut) with a Premiere-style timeline that runs in WSL at http://localhost:5199. Claudia decides; corteo edits and exports, on a real timeline Carlos can still adjust by hand.
+node cli-dist/occ.mjs project list
+node cli-dist/occ.mjs project new "Peru"
+node cli-dist/occ.mjs timeline items
+node cli-dist/occ.mjs render --out ~/peru.mp4
+node cli-dist/occ.mjs tools call set_aspect_ratio --args '{"ratio":"9:16"}' --apply
+```
 
-What works today is upstream OpenChatCut: the multitrack timeline, keyframes, word-level captions, local Whisper transcription, 4K export, and an MCP server for clients on the same machine. Most of the interface is still in English. Connecting Claudia from outside the PC, free models for the built-in chat through DeepSeek Harness, song listening, platform import, version comparison and the full Spanish UI are planned; [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md) tracks them.
+Without a project reference, `occ` uses the first project in the library; pass
+`--project <id-or-name>` when there are several.
 
-Quick start (WSL, Node 24 via nvm): `npm install`, then `NODE_OPTIONS=--max-old-space-size=6144 npm run dev`, and open http://localhost:5199.
+Timeline-changing calls (`occ edit`, `occ item`, `occ tools call`) write only
+with `--apply`. A write is committed atomically, checks the project revision
+and snapshots a pre-edit version, so it can be undone from the app's version
+history. The installer creates a wrapper at `~/claudia/bin/occ` that points
+`occ` at the same profile as the running app.
+From a checkout, either set `OPENCHATCUT_DEV_PROFILE_ID` to the id printed at
+startup or pass `--data-dir ~/.openchatcut/dev-profiles/<id>`.
 
-## Créditos y licencia
+## Your data
 
-- corteo es un fork de [OpenChatCut](https://github.com/0xsline/OpenChatCut), creado por OpenChatCut Contributors. OpenChatCut se apoya a su vez en [Remotion](https://www.remotion.dev/), el [Model Context Protocol](https://modelcontextprotocol.io/), [Vercel AI SDK](https://ai-sdk.dev/) y las skills de [ChatCut-Inc/agent-plugin](https://github.com/ChatCut-Inc/agent-plugin) (ver [`src/agent/skills/NOTICE.md`](src/agent/skills/NOTICE.md)).
-- Claudia es un personaje abierto de [claudia.gallery](https://claudia.gallery).
-- [`README_ZH.md`](README_ZH.md) es el README original de OpenChatCut, en chino.
+`npm run dev` keeps each checkout's projects, imported media, settings and MCP
+token under its own profile:
 
-OpenChatCut se publica bajo la [GNU Affero General Public License v3.0 o posterior](LICENSE) (AGPL-3.0-or-later), y corteo, como obra derivada, también. En resumen (vale el texto de [`LICENSE`](LICENSE)):
+```text
+~/.openchatcut/dev-profiles/<id>/
+```
 
-- Puedes usar, estudiar, modificar y compartir corteo.
-- Si lo compartes, con o sin cambios, o dejas que otras personas usen por la red una versión modificada (por ejemplo, como servicio web), tienes que ofrecerles su código fuente bajo la misma licencia.
-- Se ofrece sin ninguna garantía.
+Back up that directory to back up everything. The MCP token is written with
+mode `0600`. Projects and media stay on your machine; the only traffic that
+leaves it is what you configure — a model provider, a media service, or a
+generation API. Unconfigured services stay off and do not affect local editing.
 
-Los componentes de terceros mantienen sus propias licencias (ver `package-lock.json` y [`assets/fonts/LICENSES.md`](assets/fonts/LICENSES.md)). Remotion, el motor de render, tiene [su propia licencia](https://www.remotion.dev/license): gratuita para personas y empresas pequeñas, incluso para uso comercial; las empresas más grandes necesitan una licencia de empresa.
+## Architecture
+
+| Layer | Technology |
+|---|---|
+| Frontend | React, TypeScript, Vite |
+| Editing core | Immutable timeline state, command layer, proposal-based application |
+| Agent | Vercel AI SDK, Agent Skills, MCP SDK, local and hosted model providers |
+| Preview and visuals | Remotion Player, WebGL and GLSL |
+| Server | Shared Vite / Electron plugins and a server-side keystore |
+| Persistence | Local project store under `~/.openchatcut`, IndexedDB cache, optional R2 |
+| Desktop | Electron |
+| Export | Remotion, FFmpeg, FCPXML, SRT |
+
+| Directory | Responsibility |
+|---|---|
+| `src/editor/` | Timeline state and commands, independent of UI and models |
+| `src/agent/` | Agent assembly, tools, skills, progress and settings |
+| `src/captions/` | Caption models, styles, controls and preview |
+| `src/gl/` | WebGL effects, transitions and shader runtime |
+| `src/persist/` | Project, chat, version and media persistence |
+| `server/` | Generation, transcription, media, export, MCP and storage services |
+| `desktop/` | Electron main process and embedded services |
+| `remotion/` | Headless rendering and export pipeline |
+| `cli/` | The `occ` command line |
+
+## Credits and license
+
+- Claudia is a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut), created by OpenChatCut Contributors. OpenChatCut builds on [Remotion](https://www.remotion.dev/), the [Model Context Protocol](https://modelcontextprotocol.io/), the [Vercel AI SDK](https://ai-sdk.dev/) and the skills of [ChatCut-Inc/agent-plugin](https://github.com/ChatCut-Inc/agent-plugin); see [`src/agent/skills/NOTICE.md`](src/agent/skills/NOTICE.md).
+- Claudia is an open character from [claudia.gallery](https://claudia.gallery).
+- [`README_ZH.md`](README_ZH.md) is OpenChatCut's original Chinese README.
+
+OpenChatCut is released under the [GNU Affero General Public License v3.0 or
+later](LICENSE), and this fork is too. In short:
+
+- You may use, study, change and share Claudia.
+- If you share it, with or without changes, or let other people use a modified
+  version over a network, you must offer them the source under the same license.
+- It comes with no warranty.
+
+Third-party components keep their own licenses (see `package-lock.json` and
+[`assets/fonts/LICENSES.md`](assets/fonts/LICENSES.md)). Remotion, the render
+engine, has [its own license](https://www.remotion.dev/license): free for
+individuals and small companies, including commercial use; larger companies
+need a company license.
+
+## For developers
+
+The rules, commands and work loop are in [`AGENTS.md`](AGENTS.md). Before
+calling anything done, run:
+
+```bash
+npx tsc -b
+npm run lint
+npm test
+npm run build
+```
+
+The suite takes several minutes; on a machine without a GPU, prefix it with
+`CC_RENDER_GL=swangle`. The installer can check the Chromium libraries the
+export tests need.
+
+## En español
+
+La versión anterior de este README, en español, está en
+[`README.es.md`](README.es.md).
