@@ -2,7 +2,7 @@
 
 The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1) and `docs/plans/02-claudia-escucha.md` (Plan 2). Rules and the work loop: `AGENTS.md`.
 
-**Picking the next task:** go down the table and take the first task whose status is `todo` and whose "Needs" are all `done`. Change its status to `doing`, finish it, set `done`, and commit this file together with the work.
+**Picking the next task:** if a task is `doing`, a previous session stopped in the middle of it: resume it first. Otherwise go down the table and take the first task whose status is `todo` and whose "Needs" are all `done`. Change its status to `doing`, finish it, set `done`, and commit this file together with the work.
 
 Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if the user asks).
 

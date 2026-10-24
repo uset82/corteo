@@ -60,13 +60,13 @@ These three files are the only plan. Any other plan, status report or TODO list 
 - `package.json`, `config/`, `shared/`, `assets/` or `public/`: run `npm test` before marking the task done.
 
 ## The work loop
-1. `git status` must be clean. Open `docs/plans/PROGRESS.md`, pick the next task (rule at the top of that file) and set it to `doing`.
+1. Run `git status` and open `docs/plans/PROGRESS.md`. If a task there is `doing`, an earlier session stopped in the middle of it: resume it (its partial work may be uncommitted; `git log -5` shows what was committed). Otherwise tracked files must have no changes; pick the next task (rule at the top of `PROGRESS.md`) and set it to `doing`. Untracked files you didn't create (media, leftovers from Grok) are not yours: leave them alone.
 2. Read its card and the plan section it points to. Read the files it lists, and the code around them, before writing anything.
 3. Implement the smallest complete version that meets "Done when".
 4. Check: `npx tsc -b`, `npm run lint`, `npm run verify:affected`, plus the card's Verify commands. Fix what you broke.
 5. Try it for real when the card asks: in the browser at http://localhost:5199 and/or through MCP (smoke test below).
-6. Set the task to `done` in `PROGRESS.md` (add output paths or numbers worth keeping) and commit everything with the task ID first, for example `P1-3: accept OPENCHATCUT_ALLOWED_HOSTS in allowedHosts`. A big task may take a few commits.
-7. At the end of every phase: `npm test` and `npm run build`, then push (see Git).
+6. Set the task to `done` in `PROGRESS.md` (add output paths or numbers worth keeping) and commit the task's files together with `PROGRESS.md`, with the task ID first in the message, for example `P1-3: accept OPENCHATCUT_ALLOWED_HOSTS in allowedHosts`. A big task may take a few commits.
+7. After every 5 finished tasks: `npm test` and `npm run build`, push (see Git), report (see Reporting) and end the session. Long sessions lose track; the next session starts fresh from `PROGRESS.md`.
 
 ## When something fails
 - Read the whole error and find the cause before changing code.
@@ -118,7 +118,8 @@ curl -s -X POST "$URL" "${H[@]}" -H "mcp-session-id: $SID" -d '{"jsonrpc":"2.0",
 ## Git
 - Work on `cursor/video-editor-mvp-d191`. Don't touch `grok-wip`. No force-push and no history rewrites.
 - Commit after every task (see the loop). Never commit secrets, media or `test-results/`.
-- Push at the end of each phase or when the user asks: `git push github cursor/video-editor-mvp-d191:main` (`github` is the user's GitHub fork).
+- Stage files by name (`git add <paths>`), never `git add -A` or `git add .`: the checkout can hold untracked media and leftovers that must not be committed. Check `git status` before each commit.
+- Push at the end of each session (step 7 of the loop) or when the user asks: `git push github cursor/video-editor-mvp-d191:main` (`github` is the user's GitHub fork). If the push is rejected, report it; never force-push.
 
 ## Reporting
-At the end of a session, tell the user: the task IDs finished, the tasks blocked and why, and the real result of the last `npm test` (pass count, or the names of the failing tests). Never round up: "partly works" is a valid status.
+At the end of a session (after 5 tasks, when no task is left that you can do, or when the user stops you), tell the user: the task IDs finished, the tasks blocked and why, the next task in line, and the real result of the last `npm test` (pass count, or the names of the failing tests). Never round up: "partly works" is a valid status.
