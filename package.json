@@ -166,5 +166,14 @@
     "onnxruntime-web": "1.29.0",
     "adm-zip": "0.6.0",
     "sharp": "0.35.0"
+  },
+  "allowScripts": {
+    "esbuild": true,
+    "ffmpeg-static": true,
+    "koffi": true,
+    "onnxruntime-node": true,
+    "protobufjs": true,
+    "@ffprobe-installer/linux-x64": true,
+    "electron-winstaller": true
   }
 }
