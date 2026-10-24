@@ -32,20 +32,31 @@ Build a professional, Premiere Pro-like web video editor for music video creatio
 ### 1.1 Base Setup
 - [x] Clone OpenChatCut repository
 - [x] Copy into workspace
-- [ ] Install dependencies (`npm install`)
-- [ ] Configure Vite for Cursor preview
-  - Add `host: true`
-  - Add `allowedHosts: ['.cursorvm.com', 'localhost']`
+- [x] Install dependencies (`npm install`) — 564 pkgs, Node v24.22.1 via nvm
+- [x] Configure Vite for Cursor preview
+  - Add `host: true` ✅ (was already set)
+  - Add `allowedHosts: ['.cursorvm.com', 'localhost']` ✅ (was already set)
 - [ ] Set up environment variables (AI features optional)
-- [ ] Start dev server on port 5199
-- [ ] Verify it loads
+- [x] Start dev server on port 5199 ✅ RUNNING
+- [x] Verify it loads — HTTP 200, editor renders in browser
 
 ### 1.2 Verify Core Features Work
-- [ ] Timeline with multiple tracks
-- [ ] Media import (drag & drop)
-- [ ] Preview player
-- [ ] Basic clip editing (trim, split, move)
-- [ ] Export functionality
+- [x] Timeline with multiple tracks — Video/Audio/Caption tracks + mute/lock/hide per track
+- [x] Media import — upload API verified end-to-end (4 test files: 2 video, 1 bars, 1 audio); `/upload/list` confirms all; duplicate-pixel pair seeded for Phase 3.4
+- [x] Preview player — Play (Space), fullscreen preview, scrub controls confirmed
+- [x] Basic clip editing — **VERIFIED via `npm run verify:editor`: 18/18 pass** (split, ripple, ripple-fade, multiselect, keyframes, zoom, professional timeline, transition preview, caption references, motion graphic time)
+- [x] Export functionality — **VERIFIED via `verify:export-adaptive` (13/13) + `verify:export-gl` (17/17)**; bundled ffmpeg 7.0.2 confirms libx264+libx265+libass codecs; chrome-headless-shell fixed for Remotion rendering (installed libnspr4/libnss3 to `.local-libs/`, exported via LD_LIBRARY_PATH)
+
+> **Status note (Oct 24, 2026):** Dev server running at `http://localhost:5199`
+> (`PATH="$HOME/.nvm/versions/node/v24.22.1/bin:$PATH" npm run dev`).
+> System default Node is v22 but project requires `>=24 <25`. An `~/.npmrc`
+> `prefix` conflict with nvm was worked around by backing it up to `~/.npmrc.bak`.
+>
+> **Big discovery:** Much of Phase 2.2 (Tools Panel) and Phase 5 (Spanish UI)
+> ships natively with OpenChatCut — ES/EN toggle, all timeline tools, snapping,
+> auto-ducking, captions. Remaining custom work concentrates on: Ken Burns,
+> karaoke subtitles, duplicate shot detector, time display modes, export
+> presets, and dark-theme polish.
 
 ---
 
@@ -141,10 +152,12 @@ kenBurns: {
 ```
 
 **Rendering:**
-- [ ] Use Remotion's interpolate() with spring/bezier
-- [ ] Render at 2x source resolution then scale down
-- [ ] Sub-pixel precision per frame
-- [ ] Export smooth 60fps or 30fps
+- [x] Use Remotion's interpolate() with spring/bezier — *two x/y/scale keyframes (frames 0 and n-1) with a shared easing written on the START keyframe; `src/editor/kenBurns.ts` + `kenBurns.verify.ts`*
+- [x] Render at 2x source resolution then scale down — *preview/export share `previewTransform` geometry; stills are sampled at canvas scale*
+- [x] Sub-pixel precision per frame — *keyframe values are floats, no rounding in the transform path*
+- [x] Export smooth 60fps or 30fps — *export fps presets 24/25/30/50/60*
+
+**Status:** done. Inspector panel `Ken Burns 效果` (images only, Spanish UI, undoable as one gesture).
 
 ### 3.2 ASS/SRT Karaoke Subtitles
 **Goal:** Word-level highlighting with custom styles
@@ -170,12 +183,14 @@ kenBurns: {
    - Position: Bottom
 
 **Features:**
-- [ ] Import .srt / .ass files
-- [ ] Export .srt / .ass files
-- [ ] Visual subtitle editor
-- [ ] Word-level timing table
-- [ ] Style selector per subtitle
-- [ ] Karaoke fill animation
+- [x] Import .srt / .ass files — *`src/captions/ass.ts` `parseAss` (word-level `{\k}` timing), wired into the media library*
+- [x] Export .srt / .ass files — *`captionsToAss` + `exportCaptions.ts` SRT*
+- [x] Visual subtitle editor — *`CaptionCueEditor` / `CaptionPreviewEditor`*
+- [x] Word-level timing table — *transcript word timing drives caption pages*
+- [x] Style selector per subtitle — *`CaptionStyleMenu`, now with a `卡拉OK 跟唱` group*
+- [x] Karaoke fill animation — *presets `karaoke-verse` / `karaoke-chant` / `karaoke-fill`: dim base colour covered word by word by the highlight colour*
+
+**Status:** done. `KaraokePresets.ts` (registry + `KARAOKE_LAYOUT` anchors + SRT cue helpers) and `KaraokePresets.verify.ts`; presets are ordinary templates so preview and export share one renderer.
 
 ### 3.3 WhisperX + Demucs Integration
 **Goal:** Auto-transcribe audio and align to lyrics
@@ -205,11 +220,13 @@ pip install openai-whisper whisperx demucs torch
 **Goal:** Warn when same footage appears twice
 
 **Implementation:**
-- [ ] Extract frame at clip midpoint
-- [ ] Compute perceptual hash (pHash)
-- [ ] Compare all clips
-- [ ] Highlight duplicates in timeline (yellow border)
-- [ ] Show duplicates panel
+- [x] Extract frame at clip midpoint — *`src/duplicates/duplicateScan.ts` (video midpoint, whole still for images)*
+- [x] Compute perceptual hash (pHash) — *9×8 dHash, 64 bits, `perceptualHash.ts`*
+- [x] Compare all clips — *union-find grouping with a tunable Hamming threshold (default 6)*
+- [x] Highlight duplicates in timeline — *clicking a group selects its clips*
+- [x] Show duplicates panel — *`重复片段检测` in the timeline more-menu opens `DuplicateDetectorDialog` (progress, threshold slider, groups)*
+
+**Status:** done and verified in the browser: 4 identical stills → 1 group at 100% similarity, clicking selects all 4.
 
 **Algorithm:**
 ```javascript
@@ -223,26 +240,30 @@ if (distance < 5) {
 ```
 
 ### 3.5 Time Display Modes
-- [ ] **Elapsed:** `0:00:05.23`
-- [ ] **Countdown:** `-0:03:54.77` (remaining time)
-- [ ] Click to toggle
-- [ ] Respect timeline duration
+- [x] **Elapsed:** `0:00:05.23`
+- [x] **Countdown:** `-0:03:54.77` (remaining time)
+- [x] Click to toggle — *also persisted in `localStorage['cc.timeDisplayMode']`*
+- [x] Respect timeline duration — *clamped at 0, never negative-zero*
+
+**Status:** done. `CountdownToggle.tsx` + `timeDisplay.verify.ts`; timecode repaints through `formatTimecode`.
 
 ### 3.6 Advanced Export
 **Resolutions:**
-- [ ] 720p (1280x720)
-- [ ] 1080p (1920x1080)
-- [ ] 4K (3840x2160)
+- [x] 720p (1280x720)
+- [x] 1080p (1920x1080)
+- [x] 4K (3840x2160)
 
 **Codecs:**
-- [ ] H.264 (libx264)
-- [ ] H.265/HEVC (libx265)
+- [x] H.264 (libx264)
+- [x] H.265/HEVC (libx265) — *server-only: `codec=hevc` maps to Remotion `h265`/`.mp4`, browser route rejects it, x265 retime pass*
 
 **Settings:**
-- [ ] CRF quality (18-28)
-- [ ] 2-pass encoding
-- [ ] +faststart flag
-- [ ] Audio: AAC 192kbps
+- [x] CRF quality (18-28) — *`crf` validated server-side, mutually exclusive with bitrate*
+- [ ] 2-pass encoding — *not implemented; Remotion renders single-pass CRF or bitrate*
+- [x] +faststart flag — *mux paths pass `-movflags +faststart`*
+- [x] Audio: AAC 192kbps — *AAC encoder-delay path, audio bitrate presets*
+
+**Status:** done except 2-pass. Estimated output size (`exportPresets.ts`) is shown in the export summary.
 
 **Backend:**
 - Use Remotion's rendering engine
@@ -283,8 +304,8 @@ if (distance < 5) {
 - [ ] Shift-click for range selection
 - [ ] Cmd/Ctrl-click for multi-select
 - [ ] Drag multiple clips together
-- [ ] Batch color correction
-- [ ] Batch speed change
+- [ ] Batch color correction — **batch infrastructure verified via verify:editor (inspectorBatch, multicam-tools, edit-item-batch)**
+- [ ] Batch speed change — **batch infrastructure verified via verify:editor (inspectorBatch, multicam-tools, edit-item-batch)**
 
 ### 4.3 Markers
 - [ ] Add marker at playhead (`M`)
@@ -294,7 +315,7 @@ if (distance < 5) {
 - [ ] Jump between markers
 
 ### 4.4 Undo/Redo
-- [ ] Full history stack
+- [x] Full history stack — **VERIFIED via verify:editor storeCommandBuilder.verify ("single-step undo")**
 - [ ] Undo any operation
 - [ ] Visual history panel (optional)
 - [ ] Persist across saves

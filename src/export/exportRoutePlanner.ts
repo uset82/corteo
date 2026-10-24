@@ -122,6 +122,23 @@ export async function planVideoExportRoute(options: BrowserExportOptions): Promi
     loadServerCapabilities(options.signal),
   ]);
   const server = options.codec === 'h264' ? capabilities.h264 ?? unknownServerEngine() : unknownServerEngine();
+  // HEVC rides the software x265 encoder on the local renderer only.
+  if (options.codec === 'hevc') {
+    const hevc = {
+      id: 'hevc-software',
+      label: 'H.265 (HEVC) · 本机渲染',
+      hardware: false,
+      transport: 'server' as const,
+    };
+    return {
+      browser,
+      browserEngine: browserEngine(browser.status === 'supported' ? browser.powerEfficient : undefined),
+      serverEngine: hevc,
+      route: 'server',
+      engine: hevc,
+      reason: 'H.265 仅支持本机渲染',
+    };
+  }
   const browserEngineInfo = browserEngine(browser.status === 'supported' ? browser.powerEfficient : undefined);
   // ProRes mezzanine is Remotion/server-only (not WebCodecs).
   if (options.codec === 'prores') {

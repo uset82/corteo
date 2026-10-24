@@ -81,7 +81,8 @@ function editingActions(deps: EditorActionDeps): ActionBindings {
     paste: () => tl()?.pasteClipboard(),
     'paste-effects': () => tl()?.pasteEffects(),
     duplicate: () => tl()?.duplicateSelected(),
-    delete: ({ shift }) => tl()?.deleteSelected(shift),
+    delete: () => tl()?.deleteSelected(false),
+    'ripple-delete': () => tl()?.deleteSelected(true),
     split: () => tl()?.splitAtPlayhead(),
     'interaction-mode-selection': () => tl()?.setEditMode('selection'),
     'interaction-mode-trim': () => tl()?.setEditMode('trim'),
@@ -89,6 +90,9 @@ function editingActions(deps: EditorActionDeps): ActionBindings {
     'interaction-mode-rate-stretch': () => tl()?.setEditMode('rate-stretch'),
     'interaction-mode-blade': () => tl()?.setEditMode('blade'),
     'interaction-mode-pen': () => tl()?.setEditMode('pen'),
+    'interaction-mode-text': () => tl()?.setEditMode('text'),
+    'interaction-mode-hand': () => tl()?.setEditMode('hand'),
+    'interaction-mode-zoom': () => tl()?.setEditMode('zoom'),
     'nudge-left': ({ shift }) => tl()?.nudgeSelected(-(shift ? 5 : 1)),
     'nudge-right': ({ shift }) => tl()?.nudgeSelected(shift ? 5 : 1),
     'trim-start': () => tl()?.trimSelectedToPlayhead('start'),
@@ -105,6 +109,11 @@ function editingActions(deps: EditorActionDeps): ActionBindings {
 function navigationActions(deps: EditorActionDeps): ActionBindings {
   const tl = () => timeline(deps.timelineRef);
   return {
+    'goto-start': () => tl()?.seekTo(0),
+    'goto-end': () => {
+      const api = tl();
+      if (api) api.seekTo(Math.max(0, api.getTotal() - 1));
+    },
     'prev-edit': () => {
       if (!nudgeSelectedPreview(deps, 'up')) tl()?.gotoEdit(-1);
     },

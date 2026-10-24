@@ -256,12 +256,26 @@ function runFfmpeg(args: string[], signal?: AbortSignal): Promise<void> {
 }
 
 export function retimeVideoEncodingArgs(
-  codec: 'h264' | 'vp8',
+  codec: 'h264' | 'vp8' | 'h265',
   encoder: H264Encoder,
   targetBitrate: number,
+  crf?: number,
 ): string[] {
   if (codec === 'vp8') {
-    return ['-c:v', 'libvpx', ...ffmpegThreadArgs(), '-b:v', String(targetBitrate)];
+    return crf === undefined
+      ? ['-c:v', 'libvpx', ...ffmpegThreadArgs(), '-b:v', String(targetBitrate)]
+      : ['-c:v', 'libvpx', ...ffmpegThreadArgs(), '-crf', String(crf), '-b:v', '0'];
+  }
+  if (codec === 'h265') {
+    // Software x265 keeps the retime pass independent of hardware HEVC support.
+    return crf === undefined
+      ? ['-c:v', 'libx265', ...ffmpegThreadArgs(), '-b:v', String(targetBitrate), '-pix_fmt', 'yuv420p']
+      : ['-c:v', 'libx265', ...ffmpegThreadArgs(), '-crf', String(crf), '-pix_fmt', 'yuv420p'];
+  }
+  if (crf !== undefined) {
+    // Hardware encoders have no portable CRF equivalent; use software x264 so the
+    // retime pass keeps the constant-quality budget the user picked.
+    return ['-c:v', 'libx264', '-preset', 'medium', ...ffmpegThreadArgs(), '-crf', String(crf)];
   }
   return h264EncodingArgs({ encoder, targetBitrate, softwarePreset: 'medium' });
 }
@@ -271,20 +285,32 @@ export async function retimeFps(
   input: string,
   output: string,
   targetFps: number,
-  codec: 'h264' | 'vp8',
+  codec: 'h264' | 'vp8' | 'h265',
   targetBitrate: number,
   outputSize?: { width: number; height: number },
   signal?: AbortSignal,
+  crf?: number,
 ): Promise<H264EncoderOutcome | undefined> {
   await unlink(output).catch(() => {});
   const base = ['-nostdin', '-hide_banner', '-loglevel', 'error', '-y'];
   try {
-    if (codec === 'vp8') {
+    if (crf !== undefined) {
       await runFfmpeg([
         ...base,
         '-i', input,
         '-vf', `fps=${targetFps}`,
-        ...retimeVideoEncodingArgs('vp8', 'libx264', targetBitrate),
+        ...retimeVideoEncodingArgs(codec, 'libx264', targetBitrate, crf),
+        '-c:a', 'copy',
+        output,
+      ], signal);
+      return undefined;
+    }
+    if (codec !== 'h264') {
+      await runFfmpeg([
+        ...base,
+        '-i', input,
+        '-vf', `fps=${targetFps}`,
+        ...retimeVideoEncodingArgs(codec, 'libx264', targetBitrate),
         '-c:a', 'copy',
         output,
       ], signal);

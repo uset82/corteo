@@ -1,4 +1,4 @@
-// Default keyboard preset with 56 actions. The UI can show Chinese via labelZh.
+// Default keyboard preset with 62 actions. The UI can show Chinese via labelZh.
 
 export type ShortcutGroup =
   | 'ai'
@@ -28,7 +28,7 @@ export const SHORTCUT_GROUPS: { id: ShortcutGroup; label: string; labelZh: strin
   { id: 'ai', label: 'AI', labelZh: 'AI' },
 ];
 
-/** Canonical 56 actions — source of truth for help UI + matcher. */
+/** Canonical 62 actions — source of truth for help UI + matcher. */
 export const SHORTCUT_CATALOG: ShortcutAction[] = [
   { id: 'play-pause', label: 'Play / Pause', labelZh: '播放/暂停', group: 'playback', keys: 'Space' },
   { id: 'seek-back', label: 'Previous frame', labelZh: '上一帧', group: 'playback', keys: '←' },
@@ -48,26 +48,32 @@ export const SHORTCUT_CATALOG: ShortcutAction[] = [
   { id: 'paste', label: 'Paste', labelZh: '粘贴', group: 'edit', keys: 'Mod + V' },
   { id: 'paste-effects', label: 'Paste Effects', labelZh: '粘贴效果', group: 'edit', keys: 'Mod + Alt + V / Mod + Shift + B' },
   { id: 'duplicate', label: 'Duplicate', labelZh: '复制片段', group: 'edit', keys: 'Mod + D' },
-  { id: 'delete', label: 'Delete', labelZh: '删除', group: 'edit', keys: 'Backspace / Delete' },
-  { id: 'split', label: 'Split', labelZh: '切分', group: 'edit', keys: 'C / Enter' },
-  { id: 'interaction-mode-selection', label: 'Selection Mode', labelZh: '选择模式', group: 'edit', keys: 'V' },
-  { id: 'interaction-mode-trim', label: 'Trim Edit Mode', labelZh: '修剪模式', group: 'edit', keys: 'N' },
-  { id: 'interaction-mode-slip', label: 'Slip Edit Mode', labelZh: '滑移模式', group: 'edit', keys: 'U' },
-  { id: 'interaction-mode-blade', label: 'Blade Edit Mode', labelZh: '刀片模式', group: 'edit', keys: 'B' },
+  { id: 'delete', label: 'Delete (lift)', labelZh: '删除（留空）', group: 'edit', keys: 'Shift + Backspace / Shift + Delete' },
+  { id: 'ripple-delete', label: 'Ripple delete', labelZh: '波纹删除', group: 'edit', keys: 'Backspace / Delete' },
+  { id: 'split', label: 'Split at playhead', labelZh: '在播放头切分', group: 'edit', keys: 'Mod + K / Enter' },
+  { id: 'interaction-mode-selection', label: 'Selection tool', labelZh: '选择工具 (V)', group: 'edit', keys: 'V' },
+  { id: 'interaction-mode-trim', label: 'Ripple edit tool', labelZh: '波纹编辑工具 (B)', group: 'edit', keys: 'B' },
+  { id: 'interaction-mode-slip', label: 'Slip tool', labelZh: '滑移工具 (Y)', group: 'edit', keys: 'Y' },
+  { id: 'interaction-mode-blade', label: 'Razor tool', labelZh: '剃刀工具 (C)', group: 'edit', keys: 'C' },
   { id: 'interaction-mode-pen', label: 'Pen Edit Mode', labelZh: '钢笔模式', group: 'edit', keys: 'P' },
+  { id: 'interaction-mode-text', label: 'Text tool', labelZh: '文字工具 (T)', group: 'edit', keys: 'T' },
+  { id: 'interaction-mode-hand', label: 'Hand tool', labelZh: '手形工具 (H)', group: 'edit', keys: 'H' },
+  { id: 'interaction-mode-zoom', label: 'Zoom tool', labelZh: '缩放工具 (Z)', group: 'edit', keys: 'Z' },
   { id: 'nudge-left', label: 'Nudge left 1 / 5 frames', labelZh: '左移 1/5 帧', group: 'edit', keys: 'E / Shift + E' },
   { id: 'nudge-right', label: 'Nudge right 1 / 5 frames', labelZh: '右移 1/5 帧', group: 'edit', keys: 'R / Shift + R' },
   { id: 'trim-start', label: 'Trim start', labelZh: '裁到入点', group: 'edit', keys: 'Q' },
   { id: 'trim-end', label: 'Trim end', labelZh: '裁到出点', group: 'edit', keys: 'W' },
   // disabled when typing so ⌘A still selects text in chat/inspector inputs
   { id: 'select-all', label: 'Select all', labelZh: '全选', group: 'edit', keys: 'Mod + A' },
-  { id: 'select-after', label: 'Select clips forward', labelZh: '向后选片段', group: 'edit', keys: 'Y' },
+  { id: 'select-after', label: 'Select clips forward', labelZh: '向后选片段', group: 'edit', keys: 'Shift + Y' },
   { id: 'move-up', label: 'Move clip up', labelZh: '片段上移轨', group: 'edit', keys: 'Alt + ↑' },
   { id: 'move-down', label: 'Move clip down', labelZh: '片段下移轨', group: 'edit', keys: 'Alt + ↓' },
   { id: 'move-left-boundary', label: 'Move left to boundary', labelZh: '左贴边', group: 'edit', keys: 'Ctrl + E' },
   { id: 'move-right-boundary', label: 'Move right to boundary', labelZh: '右贴边', group: 'edit', keys: 'Ctrl + R' },
   { id: 'save-version', label: 'Save version', labelZh: '保存版本', group: 'edit', keys: 'Mod + S' },
 
+  { id: 'goto-start', label: 'Go to start', labelZh: '跳到起点', group: 'navigation', keys: 'Home' },
+  { id: 'goto-end', label: 'Go to end', labelZh: '跳到终点', group: 'navigation', keys: 'End' },
   { id: 'prev-edit', label: 'Previous edit', labelZh: '上一剪辑点', group: 'navigation', keys: '↑' },
   { id: 'next-edit', label: 'Next edit', labelZh: '下一剪辑点', group: 'navigation', keys: '↓' },
   { id: 'zone-in', label: 'Mark in', labelZh: '入点', group: 'navigation', keys: 'I' },
@@ -85,8 +91,8 @@ export const SHORTCUT_CATALOG: ShortcutAction[] = [
 
   { id: 'snapping', label: 'Snapping', labelZh: '吸附', group: 'view', keys: 'S' },
   { id: 'selection-mode', label: 'Selection mode', labelZh: '选择模式 (Alt)', group: 'view', keys: 'Alt + S' },
-  { id: 'zoom-in', label: 'Timeline zoom in', labelZh: '时间线放大', group: 'view', keys: 'Mod + = / Mod + +' },
-  { id: 'zoom-out', label: 'Timeline zoom out', labelZh: '时间线缩小', group: 'view', keys: 'Mod + -' },
+  { id: 'zoom-in', label: 'Timeline zoom in', labelZh: '时间线放大', group: 'view', keys: 'Mod + = / Mod + + / = / +' },
+  { id: 'zoom-out', label: 'Timeline zoom out', labelZh: '时间线缩小', group: 'view', keys: 'Mod + - / -' },
   { id: 'zoom-fit', label: 'Zoom timeline to fit', labelZh: '适配视图', group: 'view', keys: 'Shift + Z' },
   { id: 'fullscreen', label: 'Fullscreen preview', labelZh: '全屏', group: 'view', keys: '`' },
   { id: 'keyboard-shortcuts', label: 'Keyboard shortcuts', labelZh: '快捷键列表', group: 'view', keys: 'Mod + Alt + K', disabledWhenTyping: false },

@@ -32,6 +32,7 @@ import { customTransitionUniforms, getCustomTransition } from '../gl/customTrans
 import type { ZoomEffect } from '../editor/types';
 import { Icon } from '../components/icons';
 import { parseSrt } from '../captions/srt';
+import { parseAss } from '../captions/ass';
 
 // Two built-in LUTs implemented with published camera-log transfer functions.
 // They apply through the same pipeline as other effects.
@@ -131,6 +132,8 @@ export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddA
   const isVisual = selKind != null && selKind !== 'audio';
   const [mainTab, setMainTab] = useState<(typeof MAIN_TABS)[number]>('我的素材');
   const [subTab, setSubTab] = useState<(typeof SUB_TABS)[number]>('MG 动画');
+  // Shared across the resource categories so one search box filters whichever one is open.
+  const [resourceQuery, setResourceQuery] = useState('');
   const [extensionOpen, setExtensionOpen] = useState(false);
   const [directoryImportError, setDirectoryImportError] = useState<string | null>(null);
   const directoryImport = useDirectoryImport({
@@ -174,16 +177,19 @@ export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddA
   };
   const importSrt = async (file: File) => {
     try {
-      const words = parseSrt(await file.text());
+      const content = await file.text();
+      const isAss = /\.ass$/i.test(file.name);
+      const words = isAss ? parseAss(content) : parseSrt(content);
+      if (!words.length) throw new Error('文件中没有可用的字幕条目');
       const entryId = `srt_${crypto.randomUUID()}`;
       onCreateCaptionTrack({
         ...newManualCaptions(),
         sourceEntries: [{ id: entryId, itemId: `manual:${entryId}`, label: file.name, words }],
-      }, { name: file.name.replace(/\.srt$/i, '') || file.name });
+      }, { name: file.name.replace(/\.(srt|ass)$/i, '') || file.name });
       setMainTab('字幕');
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
-      window.alert(`${t('SRT 导入失败')}：${t(detail)}`);
+      window.alert(`${t('字幕导入失败')}：${t(detail)}`);
     }
   };
 
@@ -243,10 +249,24 @@ export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddA
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, padding: '10px 12px 7px 16px', fontSize: 12, borderBottom: `0.5px solid ${theme.border}` }}>
         <div style={{ display: 'flex', gap: 14, minWidth: 0, overflowX: 'auto', whiteSpace: 'nowrap', flex: 1 }}>
           {SUB_TABS.map((tab) => (
-            <button key={tab} onClick={() => setSubTab(tab)}
+            <button key={tab} onClick={() => { setSubTab(tab); setResourceQuery(''); }}
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: subTab === tab ? theme.text : theme.textDim, borderBottom: `2px solid ${subTab === tab ? theme.accent : 'transparent'}`, padding: '0 0 4px' }}>{t(tab)}</button>
           ))}
         </div>
+        {subTab !== 'MG 动画' && subTab !== '音效' && (
+          <input
+            type="search"
+            value={resourceQuery}
+            onChange={(event) => setResourceQuery(event.target.value)}
+            placeholder={t('搜索效果与转场')}
+            aria-label={t('搜索效果与转场')}
+            style={{
+              flex: '0 0 auto', width: 132, height: 22,
+              background: theme.panelAlt, border: `0.5px solid ${theme.border}`,
+              borderRadius: 4, color: theme.text, fontSize: 11, padding: '0 6px', outline: 'none',
+            }}
+          />
+        )}
         <button
           type="button"
           onClick={() => setExtensionOpen(true)}
@@ -285,6 +305,7 @@ export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddA
                 layout="grid"
                 dragKind="transition"
                 hint="点击应用到选中音频（需同轨前一段相邻音频）。出点渐弱、入点渐强。"
+                query={resourceQuery}
                 items={AUDIO_TRANSITION_ITEMS}
                 applicable={selKind === 'audio'}
                 onApply={(id) => onApplyTransition(id as TransitionType)}
@@ -298,6 +319,7 @@ export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddA
               layout="grid"
               dragKind="transition"
               hint="悬停预览 · 点击应用到选中画面片段（入场，需前一个相邻同轨片段）"
+              query={resourceQuery}
               items={transitionItems}
               applicable={selectedItem != null && selKind !== 'audio'}
               onApply={applyTransitionById}
@@ -310,6 +332,7 @@ export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddA
             layout="grid"
             dragKind="fx"
             hint="悬停预览 · 点击应用到选中视频/图片"
+            query={resourceQuery}
             items={fxItems}
             applicable={selKind === 'video' || selKind === 'image'}
             onApply={(id) => onApplyFx(id)}
@@ -320,6 +343,7 @@ export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddA
             layout="grid"
             dragKind="zoom"
             hint="悬停预览 · 点击应用到选中片段（默认 1.5×，属性可细调）"
+            query={resourceQuery}
             items={zoomItems}
             applicable={isVisual}
             onApply={applyZoomById}
@@ -338,6 +362,7 @@ export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddA
             layout="grid"
             dragKind="lut"
             hint="悬停预览 · 点击应用到选中视频/图片（强度可在属性细调）"
+            query={resourceQuery}
             items={lutItems}
             applicable={selKind === 'video' || selKind === 'image'}
             onApply={(id) => onApplyFx(id)}

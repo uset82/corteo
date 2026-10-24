@@ -9,11 +9,13 @@ import type { EditorCommands } from '../../editor/store';
 import { useT } from '../../i18n/locale';
 import { useFocusReturn } from '../../hooks/useFocusReturn';
 import { invokeAction } from '../../shortcuts/actionRegistry';
-import { MIN_TIME_ZOOM, fmt, type EditMode } from './timelineUtil';
+import { MIN_TIME_ZOOM, type EditMode } from './timelineUtil';
+import { formatTimecode, toggleTimeDisplayMode, useTimeDisplayMode } from './CountdownToggle';
 import { TimelineSpeedControl } from './TimelineSpeedControl';
 import { SceneDetectionDialog } from '../../scene-detection/SceneDetectionDialog';
 import { MotionTrackingDialog } from '../../tracking/MotionTrackingDialog';
 import { TrackCreateControl } from './TrackCreateControl';
+import { DuplicateDetectorDialog } from '../DuplicateDetector';
 import { TimelineFrameRateControl } from './TimelineFrameRateControl';
 
 // Group spacing between toolbar clusters uses gaps without a visible divider.
@@ -56,6 +58,7 @@ function TimelineMoreControl(props: {
   trackingEnabled: boolean;
   onScene: (restoreFocus: () => void) => void;
   onTracking: (restoreFocus: () => void) => void;
+  onDuplicates: (restoreFocus: () => void) => void;
   onPlaceMode: (mode: 'insert' | 'overwrite') => void;
 }) {
   const t = useT();
@@ -87,6 +90,9 @@ function TimelineMoreControl(props: {
         <button disabled={!props.trackingEnabled} onClick={(event) => runMenuAction(event, () => props.onTracking(restoreFocus), false)}>
           <Icon name="tracking" size={15} />{t('运动跟踪')}
         </button>
+        <button onClick={(event) => runMenuAction(event, () => props.onDuplicates(restoreFocus), false)}>
+          <Icon name="film" size={15} />{t('重复片段检测')}
+        </button>
         <div className="cc-track-create-separator" />
         <button className={props.placeMode === 'insert' ? 'selected' : ''} onClick={(event) => runMenuAction(event, () => props.onPlaceMode('insert'))}>
           <Icon name="insert" size={15} />{t('插入落轨')}
@@ -111,6 +117,8 @@ interface TimelineToolbarProps {
   playing: boolean;
   /** painted imperatively by the playhead painter */
   timecodeRef: RefObject<HTMLSpanElement | null>;
+  /** live playhead frame, read on demand (the prop value may be a render behind) */
+  getPlayheadFrame: () => number;
   playheadFrame: number;
   total: number;
   captionsVisible: boolean;
@@ -122,10 +130,11 @@ interface TimelineToolbarProps {
 
 export function TimelineToolbar({
   state, commands, editMode, placeMode, setPlaceMode, snapping,
-  recorder, canRecord, playing, timecodeRef, playheadFrame, total, captionsVisible,
+  recorder, canRecord, playing, timecodeRef, getPlayheadFrame, playheadFrame, total, captionsVisible,
   zoom, setZoom, frameRateLock,
 }: TimelineToolbarProps) {
   const t = useT();
+  const timeDisplayMode = useTimeDisplayMode();
   const speedItem = state.items.find((item) => (
     item.id === state.selectedId && (item.kind === 'video' || item.kind === 'audio' || item.kind === 'sequence')
   )) ?? null;
@@ -139,6 +148,7 @@ export function TimelineToolbar({
   )) ?? null;
   const [sceneDetectionOpen, setSceneDetectionOpen] = useState(false);
   const [motionTrackingOpen, setMotionTrackingOpen] = useState(false);
+  const [duplicatesOpen, setDuplicatesOpen] = useState(false);
   const modalFocus = useFocusReturn();
   const captionTracks = captionTrackEntries(state).filter((entry) => entry.captions);
   // On-screen text clips count as captions for the toggle (render-layer hidden with them).
@@ -151,10 +161,10 @@ export function TimelineToolbar({
         <TrackCreateControl commands={commands} />
         <ToolSep />
         <TB icon="cursor" title={t('选择模式 (V)：拖动移动 / 裁剪首尾')} active={editMode === 'selection'} onClick={() => invokeAction('interaction-mode-selection', undefined, 'toolbar')} />
-        <TB icon="trim" title={t('修剪模式 (N)：裁剪片段边缘，后续片段自动跟随合缝（波纹）')} active={editMode === 'trim'} onClick={() => invokeAction('interaction-mode-trim', undefined, 'toolbar')} />
+        <TB icon="trim" title={t('波纹编辑工具 (B)：裁剪片段边缘，后续片段自动跟随合缝')} active={editMode === 'trim'} onClick={() => invokeAction('interaction-mode-trim', undefined, 'toolbar')} />
         <TB
           icon="swap"
-          title={t('滑移模式 (U)：保持时间线位置和时长，仅拖动源素材区间')}
+          title={t('滑移工具 (Y)：保持时间线位置和时长，仅拖动源素材区间')}
           active={editMode === 'slip'}
           onClick={() => invokeAction('interaction-mode-slip', undefined, 'toolbar')}
         />
@@ -170,9 +180,12 @@ export function TimelineToolbar({
             'toolbar',
           )}
         />
-        <TB icon="blade" title={t('刀片模式 (B)：点击片段在该处切分')} active={editMode === 'blade'} onClick={() => invokeAction('interaction-mode-blade', undefined, 'toolbar')} />
+        <TB icon="blade" title={t('剃刀工具 (C)：点击片段在该处切分')} active={editMode === 'blade'} onClick={() => invokeAction('interaction-mode-blade', undefined, 'toolbar')} />
         <TB icon="pencil" title={t('钢笔模式 (P)：在选中片段上点击绘制关键帧（视觉片段=透明度，音频片段=音量；纵向=值，拖点改帧/值，右键删点）')} active={editMode === 'pen'} onClick={() => invokeAction('interaction-mode-pen', undefined, 'toolbar')} />
-        <TB icon="scissors" title={t('在播放头切分选中片段 (C)')} onClick={() => invokeAction('split', undefined, 'toolbar')} />
+        <TB icon="text" title={t('文字工具 (T)：点击视频轨在该处添加文字')} active={editMode === 'text'} onClick={() => invokeAction('interaction-mode-text', undefined, 'toolbar')} />
+        <TB icon="hand" title={t('手形工具 (H)：拖动平移时间轴')} active={editMode === 'hand'} onClick={() => invokeAction('interaction-mode-hand', undefined, 'toolbar')} />
+        <TB icon="zoomIn" title={t('缩放工具 (Z)：点击放大，Alt+点击缩小')} active={editMode === 'zoom'} onClick={() => invokeAction('interaction-mode-zoom', undefined, 'toolbar')} />
+        <TB icon="scissors" title={t('在播放头切分选中片段 (⌘/Ctrl+K)')} onClick={() => invokeAction('split', undefined, 'toolbar')} />
         <TB icon="magnet" title={snapping ? t('磁性吸附：开 (S)') : t('磁性吸附：关 (S)')} active={snapping} onClick={() => invokeAction('snapping', undefined, 'toolbar')} />
         <ToolSep />
         <TimelineMoreControl
@@ -181,6 +194,7 @@ export function TimelineToolbar({
           trackingEnabled={!!trackingItem}
           onScene={(restoreFocus) => { modalFocus.remember(restoreFocus); setSceneDetectionOpen(true); }}
           onTracking={(restoreFocus) => { modalFocus.remember(restoreFocus); setMotionTrackingOpen(true); }}
+          onDuplicates={(restoreFocus) => { modalFocus.remember(restoreFocus); setDuplicatesOpen(true); }}
           onPlaceMode={setPlaceMode}
         />
         <ToolSep />
@@ -203,7 +217,24 @@ export function TimelineToolbar({
         active={playing}
         onClick={() => invokeAction('play-pause', undefined, 'toolbar')}
       />
-      <span ref={timecodeRef} className="cc-timeline-timecode">{fmt(playheadFrame, state.fps)} / {fmt(total, state.fps)}</span>
+      <span
+        ref={timecodeRef}
+        className="cc-timeline-timecode"
+        role="button"
+        tabIndex={0}
+        style={{ cursor: 'pointer' }}
+        title={timeDisplayMode === 'countdown' ? t('剩余时间：点击切换为已用时间') : t('已用时间：点击切换为剩余时间')}
+        onClick={() => {
+          const next = toggleTimeDisplayMode();
+          if (timecodeRef.current) timecodeRef.current.textContent = formatTimecode(getPlayheadFrame(), total, state.fps, next);
+        }}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
+          const next = toggleTimeDisplayMode();
+          if (timecodeRef.current) timecodeRef.current.textContent = formatTimecode(getPlayheadFrame(), total, state.fps, next);
+        }}
+      >{formatTimecode(playheadFrame, total, state.fps, timeDisplayMode)}</span>
       </div>
       <div className="cc-timeline-view-controls">
       <TB icon="zoomOut" title={t('缩小时间轴 (⌘−)')} tipRight onClick={() => invokeAction('zoom-out', undefined, 'toolbar')} />
@@ -241,6 +272,13 @@ export function TimelineToolbar({
           commands={commands}
           item={sceneItem}
           onClose={() => { setSceneDetectionOpen(false); modalFocus.restore(); }}
+        />
+      )}
+      {duplicatesOpen && (
+        <DuplicateDetectorDialog
+          state={state}
+          onSelect={(ids) => commands.selectItems(ids)}
+          onClose={() => { setDuplicatesOpen(false); modalFocus.restore(); }}
         />
       )}
       {motionTrackingOpen && trackingItem && (

@@ -131,6 +131,75 @@ export default {
   // Enhanced Export
   '高级导出': 'Exportación Avanzada',
   '视频编码': 'Códec de Video',
+  'MP4 (H.265 / HEVC · 本机)': 'MP4 (H.265 / HEVC · render local)',
   '音频编码': 'Códec de Audio',
   '比特率': 'Tasa de Bits',
+
+  // Ken Burns panel
+  'Ken Burns 效果说明': 'Ken Burns desplaza y acerca las imágenes fijas con precisión subpíxel',
+  '缩放 (1 = 100%)': 'Escala (1 = 100%)',
+  '线性': 'Lineal',
+  '缓入': 'Acelerar',
+  '缓出': 'Desacelerar',
+  '缓入缓出': 'Acelerar y desacelerar',
+
+  // Timeline timecode
+  '剩余时间：点击切换为已用时间': 'Tiempo restante: clic para tiempo transcurrido',
+  '已用时间：点击切换为剩余时间': 'Tiempo transcurrido: clic para tiempo restante',
+
+  // Timeline tools
+  '选择模式 (V)：拖动移动 / 裁剪首尾': 'Herramienta de selección (V): arrastra para mover, bordes para recortar',
+  '波纹编辑工具 (B)：裁剪片段边缘，后续片段自动跟随合缝': 'Herramienta de edición con desplazamiento (B): recorta y cierra el hueco automáticamente',
+  '滑移工具 (Y)：保持时间线位置和时长，仅拖动源素材区间': 'Herramienta de deslizamiento (Y): mantiene posición y duración, desplaza el rango de origen',
+  '剃刀工具 (C)：点击片段在该处切分': 'Herramienta de cuchilla (C): haz clic en un clip para cortarlo ahí',
+  '文字工具 (T)：点击视频轨在该处添加文字': 'Herramienta de texto (T): haz clic en una pista de vídeo para añadir un título',
+  '手形工具 (H)：拖动平移时间轴': 'Herramienta de mano (H): arrastra para desplazar la línea de tiempo',
+  '缩放工具 (Z)：点击放大，Alt+点击缩小': 'Herramienta de zoom (Z): clic para acercar, Alt+clic para alejar',
+  '在播放头切分选中片段 (⌘/Ctrl+K)': 'Cortar el clip seleccionado en el cabezal (⌘/Ctrl+K)',
+
+  // Duplicate detector
+  '比较每个画面片段的中点帧，找出重复使用的镜头': 'Compara el fotograma central de cada clip visual y encuentra planos repetidos',
+  '相似阈值': 'Umbral de similitud',
+  '数值越大，越多相似镜头被判为重复': 'Cuanto más alto, más planos similares se marcan como duplicados',
+  '正在比较画面': 'Comparando fotogramas',
+  '画面片段': 'Clips visuales',
+  '可扫描 {n} 个画面片段；文字、纯色和序列会被跳过': 'Se pueden escanear {n} clips visuales; texto, colores planos y secuencias se omiten',
+  '重新扫描': 'Volver a escanear',
+  '时间线上至少需要两个画面片段': 'La línea de tiempo necesita al menos dos clips visuales',
+  '重复组': 'Grupos duplicados',
+  '找到 {n} 组重复片段，点击一组即可选中': 'Se encontraron {n} grupos duplicados; haz clic en uno para seleccionarlo',
+  '扫描完成后会列出相似镜头': 'Los planos similares aparecerán al terminar el escaneo',
+  '已扫描 {n} 个': '{n} escaneados',
+  '正在比对各片段画面…': 'Comparando los fotogramas de los clips…',
+  '点击“扫描”开始': 'Haz clic en «Escanear» para empezar',
+  '相似度 {n}%': '{n}% de similitud',
+  '跳过 {n} 个不可取帧的片段': 'Se omitieron {n} clips sin fotograma utilizable',
+
+  // Karaoke caption templates
+  '卡拉OK 跟唱': 'Karaoke para cantar',
+  '卡拉OK 抒情': 'Karaoke balada',
+  '暗字金高亮，逐词跟唱': 'Letra atenuada que se ilumina en oro palabra a palabra',
+  '卡拉OK 喊麦': 'Karaoke grito',
+  '红字黄高亮、全大写，适合副歌': 'Texto rojo en mayúsculas iluminado en amarillo, para estribillos',
+  '卡拉OK 填色': 'Karaoke relleno',
+  '暗白字随唱词点亮，无底板': 'Texto blanco atenuado que se enciende con la voz, sin fondo',
+
+  // SRT / ASS subtitle import-export
+  '导入 SRT': 'Importar SRT',
+  '导入字幕 (SRT/ASS)': 'Importar subtítulos (SRT/ASS)',
+  '文件中没有可用的字幕条目': 'No se encontraron subtítulos utilizables en el archivo',
+  'SRT 导入失败': 'Error al importar SRT',
+  '字幕导入失败': 'Error al importar subtítulos',
+  'ASS 文件中没有有效字幕。': 'No se encontraron subtítulos válidos en el archivo ASS.',
+  '纯文本 (.txt)': 'Texto plano (.txt)',
+  'ASS 卡拉OK (.ass)': 'ASS karaoke (.ass)',
+
+  // Advanced export quality controls
+  '恒定质量 (CRF)': 'Calidad constante (CRF)',
+  'CRF 值': 'Valor CRF',
+  'CRF {value}': 'CRF {value}',
+  'CRF 18–28，数值越小画质越高、文件越大；仅在本机渲染生效。': 'CRF 18–28: cuanto menor, mayor calidad y tamaño de archivo; solo se aplica al renderizado local.',
+  '音频码率': 'Tasa de bits de audio',
+  '搜索效果与转场': 'Buscar efectos y transiciones',
+  '没有匹配的结果': 'Sin resultados',
 } as Record<string, string>;

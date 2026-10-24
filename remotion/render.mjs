@@ -219,6 +219,8 @@ async function renderMediaOptimized(options) {
  * @param {'h264'|'vp8'|'prores'|'mp3'|'wav'} [args.codec]
  * @param {[number, number]} [args.frameRange] inclusive Remotion frame range
  * @param {number} [args.videoBitrate] video bitrate in bits per second
+ * @param {number} [args.crf] constant-quality value (H.264/H.265, 18–28)
+ * @param {string} [args.audioBitrate] audio bitrate, e.g. "192k"
  * @param {{id:string,label:string,hardware:boolean,transport:'server'}} [args.h264Profile]
  * @param {string} [args.vaapiDevice]
  * @param {(progress: number) => void} [args.onProgress]  0..1
@@ -234,6 +236,8 @@ export async function renderTimeline({
   frameRange,
   scale,
   videoBitrate,
+  crf,
+  audioBitrate,
   h264Profile,
   vaapiDevice,
   signal,
@@ -279,6 +283,8 @@ export async function renderTimeline({
         : Number.isFinite(videoBitrate) && videoBitrate > 0
           ? `${Math.round(videoBitrate / 1000)}k`
           : undefined,
+      ...(codec !== 'prores' && Number.isFinite(crf) ? { crf } : {}),
+      ...(audioBitrate ? { audioBitrate } : {}),
       ...proresOptions,
       chromiumOptions: { gl: resolveRenderGlBackend() },
       browserExecutable: browserExecutable(),

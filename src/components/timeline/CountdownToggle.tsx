@@ -1,103 +1,70 @@
-// Countdown time display toggle for timeline
-import { useState } from 'react';
+// Timeline timecode display mode: elapsed, or countdown to the timeline end.
+//
+// The toolbar timecode span is painted imperatively by the playhead painter, so
+// the mode lives in a tiny module store instead of React state: the painter
+// reads getTimeDisplayMode() on every paint, and toggling repaints immediately.
+// The choice is persisted per browser.
+import { useSyncExternalStore } from 'react';
+import { fmt } from './timelineUtil';
 
 export type TimeDisplayMode = 'elapsed' | 'countdown';
 
-interface TimeDisplayProps {
-  currentTime: number;
-  totalDuration: number;
-  mode: TimeDisplayMode;
-  onToggleMode: () => void;
-}
+const STORAGE_KEY = 'cc.timeDisplayMode';
+const subscribers = new Set<() => void>();
 
-export function TimeDisplay({ currentTime, totalDuration, mode, onToggleMode }: TimeDisplayProps) {
-  const displayTime = mode === 'countdown' ? totalDuration - currentTime : currentTime;
-  const isNegative = mode === 'countdown' && displayTime < 0;
-  
-  return (
-    <div
-      className="time-display"
-      onClick={onToggleMode}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '8px',
-        padding: '6px 12px',
-        background: '#1a1a1a',
-        borderRadius: '6px',
-        fontSize: '13px',
-        fontFamily: 'monospace',
-        cursor: 'pointer',
-        userSelect: 'none',
-        transition: 'background 0.2s',
-      }}
-      title="Click to toggle between elapsed and countdown"
-    >
-      <span style={{ color: '#888', fontSize: '11px' }}>
-        {mode === 'countdown' ? '⏱' : '⏲'}
-      </span>
-      <span style={{ color: '#fff', fontWeight: 500 }}>
-        {isNegative && '-'}
-        {formatTime(Math.abs(displayTime))}
-      </span>
-      <span style={{ color: '#666', fontSize: '11px' }}>
-        / {formatTime(totalDuration)}
-      </span>
-    </div>
-  );
-}
-
-function formatTime(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  const frames = Math.floor((seconds % 1) * 30); // Assuming 30fps
-  
-  if (hours > 0) {
-    return `${hours}:${pad(minutes)}:${pad(secs)}.${pad(frames)}`;
+function readStored(): TimeDisplayMode {
+  try {
+    return localStorage.getItem(STORAGE_KEY) === 'countdown' ? 'countdown' : 'elapsed';
+  } catch {
+    return 'elapsed';
   }
-  return `${minutes}:${pad(secs)}.${pad(frames)}`;
 }
 
-function pad(num: number): string {
-  return num.toString().padStart(2, '0');
+let mode: TimeDisplayMode = readStored();
+
+export function getTimeDisplayMode(): TimeDisplayMode {
+  return mode;
 }
 
-// Hook for managing time display state
-export function useTimeDisplay(totalDuration: number) {
-  const [mode, setMode] = useState<TimeDisplayMode>('elapsed');
-  
-  const toggleMode = () => {
-    setMode(prev => prev === 'elapsed' ? 'countdown' : 'elapsed');
-  };
-  
-  return {
-    mode,
-    toggleMode,
-    formatTime,
-  };
+export function setTimeDisplayMode(next: TimeDisplayMode): void {
+  if (next === mode) return;
+  mode = next;
+  try { localStorage.setItem(STORAGE_KEY, next); } catch { /* private mode */ }
+  for (const notify of subscribers) notify();
 }
 
-// Styled component version for integration with OpenChatCut
-export function TimelineTimeDisplay({ currentTime, totalDuration }: { currentTime: number; totalDuration: number }) {
-  const { mode, toggleMode } = useTimeDisplay(totalDuration);
-  
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '8px 16px', background: '#2a2a2a' }}>
-      <TimeDisplay
-        currentTime={currentTime}
-        totalDuration={totalDuration}
-        mode={mode}
-        onToggleMode={toggleMode}
-      />
-      
-      <div style={{ fontSize: '11px', color: '#666' }}>
-        {mode === 'elapsed' ? 'Elapsed time' : 'Time remaining'}
-      </div>
-      
-      <div style={{ marginLeft: 'auto', fontSize: '11px', color: '#888' }}>
-        Click time to toggle countdown
-      </div>
-    </div>
-  );
+/** Flip the mode and return the new one, so callers can repaint immediately. */
+export function toggleTimeDisplayMode(): TimeDisplayMode {
+  setTimeDisplayMode(mode === 'elapsed' ? 'countdown' : 'elapsed');
+  return mode;
+}
+
+export function subscribeTimeDisplayMode(onChange: () => void): () => void {
+  subscribers.add(onChange);
+  return () => { subscribers.delete(onChange); };
+}
+
+/**
+ * Toolbar timecode text. Countdown counts down to the timeline end and carries a
+ * leading minus while time remains; at or past the end it reads 00:00.00.
+ */
+export function formatTimecode(
+  frame: number,
+  total: number,
+  fps: number,
+  displayMode: TimeDisplayMode = mode,
+): string {
+  const safeTotal = Math.max(0, Math.round(total));
+  const clamped = Math.max(0, Math.min(Math.round(frame), safeTotal));
+  const totalText = fmt(safeTotal, fps);
+  if (displayMode === 'countdown') {
+    const remaining = safeTotal - clamped;
+    return `${remaining > 0 ? '-' : ''}${fmt(remaining, fps)} / ${totalText}`;
+  }
+  return `${fmt(clamped, fps)} / ${totalText}`;
+}
+
+/** Subscribe a component to mode changes (toolbar label and tooltip). */
+export function useTimeDisplayMode(): TimeDisplayMode {
+  return useSyncExternalStore(subscribeTimeDisplayMode, getTimeDisplayMode, getTimeDisplayMode);
 }

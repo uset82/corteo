@@ -35,6 +35,8 @@ import {
 } from '../media/qualityPolicy';
 import type { ExportDestination } from './exportDestination';
 import { exportMediaExtension } from './exportMediaExtension';
+import { estimateFileSize, type FileSizeEstimate } from './exportPresets';
+import { timelineDuration } from '../editor/timelineTypes';
 import type { ExportEngineInfo, ExportEngineReason } from './exportWorkflowTypes';
 import {
   effectiveIncludeMg,
@@ -67,7 +69,12 @@ export const EXPORT_FPS = [...EXPORT_FPS_OPTIONS];
 export const EXPORT_RESOLUTION_OPTIONS = Object.keys(EXPORT_RESOLUTIONS) as ExportResolution[];
 export const DEFAULT_INCLUDE_MG = true;
 
-export type ExportVideoCodec = 'h264' | 'vp8' | 'prores';
+export type ExportVideoCodec = 'h264' | 'vp8' | 'hevc' | 'prores';
+
+/** Constant-quality range offered by the server encoder (lower = better). */
+export const CRF_RANGE = { min: 18, max: 28, default: 23 } as const;
+export const AUDIO_BITRATES = [128, 192, 256, 320] as const;
+export type ExportAudioBitrate = (typeof AUDIO_BITRATES)[number];
 
 export interface ExportVideoSettings {
   codec: ExportVideoCodec;
@@ -80,17 +87,23 @@ export interface ExportVideoSettings {
   setBitrateMode: Dispatch<SetStateAction<VideoBitrateMode>>;
   customBitrateMbps: number;
   setCustomBitrateMbps: Dispatch<SetStateAction<number>>;
+  crf: number;
+  setCrf: Dispatch<SetStateAction<number>>;
+  audioBitrateKbps: ExportAudioBitrate;
+  setAudioBitrateKbps: Dispatch<SetStateAction<ExportAudioBitrate>>;
   dimensions: { width: number; height: number };
   resolvedBitrate: number;
   requestedBitrate: number | undefined;
+  /** Rough on-disk size for the current settings; null for ProRes or an empty timeline. */
+  estimatedSize: FileSizeEstimate | null;
 }
 
 export interface ExportSubtitleSettings {
   tracks: Array<{ id: TrackId; captions: CaptionsData | null }>;
   trackId: string;
   setTrackId: Dispatch<SetStateAction<string>>;
-  format: 'srt' | 'txt';
-  setFormat: Dispatch<SetStateAction<'srt' | 'txt'>>;
+  format: 'srt' | 'txt' | 'ass';
+  setFormat: Dispatch<SetStateAction<'srt' | 'txt' | 'ass'>>;
   captions: CaptionsData | null;
 }
 
@@ -140,9 +153,11 @@ export interface ExportDialogModel {
 function useVideoSettings(state: TimelineState, qualityMode: QualityMode): ExportVideoSettings {
   const [codec, setCodec] = useState<ExportVideoCodec>('h264');
   const [resolution, setResolution] = useState<ExportResolution>(() => exportResolutionForCanvas(state, qualityMode));
-  const [fps, setFps] = useState(() => nearestExportFps(state.fps));
+  const [fps, setFps] = useState<number>(() => nearestExportFps(state.fps));
   const [bitrateMode, setBitrateMode] = useState<VideoBitrateMode>(() => defaultBitrateModeForQuality(qualityMode));
   const [customBitrateMbps, setCustomBitrateMbps] = useState(DEFAULT_CUSTOM_BITRATE_MBPS);
+  const [crf, setCrf] = useState<number>(CRF_RANGE.default);
+  const [audioBitrateKbps, setAudioBitrateKbps] = useState<ExportAudioBitrate>(192);
   // Re-apply quality defaults when the user toggles balanced ↔ master.
   useEffect(() => {
     setResolution(exportResolutionForCanvas({ width: state.width, height: state.height }, qualityMode));
@@ -150,23 +165,33 @@ function useVideoSettings(state: TimelineState, qualityMode: QualityMode): Expor
     // Master quality keeps ProRes available but does not force it (file size).
     setCodec((current) => (qualityMode !== 'master' && current === 'prores' ? 'h264' : current));
   }, [qualityMode, state.width, state.height]);
+  // VP8/ProRes cannot take the CRF path; fall back instead of silently dropping the target.
+  useEffect(() => {
+    if (codec === 'vp8' || codec === 'prores') {
+      setBitrateMode((mode) => (mode === 'crf' ? 'auto' : mode));
+    }
+  }, [codec]);
   const dimensions = browserScaledExportDimensions(state, resolution);
   const bitrateInput = { mode: bitrateMode, ...dimensions, fps, customMbps: customBitrateMbps };
   const resolvedBitrate = resolveVideoBitrateBps(bitrateInput);
   // ProRes is mezzanine: remotion ignores bitrate; do not send a false target.
   const requestedBitrate = codec === 'prores' ? undefined : requestedVideoBitrateBps(bitrateInput);
+  const durationSeconds = timelineDuration(state) / (state.fps || 30);
+  const estimatedSize = estimateFileSize(codec === 'prores' ? undefined : resolvedBitrate, durationSeconds);
   return {
     codec, setCodec, resolution, setResolution, fps, setFps, bitrateMode, setBitrateMode,
-    customBitrateMbps, setCustomBitrateMbps, dimensions,
+    customBitrateMbps, setCustomBitrateMbps, crf, setCrf,
+    audioBitrateKbps, setAudioBitrateKbps, dimensions,
     resolvedBitrate,
     requestedBitrate,
+    estimatedSize,
   };
 }
 
 function useSubtitleSettings(state: TimelineState): ExportSubtitleSettings {
   const tracks = useMemo(() => captionTrackEntries(state).filter((entry) => entry.captions), [state]);
   const [trackId, setTrackId] = useState(tracks[0]?.id ?? '');
-  const [format, setFormat] = useState<'srt' | 'txt'>('srt');
+  const [format, setFormat] = useState<'srt' | 'txt' | 'ass'>('srt');
   useEffect(() => {
     if (!tracks.some((entry) => entry.id === trackId)) setTrackId(tracks[0]?.id ?? '');
   }, [tracks, trackId]);
@@ -212,6 +237,8 @@ export function useExportDialogModel({ state, project, projectId, projectName, e
   const workflow = useExportWorkflow({
     state, project, timelineId: project.activeTimelineId, projectId, projectName, base, tab, codec: video.codec, resolution: video.resolution,
     fps: video.fps, requestedVideoBitrate: video.requestedBitrate,
+    videoCrf: video.codec !== 'prores' && video.bitrateMode === 'crf' ? video.crf : undefined,
+    videoAudioBitrateKbps: video.codec === 'prores' ? undefined : video.audioBitrateKbps,
     subtitleFormat: subtitles.format, subtitleCaptions: subtitles.captions,
     nleFormat, includeMg: includeAvailableMg, mgItems, onClose,
   }, exportJobs);
@@ -219,11 +246,13 @@ export function useExportDialogModel({ state, project, projectId, projectName, e
   const qualityTag = qualityMode === 'master' ? ` · ${t('画质优先')}` : '';
   const codecLabel = video.codec === 'prores'
     ? 'MOV · ProRes 422 HQ'
-    : video.codec === 'h264' ? 'MP4 · H.264' : 'WebM · VP8';
+    : video.codec === 'hevc' ? 'MP4 · H.265'
+      : video.codec === 'h264' ? 'MP4 · H.264' : 'WebM · VP8';
   const rateLabel = video.codec === 'prores'
     ? t('母带')
     : `${(video.resolvedBitrate / 1_000_000).toFixed(1)} Mbps`;
-  const videoSummary = `${codecLabel} · ${video.dimensions.width}×${video.dimensions.height} · ${video.fps} fps · ${rateLabel}${qualityTag}`;
+  const sizeLabel = video.estimatedSize ? ` · ≈ ${video.estimatedSize.label}` : '';
+  const videoSummary = `${codecLabel} · ${video.dimensions.width}×${video.dimensions.height} · ${video.fps} fps · ${rateLabel}${sizeLabel}${qualityTag}`;
   const disabled = !!workflow.busy
     || (tab === 'subtitles' && !subtitles.captions)
     || (tab === 'mg' && mgItems.length === 0);

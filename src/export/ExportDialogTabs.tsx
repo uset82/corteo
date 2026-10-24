@@ -10,6 +10,7 @@ import {
 import { ExportBitrateControl } from './ExportBitrateControl';
 import { ExportQaCard, InfoCard, Row, Segmented } from './ExportDialogParts';
 import {
+  AUDIO_BITRATES,
   EXPORT_FPS,
   EXPORT_RESOLUTION_OPTIONS,
   type ExportSubtitleSettings,
@@ -66,10 +67,11 @@ function VideoSettings({ video, busy, qualityMode, setQualityMode }: VideoSettin
         <select
           className="cc-export-select"
           value={video.codec}
-          onChange={(event) => video.setCodec(event.target.value as 'h264' | 'vp8' | 'prores')}
+          onChange={(event) => video.setCodec(event.target.value as 'h264' | 'vp8' | 'hevc' | 'prores')}
           disabled={busy}
         >
           <option value="h264">MP4 (H.264)</option>
+          <option value="hevc">{t('MP4 (H.265 / HEVC · 本机)')}</option>
           <option value="vp8">WebM (VP8)</option>
           <option value="prores">{t('ProRes 422 HQ 母带 (.mov)')}</option>
         </select>
@@ -90,10 +92,22 @@ function VideoSettings({ video, busy, qualityMode, setQualityMode }: VideoSettin
           <ExportBitrateControl
             mode={video.bitrateMode}
             customMbps={video.customBitrateMbps}
+            crf={video.crf}
+            allowCrf={video.codec === 'h264' || video.codec === 'hevc'}
             resolvedBps={video.resolvedBitrate}
             disabled={busy}
             onModeChange={video.setBitrateMode}
             onCustomMbpsChange={(value) => video.setCustomBitrateMbps(clampBitrate(value))}
+            onCrfChange={video.setCrf}
+          />
+        </Row>
+      )}
+      {video.codec !== 'prores' && (
+        <Row label={t('音频码率')}>
+          <Segmented
+            options={AUDIO_BITRATES.map((value) => ({ value, label: `${value} kbps` }))}
+            value={video.audioBitrateKbps}
+            onChange={video.setAudioBitrateKbps}
           />
         </Row>
       )}
@@ -168,7 +182,11 @@ function SubtitlesTab({ state, subtitles }: { state: TimelineState; subtitles: E
       </Row>
       <Row label={t('格式')}>
         <Segmented
-          options={[{ value: 'srt', label: 'SubRip (.srt)' }, { value: 'txt', label: '纯文本 (.txt)' }] as const}
+          options={[
+            { value: 'srt', label: 'SubRip (.srt)' },
+            { value: 'txt', label: '纯文本 (.txt)' },
+            { value: 'ass', label: 'ASS 卡拉OK (.ass)' },
+          ] as const}
           value={subtitles.format}
           onChange={subtitles.setFormat}
         />

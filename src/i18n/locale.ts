@@ -23,19 +23,6 @@ const DOCUMENT_LANG: Record<Locale, string> = {
   es: 'es',
 };
 
-function systemLocale(): Locale {
-  try {
-    const tag = String(navigator.language ?? '').toLowerCase();
-    if (tag.startsWith('zh')) return 'zh';
-    if (tag.startsWith('it')) return 'it';
-    if (tag.startsWith('ru')) return 'ru';
-    if (tag.startsWith('es')) return 'es';
-    return 'en';
-  } catch {
-    return 'en';
-  }
-}
-
 function readInitial(): Locale {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);

@@ -72,11 +72,15 @@ export interface UseExportWorkflowOptions {
   projectName: string;
   base: string;
   tab: ExportTab;
-  codec: 'h264' | 'vp8' | 'prores';
+  codec: 'h264' | 'vp8' | 'hevc' | 'prores';
   resolution: ExportResolution;
   fps: number;
   requestedVideoBitrate?: number;
-  subtitleFormat: 'srt' | 'txt';
+  /** Constant-quality value (18–28); mutually exclusive with requestedVideoBitrate. */
+  videoCrf?: number;
+  /** Audio bitrate (kbps) for MP4/WebM exports. */
+  videoAudioBitrateKbps?: number;
+  subtitleFormat: 'srt' | 'txt' | 'ass';
   subtitleCaptions: CaptionsData | null;
   nleFormat: 'fcp_xml' | 'fcp_xml_resolve';
   includeMg: boolean;

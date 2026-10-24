@@ -285,7 +285,7 @@ export function registerExportRoute(server: ViteDevServer): void {
             finalOutput,
             retimedOutput,
             plan.retimeFps,
-            media.codec as 'h264' | 'vp8',
+            media.codec as 'h264' | 'vp8' | 'h265',
             plan.videoBitrate ?? resolveH264TargetBitrate({ ...outputSize, fps: plan.retimeFps }),
             outputSize,
             requestAbort.controller.signal,

@@ -80,12 +80,24 @@ assert.throws(() => validateVideoParams({ videoBitrate: 12_000_000 }, 'audio'), 
 assert.throws(() => validateVideoParams({ videoBitrate: 999_999 }, 'video'), /between 1000000 and 80000000/);
 assert.throws(() => validateVideoParams({ videoBitrate: 12_500_000.5 }, 'video'), /integer/);
 
+// Constant quality: 18–28 only (Remotion's H.264/H.265 range covers it),
+// mutually exclusive with a bitrate target, and video-only.
+validateVideoParams({ crf: 23, audioBitrate: 192 }, 'video');
+assert.throws(() => validateVideoParams({ crf: 23 }, 'audio'), /video exports only/);
+assert.throws(() => validateVideoParams({ crf: 17 }, 'video'), /between 18 and 28/);
+assert.throws(() => validateVideoParams({ crf: 29 }, 'video'), /between 18 and 28/);
+assert.throws(() => validateVideoParams({ crf: 22.5 }, 'video'), /integer/);
+assert.throws(() => validateVideoParams({ crf: 23, videoBitrate: 12_000_000 }, 'video'), /mutually exclusive/);
+assert.throws(() => validateVideoParams({ audioBitrate: 192 }, 'audio'), /video exports only/);
+assert.throws(() => validateVideoParams({ audioBitrate: 160 }, 'video'), /128, 192, 256, or 320/);
+
 const bitrateInput = { width: 1920, height: 1080, fps: 30, customMbps: 12 } as const;
 assert.equal(resolveVideoBitrateBps({ ...bitrateInput, mode: 'recommended' }), 10_000_000);
 assert.equal(resolveVideoBitrateBps({ ...bitrateInput, mode: 'compact' }), 6_500_000);
 assert.equal(resolveVideoBitrateBps({ ...bitrateInput, mode: 'high' }), 15_000_000);
 assert.equal(resolveVideoBitrateBps({ ...bitrateInput, mode: 'custom' }), 12_000_000);
 assert.equal(requestedVideoBitrateBps({ ...bitrateInput, mode: 'auto' }), undefined);
+assert.equal(requestedVideoBitrateBps({ ...bitrateInput, mode: 'crf' }), undefined, 'CRF exports have no bitrate target');
 
 // FFmpeg's fps filter resamples frames without changing presentation duration.
 for (const fps of [24, 30, 60]) {
@@ -98,5 +110,32 @@ for (const fps of [24, 30, 60]) {
   });
   assert.equal(plan.durationSeconds, 4, `30 to ${fps} fps must retain the 4s duration`);
 }
+
+// HEVC is a server-only MP4 codec: the public id maps to Remotion's h265 and
+// keeps the .mp4 container, while the bitrate stays a real target.
+const hevcPlan = planExport({ state: { ...planState, width: 1920, height: 1080 }, codec: 'hevc', videoBitrate: 12_000_000 });
+assert.equal(hevcPlan.media.codec, 'h265');
+assert.equal(hevcPlan.media.ext, 'mp4');
+assert.equal(hevcPlan.media.mime, 'video/mp4');
+assert.equal(hevcPlan.videoBitrate, 12_000_000);
+assert.equal(hevcPlan.filename.endsWith('.mp4'), true);
+assert.equal(planExport({ state: planState, codec: 'hevc' }).media.codec, 'h265', 'defaults to video format');
+assert.throws(() => planExport({ state: planState, format: 'audio', codec: 'hevc' }), /audio export does not support codec=hevc/);
+assert.throws(() => planExport({ state: planState, codec: 'av1' }), /codec must be h264, vp8, hevc, prores, mp3, or wav/);
+
+// CRF replaces the bitrate target for H.264/H.265; VP8 keeps its bitrate path
+// because libvpx's CRF needs a different range than the 18–28 UI offers.
+const crfPlan = planExport({ state: planState, codec: 'h264', crf: 20 });
+assert.equal(crfPlan.crf, 20);
+assert.equal(crfPlan.videoBitrate, undefined);
+assert.equal(planExport({ state: planState, codec: 'hevc', crf: 22 }).crf, 22);
+assert.equal(planExport({ state: planState, codec: 'vp8', crf: 20 }).crf, undefined);
+assert.equal(planExport({ state: planState, codec: 'prores', crf: 20 }).crf, undefined);
+
+// Audio bitrate rides along on video exports only; ProRes ignores it.
+assert.equal(planExport({ state: planState, codec: 'h264', audioBitrate: 192 }).audioBitrate, 192);
+assert.equal(planExport({ state: planState, codec: 'vp8', audioBitrate: 320 }).audioBitrate, 320);
+assert.equal(planExport({ state: planState, codec: 'prores', audioBitrate: 192 }).audioBitrate, undefined);
+assert.equal(planExport({ state: planState, codec: 'h264' }).audioBitrate, undefined);
 
 console.log('export params verification passed');

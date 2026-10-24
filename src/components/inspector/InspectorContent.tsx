@@ -13,6 +13,8 @@ import { BackgroundFillControl, EffectsControl, FilterControl, SectionLabel } fr
 import type { InspectorPanelProps } from './InspectorTypes';
 import { InspectorSlipControl } from './InspectorSlipControl';
 import { groupInspectorPropSchema } from './inspectorPropSchemaLayout';
+import { KenBurnsControls } from './KenBurnsControls';
+import { readKenBurns, writeKenBurns, type KenBurnsSpec } from '../../editor/kenBurns';
 
 export type InspectorTab = 'basic' | 'video' | 'audio' | 'animation';
 
@@ -215,6 +217,27 @@ function AudioTab({ panel, item, playheadLocal }: InspectorContentProps) {
 function AnimationTab({ panel, item }: InspectorContentProps) {
   const t = useT();
   const visual = panel.selectedItems.every((entry) => entry.kind !== 'audio');
+  const kbSpec = visual && item.kind === 'image' && panel.historyGesture
+    ? readKenBurns(item)
+    : null;
+  const setKenBurns = (spec: KenBurnsSpec | null) => {
+    if (item.kind !== 'image') return;
+    // All three props land in one gesture → a single undo step.
+    const keyframes = writeKenBurns(item, spec);
+    if (!keyframes) return;
+    panel.historyGesture.begin();
+    try {
+      for (const prop of ['x', 'y', 'scale'] as const) {
+        const target = keyframes[prop];
+        // Clear whatever exists first: this removes stale anchor points when
+        // an old, differently-anchored curve exists, then rewrites the canon.
+        panel.onResetItemKeyframes([prop]);
+        for (const kf of target ?? []) panel.onSetItemKeyframe(prop, kf.frame, kf.value, kf.easing);
+      }
+    } finally {
+      panel.historyGesture.end();
+    }
+  };
   return (
     <>
       {(item.kind === 'video' || item.kind === 'audio' || item.kind === 'sequence') && panel.onItemSpeedChange && <><SectionLabel>{t('变速')}</SectionLabel><SpeedControl item={item} mixed={isMixed(panel, (entry) => entry.playbackRate ?? 1)} onChange={panel.onItemSpeedChange} /></>}
@@ -225,6 +248,13 @@ function AnimationTab({ panel, item }: InspectorContentProps) {
         focalPointY: isMixed(panel, (entry) => entry.zoom?.focalPointY ?? 0.5),
       }} onChange={panel.onItemZoomChange} getLocalFrame={() => Math.max(0, Math.min(item.durationInFrames - 1, panel.getPlayhead() - item.startFrame))} fps={panel.fps} onSetKeyframe={panel.onSetReframeKeyframe} onRemoveKeyframe={panel.onRemoveReframeKeyframe} /></>}
       {visual && panel.selectedItems.length === 1 && <><SectionLabel>{t('转场')}</SectionLabel><TransitionControl transition={panel.transition} fps={panel.fps} onAdd={panel.onAddTransition} onSet={panel.onSetTransition} onRemove={panel.onRemoveTransition} audioMode={false} previewStatus={panel.selectedPreviewStatuses?.find((status) => status.kind === 'transition' && status.targetId === panel.transition?.id)} /></>}
+      {item.kind === 'image' && panel.historyGesture && <><SectionLabel>{t('Ken Burns 效果')}</SectionLabel><KenBurnsControls
+        value={kbSpec ? { enabled: true, ...kbSpec } : { enabled: false, startX: 0, startY: 0, startScale: 1, endX: 0, endY: 0, endScale: 1, easing: 'easeInOut' }}
+        onChange={(next) => setKenBurns(next.enabled ? {
+          startX: next.startX, startY: next.startY, startScale: next.startScale,
+          endX: next.endX, endY: next.endY, endScale: next.endScale, easing: next.easing,
+        } : null)}
+      /></>}
       {item.kind === 'audio' && panel.selectedItems.length === 1 && <><SectionLabel>{t('音频转场')}</SectionLabel><TransitionControl transition={panel.transition} fps={panel.fps} onAdd={panel.onAddTransition} onSet={panel.onSetTransition} onRemove={panel.onRemoveTransition} audioMode /></>}
       <SectionLabel onReset={() => panel.onItemFadeChange({ fadeInFrames: 0, fadeOutFrames: 0 })} resetDisabled={(item.fadeInFrames ?? 0) === 0 && (item.fadeOutFrames ?? 0) === 0 && !isMixed(panel, (entry) => [entry.fadeInFrames ?? 0, entry.fadeOutFrames ?? 0])}>{t('淡入淡出')}</SectionLabel>
       <FadeControl item={item} mixed={{ fadeInFrames: isMixed(panel, (entry) => entry.fadeInFrames ?? 0), fadeOutFrames: isMixed(panel, (entry) => entry.fadeOutFrames ?? 0) }} fps={panel.fps} onChange={panel.onItemFadeChange} />

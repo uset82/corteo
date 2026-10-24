@@ -43,7 +43,7 @@ export interface ServerExportContext {
 }
 
 export type ExportFormat = 'video' | 'audio';
-export type ExportCodec = 'h264' | 'vp8' | 'prores' | 'mp3';
+export type ExportCodec = 'h264' | 'vp8' | 'hevc' | 'prores' | 'mp3';
 
 function recoveryRecord(
   context: ServerExportContext,
@@ -108,7 +108,7 @@ function submissionBody(
   codec: ExportCodec,
   operationId: string,
 ) {
-  const { state, project, timelineId, base, resolution, fps, requestedVideoBitrate } = context.options;
+  const { state, project, timelineId, base, resolution, fps, requestedVideoBitrate, videoCrf, videoAudioBitrateKbps } = context.options;
   const body: Record<string, unknown> = {
     state, format, codec, name: base, operationId,
     ...(project && timelineId ? { project, timelineId } : {}),
@@ -117,6 +117,8 @@ function submissionBody(
   body.resolution = resolution;
   if (fps !== state.fps) body.fps = fps;
   if (requestedVideoBitrate !== undefined) body.videoBitrate = requestedVideoBitrate;
+  if (videoCrf !== undefined) body.crf = videoCrf;
+  if (videoAudioBitrateKbps !== undefined) body.audioBitrate = videoAudioBitrateKbps;
   return body;
 }
 

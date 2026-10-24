@@ -24,7 +24,7 @@ import {
   renderTimelineStills,
 } from './export-rendering.ts';
 
-const CLIP_EXT: Record<string, string> = { prores: 'mov', vp8: 'webm', vp9: 'webm', h264: 'mp4' };
+const CLIP_EXT: Record<string, string> = { prores: 'mov', vp8: 'webm', vp9: 'webm', h264: 'mp4', h265: 'mp4', hevc: 'mp4' };
 const CLIP_MIME: Record<string, string> = { mov: 'video/quicktime', webm: 'video/webm', mp4: 'video/mp4' };
 
 export function registerRenderStillRoute(server: ViteDevServer): void {

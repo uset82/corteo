@@ -4,6 +4,7 @@
 // Exception for the error line: it is also written by the "Turn on captions" button outside the menu (there is no text script for this track), so it is passed in by Timeline.
 import { useEffect, useState } from 'react';
 import { CAPTION_STYLES } from './styles';
+import { isKaraokeTemplate } from './KaraokePresets';
 import { buildTranslation } from './translate';
 import type { CaptionsData, CaptionTemplate } from './types';
 import { deleteCaptionPreset, listCaptionPresets, saveCaptionPreset, type CaptionPreset } from './presetStore';
@@ -13,6 +14,7 @@ import { useT } from '../i18n/locale';
 import { captionsForTrack } from './captionTrack';
 import { newManualCaptions } from './manualCaptions';
 import { captionTemplatePatch } from './captionTemplatePatch';
+import { KARAOKE_LAYOUT, karaokeTemplateOf } from './KaraokePresets';
 import { MenuDrillHeader } from '../components/timeline/MenuDrillHeader';
 
 const CAPTION_LANGS = ['English', '日本語', '한국어', 'Español', 'Français', 'Deutsch', 'Português'];
@@ -42,7 +44,12 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
 
   const applyStyle = (template: CaptionTemplate) => {
     const captions = captionsForTrack(state, trackId) ?? newManualCaptions();
-    const patch = { enabled: true, ...captionTemplatePatch(captions, template) };
+    const karaoke = karaokeTemplateOf(template);
+    const patch = {
+      enabled: true,
+      ...captionTemplatePatch(captions, template),
+      ...(karaoke ? { layout: { ...(captions.layout ?? {}), anchor: KARAOKE_LAYOUT[karaoke].anchor } } : {}),
+    };
     if (current) commands.updateCaptions(patch, trackId);
     else commands.setCaptions({ ...captions, ...patch }, trackId);
     onError(null);
@@ -80,10 +87,13 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
   };
   const applyPreset = (preset: CaptionPreset) => {
     const captions = captionsForTrack(state, trackId) ?? newManualCaptions();
+    const template = preset.template ?? captions.template;
+    const karaoke = karaokeTemplateOf(template);
     const patch: Partial<CaptionsData> = {
       enabled: true,
-      ...captionTemplatePatch(captions, preset.template ?? captions.template, preset.styleOverride),
+      ...captionTemplatePatch(captions, template, preset.styleOverride),
       ...(preset.pacing ? { pacing: preset.pacing } : {}),
+      ...(karaoke ? { layout: { ...(captions.layout ?? {}), anchor: KARAOKE_LAYOUT[karaoke].anchor } } : {}),
     };
     if (current) commands.updateCaptions(patch, trackId);
     else commands.setCaptions({ ...captions, ...patch }, trackId);
@@ -126,10 +136,19 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
     <div className="cc-caption-style-menu" style={{ position: 'fixed', left: pos.left, top: pos.top }} onPointerDown={(e) => e.stopPropagation()}>
       <MenuDrillHeader title={t('字幕样式')} onBack={backToParent} />
       <div className="cc-caption-style-list">
-        {CAPTION_STYLES.map((style) => {
+        {CAPTION_STYLES.filter((style) => !isKaraokeTemplate(style.id)).map((style) => {
           return (
             <button type="button" key={style.id} className={current?.template === style.id ? 'active' : ''} onClick={() => applyStyle(style.id)}>
               <span className="cc-caption-style-swatch" style={{ background: style.highlightBackground ?? '#292929', color: style.highlightBackground ? style.highlightColor : style.color, fontFamily: style.fontFamily, WebkitTextStroke: style.strokeWidth ? `${Math.min(1, style.strokeWidth)}px ${style.strokeColor}` : undefined }}>Aa</span>
+              <span>{t(style.labelZh)}</span>
+            </button>
+          );
+        })}
+        <div className="cc-caption-style-title" style={{ marginTop: 4 }}>{t('卡拉OK 跟唱')}</div>
+        {CAPTION_STYLES.filter((style) => isKaraokeTemplate(style.id)).map((style) => {
+          return (
+            <button type="button" key={style.id} className={current?.template === style.id ? 'active' : ''} onClick={() => applyStyle(style.id)}>
+              <span className="cc-caption-style-swatch" style={{ background: style.highlightBackground ?? '#292929', color: style.highlightColor, fontFamily: style.fontFamily, WebkitTextStroke: style.strokeWidth ? `${Math.min(1, style.strokeWidth)}px ${style.strokeColor}` : undefined }}>Aa</span>
               <span>{t(style.labelZh)}</span>
             </button>
           );

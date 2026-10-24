@@ -2,7 +2,7 @@
 // toolbar/track-header glyphs — replaces emoji for a consistent editor chrome.
 
 export type IconName =
-  | 'plus' | 'cursor' | 'trim' | 'rateStretch' | 'blade' | 'scissors' | 'magnet' | 'mic' | 'chevronDown' | 'check' | 'brush' | 'cloud' | 'insert'
+  | 'plus' | 'cursor' | 'trim' | 'rateStretch' | 'blade' | 'scissors' | 'magnet' | 'mic' | 'chevronDown' | 'check' | 'brush' | 'cloud' | 'insert' | 'hand'
   | 'play' | 'pause' | 'text' | 'copy' | 'trash' | 'bookmark' | 'prev' | 'next'
   | 'zoomOut' | 'zoomIn' | 'fit' | 'aspect' | 'captions' | 'fullscreen'
   | 'eye' | 'eyeOff' | 'volume' | 'volumeOff' | 'lock' | 'unlock'
@@ -22,6 +22,7 @@ const P: Record<IconName, string> = {
   // lucide wand-sparkles simplified (creative mode)
   wand: 'M15 4V2 M15 16v-2 M8 9h2 M20 9h2 M17.8 11.8L19 13 M17.8 6.2L19 5 M12.2 6.2L11 5 M3 21l9-9',
   cursor: 'M5 3l6 15 2-6 6-2z',
+  hand: 'M18 11V6a2 2 0 0 0-4 0v5 M14 10V4a2 2 0 0 0-4 0v6 M10 10.5V6a2 2 0 0 0-4 0v8 M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15',
   trim: 'M8 4v16M4 8h4M4 16h4 M16 4v16M16 8h4M16 16h4',
   rateStretch: 'M4 5v14 M20 5v14 M8 12h8 M11 9l-3 3 3 3 M13 9l3 3-3 3',
   blade: 'M4 6h14l2 6-2 6H4l-2-6z M8 10h6v4H8z',

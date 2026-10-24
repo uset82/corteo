@@ -462,7 +462,7 @@ export function useTimelineController({
     t, locale, total, empty, trackIds, indexes, innerRef, scrollRef,
     relinkInputRef, trackInsertInputRef, seekGestureRef,
     hoverPreviewFrame, captionSelectionMovePreview, setCaptionSelectionMovePreview,
-    commitTimelineSelectionMove, zoom, setZoom, px, trackScale, metaOf,
+    commitTimelineSelectionMove, zoom, setZoom, zoomBy, px, trackScale, metaOf,
     playheadRef, playheadLineRef, toolbarTimecodeRef, rulerTimecodeRef,
     paintPlayhead, playing, editMode, placeMode, setPlaceMode, snapping,
     captionsVisible, captionMenu, setCaptionMenu, trackMenu, setTrackMenu, transitionMenu, setTransitionMenu,

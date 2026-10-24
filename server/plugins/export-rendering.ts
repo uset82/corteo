@@ -75,6 +75,8 @@ export async function renderExportPlan(
       frameRange: plan.frameRange,
       scale: plan.scale,
       videoBitrate: plan.videoBitrate,
+      crf: plan.crf,
+      audioBitrate: plan.audioBitrate ? `${plan.audioBitrate}k` : undefined,
       ...await h264RenderOptions(plan.media.codec),
       onProgress: createRenderProgress(update, plan.totalFrames, plan.retimeFps ? 84 : 90),
       signal,
@@ -89,10 +91,11 @@ export async function renderExportPlan(
         filepath,
         retimed,
         plan.retimeFps,
-        plan.media.codec as 'h264' | 'vp8',
+        plan.media.codec as 'h264' | 'vp8' | 'h265',
         plan.videoBitrate ?? resolveH264TargetBitrate({ ...outputSize, fps: plan.retimeFps }),
         outputSize,
         signal,
+        plan.crf,
       ));
       signal?.throwIfAborted();
       await unlink(filepath).catch(() => {});

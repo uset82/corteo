@@ -59,6 +59,8 @@ interface ResourceBrowserProps {
   layout?: 'list' | 'grid';
   /** enable HTML5 drag onto timeline clips (kind in payload) */
   dragKind?: LibraryDragKind;
+  /** case-insensitive filter over id, translated name and badge */
+  query?: string;
 }
 
 type Translate = typeof translate;
@@ -248,7 +250,7 @@ function usePreviewCleanupRegistration(scope: LibraryDragKind | undefined): Regi
 }
 
 export function ResourceBrowser({
-  hint, items, onApply, applicable, disabledNote, thumb, renderThumb, layout = 'list', dragKind,
+  hint, items, onApply, applicable, disabledNote, thumb, renderThumb, layout = 'list', dragKind, query = '',
 }: ResourceBrowserProps) {
   const t = useT();
   const registerCleanup = usePreviewCleanupRegistration(dragKind);
@@ -256,6 +258,10 @@ export function ResourceBrowser({
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const clickable = applicable && !disabledNote;
   const canDrag = !!dragKind && !disabledNote;
+  const needle = query.trim().toLowerCase();
+  const visibleItems = needle
+    ? items.filter((item) => `${item.id} ${item.name} ${t(item.name)} ${item.badge ? t(item.badge) : ''}`.toLowerCase().includes(needle))
+    : items;
   const hintText = disabledNote
     ? t(disabledNote)
     : applicable
@@ -276,12 +282,15 @@ export function ResourceBrowser({
           style={{ color: disabledNote ? theme.accent : theme.textDim }}>
           {hintText}
         </div>
+        {visibleItems.length === 0 && needle && (
+          <div style={{ color: theme.textDim, fontSize: 11, padding: '6px 4px' }}>{t('没有匹配的结果')}</div>
+        )}
         {layout === 'grid' ? (
-          <ResourceGrid items={items} activeId={activeId} draggedId={draggedId}
+          <ResourceGrid items={visibleItems} activeId={activeId} draggedId={draggedId}
             clickable={clickable} canDrag={canDrag} renderThumb={renderThumb} thumb={thumb}
             onApply={onApply} onDragStart={onDragStart} onDragChange={setDraggedId}
             onPointerChange={setPointerId} onFocusChange={setFocusId} t={t} />
-        ) : items.map((item) => (
+        ) : visibleItems.map((item) => (
           <ResourceListItem key={item.id} item={item} clickable={clickable} canDrag={canDrag}
             thumb={thumb} onApply={onApply} onDragStart={onDragStart} onDragChange={setDraggedId} t={t} />
         ))}

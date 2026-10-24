@@ -213,7 +213,7 @@ function recoveredContext(
     projectId: record.projectId,
     base: record.base,
     tab: record.format,
-    codec: record.codec === 'vp8' || record.codec === 'prores' ? record.codec : 'h264',
+    codec: record.codec === 'vp8' || record.codec === 'prores' || record.codec === 'hevc' ? record.codec : 'h264',
     resolution: '1080p',
     fps: record.fps,
     subtitleFormat: 'srt',

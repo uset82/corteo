@@ -1,4 +1,4 @@
-export type VideoBitrateMode = 'auto' | 'compact' | 'recommended' | 'high' | 'custom';
+export type VideoBitrateMode = 'auto' | 'crf' | 'compact' | 'recommended' | 'high' | 'custom';
 
 export const MIN_VIDEO_BITRATE_MBPS = 1;
 export const MAX_VIDEO_BITRATE_MBPS = 80;
@@ -39,5 +39,5 @@ export function resolveVideoBitrateBps(input: VideoBitrateInput): number {
 }
 
 export function requestedVideoBitrateBps(input: VideoBitrateInput): number | undefined {
-  return input.mode === 'auto' ? undefined : resolveVideoBitrateBps(input);
+  return input.mode === 'auto' || input.mode === 'crf' ? undefined : resolveVideoBitrateBps(input);
 }

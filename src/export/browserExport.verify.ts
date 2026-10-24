@@ -119,6 +119,21 @@ const retimed = await renderTimelineInBrowser({
 assert.equal(retimed.status, 'unsupported');
 assert.equal(loaderCalls, 0, 'frame-rate mismatch must not load the browser renderer');
 
+// HEVC has no WebCodecs path here: it must be rejected before any renderer loads.
+const hevc = await renderTimelineInBrowser({
+  state,
+  codec: 'hevc',
+  resolution: '1080p',
+  fps: 30,
+  loadRenderer: async () => {
+    loaderCalls += 1;
+    return {} as never;
+  },
+});
+assert.equal(hevc.status, 'unsupported');
+assert.equal(hevc.status === 'unsupported' ? hevc.reason : '', 'H.265 仅支持本机渲染');
+assert.equal(loaderCalls, 0, 'HEVC must not load the browser renderer');
+
 // Real-render verification in this branch proved web-renderer's WebCodecs path
 // reliably captures WebGL clip effects and GLSL transitions (1080p × 360f,
 // zero black frames, distinct per-frame content). So a timeline carrying them is

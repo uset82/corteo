@@ -5,6 +5,7 @@ import type { EditMode } from '../components/timeline/timelineUtil';
 /** Methods Timeline exposes so Editor can bind the global shortcut dispatcher. */
 export interface TimelineShortcutApi {
   getPlayhead: () => number;
+  getTotal: () => number;
   seekTo: (frame: number) => void;
   playPause: () => void;
   isPlaying: () => boolean;

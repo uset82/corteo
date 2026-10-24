@@ -1,3 +1,4 @@
+import { captionsToAss } from '../captions/ass';
 import { captionsToSrt, captionsToTxt } from '../captions/exportCaptions';
 import type { TimelineItem } from '../editor/types';
 import { renderClipMovBlob } from '../media/clipExport';
@@ -88,11 +89,13 @@ async function exportMgBatch(context: ArtifactExportContext, signal?: AbortSigna
 
 async function exportSubtitles(context: ArtifactExportContext, signal?: AbortSignal): Promise<void> {
   signal?.throwIfAborted();
-  const { subtitleCaptions, subtitleFormat, state, base } = context.options;
+  const { subtitleCaptions, subtitleFormat, state, base, projectName } = context.options;
   if (!subtitleCaptions) throw new Error(context.t('请先开启字幕'));
   const text = subtitleFormat === 'srt'
     ? captionsToSrt(subtitleCaptions, state.items, state.fps)
-    : captionsToTxt(subtitleCaptions, state.items, state.fps);
+    : subtitleFormat === 'ass'
+      ? captionsToAss(subtitleCaptions, state.items, state.fps, { title: projectName })
+      : captionsToTxt(subtitleCaptions, state.items, state.fps);
   signal?.throwIfAborted();
   if (!text) throw new Error(context.t('当前字幕轨没有可导出的内容'));
   const filename = `${base}.${subtitleFormat}`;

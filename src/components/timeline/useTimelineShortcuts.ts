@@ -90,6 +90,7 @@ export function useTimelineShortcuts(deps: ShortcutDeps): { zoneIn: number | nul
     if (!shortcutApiRef) return;
     const api: TimelineShortcutApi = {
       getPlayhead: () => playheadRef.current,
+      getTotal: () => total,
       seekTo: (frame) => seekFrame(frame),
       playPause: () => {
         stopShuttle();

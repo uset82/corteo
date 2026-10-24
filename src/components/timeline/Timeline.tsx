@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { theme, themeAlpha } from '../../theme';
 import {
   TRANSITION_LABELS, captionsOnTrack, selectedIdsOf, trackAlias, trackKind,
@@ -36,7 +37,7 @@ export function Timeline(props: TimelineProps) {
     t, locale, total, empty, trackIds, indexes, innerRef, scrollRef,
     relinkInputRef, trackInsertInputRef, seekGestureRef,
     hoverPreviewFrame, captionSelectionMovePreview, setCaptionSelectionMovePreview,
-    commitTimelineSelectionMove, zoom, setZoom, px, metaOf,
+    commitTimelineSelectionMove, zoom, setZoom, zoomBy, px, metaOf,
     playheadRef, playheadLineRef, toolbarTimecodeRef, rulerTimecodeRef,
     playing, editMode, placeMode, setPlaceMode, snapping,
     captionsVisible, captionMenu, setCaptionMenu, trackMenu, setTrackMenu, transitionMenu, setTransitionMenu,
@@ -54,6 +55,76 @@ export function Timeline(props: TimelineProps) {
     clearHoverPreview, updateHoverPreview, startSeekGesture, updateSeekGesture, finishSeekGesture,
     markers, zoneIn, zoneOut, editing, editMarker, setEditMarker, pinnedItemIds,
   } = useTimelineController(props);
+
+  // Premiere-style tool modes that act on the timeline surface itself:
+  // hand = drag to pan, zoom = click to zoom (Alt = zoom out), text = click a
+  // video track to drop a title at that frame. Capture listeners run before the
+  // React pointer machine, so clips/playhead never see the gesture.
+  const handPanRef = useRef<{ pointerId: number; x: number; y: number; left: number; top: number } | null>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || (editMode !== 'hand' && editMode !== 'zoom' && editMode !== 'text')) return;
+    el.style.cursor = editMode === 'hand' ? 'grab' : editMode === 'zoom' ? 'zoom-in' : 'text';
+    const inTrackArea = (event: PointerEvent) => {
+      const rect = innerRef.current?.getBoundingClientRect();
+      if (!rect) return false;
+      return event.clientY - rect.top >= RULER_H && event.clientX - rect.left >= HEADER_W;
+    };
+    const onDown = (event: PointerEvent) => {
+      if (event.button !== 0) return;
+      if (editMode === 'hand') {
+        handPanRef.current = {
+          pointerId: event.pointerId, x: event.clientX, y: event.clientY,
+          left: el.scrollLeft, top: el.scrollTop,
+        };
+        el.setPointerCapture?.(event.pointerId);
+        el.style.cursor = 'grabbing';
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      if (!inTrackArea(event)) return;
+      if (editMode === 'zoom') {
+        seekTo(event.clientX);
+        zoomBy(event.altKey ? 1 / 1.4 : 1.4);
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      const track = trackFromClientY(event.clientY);
+      if (!track || trackKind(state, track) !== 'video' || state.tracks?.[track]?.locked) return;
+      const id = commands.addTextClip({ track, startFrame: frameFromClientX(event.clientX) });
+      commands.selectItem(id);
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    const onMove = (event: PointerEvent) => {
+      const pan = handPanRef.current;
+      if (!pan || pan.pointerId !== event.pointerId) return;
+      el.scrollLeft = pan.left - (event.clientX - pan.x);
+      el.scrollTop = pan.top - (event.clientY - pan.y);
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    const onUp = (event: PointerEvent) => {
+      if (!handPanRef.current || handPanRef.current.pointerId !== event.pointerId) return;
+      handPanRef.current = null;
+      el.releasePointerCapture?.(event.pointerId);
+      el.style.cursor = editMode === 'hand' ? 'grab' : el.style.cursor;
+    };
+    el.addEventListener('pointerdown', onDown, true);
+    el.addEventListener('pointermove', onMove, true);
+    el.addEventListener('pointerup', onUp, true);
+    el.addEventListener('pointercancel', onUp, true);
+    return () => {
+      el.removeEventListener('pointerdown', onDown, true);
+      el.removeEventListener('pointermove', onMove, true);
+      el.removeEventListener('pointerup', onUp, true);
+      el.removeEventListener('pointercancel', onUp, true);
+      el.style.cursor = '';
+      handPanRef.current = null;
+    };
+  }, [editMode, zoomBy, seekTo, frameFromClientX, trackFromClientY, commands, state, scrollRef, innerRef]);
 
   return (
     <section
@@ -86,7 +157,7 @@ export function Timeline(props: TimelineProps) {
         snapping={snapping}
         recorder={recorder} canRecord={!!onRecordVoiceover}
         playing={playing}
-        timecodeRef={toolbarTimecodeRef} playheadFrame={playheadRef.current} total={total}
+        timecodeRef={toolbarTimecodeRef} getPlayheadFrame={() => playheadRef.current} playheadFrame={playheadRef.current} total={total}
         captionsVisible={captionsVisible}
         zoom={zoom} setZoom={setZoom}
         frameRateLock={props.frameRateLock ?? null}

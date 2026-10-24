@@ -22,7 +22,7 @@ export type ExportRequest = {
   timelineId?: unknown;
   operationId?: unknown;
   format?: 'video' | 'audio';
-  codec?: 'h264' | 'vp8' | 'prores' | 'mp3' | 'wav';
+  codec?: 'h264' | 'vp8' | 'hevc' | 'prores' | 'mp3' | 'wav';
   name?: string;
   startFrame?: number;
   endFrameExclusive?: number;
@@ -31,6 +31,8 @@ export type ExportRequest = {
   resolution?: ExportResolution;
   fps?: number;
   videoBitrate?: number;
+  crf?: number;
+  audioBitrate?: number;
 };
 
 export type ExportTimeline = {
@@ -41,6 +43,8 @@ export type ExportTimeline = {
 export const EXPORT_MEDIA = {
   h264: { codec: 'h264', ext: 'mp4', mime: 'video/mp4' },
   vp8: { codec: 'vp8', ext: 'webm', mime: 'video/webm' },
+  // The public codec id is 'hevc'; Remotion/ffmpeg expect 'h265'.
+  hevc: { codec: 'h265', ext: 'mp4', mime: 'video/mp4' },
   /** Mezzanine master: ProRes 422 HQ (Remotion proResProfile hq). Server-only. */
   prores: { codec: 'prores', ext: 'mov', mime: 'video/quicktime' },
   mp3: { codec: 'mp3', ext: 'mp3', mime: 'audio/mpeg' },
@@ -59,12 +63,19 @@ export interface ExportPlan {
   scale: number;
   retimeFps: number | undefined;
   videoBitrate: number | undefined;
+  crf: number | undefined;
+  audioBitrate: number | undefined;
 }
+
+/** AAC bitrate presets the encoder accepts. */
+export const EXPORT_AUDIO_BITRATES = [128, 192, 256, 320] as const;
+export const MIN_EXPORT_CRF = 18;
+export const MAX_EXPORT_CRF = 28;
 
 class ExportRequestError extends Error {}
 
 export function validateVideoParams(
-  body: { resolution?: unknown; fps?: unknown; videoBitrate?: unknown } | null,
+  body: { resolution?: unknown; fps?: unknown; videoBitrate?: unknown; crf?: unknown; audioBitrate?: unknown } | null,
   format: 'video' | 'audio',
 ): void {
   if (body?.resolution !== undefined) {
@@ -85,6 +96,23 @@ export function validateVideoParams(
       || (body.videoBitrate as number) < MIN_VIDEO_BITRATE_BPS
       || (body.videoBitrate as number) > MAX_VIDEO_BITRATE_BPS) {
       throw new ExportRequestError('videoBitrate must be an integer between 1000000 and 80000000 bps');
+    }
+  }
+  if (body?.crf !== undefined) {
+    if (format !== 'video') throw new ExportRequestError('crf applies to video exports only');
+    if (!Number.isInteger(body.crf)
+      || (body.crf as number) < MIN_EXPORT_CRF
+      || (body.crf as number) > MAX_EXPORT_CRF) {
+      throw new ExportRequestError('crf must be an integer between 18 and 28');
+    }
+    if (body.videoBitrate !== undefined) {
+      throw new ExportRequestError('crf and videoBitrate are mutually exclusive');
+    }
+  }
+  if (body?.audioBitrate !== undefined) {
+    if (format !== 'video') throw new ExportRequestError('audioBitrate applies to video exports only');
+    if (!(EXPORT_AUDIO_BITRATES as readonly number[]).includes(body.audioBitrate as number)) {
+      throw new ExportRequestError('audioBitrate must be 128, 192, 256, or 320 kbps');
     }
   }
 }
@@ -154,7 +182,7 @@ export function planExport(body: ExportRequest | null): ExportPlan {
     throw new ExportRequestError('format must be video or audio');
   }
   if (body?.codec !== undefined && !Object.hasOwn(EXPORT_MEDIA, body.codec)) {
-    throw new ExportRequestError('codec must be h264, vp8, prores, mp3, or wav');
+    throw new ExportRequestError('codec must be h264, vp8, hevc, prores, mp3, or wav');
   }
   if (body?.name !== undefined && typeof body.name !== 'string') throw new ExportRequestError('name must be a string');
   if ([body?.startSeconds, body?.endSeconds].some((value) => value !== undefined && (typeof value !== 'number' || !Number.isFinite(value)))) {
@@ -211,5 +239,7 @@ export function planExport(body: ExportRequest | null): ExportPlan {
     scale: size.scale,
     retimeFps,
     videoBitrate: format === 'video' && codec !== 'prores' ? body?.videoBitrate : undefined,
+    crf: format === 'video' && codec !== 'prores' && codec !== 'vp8' ? body?.crf : undefined,
+    audioBitrate: format === 'video' && codec !== 'prores' ? body?.audioBitrate : undefined,
   };
 }

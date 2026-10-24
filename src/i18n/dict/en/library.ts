@@ -25,6 +25,8 @@ export default {
   '悬停预览 · 点击应用到选中片段（默认 1.5×，属性可细调）': 'Hover to preview · Click to apply to the selected clip (1.5× by default, fine-tune in properties)',
   '悬停预览 · 点击应用到选中视频/图片（强度可在属性细调）': 'Hover to preview · Click to apply to the selected video/image (adjust intensity in properties)',
   '「{main} · {sub}」内容待接入。': '"{main} · {sub}" is not wired up yet.',
+  '搜索效果与转场': 'Search effects and transitions',
+  '没有匹配的结果': 'No matching results',
   '人声隔离只能用在视频 / 音频片段上': 'Voice isolation only works on video / audio clips',
   '人声隔离失败': 'Voice isolation failed',
   '人声隔离处理中…': 'Isolating voice…',
