@@ -24,12 +24,15 @@ import { resolveDoubaoSpeaker } from './plugins/voice-providers.ts';
 import { xaiOauthAccessToken } from './xai-oauth-session.ts';
 import {
   classifyStatus,
+  classifyStatusTemplate,
   doubaoPostCheck,
   minimaxPostCheck,
   networkMessage,
+  networkMessageTemplate,
   parseModelCatalog,
   parseTextModelCatalog,
   sanitizeProbeText,
+  type ProbeMessageTemplate,
   type ProbeResult,
 } from './key-probe-result.ts';
 import { PROBE_TIMEOUT_MS, runDataDirProbe, runProxyProbe } from './key-probe-local.ts';
@@ -451,8 +454,18 @@ export async function runProbe(page: string, overrides: Record<string, unknown>)
   const probe = PROBES[page];
   if (!probe) return { ok: false, message: '该厂商暂不支持连接测试' };
   const get = makeGetter(overrides);
+  // DeepSeek Harness is the first page whose Spanish copy matters from day one
+  // (free-lane users are not expected to read Chinese). Its results carry the
+  // Chinese template that settingsVendorPane.tsx translates with t().
+  const translated = page === 'llm/dsh';
   const ready = probe.needs.some((group) => group.every((n) => get(n).length > 0));
-  if (!ready) return { ok: false, message: '尚未填写 API Key · 填好后再点测试' };
+  if (!ready) {
+    return {
+      ok: false,
+      message: '尚未填写 API Key · 填好后再点测试',
+      ...(translated ? { messageKey: '尚未填写 API Key · 填好后再点测试' } : {}),
+    };
+  }
   const started = Date.now();
   try {
     const response = await probe.run(get);
@@ -466,16 +479,36 @@ export async function runProbe(page: string, overrides: Record<string, unknown>)
         ? models.length > 0 ? ` · 已读取 ${models.length} 个模型` : ' · 接口未返回模型列表'
         : '';
       const okText = probe.okText?.(bodyText) ?? '连接成功 · 鉴权通过';
+      const template: Partial<ProbeMessageTemplate> = translated && probe.okText === undefined
+        ? models
+          ? models.length > 0
+            ? {
+                messageKey: '连接成功 · 鉴权通过 · 已读取 {n} 个模型 · {ms}ms',
+                messageParams: { n: models.length, ms: latencyMs },
+              }
+            : { messageKey: '连接成功 · 鉴权通过 · 接口未返回模型列表 · {ms}ms', messageParams: { ms: latencyMs } }
+          : { messageKey: '连接成功 · 鉴权通过 · {ms}ms', messageParams: { ms: latencyMs } }
+        : {};
       return {
         ok: true,
         status: response.status,
         latencyMs,
         message: `${okText}${modelText} · ${latencyMs}ms`,
+        ...template,
         ...(models ? { models } : {}),
       };
     }
-    return { ...classifyStatus(response.status, bodyText), latencyMs };
+    return {
+      ...classifyStatus(response.status, bodyText),
+      latencyMs,
+      ...(translated ? classifyStatusTemplate(response.status, bodyText) : {}),
+    };
   } catch (error) {
-    return { ok: false, latencyMs: Date.now() - started, message: networkMessage(error) };
+    return {
+      ok: false,
+      latencyMs: Date.now() - started,
+      message: networkMessage(error),
+      ...(translated ? networkMessageTemplate(error) : {}),
+    };
   }
 }

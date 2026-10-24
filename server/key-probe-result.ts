@@ -4,6 +4,15 @@ export interface ProbeResult {
   status?: number;
   latencyMs?: number;
   models?: string[];
+  /** Chinese template for t(); `message` stays the concrete, already-formatted text. */
+  messageKey?: string;
+  messageParams?: Record<string, string | number>;
+}
+
+/** Same conclusion as a probe message, expressed as a translatable template. */
+export interface ProbeMessageTemplate {
+  messageKey: string;
+  messageParams?: Record<string, string | number>;
 }
 
 export function parseModelCatalog(bodyText: string): string[] {
@@ -80,13 +89,41 @@ export function classifyStatus(status: number, bodyText: string): ProbeResult {
   return { ok: false, status, message: `HTTP ${status}${detail ? ` · ${detail}` : ''}` };
 }
 
-/** Distinguish transport failures from rejected credentials. */
-export function networkMessage(error: unknown): string {
-  const raw = error instanceof Error
+/** The same conclusions as classifyStatus(), keyed for t() at the settings panel. */
+export function classifyStatusTemplate(status: number, bodyText: string): ProbeMessageTemplate {
+  if (status === 401 || status === 403) {
+    return { messageKey: '鉴权失败（HTTP {status}）· Key 无效、过期或无此接口权限', messageParams: { status } };
+  }
+  if (status === 404) return { messageKey: '探测端点 404 · Base URL 可能填错（或该服务不认此探测路径）' };
+  if (status === 429) return { messageKey: '鉴权通过（HTTP 429 限流，说明 Key 有效）' };
+  const detail = sanitizeProbeText(bodyText);
+  return detail
+    ? { messageKey: 'HTTP {status} · {detail}', messageParams: { status, detail } }
+    : { messageKey: 'HTTP {status}', messageParams: { status } };
+}
+
+function errorText(error: unknown): string {
+  return error instanceof Error
     ? `${error.name}: ${error.message}${error.cause instanceof Error ? `（${error.cause.message}）` : ''}`
     : String(error);
+}
+
+/** Distinguish transport failures from rejected credentials. */
+export function networkMessage(error: unknown): string {
+  const raw = errorText(error);
   if (/timeout|abort/i.test(raw)) {
     return '连接超时 · 服务不可达或网络受限（可能需代理），不代表 Key 错误';
   }
   return `网络不可达 · ${sanitizeProbeText(raw)} · 本机连不上该服务（可能需代理），不代表 Key 错误`;
+}
+
+export function networkMessageTemplate(error: unknown): ProbeMessageTemplate {
+  const raw = errorText(error);
+  if (/timeout|abort/i.test(raw)) {
+    return { messageKey: '连接超时 · 服务不可达或网络受限（可能需代理），不代表 Key 错误' };
+  }
+  return {
+    messageKey: '网络不可达 · {detail} · 本机连不上该服务（可能需代理），不代表 Key 错误',
+    messageParams: { detail: sanitizeProbeText(raw) },
+  };
 }

@@ -60,4 +60,25 @@ assert.equal(resolveModelCapabilities(identity('cheaperinference', 'unknown-cust
 assert.equal(resolveModelCapabilities(cheaperDefault, [{ ...cheaperDefault, supportsTools: false }]).supportsTools.value,
   false, 'gateway-specific user overrides still win');
 
+// DeepSeek Harness free lanes are absent from the catalog: estimate 128k
+// context / 16k output, and keep tools on so the agent's tool catalog is not
+// emptied. A settings override still wins on every field.
+{
+  const dsh = identity('dsh', 'combo:recommended-free');
+  const caps = resolveModelCapabilities(dsh);
+  assert.equal(caps.contextWindowTokens.value, 131_072, 'dsh fallback context is 128k');
+  assert.equal(caps.contextWindowTokens.source, 'provider-fallback');
+  assert.equal(caps.maxOutputTokens.value, 16_384, 'dsh fallback output is 16k');
+  assert.equal(caps.maxOutputTokens.source, 'provider-fallback');
+  assert.equal(caps.supportsTools.value, true, 'free lanes must expose editing tools');
+  assert.equal(caps.supportsTools.source, 'provider-fallback');
+  const overridden = resolveModelCapabilities(dsh, [{
+    ...dsh, contextWindowTokens: 64_000, maxOutputTokens: 8_000, supportsTools: false,
+  }]);
+  assert.equal(overridden.contextWindowTokens.value, 64_000);
+  assert.equal(overridden.contextWindowTokens.source, 'settings-override');
+  assert.equal(overridden.maxOutputTokens.value, 8_000);
+  assert.equal(overridden.supportsTools.value, false, 'user overrides outrank the dsh fallback');
+}
+
 console.log('model-capabilities.verify: snapshot prefix matching passed');

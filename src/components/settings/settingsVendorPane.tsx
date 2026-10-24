@@ -189,7 +189,14 @@ function LocalModelsPane({ page, fields, ctx }: {
 // ── Test connection ───────────────────────────────────────────────────────
 
 interface ProbeRequestResult { body: ProbeResponse; staged: boolean; }
-interface ProbeResponse { ok: boolean; message: string; latencyMs?: number; models?: string[]; }
+interface ProbeResponse {
+  ok: boolean;
+  message: string;
+  latencyMs?: number;
+  models?: string[];
+  messageKey?: string;
+  messageParams?: Record<string, string | number>;
+}
 interface ProbeShown { page: string; ok: boolean; message: string; }
 
 /** Unsaved temporary values in the fields on this page → detect overrides; the empty string represents the default value for this test. */
@@ -231,7 +238,11 @@ export function TestConnectionRow({ page, ctx }: { page: SettingsVendorPage; ctx
     try {
       const { body, staged } = await requestProbe(page, ctx, t);
       const suffix = staged && body.ok ? t('（按当前输入测试，记得保存）') : '';
-      setResult({ page: page.key, ok: body.ok, message: t(body.message) + suffix });
+      setResult({
+        page: page.key,
+        ok: body.ok,
+        message: t(body.messageKey ?? body.message, body.messageParams) + suffix,
+      });
       const modelField = page.fields.find((field) => field.discoverableModel);
       if (body.ok && modelField && Array.isArray(body.models)) {
         ctx.onModelsDiscovered(modelField.name, body.models);

@@ -165,6 +165,16 @@ export const LLM_PROVIDER_PRESETS = [
     baseUrl: 'http://localhost:1234/v1',
     defaultModel: 'qwen2.5-coder-7b-instruct',
   },
+  {
+    // Local forward port in front of the DeepSeek Harness free lanes. It
+    // demands the forward key, so it stays a cloud-style provider: a wrong key
+    // surfaces as 401 instead of being treated as an unauthenticated local model.
+    id: 'dsh',
+    label: 'DeepSeek Harness',
+    protocol: 'openai-compatible',
+    baseUrl: 'http://127.0.0.1:18899/v1',
+    defaultModel: 'combo:recommended-free',
+  },
 ] as const satisfies readonly LlmProviderPreset[];
 
 export type LlmProvider = (typeof LLM_PROVIDER_PRESETS)[number]['id'];

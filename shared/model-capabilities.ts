@@ -68,6 +68,12 @@ const PROVIDERS = new Set<string>(LLM_PROVIDER_PRESETS.map((preset) => preset.id
 // override them in the capability editor.
 const UNKNOWN_CONTEXT_TOKENS = 409_600;
 const UNKNOWN_OUTPUT_TOKENS = 65_536;
+// DeepSeek Harness free lanes are not in the catalog and are far smaller than
+// the statistical fallback above; overestimating would delay compaction until
+// the lane overflows. Every lane is a chat model, so tools default to on —
+// without them the agent's tool catalog is empty and nothing can be edited.
+const DSH_CONTEXT_TOKENS = 131_072;
+const DSH_OUTPUT_TOKENS = 16_384;
 // Claude Code CLI caps output below the raw API ceiling the catalog records:
 // a real `claude -p --model sonnet` turn reports maxOutputTokens 64000 in its
 // result event, where the catalog lists 128000 for claude-sonnet-5/opus-5.
@@ -280,13 +286,17 @@ export function resolveModelCapabilities(
   const override = userOverride || builtinOverride
     ? { ...builtinOverride, ...userOverride } as ModelCapabilityOverride
     : undefined;
+  const isDsh = identity.provider === 'dsh';
   const context = override?.contextWindowTokens !== undefined
     ? exact(override.contextWindowTokens, 'settings-override')
     : model?.contextWindowTokens
       ? exact(model.contextWindowTokens, 'catalog')
-      : fallback(UNKNOWN_CONTEXT_TOKENS);
+      : fallback(isDsh ? DSH_CONTEXT_TOKENS : UNKNOWN_CONTEXT_TOKENS);
   const catalogOutput = positiveInteger(model?.maxOutputTokens);
-  const outputValue = Math.min(override?.maxOutputTokens ?? catalogOutput ?? UNKNOWN_OUTPUT_TOKENS, context.value);
+  const outputValue = Math.min(
+    override?.maxOutputTokens ?? catalogOutput ?? (isDsh ? DSH_OUTPUT_TOKENS : UNKNOWN_OUTPUT_TOKENS),
+    context.value,
+  );
   const output = override?.maxOutputTokens !== undefined
     ? exact(outputValue, 'settings-override')
     : catalogOutput
@@ -303,7 +313,7 @@ export function resolveModelCapabilities(
       ? exact(inputValue, 'catalog')
       : fallback(inputValue);
   const tools = override?.supportsTools !== undefined ? exact(override.supportsTools, 'settings-override')
-    : typeof model?.supportsTools === 'boolean' ? exact(model.supportsTools, 'catalog') : fallback(false);
+    : typeof model?.supportsTools === 'boolean' ? exact(model.supportsTools, 'catalog') : fallback(isDsh);
   const images = override?.supportsImages !== undefined ? exact(override.supportsImages, 'settings-override')
     : model ? exact(model.input.includes('image'), 'catalog') : fallback(false);
   const reasoning = override?.supportsReasoning !== undefined ? exact(override.supportsReasoning, 'settings-override')

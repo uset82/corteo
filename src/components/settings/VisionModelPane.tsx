@@ -49,6 +49,7 @@ const PROVIDER_LABELS: Record<LlmProvider, string> = {
   cheaperinference: 'Cheaper Inference',
   ollama: 'Ollama',
   lmstudio: 'LM Studio',
+  dsh: 'DeepSeek Harness',
 };
 
 export function VisionModelPane(): React.JSX.Element {
