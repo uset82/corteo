@@ -412,7 +412,7 @@ export async function duplicateProject(id: string, name?: string): Promise<Proje
   if (!doc) return null;
   // Allow duplicating soft-deleted sources too (copy is active).
   const src = (await readIndex()).find((m) => m.id === id);
-  const copyName = (name?.trim() || `Copia de ${src?.name ?? '工程'}`);
+  const copyName = (name?.trim() || `Copia de ${src?.name ?? 'proyecto'}`);
   return createProject(copyName, doc, src?.description ? { description: src.description } : undefined);
 }
 
