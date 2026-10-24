@@ -126,7 +126,7 @@ The shipped layout matches this: pinned media library and agent panel, center So
 - [ ] Audio effects (EQ, compressor) — *not implemented as per-clip realtime inserts; the server has an FFmpeg voice-cleanup plugin (`highpass/lowpass/afftdn/acompressor`) used by isolate-voice. Documented as a limitation.*
 
 ### 2.4 Effects & Transitions
-- [x] Effects browser (searchable) — *`LibraryPanel`/`ResourceBrowser` search over effects, scale presets and LUTs*
+- [x] Effects browser (searchable) — *`LibraryPanel`/`ResourceBrowser` search over effects, scale presets and LUTs; the timeline more-menu also opens a quick `Biblioteca de efectos` dialog for the current selection*
 - [x] Transition browser — *same library, transition category with animated thumbnails*
 - [x] Drag-to-apply to clips — *`dragKind="transition" | "fx" | "zoom" | "lut"` payloads handled by timeline drops*
 - [x] Effect controls in inspector — *effect stack with add/remove per clip*

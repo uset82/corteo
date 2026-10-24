@@ -151,3 +151,46 @@
   .cc-scene-row { grid-template-columns: 1fr; }
   .cc-scene-outside { grid-column: 1; }
 }
+/* Effects browser (Phase 2.4): searchable catalog reusing the scene dialog shell. */
+.cc-scene-icon-button {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0.5px solid var(--cc-border);
+  border-radius: 4px;
+  color: var(--cc-text-muted);
+  cursor: pointer;
+}
+.cc-scene-icon-button:hover { color: var(--cc-text); border-color: var(--cc-text-muted); }
+.cc-scene-search-row { padding: 10px 18px 0; }
+.cc-scene-search {
+  width: 100%;
+  padding: 7px 10px;
+  color: var(--cc-text);
+  background: var(--cc-panel-alt);
+  border: 0.5px solid var(--cc-border);
+  border-radius: 4px;
+  font-size: 0.71875rem;
+}
+.cc-scene-search:focus { outline: none; border-color: var(--cc-accent); }
+.cc-scene-row-button {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.cc-scene-row-button:hover:not(:disabled) { border-color: var(--cc-accent); }
+.cc-scene-row-button:disabled { opacity: 0.5; cursor: default; }
+.cc-scene-row-name { display: flex; align-items: center; gap: 6px; color: var(--cc-text-strong); font-weight: 600; }
+.cc-scene-row-desc { color: var(--cc-text-muted); }
+.cc-scene-badge {
+  padding: 0 4px;
+  color: var(--cc-text-dim);
+  border: 0.5px solid var(--cc-border);
+  border-radius: 3px;
+  font-size: 0.59375rem;
+  font-weight: 700;
+}

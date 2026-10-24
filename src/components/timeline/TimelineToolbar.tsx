@@ -16,6 +16,7 @@ import { SceneDetectionDialog } from '../../scene-detection/SceneDetectionDialog
 import { MotionTrackingDialog } from '../../tracking/MotionTrackingDialog';
 import { TrackCreateControl } from './TrackCreateControl';
 import { DuplicateDetectorDialog } from '../DuplicateDetector';
+import { EffectsBrowserDialog } from '../EffectsBrowserDialog';
 import { MarkerListDialog } from './MarkerListDialog';
 import { TimelineFrameRateControl } from './TimelineFrameRateControl';
 
@@ -60,6 +61,7 @@ function TimelineMoreControl(props: {
   onScene: (restoreFocus: () => void) => void;
   onTracking: (restoreFocus: () => void) => void;
   onDuplicates: (restoreFocus: () => void) => void;
+  onEffects: (restoreFocus: () => void) => void;
   onMarkers: (restoreFocus: () => void) => void;
   onPlaceMode: (mode: 'insert' | 'overwrite') => void;
 }) {
@@ -97,6 +99,9 @@ function TimelineMoreControl(props: {
         </button>
         <button onClick={(event) => runMenuAction(event, () => props.onMarkers(restoreFocus), false)}>
           <Icon name="bookmark" size={15} />{t('标记列表')}
+        </button>
+        <button onClick={(event) => runMenuAction(event, () => props.onEffects(restoreFocus), false)}>
+          <Icon name="sparkles" size={15} />{t('Biblioteca de efectos')}
         </button>
         <div className="cc-track-create-separator" />
         <button className={props.placeMode === 'insert' ? 'selected' : ''} onClick={(event) => runMenuAction(event, () => props.onPlaceMode('insert'))}>
@@ -156,6 +161,7 @@ export function TimelineToolbar({
   const [sceneDetectionOpen, setSceneDetectionOpen] = useState(false);
   const [motionTrackingOpen, setMotionTrackingOpen] = useState(false);
   const [duplicatesOpen, setDuplicatesOpen] = useState(false);
+  const [effectsOpen, setEffectsOpen] = useState(false);
   const [markersOpen, setMarkersOpen] = useState(false);
   const modalFocus = useFocusReturn();
   const captionTracks = captionTrackEntries(state).filter((entry) => entry.captions);
@@ -203,6 +209,7 @@ export function TimelineToolbar({
           onScene={(restoreFocus) => { modalFocus.remember(restoreFocus); setSceneDetectionOpen(true); }}
           onTracking={(restoreFocus) => { modalFocus.remember(restoreFocus); setMotionTrackingOpen(true); }}
           onDuplicates={(restoreFocus) => { modalFocus.remember(restoreFocus); setDuplicatesOpen(true); }}
+          onEffects={(restoreFocus) => { modalFocus.remember(restoreFocus); setEffectsOpen(true); }}
           onMarkers={(restoreFocus) => { modalFocus.remember(restoreFocus); setMarkersOpen(true); }}
           onPlaceMode={setPlaceMode}
         />
@@ -288,6 +295,13 @@ export function TimelineToolbar({
           state={state}
           onSelect={(ids) => commands.selectItems(ids)}
           onClose={() => { setDuplicatesOpen(false); modalFocus.restore(); }}
+        />
+      )}
+      {effectsOpen && (
+        <EffectsBrowserDialog
+          state={state}
+          commands={commands}
+          onClose={() => { setEffectsOpen(false); modalFocus.restore(); }}
         />
       )}
       {markersOpen && (

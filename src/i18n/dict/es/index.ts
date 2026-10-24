@@ -225,6 +225,12 @@ export default {
 
   // Inspector color correction
   '曝光': 'Exposición',
+  'Biblioteca de efectos': 'Biblioteca de efectos',
+  'Se aplicará a {n} clips seleccionados': 'Se aplicará a {n} clips seleccionados',
+  'Se aplicará al clip seleccionado': 'Se aplicará al clip seleccionado',
+  'Selecciona primero un clip de vídeo o imagen': 'Selecciona primero un clip de vídeo o imagen',
+  'Buscar efectos y LUTs…': 'Buscar efectos y LUTs…',
+  '没有匹配的效果': 'Ningún efecto coincide',
   '色温': 'Temperatura de color',
 
   // Source Monitor

@@ -37,7 +37,7 @@ npm run preview
 | Espacio de previsualización (centro) | Monitor de origen arriba y Monitor de programa abajo |
 | Inspector (derecha) | Transformación, filtros, color, audio, Ken Burns, efectos |
 | Línea de tiempo (abajo) | Pistas de vídeo/audio/subtítulos, herramientas, marcadores, zoom |
-| Menú del clip | Transiciones, efectos y LUTs: se aplican desde el menú contextual del clip y se ajustan en el inspector |
+| Biblioteca de efectos | Transiciones, efectos, escalas y LUTs con búsqueda; se arrastran al clip o se aplican desde el menú **más** de la línea de tiempo → **Biblioteca de efectos** |
 
 Capturas: [`01-editor-overview.png`](../screenshots/01-editor-overview.png) · [`03-full-editor.png`](../screenshots/03-full-editor.png) · [`04-editor-with-panels.png`](../screenshots/04-editor-with-panels.png) · [`dashboard-spanish.png`](../screenshots-spanish/dashboard-spanish.png)
 
@@ -125,7 +125,7 @@ Haz clic en el código de tiempo de la línea de tiempo para alternar entre **ti
 
 ### Color
 
-El inspector ofrece **brillo, contraste, saturación y desenfoque**, además de **exposición** y **temperatura**. El ajuste automático analiza localmente una muestra y aplica correcciones pequeñas. Los LUT (`.cube`) se aplican desde el menú contextual del clip seleccionado y se retiran desde el mismo menú o desde la pila de efectos del inspector.
+El inspector ofrece **brillo, contraste, saturación y desenfoque**, además de **exposición** y **temperatura**. El ajuste automático analiza localmente una muestra y aplica correcciones pequeñas. Los LUT (`.cube`) se aplican desde la biblioteca de efectos sobre el clip seleccionado y se retiran desde la pila de efectos del inspector.
 
 ---
 
