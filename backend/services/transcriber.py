@@ -13,9 +13,21 @@ class Transcriber:
         isolate_vocals: bool = False,
         language: str = "es"
     ) -> List[SubtitleEntry]:
-        """Transcribe audio using Whisper"""
+        """Transcribe audio using Whisper (requires whisper to be installed)"""
         try:
-            import whisper
+            try:
+                import whisper
+            except ImportError:
+                print("Whisper not installed. Returning placeholder subtitles.")
+                return [
+                    SubtitleEntry(
+                        id=str(uuid.uuid4()),
+                        start_time=0.0,
+                        end_time=5.0,
+                        text="Whisper not installed. Please install with: pip install openai-whisper",
+                        style_name="default"
+                    )
+                ]
             
             processed_audio = audio_path
             

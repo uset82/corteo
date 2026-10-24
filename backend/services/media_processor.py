@@ -78,19 +78,41 @@ class MediaProcessor:
     async def generate_waveform(self, audio_path: str, samples: int = 1000) -> List[float]:
         """Generate waveform data for audio visualization"""
         try:
-            import librosa
+            cmd = [
+                'ffmpeg',
+                '-i', audio_path,
+                '-f', 's16le',
+                '-ac', '1',
+                '-ar', '8000',
+                '-'
+            ]
             
-            y, sr = librosa.load(audio_path, sr=None)
+            result = subprocess.run(cmd, capture_output=True)
             
-            hop_length = len(y) // samples
-            if hop_length < 1:
-                hop_length = 1
+            if result.returncode != 0:
+                return []
             
-            rms = librosa.feature.rms(y=y, hop_length=hop_length)[0]
+            audio_data = np.frombuffer(result.stdout, dtype=np.int16)
             
-            normalized = (rms / np.max(rms)).tolist()
+            if len(audio_data) == 0:
+                return []
             
-            return normalized[:samples]
+            hop_length = max(1, len(audio_data) // samples)
+            
+            resampled = []
+            for i in range(0, len(audio_data), hop_length):
+                chunk = audio_data[i:i+hop_length]
+                if len(chunk) > 0:
+                    resampled.append(float(np.abs(chunk).mean()))
+            
+            resampled = resampled[:samples]
+            
+            if len(resampled) > 0:
+                max_val = max(resampled)
+                if max_val > 0:
+                    resampled = [x / max_val for x in resampled]
+            
+            return resampled
         
         except Exception as e:
             print(f"Error generating waveform: {e}")
