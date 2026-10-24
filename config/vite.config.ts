@@ -149,8 +149,13 @@ export default defineConfig(({ mode }) => {
     publicDir: 'public',
     plugins: [serveOrtWasmLoader(), react(), productAssetsPlugin(), excludeUserMediaFromBuild(), ...serverPlugins()],
     server: {
+      host: true,
       port: 5199,
       strictPort: true,
+      allowedHosts: [
+        '.cursorvm.com',
+        'localhost',
+      ],
       // Pre-transform the editor entry graph at startup so the first tab
       // (and chat hydration) renders without a multi-second compile stall.
       warmup: {
