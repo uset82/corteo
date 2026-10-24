@@ -31,7 +31,7 @@
 ## What Claudia is
 
 Claudia is an open AI pop star from [claudia.gallery](https://claudia.gallery)
-who runs as a Grok bot. This is her video editor — also called Claudia — and
+who runs with Grok bot. This is her video editor — also called Claudia — and
 the source repository is still named [`corteo`](https://github.com/uset82/corteo).
 
 She decides what the clip should be: which image belongs to each verse,
