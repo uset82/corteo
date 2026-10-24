@@ -27,6 +27,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P0-3 | `npm run start:claudia` and `.env.claudia.example` | todo | P0-2 |
 | P0-4 | Spanish README | todo | P0-3 |
 | H-9 | Merge the harness tracks (Cursor agent only) | todo | HQ-1 to HQ-5 and HW-1 to HW-5 `done` or `blocked` on their own branches |
+| B-9 | Merge the brand tracks (Cursor agent only) | todo | BD-1 to BD-4 and BQ-1 to BQ-4 `done` or `blocked`, and H-9 |
 | P1-1 | Providers off: server block | todo | P0-3, H-9 |
 | P1-2 | Providers off: hide UI, filter MCP tools | todo | P1-1 |
 | P1-3 | Allowed hosts from env | todo | P0-3 |
@@ -77,6 +78,11 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Needs: check both tracks' tables on GitHub, not here: `git fetch github`, then `git show github/harness-qoder:docs/plans/PROGRESS.md` and `git show github/harness-workbuddy:docs/plans/PROGRESS.md`.
 - Do and Done when: the five steps in the plan doc.
 
+### B-9 · Merge the brand tracks
+- Plan: Plan 4 › B-9. Only a Cursor agent takes it.
+- Needs: `git fetch github`, then `git show github/harness-workbuddy:docs/plans/PROGRESS.md`. Both brand tracks were executed on `harness-workbuddy` (the DeepSeek and Qoder agents were unavailable), so `brand-deepseek` and `brand-qoder` do not exist: the merge is that branch, plus `harness-qoder` once H-9 is done. It diverged from this branch at `1d00e0a`, so expect a real merge, not a fast-forward.
+- Do and Done when: the five steps in the plan doc — review both diffs against the brief and the AI-tells list, rewrite the README and AGENTS prose, run `npx tsc -b`, `npm run lint`, `npm test` and `npm run build`, check the projects page and the chat at 1440 and 390 px wide, and ask Carlos before publishing.
+
 ### P0-2 · Raise the dev server heap
 - Plan: Plan 1 › Phase 0.
 - Files: `scripts/dev-profile.mjs` (`runVite`), `scripts/dev-profile.verify.mjs`.
@@ -101,6 +107,7 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Files: `README.md` (leave `README_ZH.md` alone).
 - Do: in Spanish: what corteo is (a fork of OpenChatCut for music videos, driven by Claudia over MCP), requirements (WSL/Linux, Node 24, ffmpeg comes with npm), `npm install`, `npm run dev`, `npm run start:claudia`, how to connect Claudia (URL, token, `.env.claudia`), where data lives (`~/.openchatcut`), AGPL v3 note with a link to upstream OpenChatCut (https://github.com/0xsline/OpenChatCut).
 - Remaining: once P0-3 and P1-4 are done, add `npm run start:claudia`, `.env.claudia` and the steps to connect Claudia, and update its "Estado" section.
+- B-9 rewrites the README and AGENTS prose for the new name: the product is Claudia, corteo stays the repository and the command, and the two font licences join the credits. Don't pre-empt it here.
 - Done when: a new user can go from clone to the running editor and a connected Claudia with only the README.
 
 ### P1-1 · Providers off: server block
@@ -295,6 +302,7 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Plan: Plan 1 › Phase 5.
 - Files: `src/i18n/dict/es/` (mirror the 19 modules of `src/i18n/dict/en/`, then make `src/i18n/dict/es/index.ts` assemble them like `src/i18n/dict/it/index.ts`), `src/i18n/dictRegistry.ts`.
 - Do: one commit per module. Keys stay the Chinese originals; keep every `{placeholder}`.
+- Also fold `src/i18n/dict/en/brand.ts` and `src/i18n/dict/es/brand.ts` (Plan 4) into the per-module files, then drop the spread in `dictRegistry.ts` and the last entry in `en/index.ts`.
 - Pitfall: source files may not exceed 500 lines (`scripts/verify-gate-coverage.verify.mjs`). Split a long module into parts, or add it to that file's `dataModules` list like `src/i18n/dict/en/settings.ts`.
 - Verify: `npm run verify:i18n`.
 
@@ -315,6 +323,7 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 Add a line when you choose something the plans leave open: date, task ID, decision, reason.
 
 - 2026-10-24 · Plan 3 · The built-in chat stays, with free models through the local DeepSeek Harness (plus Ollama and LM Studio); `AGENTS.md` rule 1 changed accordingly. P1-1 and P1-2 now only cover generation, stock and cloud transcription, and P1-1 waits for H-9 so `server/plugins/providers-off.ts` is created once (by HQ-3). Reason: Carlos wants Claudia's chat in the editor on free models, without paid APIs.
+- 2026-10-24 · Plan 4 · The eight brand cards ran on `harness-workbuddy` in the WorkBuddy worktree, not as two tracks on `brand-deepseek` and `brand-qoder`: neither agent was available and the cards were ready. The file split in the plan still holds for the review, because each card touched the files its track owns. Reason: waiting for two idle agents would have left the name and the look undone.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.
@@ -397,7 +406,7 @@ Executed by the WorkBuddy agent on 2026-10-24 (the Qoder agent was not available
 | BQ-1 | The old name out of the text | done | |
 | BQ-2 | The fork's links and the assistant's identity | done | |
 | BQ-3 | The chat panel | done | BD-3 |
-| BQ-4 | Cleanups and the review | doing | BQ-3 |
+| BQ-4 | Cleanups and the review | blocked | BQ-3 |
 
 ### Qoder (brand): decisions
 - The dictionary sweep changed 40 lines and kept the 10 lines of the five desktop-updater keys, which name upstream's release on purpose.
@@ -411,7 +420,7 @@ Executed by the WorkBuddy agent on 2026-10-24 (the Qoder agent was not available
 - The gate now also covers those six identity files and `product-help/SKILL.md`, so BQ-2 cannot silently regress.
 
 ### Qoder (brand): blockers
-- `npm test` and `npm run build` need WSL, which the sandbox refused for the whole session (`wsl.exe` on the Program Blacklist). Git itself works over the UNC path, so the three commits below are real: `1ddc7bd` (BD), `f179f63` (BQ), `01bbb02` (B-0). The work was verified over UNC instead: `tsc` on both projects, `check-i18n`, and the affected verifies, run individually.
+- `npm test` and `npm run build` need WSL, which this sandbox refuses (`wsl.exe` on the Program Blacklist; re-checked 2026-10-25 00:00). Git itself works over the UNC path, so the commits below are real: `1ddc7bd` (BD), `f179f63` (BQ), `01bbb02` (B-0), `1fabc26` (the PROGRESS entry). The work was verified over UNC instead: `tsc` on both projects, `check-i18n`, and the affected verifies, run individually.
 - `scripts/verify-registration.verify.mjs` fails until the six new verify files are committed: it compares `package.json` against `git ls-files`, and untracked files read as "registered but not tracked". `scripts/verify-gate-coverage.verify.mjs` already passes (636 verify files, all reachable).
 - `vite build` was attempted on Windows and cannot work from the UNC path: the win32 `@rolldown/binding` and `lightningcss` binaries load, but rolldown's native resolver fails on `\\wsl.localhost\...` ("Failed to resolve entry for package @vitejs/plugin-react"), and the share cannot be mapped to a drive (`net use` → system error 64). The client bundle stays unbuilt until WSL is back.
 
