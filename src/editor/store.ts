@@ -5,12 +5,15 @@ import type { AnyAction, ProjectDispatch } from './reduce';
 import { historyReduce, isHistoryControlAction, projectReduce } from './reduce';
 import { buildCommands } from './storeCommandBuilder';
 import type { EditorCommands } from './storeCommands';
+import type { HistorySteps } from './historyLabels';
 
 // Re-export the reducer layer so existing importers (`from './editor/store'`) keep working.
 export type { Action, AnyAction, AtomicAction, BatchAction, ProjectAction, Dispatch, ProjectDispatch } from './reduce';
 export { reduce, projectReduce } from './reduce';
 export type { MediaRelinkResult } from './types';
 export type { AddSequenceResult, EditorCommands } from './storeCommands';
+
+export type { HistorySteps } from './historyLabels';
 
 export function useEditor(initial: ProjectDoc): {
   /** the active timeline — what the composition/export/inspector operate on */
@@ -25,6 +28,8 @@ export function useEditor(initial: ProjectDoc): {
   getUndoTarget: () => ProjectDoc | null;
   /** Next redo snapshot (future[0]), null when there is nothing to redo. Agent redo_last_change applies it via applyDoc. */
   getRedoTarget: () => ProjectDoc | null;
+  /** Undo stack as a linear list of i18n step labels, for the history panel. */
+  historySteps: HistorySteps;
 } {
   const [h, dispatch] = useReducer(historyReduce, { past: [], present: initial, future: [] });
   const doc = h.present;
@@ -54,6 +59,14 @@ export function useEditor(initial: ProjectDoc): {
     canRedo: h.future.length > 0,
     getUndoTarget,
     getRedoTarget,
+    // Labels are only carried by histories built after this field existed; older
+    // or externally constructed stacks fall back to empty labels (rendered as
+    // "initial state"/unnamed steps) rather than breaking the panel.
+    historySteps: {
+      past: h.pastLabels ?? h.past.map(() => ''),
+      present: h.presentLabel,
+      future: h.futureLabels ?? h.future.map(() => ''),
+    },
   };
 }
 

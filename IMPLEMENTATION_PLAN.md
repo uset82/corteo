@@ -325,8 +325,8 @@ if (distance < 5) {
 ### 4.4 Undo/Redo
 - [x] Full history stack — **VERIFIED via verify:editor storeCommandBuilder.verify ("single-step undo")**
 - [x] Undo any operation — *every mutation goes through the command layer; gestures coalesce into one step*
-- [ ] Visual history panel (optional)
-- [ ] Persist across saves — *undo history is intentionally session-scoped*
+- [x] Visual history panel (optional) — *second tab in the version-history dialog: every undo step is named (``historyLabels.ts`` maps action types to i18n keys), the current state is highlighted, and any row is one click away; **VERIFIED via verify:editor historyLabels.verify** (label alignment across push/undo/redo, 100-entry cap, row distances)*
+- [ ] Persist across saves — *intentionally session-scoped: the stack holds up to 100 full project snapshots, so persisting it would store ~100× the project on every save. Reopening a project starts a clean stack; named versions (`历史版本` → save) are the durable equivalent.*
 
 ### 4.5 Source Monitor
 - [x] Preview clips before adding to timeline — *opens from the media pool context menu for video/audio/image/GIF/SVG*

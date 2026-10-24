@@ -4,13 +4,26 @@ import { Icon } from './icons';
 import type { ProjectDoc } from '../editor/types';
 import { listVersions, saveVersion, deleteVersion, type ProjectVersion } from '../persist/versionStore';
 import { t, useT } from '../i18n/locale';
+import { historyRows, type HistorySteps } from '../editor/historyLabels';
+
+/** Undo stack plus the dispatchers the panel needs to jump around it. */
+export interface HistoryPanelState extends HistorySteps {
+  /** Step back N entries (N = 1 undoes one step). */
+  onUndo: (steps: number) => void;
+  /** Step forward N entries. */
+  onRedo: (steps: number) => void;
+}
 
 interface VersionHistoryProps {
   projectId: string;
   currentDoc: ProjectDoc;
   onRestore: (doc: ProjectDoc) => void;
   onClose: () => void;
+  /** Undo stack for this session. Absent → only the saved-version tab is shown. */
+  history?: HistoryPanelState;
 }
+
+type Tab = 'versions' | 'history';
 
 /** "Just / N minutes ago / N hours ago / N days ago". */
 function relTime(ms: number): string {
@@ -23,12 +36,13 @@ function relTime(ms: number): string {
   return t('{n} 天前', { n: Math.floor(hr / 24) });
 }
 
-/** Version history - named project snapshot + one-click rollback to restore reused atomic applyDoc. */
-export function VersionHistory({ projectId, currentDoc, onRestore, onClose }: VersionHistoryProps) {
+/** Version history — named project snapshots, plus this session's undo stack. */
+export function VersionHistory({ projectId, currentDoc, onRestore, onClose, history }: VersionHistoryProps) {
   const t = useT();
   const [versions, setVersions] = useState<ProjectVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingName, setSavingName] = useState<string | null>(null); // null = input box hidden
+  const [tab, setTab] = useState<Tab>('versions');
 
   const refresh = () => {
     listVersions(projectId).then((list) => { setVersions(list); setLoading(false); });
@@ -53,6 +67,8 @@ export function VersionHistory({ projectId, currentDoc, onRestore, onClose }: Ve
     refresh();
   };
 
+  const rows = history ? historyRows(history) : [];
+
   return (
     <div onClick={onClose} style={backdrop}>
       <div onClick={(e) => e.stopPropagation()} style={card}>
@@ -63,15 +79,60 @@ export function VersionHistory({ projectId, currentDoc, onRestore, onClose }: Ve
           <button onClick={onClose} title={t('关闭')} style={iconBtn}><Icon name="x" size={15} /></button>
         </div>
 
+        {/* tabs */}
+        {history && (
+          <div style={{ display: 'flex', gap: 4, padding: '8px 12px 0' }}>
+            {(['versions', 'history'] as const).map((value) => (
+              <button
+                key={value}
+                onClick={() => setTab(value)}
+                style={value === tab ? tabActive : tabIdle}
+              >
+                {value === 'versions' ? t('已保存版本') : t('操作历史')}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* list */}
         <div style={{ padding: 12, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 120 }}>
-          {loading ? (
+          {tab === 'history' && history ? (
+            rows.length <= 1 ? (
+              <div style={emptyState}>{t('还没有任何操作')}</div>
+            ) : (
+              rows.map((row) => (
+                <button
+                  key={row.key}
+                  onClick={() => {
+                    if (row.distance < 0) history.onUndo(-row.distance);
+                    else if (row.distance > 0) history.onRedo(row.distance);
+                  }}
+                  disabled={row.distance === 0}
+                  title={row.state === 'past' ? t('回到这一步') : row.state === 'future' ? t('重做到这一步') : t('当前状态')}
+                  style={{
+                    ...row_,
+                    cursor: row.distance === 0 ? 'default' : 'pointer',
+                    borderColor: row.state === 'present' ? theme.accent : theme.border,
+                    opacity: row.state === 'future' ? 0.55 : 1,
+                  }}
+                >
+                  <span style={{ color: row.state === 'present' ? theme.accent : theme.textDim, lineHeight: 0 }}>
+                    <Icon name={row.state === 'present' ? 'check' : row.state === 'past' ? 'undo' : 'redo'} size={13} />
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {row.label ? t(row.label) : t('初始状态')}
+                  </span>
+                  {row.state === 'present' && <span style={{ fontSize: 11, color: theme.accent }}>{t('当前')}</span>}
+                </button>
+              ))
+            )
+          ) : loading ? (
             <div style={emptyState}>{t('加载中…')}</div>
           ) : versions.length === 0 ? (
             <div style={emptyState}>{t('还没有保存过版本')}</div>
           ) : (
             versions.map((v) => (
-              <div key={v.id} style={row}>
+              <div key={v.id} style={row_}>
                 <span style={{ color: theme.textDim, lineHeight: 0 }}><Icon name="clock" size={14} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.name}</div>
@@ -85,20 +146,22 @@ export function VersionHistory({ projectId, currentDoc, onRestore, onClose }: Ve
         </div>
 
         {/* footer */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 16px', borderTop: `0.5px solid ${theme.border}` }}>
-          {savingName !== null ? (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <input autoFocus value={savingName} placeholder={t('版本名称')}
-                onChange={(e) => setSavingName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setSavingName(null); }}
-                style={textInput} />
-              <button onClick={handleSave} style={primaryBtn}>{t('确定')}</button>
-              <button onClick={() => setSavingName(null)} style={ghostBtn}>{t('取消')}</button>
-            </div>
-          ) : (
-            <button onClick={() => setSavingName('')} style={primaryBtn}>{t('保存当前版本')}</button>
-          )}
-        </div>
+        {tab === 'versions' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 16px', borderTop: `0.5px solid ${theme.border}` }}>
+            {savingName !== null ? (
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <input autoFocus value={savingName} placeholder={t('版本名称')}
+                  onChange={(e) => setSavingName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setSavingName(null); }}
+                  style={textInput} />
+                <button onClick={handleSave} style={primaryBtn}>{t('确定')}</button>
+                <button onClick={() => setSavingName(null)} style={ghostBtn}>{t('取消')}</button>
+              </div>
+            ) : (
+              <button onClick={() => setSavingName('')} style={primaryBtn}>{t('保存当前版本')}</button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -113,9 +176,18 @@ const card: React.CSSProperties = {
     background: theme.panel, color: theme.text, border: `0.5px solid ${theme.border}`, borderRadius: 6,
   boxShadow: `0 20px 60px ${themeAlpha.shadow(0.5)}`,
 };
-const row: React.CSSProperties = {
+const row_: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 9, background: theme.panelAlt,
     border: `0.5px solid ${theme.border}`, borderRadius: 4, padding: '7px 10px',
+  font: 'inherit', color: 'inherit',
+};
+const tabActive: React.CSSProperties = {
+  background: theme.panelAlt, color: theme.text, border: `0.5px solid ${theme.accent}`,
+  borderRadius: 4, padding: '5px 12px', fontSize: 12.5, cursor: 'pointer',
+};
+const tabIdle: React.CSSProperties = {
+  background: 'none', color: theme.textDim, border: `0.5px solid transparent`,
+  borderRadius: 4, padding: '5px 12px', fontSize: 12.5, cursor: 'pointer',
 };
 const emptyState: React.CSSProperties = { padding: '24px 0', textAlign: 'center', fontSize: 12.5, color: theme.textDim };
 const iconBtn: React.CSSProperties = { background: 'none', border: 'none', color: theme.textDim, cursor: 'pointer', padding: 3, lineHeight: 0 };

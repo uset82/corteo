@@ -2,12 +2,19 @@ import type { ProjectDoc } from './types';
 import type { AnyAction, HistoryControlAction } from './reducerActions';
 import { MUTATING } from './reducerActions';
 import { projectReduce } from './reducerProject';
+import { actionLabel } from './historyLabels';
 
 // ── history wrapper (snapshot-based undo/redo over the whole project) ──────
 export interface History {
   past: ProjectDoc[];
   present: ProjectDoc;
   future: ProjectDoc[];
+  /** i18n key of the step that produced each `past` entry, index-aligned with `past`. */
+  pastLabels?: string[];
+  /** i18n key of the step that produced `present`; undefined for the opening state. */
+  presentLabel?: string;
+  /** i18n key of the step that produced each `future` entry, index-aligned with `future`. */
+  futureLabels?: string[];
   /**
    * Merge status during continuous gestures (drag the slider, drag the color picker). 'open' = The gesture has started but no changes have been made;
    * 'pushed' = This gesture has been pushed through history once, and only present will be changed in subsequent steps.
@@ -20,6 +27,9 @@ export interface History {
 
 const HISTORY_LIMIT = 100;
 const pushHistory = (past: ProjectDoc[], doc: ProjectDoc) => [...past, doc].slice(-HISTORY_LIMIT);
+/** Labels are trimmed with the same limit as the snapshots they describe. */
+const pushLabel = (labels: string[] | undefined, label: string | undefined): string[] =>
+  [...(labels ?? []), label ?? ''].slice(-HISTORY_LIMIT);
 
 function reduceHistoryAction(present: ProjectDoc, action: AnyAction): {
   next: ProjectDoc;
@@ -46,23 +56,43 @@ export function historyReduce(h: History, a: AnyAction | HistoryControlAction): 
   if (a.type === 'undo') {
     if (!h.past.length) return h;
     const previous = h.past[h.past.length - 1];
-    return { past: h.past.slice(0, -1), present: previous, future: [h.present, ...h.future], gesture: undefined };
+    return {
+      past: h.past.slice(0, -1),
+      present: previous,
+      future: [h.present, ...h.future],
+      pastLabels: (h.pastLabels ?? []).slice(0, -1),
+      // The state we step back to was produced by the label of the entry leaving `past`.
+      presentLabel: h.pastLabels?.[h.past.length - 1] || undefined,
+      futureLabels: [h.presentLabel ?? '', ...(h.futureLabels ?? [])],
+      gesture: undefined,
+    };
   }
   if (a.type === 'redo') {
     if (!h.future.length) return h;
     const next = h.future[0];
-    return { past: pushHistory(h.past, h.present), present: next, future: h.future.slice(1), gesture: undefined };
+    return {
+      past: pushHistory(h.past, h.present),
+      present: next,
+      future: h.future.slice(1),
+      pastLabels: pushLabel(h.pastLabels, h.presentLabel),
+      presentLabel: h.futureLabels?.[0] || undefined,
+      futureLabels: (h.futureLabels ?? []).slice(1),
+      gesture: undefined,
+    };
   }
   const { next, mutating } = reduceHistoryAction(h.present, a);
   if (next === h.present) return h;
   if (mutating) {
     // Only one history is pushed at a time: the first step is pushed onto the stack as usual, and subsequent steps only replace present.
     // Undo returns to "before dragging", not the previous tick.
-    if (h.gesture === 'pushed') return { ...h, present: next, future: [] };
+    if (h.gesture === 'pushed') return { ...h, present: next, future: [], futureLabels: [] };
     return {
       past: pushHistory(h.past, h.present),
       present: next,
       future: [],
+      pastLabels: pushLabel(h.pastLabels, h.presentLabel),
+      presentLabel: actionLabel(a),
+      futureLabels: [],
       ...(h.gesture ? { gesture: 'pushed' as const } : {}),
     };
   }
