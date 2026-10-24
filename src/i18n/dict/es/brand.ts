@@ -23,6 +23,7 @@ export default {
   '{n} 分钟前': 'Hace {n} min',
   '{n} 小时前': 'Hace {n} h',
   '{n} 天前': 'Hace {n} d',
+  '示例工程': 'Proyecto de ejemplo',
   '处理中…': 'Procesando…',
   '失败:{error}': 'Error: {error}',
   '确认删除': 'Confirmar eliminación',
