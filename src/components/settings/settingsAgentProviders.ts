@@ -3,6 +3,7 @@ import {
   isLocalLlmProvider,
   llmProviderConfigNames,
 } from '../../../shared/llm-providers';
+import { PROVIDERS_OFF, providerAvailable } from '../../agent/providers-off';
 import type { VendorId } from './vendorIcons';
 import { secret, text, type SettingsVendorPage } from './settingsFields';
 
@@ -156,7 +157,13 @@ export const PROXY_PAGE: SettingsVendorPage = {
   fields: [text('PROXY_URL', '代理地址', '例如 http://127.0.0.1:7890')],
 };
 
+// `OPENCHATCUT_PROVIDERS=off` deployments only expose the local harness and
+// the keyless local runtimes; a deep link to a hidden page falls back to the
+// first visible one (seedSelection in SettingsDialog).
+const VISIBLE_AGENT_VENDOR_PAGES: readonly SettingsVendorPage[] = AGENT_VENDOR_PAGES
+  .filter((page) => providerAvailable(page.key.split('/')[1] ?? ''));
+
 export const AGENT_VENDOR_PAGES_WITH_VISION: readonly SettingsVendorPage[] = [
-  ...AGENT_VENDOR_PAGES,
-  VISION_PAGE,
+  ...VISIBLE_AGENT_VENDOR_PAGES,
+  ...(PROVIDERS_OFF ? [] : [VISION_PAGE]),
 ];

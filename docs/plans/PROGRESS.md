@@ -324,12 +324,13 @@ Only the Qoder agent edits this section, in `~/corteo-qoder` on branch `harness-
 |----|------|--------|-------|
 | HQ-1 | DeepSeek Harness provider | done | |
 | HQ-2 | Every harness model in the Model menu | done | HQ-1 |
-| HQ-3 | Only DeepSeek Harness under `OPENCHATCUT_PROVIDERS=off` | todo | HQ-1 |
+| HQ-3 | Only DeepSeek Harness under `OPENCHATCUT_PROVIDERS=off` | done | HQ-1 |
 | HQ-4 | Gateway behaviour tests and Spanish errors | todo | HQ-1 |
 | HQ-5 | Real proof from the chat (needs a running harness) | todo | HQ-2, HQ-3, HQ-4 |
 
 ### Qoder: decisions
-None yet. Same format as "Decisions made during the work".
+- 2026-10-24 · HQ-3 · The allowlist (`dsh`, `ollama`, `lmstudio`) and the `providersOffEnv` helper live in `shared/providers-off.ts`; `server/plugins/providers-off.ts` re-exports them so P1-1 can extend the blocked-prefix list in the same file without a second middleware. Reason: the server gate and the client UI must not drift apart.
+- 2026-10-24 · HQ-3 · `__PROVIDERS_OFF__` is a plain boolean define, separate from `__CONFIGURED_CAPS__` (which feeds the agent capability prompt). It only exists in the Vite dev/browser bundle; tsx and the Electron embedded server define nothing, so there the flag reads `false`. Reason: hiding providers is a deployment policy, not a configured capability.
 
 ### Qoder: blockers
 None yet. Same format as "Blockers".

@@ -7,6 +7,13 @@ import { serverPlugins } from '../server/plugins/index.ts';
 import { seedKeystore, getKey } from '../server/keystore.ts';
 import { productAssetsPlugin } from '../server/product-assets.ts';
 import { runtimeProfile } from '../server/runtime-profile.ts';
+import { providersOffEnv } from '../shared/providers-off.ts';
+
+/** The local-only switch is read from the process environment (not `.env`),
+ * exactly like the server gate in server/plugins/providers-off.ts. */
+export function providersOffFromEnv(env: NodeJS.ProcessEnv = process.env): boolean {
+  return providersOffEnv(env);
+}
 
 const appPackage = JSON.parse(readFileSync('package.json', 'utf8')) as { version?: unknown };
 if (typeof appPackage.version !== 'string') throw new Error('package.json is missing a valid version');
@@ -132,6 +139,7 @@ export default defineConfig(({ mode }) => {
     // ONLY — no key value is ever exposed to the browser.
     define: {
       __APP_VERSION__: JSON.stringify(appPackage.version),
+      __PROVIDERS_OFF__: JSON.stringify(providersOffFromEnv()),
       __CONFIGURED_CAPS__: JSON.stringify({
         image: Boolean(imageKey || geminiKey || minimaxKey || falKey),
         voice: Boolean(doubaoKey || elevenKey || minimaxKey),

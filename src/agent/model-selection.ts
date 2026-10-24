@@ -23,6 +23,7 @@ import {
   type ModelIdentity,
 } from '../../shared/model-capabilities';
 import { setLlmConfig } from './providerConfig';
+import { PROVIDERS_OFF, providerAvailable } from './providers-off';
 
 interface KeyStateLike {
   readonly configured: boolean;
@@ -105,6 +106,8 @@ function apiChoices(
   models: Record<string, string>,
 ): readonly AgentModelChoice[] {
   return LLM_PROVIDER_PRESETS.flatMap((preset): AgentModelChoice[] => {
+    // A local-only deployment keeps DSH and the keyless local runtimes.
+    if (!providerAvailable(preset.id)) return [];
     // DeepSeek Harness exposes one entry per discovered model instead of the
     // single saved-model row every other cloud preset gets.
     if (preset.id === 'dsh') return [];
@@ -173,7 +176,7 @@ function allChoices(): readonly AgentModelChoice[] {
   ];
 }
 function rebuildClaudeCodeChoices(): void {
-  if (!claudeCodeStatus?.installed || claudeCodeStatus.account?.loggedIn !== true) {
+  if (PROVIDERS_OFF || !claudeCodeStatus?.installed || claudeCodeStatus.account?.loggedIn !== true) {
     claudeCodeModelChoices = [];
     return;
   }
@@ -196,7 +199,7 @@ function rebuildClaudeCodeChoices(): void {
   });
 }
 function rebuildCodexChoices(): void {
-  if (!codexStatus?.installed || codexStatus.account?.type === 'apiKey') {
+  if (PROVIDERS_OFF || !codexStatus?.installed || codexStatus.account?.type === 'apiKey') {
     codexModelChoices = [];
     return;
   }
@@ -227,7 +230,7 @@ function rebuildCodexChoices(): void {
  * every OpenChatCut editing flow needs tool calls.
  */
 function rebuildCopilotChoices(): void {
-  if (!copilotStatus?.installed || !copilotStatus.supported || !copilotStatus.authenticated) {
+  if (PROVIDERS_OFF || !copilotStatus?.installed || !copilotStatus.supported || !copilotStatus.authenticated) {
     copilotModelChoices = [];
     return;
   }

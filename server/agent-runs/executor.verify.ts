@@ -111,6 +111,36 @@ for (const preset of LLM_PROVIDER_PRESETS) {
 }
 assert.equal(resolveRunExecution({ backend: 'codex', provider: 'retired-provider' }, validatedRequest,
   'http://localhost:5199', false).provider, 'openai', 'Codex keeps its own provider attribution');
+// OPENCHATCUT_PROVIDERS=off: CLI backends and remote providers are refused
+// before a turn starts; the local trio keeps working.
+{
+  process.env.OPENCHATCUT_PROVIDERS = 'off';
+  try {
+    for (const backend of ['codex', 'claude-code', 'copilot']) {
+      assert.throws(
+        () => resolveRunExecution({ backend }, validatedRequest, 'http://localhost:5199', false),
+        /providers_disabled/,
+        `${backend} server turns are refused under the local-only switch`,
+      );
+    }
+    for (const provider of ['anthropic', 'openai', 'gemini', 'xai-oauth', 'deepseek']) {
+      assert.throws(
+        () => resolveRunExecution({ provider }, validatedRequest, 'http://localhost:5199', false),
+        /providers_disabled/,
+        `${provider} server turns are refused under the local-only switch`,
+      );
+    }
+    for (const provider of ['dsh', 'ollama', 'lmstudio']) {
+      assert.equal(
+        resolveRunExecution({ provider }, validatedRequest, 'http://localhost:5199', false).provider,
+        provider,
+        `${provider} stays available under the local-only switch`,
+      );
+    }
+  } finally {
+    delete process.env.OPENCHATCUT_PROVIDERS;
+  }
+}
 assert.equal(validatedRequest.runId, validRequest.runId);
 assert.equal(validatedRequest.capability, validRequest.capability);
 assert.equal(validatedRequest.cacheMode, 'long');
