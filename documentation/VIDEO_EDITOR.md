@@ -37,7 +37,7 @@ npm run preview
 | Preview workspace (center) | Source Monitor above the Program Monitor |
 | Inspector (right) | Transform keyframes, filters, colour, audio, Ken Burns, effects |
 | Timeline (bottom) | Video/audio/caption tracks, tools, markers, snapping, zoom |
-| Effects library | Searchable transitions, effects, scale presets, LUTs — drag onto a clip |
+| Clip menu | Transitions, effects and LUTs — applied from the clip context menu, tuned in the inspector |
 
 Screenshots: [`01-editor-overview.png`](../screenshots/01-editor-overview.png) · [`03-full-editor.png`](../screenshots/03-full-editor.png) · [`04-editor-with-panels.png`](../screenshots/04-editor-with-panels.png) · [`dashboard-spanish.png`](../screenshots-spanish/dashboard-spanish.png)
 
@@ -105,7 +105,7 @@ Implementation: `src/media/sourceMonitor.ts` (pure helpers), `src/media/sourceMo
 
 ### Colour and image controls
 
-Inspector filters expose **brightness, contrast, saturation, blur**, plus an **exposure** and **temperature** pass for colour correction. Auto-grade performs a local sample analysis for small brightness/contrast/saturation corrections. LUT support is available through the LUT effect assets (`.cube` files in the effects library), applied per clip through the effect stack.
+Inspector filters expose **brightness, contrast, saturation, blur**, plus an **exposure** and **temperature** pass for colour correction. Auto-grade performs a local sample analysis for small brightness/contrast/saturation corrections. LUT support is available through the LUT effect assets (`.cube` files), applied per clip from the clip context menu and removed from there or from the inspector effect stack.
 
 ---
 
