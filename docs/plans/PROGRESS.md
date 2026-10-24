@@ -411,7 +411,7 @@ Executed by the WorkBuddy agent on 2026-10-24 (the Qoder agent was not available
 - The gate now also covers those six identity files and `product-help/SKILL.md`, so BQ-2 cannot silently regress.
 
 ### Qoder (brand): blockers
-- `npm test`, `npm run build` and every git command need WSL, which the sandbox refused for the whole session (`wsl.exe` on the Program Blacklist). The work was verified over the UNC path instead: `tsc` on both projects, `check-i18n`, and the affected verifies, run individually.
+- `npm test` and `npm run build` need WSL, which the sandbox refused for the whole session (`wsl.exe` on the Program Blacklist). Git itself works over the UNC path, so the three commits below are real: `1ddc7bd` (BD), `f179f63` (BQ), `01bbb02` (B-0). The work was verified over UNC instead: `tsc` on both projects, `check-i18n`, and the affected verifies, run individually.
 - `scripts/verify-registration.verify.mjs` fails until the six new verify files are committed: it compares `package.json` against `git ls-files`, and untracked files read as "registered but not tracked". `scripts/verify-gate-coverage.verify.mjs` already passes (636 verify files, all reachable).
 - `vite build` was attempted on Windows and cannot work from the UNC path: the win32 `@rolldown/binding` and `lightningcss` binaries load, but rolldown's native resolver fails on `\\wsl.localhost\...` ("Failed to resolve entry for package @vitejs/plugin-react"), and the share cannot be mapped to a drive (`net use` → system error 64). The client bundle stays unbuilt until WSL is back.
 
