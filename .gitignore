@@ -107,3 +107,10 @@ public/whisper-cli/
 
 # Agent tooling local state (Command Code taste captures)
 .commandcode/
+
+# Local agent state and esbuild scratch files
+.workbuddy-ai/
+*.occ-[0-9]*
+
+# Probe scratch media
+test-media/probe.txt

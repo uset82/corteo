@@ -43,6 +43,10 @@ export default {
   '返回工程列表': 'Regresar a la Lista de Proyectos',
   '示例工程': 'Proyecto de Ejemplo',
   
+  // Chat panel
+  '展开 OpenChatCut Agent': 'Expandir el agente de Claudia',
+  '收起 OpenChatCut Agent': 'Contraer el agente de Claudia',
+  
   // Top bar
   '文件': 'Archivo',
   '编辑': 'Editar',
@@ -92,6 +96,18 @@ export default {
   '取消': 'Cancelar',
   '应用': 'Aplicar',
   '撤销': 'Deshacer',
+  '刚刚': 'Ahora mismo',
+  '{n} 分钟前': 'hace {n} min',
+  '{n} 小时前': 'hace {n} h',
+  '{n} 天前': 'hace {n} d',
+  '还没有保存过版本': 'Todavía no has guardado ninguna versión',
+  '恢复': 'Restaurar',
+  '删除此版本': 'Eliminar esta versión',
+  '版本名称': 'Nombre de la versión',
+  '保存当前版本': 'Guardar la versión actual',
+  '自动保存': 'Guardado automático',
+  '未命名版本': 'Versión sin título',
+
   '切换界面语言': 'Cambiar el idioma de la interfaz',
   '设计风格(品牌)': 'Estilo de diseño (marca)',
   '历史版本': 'Historial de versiones',
@@ -343,4 +359,6 @@ export default {
   '重命名素材文件夹': "Renombrar carpeta de material",
   '修改素材文字稿': "Editar transcripción del material",
   '修改素材': "Editar material",
+  '双遍编码': "Codificación en dos pasadas",
+  '按目标码率编码两遍，码率分布更均匀、体积更可控；导出时间约翻倍，仅本机渲染生效。': "Codifica dos veces hacia la tasa de bits objetivo: distribución más uniforme y tamaño más predecible; el tiempo de exportación se duplica y solo aplica al renderizado local.",
 } as Record<string, string>;

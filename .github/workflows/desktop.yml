@@ -1,0 +1,211 @@
+name: Desktop release
+
+# Builds, smoke-tests and publishes the signed desktop artifacts. Every shipped
+# artifact is launched before anything is uploaded: a package that cannot start
+# must never reach a release.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and smoke test desktop artifacts
+    runs-on: macos-14
+    timeout-minutes: 360
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      EXPECTED_VERSION: ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Resolve version
+        run: |
+          EXPECTED_VERSION="${GITHUB_REF_NAME#v}"
+          echo "EXPECTED_VERSION=$EXPECTED_VERSION" >> "$GITHUB_ENV"
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version=process.env.EXPECTED_VERSION;fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+
+      - run: npm ci
+
+      - name: Build macOS arm64
+        run: npm run desktop:dist
+
+      - name: Build macOS x64
+        run: npm run desktop:dist:mac-x64
+
+      - name: Smoke test macOS distribution
+        env:
+          CC_SMOKE: '1'
+          CC_SMOKE_RENDER: '1'
+        run: |
+          set -euo pipefail
+          dmgs=($(find release -name '*.dmg' -type f))
+          zips=($(find release -name '*.zip' -type f))
+          [ "${#dmgs[@]}" -ge 1 ]
+          [ "$(find release -name '*.zip' -type f | wc -l)" = 2 ]
+          unzip -tq "${zips[0]}"
+          unzip -l "${zips[0]}" | grep -q 'OpenChatCut.app/Contents/MacOS/OpenChatCut'
+          unzip -l "${zips[0]}" | grep -q 'OpenChatCut.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework'
+          unzip -l "${zips[0]}" | grep -q 'render_runtime="OpenChatCut.app/Contents/Resources/chrome-headless-shell/'
+          mount_point=$(mktemp -d)
+          hdiutil attach "${dmgs[0]}" -mountpoint "$mount_point" -nobrowse -quiet
+          mounted_app="$mount_point/OpenChatCut.app"
+          test -x "$mounted_app/Contents/MacOS/OpenChatCut"
+          "$mounted_app/Contents/MacOS/OpenChatCut" > smoke-mac.log 2>&1 &
+          smoke_pid=$!
+          for _ in $(seq 1 120); do
+            grep -q 'SMOKE-OK' smoke-mac.log && break
+            sleep 1
+          done
+          grep -q 'SMOKE-OK' smoke-mac.log
+          kill "$smoke_pid" || true
+          hdiutil detach "$mount_point" -quiet || true
+
+      - name: Build Windows installer
+        run: npm run desktop:dist:win
+
+      - name: Smoke test Windows installer
+        shell: pwsh
+        env:
+          CC_SMOKE: '1'
+          CC_SMOKE_RENDER: '1'
+          CC_SMOKE_MCP_RECOVERY: '1'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installer = Get-ChildItem -LiteralPath release -Filter '*.exe' -File | Select-Object -First 1
+          if (-not $installer) { throw 'no NSIS installer was produced' }
+          $installDir = Join-Path $env:RUNNER_TEMP 'cc-install'
+          $smokeOut = Join-Path $env:RUNNER_TEMP 'smoke-out.log'
+          $smokeErr = Join-Path $env:RUNNER_TEMP 'smoke-err.log'
+          Start-Process -FilePath $installer.FullName -ArgumentList @('/S', "/D=$installDir") -Wait
+          $installedExe = Join-Path $installDir 'OpenChatCut.exe'
+          if (-not (Test-Path -LiteralPath $installedExe)) { throw 'installer did not place the executable' }
+          $smoke = Start-Process -FilePath $installedExe -PassThru `
+            -RedirectStandardOutput $smokeOut -RedirectStandardError $smokeErr
+          if (-not $smoke.WaitForExit(180000)) {
+            taskkill /T /F /PID $smoke.Id
+            Get-Content -LiteralPath $smokeOut
+            throw 'smoke timed out'
+          }
+          Get-Content -LiteralPath $smokeOut
+          if (-not (Select-String -LiteralPath $smokeOut -Pattern 'SMOKE-OK' -Quiet)) { throw 'SMOKE-OK was not printed' }
+          $uninstaller = Get-ChildItem -LiteralPath $installDir -Filter 'Uninstall*.exe' -File | Select-Object -First 1
+          if ($uninstaller) { Start-Process -FilePath $uninstaller.FullName -ArgumentList @('/S') -Wait }
+
+      - name: Build Linux AppImage
+        run: npm run desktop:dist:linux
+
+      - name: Smoke test Linux AppImage
+        env:
+          CC_SMOKE: '1'
+          CC_SMOKE_RENDER: '1'
+        run: |
+          set -euo pipefail
+          appimages=($(find release -name '*.AppImage' -type f))
+          [ "${#appimages[@]}" -ge 1 ]
+          xvfb-run --auto-servernum "${appimages[0]}" --appimage-extract-and-run > smoke-linux.log 2>&1 &
+          smoke_pid=$!
+          for _ in $(seq 1 120); do
+            grep -q 'SMOKE-OK' smoke-linux.log && break
+            sleep 1
+          done
+          grep -q 'SMOKE-OK' smoke-linux.log
+          kill "$smoke_pid" || true
+
+      - name: Collect release files
+        run: |
+          set -euo pipefail
+          mkdir -p release-files
+          cp release/latest-arm64-mac.yml release-files/
+          cp release/latest-x64-mac.yml release-files/
+          cp release/latest-x64.yml release-files/
+          cp release/latest-x64-linux.yml release-files/
+          cp release/*.blockmap release-files/
+          test -f release-files/latest-arm64-mac.yml
+          test -f release-files/latest-x64-mac.yml
+          test -f release-files/latest-x64.yml
+          test -f release-files/latest-x64-linux.yml
+          for archive in release/*.zip release/*.dmg release/*.exe release/*.AppImage; do
+            cp "$archive" "release-files/OpenChatCut-${EXPECTED_VERSION}-$(basename "$archive")"
+          done
+          test -f "release-files/OpenChatCut-${EXPECTED_VERSION}-arm64.zip.blockmap"
+          test -f "release-files/OpenChatCut-${EXPECTED_VERSION}-x64.zip.blockmap"
+          test -f "release-files/OpenChatCut-${EXPECTED_VERSION}-x64.exe.blockmap"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-files
+          path: release-files/*
+
+  release:
+    name: Publish verified draft
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-files
+          path: release-files
+
+      - name: Resolve version
+        run: echo "EXPECTED_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Create or reuse draft release
+        run: |
+          set -euo pipefail
+          gh release view "$GITHUB_REF_NAME" --json isDraft,assets > release.json || echo '{}' > release.json
+          is_draft=$(jq -r '.isDraft // empty' release.json)
+          if [[ -n "$is_draft" ]]; then
+            if [[ "$is_draft" != "true" ]]; then
+              echo "release $GITHUB_REF_NAME is already public"
+              exit 1
+            fi
+          else
+            if ! gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes "Desktop $EXPECTED_VERSION" --draft; then
+              echo 'could not create the draft release'
+              exit 1
+            fi
+          fi
+
+      - name: Upload and verify release assets
+        run: |
+          set -euo pipefail
+          if gh release upload "$GITHUB_REF_NAME" release-files/* --clobber; then
+            echo 'assets uploaded'
+          else
+            echo 'upload failed'
+            exit 1
+          fi
+          local_manifest=$(mktemp)
+          for asset in release-files/*; do sha256sum "$asset"; done | sed 's#release-files/##' > "$local_manifest"
+          gh release view "$GITHUB_REF_NAME" --json isDraft,assets > remote.json
+          remote_manifest=$(mktemp)
+          jq -r '.assets[] | [.name, (.digest // "")] | @tsv' remote.json | sort > "$remote_manifest"
+          sort "$local_manifest" | awk '{print $2"\tsha256:"$1}' > "$local_manifest.sorted"
+          mv "$local_manifest.sorted" "$local_manifest"
+          cmp -s "$local_manifest" "$remote_manifest"
+          for metadata in latest-arm64-mac.yml latest-x64-mac.yml latest-x64.yml latest-x64-linux.yml; do
+            test -f "release-files/$metadata"
+          done
+          test -f "release-files/OpenChatCut-${EXPECTED_VERSION}-arm64.zip.blockmap"
+          test -f "release-files/OpenChatCut-${EXPECTED_VERSION}-x64.zip.blockmap"
+          test -f "release-files/OpenChatCut-${EXPECTED_VERSION}-x64.exe.blockmap"
+          ls release-files/*
+
+      - name: Publish verified draft
+        run: gh release edit "$GITHUB_REF_NAME" --draft=false --title "$GITHUB_REF_NAME"

@@ -542,4 +542,6 @@ export default {
   '修改素材文字稿': "Edit media transcript",
   '修改素材': "Edit media",
   '编辑': "Edit",
+  '双遍编码': "Two-pass encoding",
+  '按目标码率编码两遍，码率分布更均匀、体积更可控；导出时间约翻倍，仅本机渲染生效。': "Encodes twice against the target bitrate for a flatter bitrate distribution and a more predictable file size; roughly doubles export time and applies to local rendering only.",
 } as Record<string, string>;
