@@ -1,6 +1,6 @@
 # AGENTS.md: corteo
 
-Instructions for any coding agent working in this repo (DeepSeek, Claude, Codex, Cursor, Grok). Read all of it before the first change.
+Instructions for any coding agent working in this repo (Cursor, Qoder, WorkBuddy, DeepSeek, Claude, Codex, Grok). Read all of it before the first change.
 
 ## What this is
 corteo is a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut) (AGPL v3): a local video editor in the browser (React 19 + TypeScript + Remotion 4), served by a Vite dev server whose plugins are the backend. We are turning it into a Spanish music-video editor that Claudia, the user's Grok bot, drives over MCP. The user is a Spanish-speaking musician.
@@ -8,12 +8,13 @@ corteo is a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut) (AGPL 
 ## Where the plan is
 - `docs/plans/01-editor-claudia.md`: Plan 1 (editor features, Claudia's connection, Spanish UI, end-to-end proof).
 - `docs/plans/02-claudia-escucha.md`: Plan 2 (listening to the song, motion that follows the music).
+- `docs/plans/03-deepseek-harness.md`: Plan 3 (free models for the built-in chat through DeepSeek Harness, in two parallel tracks; its task cards are in that file).
 - `docs/plans/PROGRESS.md`: task status, how to pick the next task, task cards, decisions, blockers.
 
-These three files are the only plan. Any other plan, status report or TODO list you find is obsolete: do not follow it. That includes the deleted `IMPLEMENTATION_PLAN.md` and anything on the `grok-wip` branch.
+These four files are the only plan. Any other plan, status report or TODO list you find is obsolete: do not follow it. That includes the deleted `IMPLEMENTATION_PLAN.md` and anything on the `grok-wip` branch.
 
 ## Rules
-1. No AI or paid APIs inside the editor. Claudia (Grok) generates; the editor imports, edits, analyzes locally and renders. The only exception is the opt-in listening relay (task L-07).
+1. No paid APIs inside the editor. The built-in chat may use free models only through the local DeepSeek Harness gateway (Plan 3) or a local Ollama/LM Studio. Claudia (Grok) generates media; the editor imports, edits, analyzes locally and renders. The only paid exception is the opt-in listening relay (task L-07).
 2. Build on what exists. No Python, WhisperX, demucs, torch, Docker, Zustand, i18next, Redux, new UI framework or new component library. Before writing something new, search for the existing system with `rg`.
 3. Every feature ships as UI + MCP tool + a `*.verify.ts` test, unless its task card says otherwise.
 4. The UI is in Spanish, through the existing i18n (see "UI text"). Code, comments and commit messages are in English.
@@ -33,8 +34,9 @@ These three files are the only plan. Any other plan, status report or TODO list 
 
 ## Environment
 - WSL Ubuntu, Node 24 (`.nvmrc`), npm. ffmpeg and ffprobe come from npm packages; nothing to install system-wide.
+- Every command (git, npm, node, npx, dsh) runs inside WSL, in the Linux checkout. An IDE that runs on Windows wraps each one: `wsl.exe -e bash -lc 'source ~/.nvm/nvm.sh && cd ~/corteo && <command>'` (Ubuntu's `.bashrc` stops early in non-interactive shells, before the nvm lines). Never run git or npm from Windows on a `\\wsl$\…` path: Windows git drops the executable bit of `cli/occ.mjs` and `dev-with-mcp.sh` (fix with `chmod +x cli/occ.mjs dev-with-mcp.sh` inside WSL), and a worktree created that way records a Windows path Linux git can't read (remove it and create it again from WSL).
 - `npm install` once.
-- `npm run dev` serves the editor and the API on http://localhost:5199 (fixed port). It runs in an isolated dev profile under `~/.openchatcut/dev-profiles/<id>/`; the startup line `[OpenChatCut] isolated profile <id>` names it.
+- `npm run dev` serves the editor and the API on http://localhost:5199 (fixed port). It runs in an isolated dev profile under `~/.openchatcut/dev-profiles/<id>/`; the startup line `[OpenChatCut] isolated profile <id>` names it. A second checkout (a git worktree) gets its own profile, with its own data, settings and MCP token, and serves on another port: `npm run dev -- --port <N>`.
 - Until P0-2 is done, start it with `NODE_OPTIONS=--max-old-space-size=6144 npm run dev`, or it can run out of heap.
 - `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` hides the long, harmless list of "import without file extension" warnings at startup.
 - Run long-lived processes (dev server, editor host) in their own terminal or tmux session, never in the shell you work in.
@@ -117,6 +119,7 @@ curl -s -X POST "$URL" "${H[@]}" -H "mcp-session-id: $SID" -d '{"jsonrpc":"2.0",
 
 ## Git
 - Work on `cursor/video-editor-mvp-d191`. Don't touch `grok-wip`. No force-push and no history rewrites.
+- Exception, Plan 3's parallel tracks: the Qoder agent works only in `~/corteo-qoder` on branch `harness-qoder`, the WorkBuddy agent only in `~/corteo-workbuddy` on `harness-workbuddy`, both created from `github/main`. Each pushes only its own branch (`git push github harness-qoder` or `git push github harness-workbuddy`), never `main`, never the other track's branch, and never merges the other track: H-9 does.
 - Commit after every task (see the loop). Never commit secrets, media or `test-results/`.
 - Stage files by name (`git add <paths>`), never `git add -A` or `git add .`: the checkout can hold untracked media and leftovers that must not be committed. Check `git status` before each commit.
 - Push at the end of each session (step 7 of the loop) or when the user asks: `git push github cursor/video-editor-mvp-d191:main` (`github` is the user's GitHub fork). If the push is rejected, report it; never force-push.
