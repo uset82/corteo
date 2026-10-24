@@ -1,8 +1,10 @@
 # Progress
 
-The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1) and `docs/plans/02-claudia-escucha.md` (Plan 2). Rules and the work loop: `AGENTS.md`.
+The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2) and `docs/plans/03-deepseek-harness.md` (Plan 3). Rules and the work loop: `AGENTS.md`.
 
 **Picking the next task:** if a task is `doing`, a previous session stopped in the middle of it: resume it first. Otherwise go down the table and take the first task whose status is `todo` and whose "Needs" are all `done`. Change its status to `doing`, finish it, set `done`, and commit this file together with the work.
+
+**Harness tracks (Plan 3):** the HQ and HW tasks have their own tables at the end of this file. Only the Qoder agent takes HQ tasks and only the WorkBuddy agent takes HW tasks, each in its own worktree and branch (see `docs/plans/03-deepseek-harness.md` › Parallel work), with the same picking rule applied to its own table. Every other agent skips both tables. Their task cards are in the plan doc.
 
 Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if the user asks).
 
@@ -12,6 +14,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 - If a test fails on your machine before you have changed anything, it is a baseline difference: record it under Blockers with its output, and don't count it against your task.
 - Grok's attempt: Grok worked in `~/corteo` from the old `IMPLEMENTATION_PLAN.md` (a first-draft plan with Python WhisperX/demucs, Zustand, i18next and a UI redesign) and got stuck. That file is deleted. None of Grok's work is on this branch: the user parks it on a branch `grok-wip` for review. Do not merge, cherry-pick or build on `grok-wip`; if something there is worth keeping, it comes back as a task card here.
 - Qoder and WorkBuddy's attempt: the GitHub fork's branch `cursor/video-editor-mvp-d191` (https://github.com/uset82/corteo, at `56676ff` on 2026-10-24) was built from `1d00e0a` with the old `IMPLEMENTATION_PLAN.md`. It has first versions of P2-1 to P2-5 plus extras, with known bugs found in a review on 2026-10-24: duplicate detection samples the middle of the whole file, ASS import ignores `\kf` and drops text before the first tag, HEVC files are tagged `hev1` instead of `hvc1`, the cool white balance rotates every hue, the tool catalog is stale so `npm run build` fails, and three files are over 500 lines. It is not merged: the user decides whether it comes in. Until then, the same rule as `grok-wip` applies.
+- Plan 3 (approved 2026-10-24): the built-in chat moves to free models through DeepSeek Harness. Qoder (HQ) and WorkBuddy (HW) work on it in parallel in the worktrees `~/corteo-qoder` and `~/corteo-workbuddy`, on the GitHub branches `harness-qoder` and `harness-workbuddy`; H-9 merges them into this branch.
 
 ## Task table
 
@@ -21,7 +24,8 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P0-2 | Raise the dev server heap | todo | |
 | P0-3 | `npm run start:claudia` and `.env.claudia.example` | todo | P0-2 |
 | P0-4 | Spanish README | todo | P0-3 |
-| P1-1 | Providers off: server block | todo | P0-3 |
+| H-9 | Merge the harness tracks (Cursor agent only) | todo | HQ-1 to HQ-5 and HW-1 to HW-5 `done` or `blocked` on their own branches |
+| P1-1 | Providers off: server block | todo | P0-3, H-9 |
 | P1-2 | Providers off: hide UI, filter MCP tools | todo | P1-1 |
 | P1-3 | Allowed hosts from env | todo | P0-3 |
 | P1-4 | "Conectar Claudia" card | todo | P1-3 |
@@ -66,6 +70,11 @@ Each card says where the plan describes it, which files to start from, when it c
 ### P0-1 · Remove first-attempt leftovers — done
 Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the first attempt left in `src/i18n/locale.ts`).
 
+### H-9 · Merge the harness tracks
+- Plan: Plan 3 › H-9. Only a Cursor agent takes it.
+- Needs: check both tracks' tables on GitHub, not here: `git fetch github`, then `git show github/harness-qoder:docs/plans/PROGRESS.md` and `git show github/harness-workbuddy:docs/plans/PROGRESS.md`.
+- Do and Done when: the five steps in the plan doc.
+
 ### P0-2 · Raise the dev server heap
 - Plan: Plan 1 › Phase 0.
 - Files: `scripts/dev-profile.mjs` (`runVite`), `scripts/dev-profile.verify.mjs`.
@@ -93,19 +102,19 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Done when: a new user can go from clone to the running editor and a connected Claudia with only the README.
 
 ### P1-1 · Providers off: server block
-- Plan: Plan 1 › Phase 1.
-- Files: `server/plugins/index.ts`, new `server/plugins/providers-off.ts` + `.verify.ts`.
-- Do: when `OPENCHATCUT_PROVIDERS=off`, one middleware answers 403 `{"error":"providers_disabled"}` for: `/llm`, `/generate/image`, `/generate/video`, `/generate/voice`, `/generate/music`, `/generate/sound`, `/api/stock-search`, `/api/firecrawl/*`, `/api/web-browser`, `/assemblyai` (Vite proxy in `config/vite.config.ts`), `/api/assemblyai-upload`, `/e2b/*`, `/api/upload-post`, `/api/claude-code`, `/api/codex`, `/api/copilot`, `/api/xai-oauth`, and `/api/transcribe` (cloud transcription: OpenAI, Deepgram, Groq, ElevenLabs, Cartesia).
+- Plan: Plan 1 › Phase 1, narrowed by Plan 3: the chat's model providers are HQ-3's job.
+- Files: `server/plugins/providers-off.ts` + its verify (created by HQ-3 and already registered right after `requestShapeGatePlugin()` in `server/plugins/index.ts`).
+- Do: extend HQ-3's blocked list, don't write a second middleware. When `OPENCHATCUT_PROVIDERS=off`, it also answers 403 `{"error":"providers_disabled"}` for: `/generate/image`, `/generate/video`, `/generate/voice`, `/generate/music`, `/generate/sound`, `/api/stock-search`, `/api/firecrawl/*`, `/api/web-browser`, `/assemblyai` (Vite proxy in `config/vite.config.ts`), `/api/assemblyai-upload`, `/e2b/*`, `/api/upload-post`, and `/api/transcribe` (cloud transcription: OpenAI, Deepgram, Groq, ElevenLabs, Cartesia). `/llm` (only DeepSeek Harness, Ollama and LM Studio pass) and the Codex, Copilot, Claude Code and xAI routes are already blocked by HQ-3.
 - Keep working: `/generate/progress` (Phase 3 import progress uses it), `/api/hf-proxy` (downloads the local model packs), and everything local (export, render, waveform, frames, scene detection, local transcription). Check `/generate/subtitles`, `/api/isolate-voice` and `/api/auto-grade`: block them only if they call a keyed service.
-- Register the plugin near the top of the list returned by `serverPlugins()` in `server/plugins/index.ts`, right after `requestShapeGatePlugin()`, so it runs before the routes. Middlewares added directly in `configureServer` also run before Vite's internal ones, including the `/assemblyai` proxy.
-- Done when: with the switch on, a POST to each blocked route gets 403 `providers_disabled`; with it off, behaviour is unchanged.
-- Verify: the new verify (route list + middleware), `npm run verify:mcp`.
+- Middlewares added directly in `configureServer` run before Vite's internal ones, including the `/assemblyai` proxy, so the existing registration covers it.
+- Done when: with the switch on, a POST to each blocked route gets 403 `providers_disabled` and the chat still works through DeepSeek Harness; with it off, behaviour is unchanged.
+- Verify: the extended verify (route list + middleware), `npm run verify:mcp`.
 
 ### P1-2 · Providers off: hide UI, filter MCP tools
-- Plan: Plan 1 › Phase 1.
-- Files: `config/vite.config.ts` (`__CONFIGURED_CAPS__` define, read by `src/agent/capabilities.ts`), `src/components/chat/ChatPanel.tsx` and its parent, the model-setup card in `src/components/dashboard/DashboardViews.tsx`, Settings provider panes (`src/components/settings/`), generation menus, `src/agent/external-tool-schemas.ts`.
-- Do: expose `providersOff` to the client through the existing define, hide those surfaces, and make `externalToolSchemas()` drop generation and stock tools when it is on.
-- Done when: with `.env.claudia` (switch on) the dashboard has no model-setup card, the editor has no chat panel or generation menus, and `tools/list` over MCP has no generation or stock tools; with the switch off nothing changes.
+- Plan: Plan 1 › Phase 1, narrowed by Plan 3: the chat stays, on DeepSeek Harness.
+- Files: the client flag HQ-3 added in `config/vite.config.ts` (its own define, not `__CONFIGURED_CAPS__`), the Settings panes for generation, stock and cloud transcription vendors (`src/components/settings/`), the generation menus, `src/agent/external-tool-schemas.ts`.
+- Do: reuse HQ-3's flag. Keep the chat panel and the dashboard model-setup card: with the switch on they lead to DeepSeek Harness (HQ-2, HQ-3 already hid the other agent vendors). Hide the generation menus and the generation, stock and cloud-transcription panes, and make `externalToolSchemas()` drop generation and stock tools when the switch is on.
+- Done when: with `.env.claudia` (switch on) the editor has no generation menus, Settings shows no generation, stock or cloud-transcription vendors, `tools/list` over MCP has no generation or stock tools, and the chat still works through DeepSeek Harness; with the switch off nothing changes.
 - Verify: `npm run verify:agent-tools`, `npm run verify:mcp`, `npm run verify:components`, a new verify for the schema filter.
 
 ### P1-3 · Allowed hosts from env
@@ -184,7 +193,7 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 ### L-07 · Real-ear relay (off by default)
 - Plan: Plan 2 › Part B.
 - Files: new `server/music-listen/relay.ts` + verify with a local mock OpenRouter.
-- Do: only when `OPENCHATCUT_LISTEN_RELAY=openrouter` and `OPENROUTER_API_KEY` are set; 64 kbps mono mp3; Spanish prompt; `audio_tokens > 0` means "verificado"; otherwise cross-check against the map and the whisper words; cache per song version and model. This is the only AI call allowed in the editor.
+- Do: only when `OPENCHATCUT_LISTEN_RELAY=openrouter` and `OPENROUTER_API_KEY` are set; 64 kbps mono mp3; Spanish prompt; `audio_tokens > 0` means "verificado"; otherwise cross-check against the map and the whisper words; cache per song version and model. This is the only paid AI call allowed in the editor; the chat's free models through DeepSeek Harness (Plan 3) are the other AI exception.
 - Done when: the mock test covers request shape, the `audio_tokens` rule, caching, and no call when off.
 
 ### L-08 · Keyframable filters + binary-search sampling
@@ -303,5 +312,49 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 ## Decisions made during the work
 Add a line when you choose something the plans leave open: date, task ID, decision, reason.
 
+- 2026-10-24 · Plan 3 · The built-in chat stays, with free models through the local DeepSeek Harness (plus Ollama and LM Studio); `AGENTS.md` rule 1 changed accordingly. P1-1 and P1-2 now only cover generation, stock and cloud transcription, and P1-1 waits for H-9 so `server/plugins/providers-off.ts` is created once (by HQ-3). Reason: Carlos wants Claudia's chat in the editor on free models, without paid APIs.
+
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.
+
+## Harness track · Qoder (HQ)
+Only the Qoder agent edits this section, in `~/corteo-qoder` on branch `harness-qoder`. Task cards: `docs/plans/03-deepseek-harness.md` › Qoder track.
+
+| ID | Task | Status | Needs |
+|----|------|--------|-------|
+| HQ-1 | DeepSeek Harness provider | todo | |
+| HQ-2 | Every harness model in the Model menu | todo | HQ-1 |
+| HQ-3 | Only DeepSeek Harness under `OPENCHATCUT_PROVIDERS=off` | todo | HQ-1 |
+| HQ-4 | Gateway behaviour tests and Spanish errors | todo | HQ-1 |
+| HQ-5 | Real proof from the chat (needs a running harness) | todo | HQ-2, HQ-3, HQ-4 |
+
+### Qoder: decisions
+None yet. Same format as "Decisions made during the work".
+
+### Qoder: blockers
+None yet. Same format as "Blockers".
+
+### Qoder: HQ-5 results
+Model ids, the result of each edit and the latency per message.
+
+---
+
+## Harness track · WorkBuddy (HW)
+Only the WorkBuddy agent edits this section, in `~/corteo-workbuddy` on branch `harness-workbuddy`. Task cards: `docs/plans/03-deepseek-harness.md` › WorkBuddy track.
+
+| ID | Task | Status | Needs |
+|----|------|--------|-------|
+| HW-1 | Pin and install | todo | |
+| HW-2 | `npm run harness` and `npm run harness:doctor` | todo | HW-1 |
+| HW-3 | Which free models can edit | todo | HW-2 |
+| HW-4 | DeepSeek Harness edits corteo over MCP | todo | HW-2 |
+| HW-5 | Guide for Carlos | todo | HW-2, HW-3, HW-4 |
+
+### WorkBuddy: decisions
+None yet. Same format as "Decisions made during the work".
+
+### WorkBuddy: blockers
+None yet. Same format as "Blockers".
+
+### WorkBuddy: model results (HW-3, HW-4)
+The top three models with their checks and latency, and the model used for the MCP edit.

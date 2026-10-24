@@ -4,7 +4,7 @@
 > Paths are relative to the repo root. If a path here and the code disagree, the code wins: fix this file in the same commit.
 
 ## Goal
-Make the OpenChatCut fork Claudia's editing limb. Every feature goes into the real UI and is also exposed as an MCP tool. The editor itself calls no AI APIs. Media comes from Grok, YouTube/Vimeo/Bilibili and real photos, and a compare-and-choose view shows edit versions side by side. An end-to-end export test and verified screenshots prove it works.
+Make the OpenChatCut fork Claudia's editing limb. Every feature goes into the real UI and is also exposed as an MCP tool. The editor itself calls no paid AI APIs (its chat uses free models through DeepSeek Harness: Plan 3). Media comes from Grok, YouTube/Vimeo/Bilibili and real photos, and a compare-and-choose view shows edit versions side by side. An end-to-end export test and verified screenshots prove it works.
 
 ## Where things stand
 - The OpenChatCut fork on branch `cursor/video-editor-mvp-d191` serves on port 5199. The dev server crashed once because Node ran out of heap memory.
@@ -25,6 +25,7 @@ Make the OpenChatCut fork Claudia's editing limb. Every feature goes into the re
 ## Decisions
 - Keep OpenChatCut as the base. Every feature ships as UI + MCP tool + `*.verify.ts` test and is built on an existing system. The orphan components were deleted, not wired.
 - Claudia decides, the editor executes. The editor makes no LLM, image, voice or video API calls: Grok generates, the editor imports, edits and renders.
+  - Amended on 2026-10-24 by Plan 3 (`docs/plans/03-deepseek-harness.md`): the built-in chat stays and may use free models, only through the local DeepSeek Harness gateway or a local Ollama/LM Studio. Image, voice, video and music generation stay off.
 - Referenced repos:
   - EffectCraft: MIT/Apache, pure Rust, alpha since Oct 1, 2026, with MCP and headless render. Optional titles sidecar in the last phase only.
   - open-edit (VEED): ideas only. Its key features need a VEED login or fal credits.
@@ -58,6 +59,7 @@ flowchart LR
 
 ## Phase 1 - Claudia's limb
 - Switch to turn off all external providers: `OPENCHATCUT_PROVIDERS=off`.
+  - Amended by Plan 3: the LLM proxy stays open for DeepSeek Harness, Ollama and LM Studio only, and the chat panel and the dashboard model-setup card stay. HQ-3 blocks the other model providers; P1-1 and P1-2 cover the rest of this list.
   - Server: one middleware in `server/plugins/index.ts` returns 403 `providers_disabled` for the LLM proxy, image/video/voice/music/sound generation, stock search and Firecrawl, the AssemblyAI proxy, e2b and upload-post.
   - Client: hide the chat panel (`src/components/chat/ChatPanel.tsx`), the dashboard model-setup card in `src/components/dashboard/DashboardViews.tsx`, the provider panes in Settings, and the generation menus.
   - MCP: `externalToolSchemas()` in `src/agent/external-tool-schemas.ts` drops generation and stock tools.

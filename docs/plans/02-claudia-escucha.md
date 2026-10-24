@@ -77,7 +77,7 @@ flowchart LR
   - The provider and token counts are saved with the note.
 - **Limits**
   - Cached per song version and model, and never automatic. Well under a cent per song.
-  - It is the only AI call the editor makes, and only when you turn it on. `OPENCHATCUT_PROVIDERS=off` still blocks everything else.
+  - It is the only paid AI call the editor makes, and only when you turn it on. (The chat's free models through DeepSeek Harness, Plan 3, are the other AI call.) `OPENCHATCUT_PROVIDERS=off` still blocks every other cloud service.
   - When it runs, your song goes to OpenRouter and the model provider.
 
 ## Part C - Motion that follows the music
