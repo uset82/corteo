@@ -127,7 +127,7 @@ this README and `PROGRESS.md` disagree, `PROGRESS.md` wins.
 **Not there yet:**
 
 - The interface opens in Spanish, but only part of it is translated: untranslated strings show in English. English is complete and Chinese is the source language; Italian and Russian are also partial.
-- The built-in chat needs a model provider (hosted or a local OpenAI-compatible server such as Ollama). Generation tools — images, voice, video, music — need their own paid API keys and stay off until configured.
+- The built-in chat needs a model provider. Free models through [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) and the [Our Free Model](https://github.com/Ebony-Vinyl/dsh-our-free-model) plugin work today (default `nvidia/nemotron-3.5-lightning:free`, the one free model that completed edits in testing), but the harness is installed and started by hand; the steps are in [`README.es.md`](README.es.md#modelos-gratis-con-deepseek-harness). `OPENCHATCUT_PROVIDERS=off` limits the editor to DeepSeek Harness, Ollama and LM Studio. Generation tools — images, voice, video, music — need their own paid API keys and stay off until configured.
 - Claudia is a single-machine tool. Browser and MCP clients on another host need a tunnel and an HTTPS setup.
 - Ken Burns, duplicate detection and countdown live on a separate development branch and are not in `main` yet.
 

@@ -35,10 +35,12 @@ Las funciones vienen todas de OpenChatCut:
 - Varias secuencias por proyecto, transiciones, efectos, LUTs, plantillas animadas y varias pistas de audio.
 - Un servidor MCP con token y unas 120 herramientas de edición. Hoy lo pueden usar los clientes MCP que corren en el mismo PC (Codex, Claude Code, Qoder…).
 
+Y una cosa nueva de Claudia: el chat del editor funciona con modelos gratis a través de [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) y el plugin [Our Free Model](https://github.com/Ebony-Vinyl/dsh-our-free-model). Sus modelos salen en el menú de modelos del chat; el de por defecto es `nvidia/nemotron-3.5-lightning:free`, el único que en las pruebas cortó un clip y puso fotogramas clave de principio a fin. Los demás pueden fallar o estar ocupados (error 429). Cómo arrancarlo: [Modelos gratis con DeepSeek Harness](#modelos-gratis-con-deepseek-harness).
+
 Con dos salvedades:
 
 - La interfaz arranca en español, pero solo unos 200 de sus 2.520 textos están traducidos: la página de proyectos, la barra superior y lo primero que se ve del chat. El resto sale en inglés.
-- OpenChatCut trae su propio chat de IA y funciones de generación, que piden claves de API. Siguen ahí. El plan apaga la generación y los modelos de pago; el chat se queda, pero solo con modelos gratis a través de DeepSeek Harness, o con Ollama y LM Studio en tu PC.
+- Los proveedores de pago de OpenChatCut y sus funciones de generación (imágenes, voz, video, música) siguen ahí. Con `OPENCHATCUT_PROVIDERS=off` (ya va en el [alias `corteo`](#el-alias-corteo)) el editor solo muestra y deja usar DeepSeek Harness, Ollama y LM Studio. Quitar la generación del todo son las tareas P1-1 y P1-2.
 
 ### Lo que falta
 
@@ -46,7 +48,7 @@ Con dos salvedades:
 |---|---|
 | Que el servidor tenga memoria suficiente sin `NODE_OPTIONS` | P0-2 |
 | Conectar a Claudia desde fuera de tu PC: `npm run start:claudia`, token fijo, túnel, tarjeta «Conectar Claudia» y una pestaña del editor sin pantalla para exportar por MCP | P0-3, P1-3 a P1-5 |
-| Claudia en el chat del editor con modelos gratis a través de [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) y el plugin [Our Free Model](https://github.com/Ebony-Vinyl/dsh-our-free-model), todos en el menú de modelos; el chat de DeepSeek Harness también podrá manejar el editor por MCP | HQ-1 a HQ-5, HW-1 a HW-5, H-9 |
+| Instalar y arrancar DeepSeek Harness con un comando (`npm run harness:install`, `npm run harness`, `npm run harness:doctor`), que el chat de DeepSeek Harness también maneje el editor por MCP, y probar qué modelos gratis editan bien | HW-1 a HW-5 (bloqueadas) |
 | Apagar la generación de imágenes, voz, video y música dentro del editor; skill `videoclip-musical` para Claudia | P1-1, P1-2, P1-6 |
 | «Claudia escucha la canción»: ritmo, secciones, emoción y coros, para que los efectos y movimientos sigan la música | L-01 a L-13 |
 | Ken Burns, subtítulos de verso y coro, importar ASS/VTT, detector de tomas repetidas, exportación HEVC, cuenta regresiva, atajos de Premiere | P2-1 a P2-6 |
@@ -118,11 +120,37 @@ Abre **http://localhost:5199** en Chrome o Edge en Windows. Usa `localhost` y no
 Ejecuta esto una vez:
 
 ```bash
-echo 'alias corteo="cd ~/corteo && VITE_CONFIG_NATIVE_IGNORE_WARNING=true NODE_OPTIONS=--max-old-space-size=6144 npm run dev"' >> ~/.bashrc
+echo 'alias corteo="cd ~/corteo && OPENCHATCUT_PROVIDERS=off VITE_CONFIG_NATIVE_IGNORE_WARNING=true NODE_OPTIONS=--max-old-space-size=6144 npm run dev"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-Desde entonces, escribir `corteo` en cualquier terminal de WSL arranca el editor. `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` solo oculta una lista larga de avisos inofensivos de Vite al arrancar.
+Desde entonces, escribir `corteo` en cualquier terminal de WSL arranca el editor. `OPENCHATCUT_PROVIDERS=off` deja solo los modelos gratis y locales (DeepSeek Harness, Ollama, LM Studio): esconde los proveedores de pago y el servidor rechaza sus llamadas. `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` solo oculta una lista larga de avisos inofensivos de Vite al arrancar.
+
+Si ya tenías el alias de antes, cámbialo: borra la línea `alias corteo=…` de `~/.bashrc` y vuelve a ejecutar los dos comandos de arriba.
+
+### Modelos gratis con DeepSeek Harness
+
+DeepSeek Harness ya está instalado en tu PC en `~/.corteo-harness` (lo instaló Qoder). Los comandos `npm run harness` y `npm run harness:doctor` todavía no existen (tarea HW-2), aunque algunos mensajes del editor ya los nombran; mientras tanto, se hace a mano.
+
+**1. Arrancarlo**, en una terminal de WSL aparte, y dejarla abierta:
+
+```bash
+DSH_HOME=~/.corteo-harness ~/.corteo-harness/runtime/node_modules/.bin/dsh web --no-open --host 127.0.0.1 --port 3080
+```
+
+Ctrl+C lo para. Mientras corre, los modelos gratis responden en `http://127.0.0.1:18899/v1`.
+
+**2. Leer la clave de reenvío** (la primera vez, o si la cambiaste), en otra terminal:
+
+```bash
+node -p 'require(process.env.HOME + "/.corteo-harness/our-free-model/settings.json").forwardKey'
+```
+
+Es una clave local: no la pegues en chats ni la subas a git.
+
+**3. Conectarlo al editor**: en Ajustes › Agent Model › DeepSeek Harness (esa parte de los ajustes aún sale en inglés), pon la dirección `http://127.0.0.1:18899/v1` y la clave, y pulsa «Test & load models». Solo hace falta una vez.
+
+**4. Elegir el modelo**: en el chat, menú «Modelo», grupo DeepSeek Harness, `nvidia/nemotron-3.5-lightning:free`. Tarda: un corte puede llevar más de un minuto. Si un modelo da «ocupado o sin cuota», prueba otro o espera un poco.
 
 ### Tus datos
 
@@ -175,7 +203,7 @@ Las reglas, los comandos y el ciclo de trabajo están en [`AGENTS.md`](AGENTS.md
 
 Claudia is a Spanish music-video editor, named after the one who drives it over MCP: Claudia, Carlos's AI assistant, the open AI pop star from [claudia.gallery](https://claudia.gallery), running as a Grok bot. The repository, its folders and the command that starts it are still called corteo. It's a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut) with a Premiere-style timeline that runs in WSL at http://localhost:5199. Claudia decides; the editor edits and exports, on a real timeline Carlos can still adjust by hand.
 
-The features that work today are upstream OpenChatCut's: the multitrack timeline, keyframes, word-level captions, local Whisper transcription, 4K export, and an MCP server for clients on the same machine. The name and the look are Claudia's, from claudia.gallery. The projects page, the top bar and the chat's first view are in Spanish; most of the rest is still in English. Connecting Claudia from outside the PC, free models for the built-in chat through DeepSeek Harness, song listening, platform import, version comparison and the full Spanish UI are planned; [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md) tracks them.
+The features that work today are upstream OpenChatCut's: the multitrack timeline, keyframes, word-level captions, local Whisper transcription, 4K export, and an MCP server for clients on the same machine. The name and the look are Claudia's, from claudia.gallery. The projects page, the top bar and the chat's first view are in Spanish; most of the rest is still in English. The built-in chat runs on free models through DeepSeek Harness, started by hand for now (see "Modelos gratis con DeepSeek Harness" above). Connecting Claudia from outside the PC, a one-command harness install and start, song listening, platform import, version comparison and the full Spanish UI are planned; [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md) tracks them.
 
 Quick start (WSL, Node 24 via nvm): `npm install`, then `NODE_OPTIONS=--max-old-space-size=6144 npm run dev`, and open http://localhost:5199.
 
