@@ -43,6 +43,7 @@ Con dos salvedades:
 | Que el servidor tenga memoria suficiente sin `NODE_OPTIONS` | P0-2 |
 | Conectar a Claudia desde fuera de tu PC: `npm run start:claudia`, token fijo, túnel, tarjeta «Conectar Claudia» y una pestaña del editor sin pantalla para exportar por MCP | P0-3, P1-3 a P1-5 |
 | Claudia en el chat del editor con modelos gratis a través de [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) y el plugin [Our Free Model](https://github.com/Ebony-Vinyl/dsh-our-free-model), todos en el menú de modelos; el chat de DeepSeek Harness también podrá editar en corteo por MCP | HQ-1 a HQ-5, HW-1 a HW-5, H-9 |
+| Llamarse Claudia y tener la identidad de claudia.gallery: tipografía de marca, piel por defecto, tarjetas de proyecto sin marco y chat con la nueva cabecera | BD-1 a BD-4, BQ-1 a BQ-4, B-9 |
 | Apagar la generación de imágenes, voz, video y música dentro del editor; skill `videoclip-musical` para Claudia | P1-1, P1-2, P1-6 |
 | «Claudia escucha la canción»: ritmo, secciones, emoción y coros, para que los efectos y movimientos sigan la música | L-01 a L-13 |
 | Ken Burns, subtítulos de verso y coro, importar ASS/VTT, detector de tomas repetidas, exportación HEVC, cuenta regresiva, atajos de Premiere | P2-1 a P2-6 |
