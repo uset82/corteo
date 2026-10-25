@@ -31,6 +31,7 @@ import { HEADLINE_TOOL_NAMES, HEADLINE_TOOL_SCHEMAS } from './tools/schemas/head
 import { BRAND_TOOL_NAMES, BRAND_TOOL_SCHEMAS } from './tools/schemas/brand-tools';
 import { SCHEDULE_TOOL_NAMES, SCHEDULE_TOOL_SCHEMAS } from './tools/schemas/schedule-tools';
 import { EMPHASIS_TOOL_NAMES, EMPHASIS_TOOL_SCHEMAS } from './tools/schemas/emphasis-tools';
+import { PERFORMANCE_TOOL_NAMES, PERFORMANCE_TOOL_SCHEMAS } from './tools/schemas/performance-tools';
 import { REFRAME_TOOL_NAMES, REFRAME_TOOL_SCHEMAS } from './tools/schemas/reframe-tools';
 import { EXPORT_TOOL_NAMES, EXPORT_TOOL_SCHEMAS } from './tools/schemas/export-tools';
 import { EXPORT_QA_TOOL_NAMES, EXPORT_QA_TOOL_SCHEMAS } from './tools/schemas/export-qa-tools';
@@ -143,6 +144,8 @@ export const TOOL_SCHEMAS: AgentToolSchema[] = [
   ...SCHEDULE_TOOL_SCHEMAS,
   // Opus parity (Plan 5): keyword emphasis on the caption overlay.
   ...EMPHASIS_TOOL_SCHEMAS,
+  // Opus parity (Plan 5): the performance loop (score bands against real views).
+  ...PERFORMANCE_TOOL_SCHEMAS,
   // Auto reframe: sample frames → detect subject focus → setReframeKeyframe through the existing render path.
   ...REFRAME_TOOL_SCHEMAS,
   // Async render jobs: submit_render_job enqueues a long render and track_export polls progress/results.
@@ -276,6 +279,7 @@ const EXECUTOR_GROUPS: ReadonlyArray<readonly [ReadonlySet<string>, ToolExecutor
   [BRAND_TOOL_NAMES, async () => (await import('./tools/brand-tools')).execBrandTool],
   [SCHEDULE_TOOL_NAMES, async () => (await import('./tools/schedule-tools')).execScheduleTool],
   [EMPHASIS_TOOL_NAMES, async () => (await import('./tools/emphasis-tools')).execEmphasisTool],
+  [PERFORMANCE_TOOL_NAMES, async () => (await import('./tools/performance-tools')).execPerformanceTool],
   [REFRAME_TOOL_NAMES, async () => (await import('./tools/reframe-tools')).execReframeTool],
   [EXPORT_TOOL_NAMES, async () => (await import('./tools/export-tools')).execExportTool],
   [EXPORT_QA_TOOL_NAMES, async () => (await import('./tools/export-qa-tools')).execExportQaTool],

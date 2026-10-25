@@ -5,8 +5,10 @@ import { join } from 'node:path';
 import {
   DEV_PROFILE_METADATA,
   loadOrCreateDevProfile,
+  devHeapNodeArg,
   profileChildEnvironment,
   resolveDevHeadlessShell,
+  viteProcessArgs,
 } from './dev-profile.mjs';
 
 const UUID_A = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
@@ -34,6 +36,14 @@ async function expectInvalid(paths, value, pattern) {
     pattern,
   );
 }
+
+assert.equal(devHeapNodeArg({}), '--max-old-space-size=6144');
+assert.equal(devHeapNodeArg({ OPENCHATCUT_DEV_HEAP_MB: '4096' }), '--max-old-space-size=4096');
+assert.deepEqual(
+  viteProcessArgs('/vite.js', ['--port', '5200'], { OPENCHATCUT_DEV_HEAP_MB: '4096' }),
+  ['--max-old-space-size=4096', '/vite.js', '--config', 'config/vite.config.ts', '--port', '5200'],
+);
+assert.throws(() => devHeapNodeArg({ OPENCHATCUT_DEV_HEAP_MB: 'nope' }), /whole number/);
 
 try {
   const stablePaths = await fixturePaths('stable');

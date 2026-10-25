@@ -2,6 +2,7 @@ import { lazy, Suspense, useState, useEffect } from 'react';
 import { theme } from '../theme';
 import { Icon } from './icons';
 import { ExportHistory } from './ExportHistory';
+import { PROVIDERS_OFF } from '../agent/providers-off';
 import { GenerationActivity } from './GenerationActivity';
 import { SkinPicker } from './settings/SkinPicker';
 import { loadMcpGuideDialog } from './settings/mcpGuideLoader';
@@ -98,7 +99,7 @@ export function TopBar({ projectId, projectName, canUndo, canRedo, exporting, ex
       <TopBarIconButton icon="clock" label={t('Programar publicaciones')} onClick={() => onOpenPublishCalendar?.()} />
       <TopBarIconButton icon="palette" label={t('设计风格(品牌)')} onClick={() => invokeAction('open-design', undefined, 'toolbar')} />
       <SkinPicker />
-      <GenerationActivity projectId={projectId} onResume={onResumeGeneration} />
+      {PROVIDERS_OFF ? null : <GenerationActivity projectId={projectId} onResume={onResumeGeneration} />}
       <TopBarIconButton icon="history" label={t('历史版本')} onClick={() => invokeAction('open-history', undefined, 'toolbar')} />
       {/* self-contained: trigger + popover, global export history, zero props */}
       <ExportHistory />

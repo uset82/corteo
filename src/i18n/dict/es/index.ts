@@ -196,4 +196,7 @@ export default {
   'running': 'publicando',
   'published': 'publicada',
   'failed': 'falló',
+  '连接 Claudia': 'Conectar Claudia',
+  '把下面的配置交给 Claudia。她从这台电脑以外编辑这个工程。编辑器的域名必须写进 hosting.egressDomains。':
+    'Dale a Claudia la configuración de abajo para que edite este proyecto desde fuera de este PC. El dominio del editor tiene que estar en hosting.egressDomains.',
 } as Record<string, string>;

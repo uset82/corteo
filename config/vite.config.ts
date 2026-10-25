@@ -15,6 +15,17 @@ export function providersOffFromEnv(env: NodeJS.ProcessEnv = process.env): boole
   return providersOffEnv(env);
 }
 
+const BASE_ALLOWED_HOSTS = ['.cursorvm.com', 'localhost'] as const;
+
+/** Hosts Vite will serve. Extra names come from the process environment, not from a `.env` file. */
+export function allowedHostsFromEnv(env: NodeJS.ProcessEnv = process.env): string[] {
+  const extra = (env.OPENCHATCUT_ALLOWED_HOSTS ?? '')
+    .split(',')
+    .map((host) => host.trim())
+    .filter((host) => host.length > 0);
+  return [...BASE_ALLOWED_HOSTS, ...extra];
+}
+
 const appPackage = JSON.parse(readFileSync('package.json', 'utf8')) as { version?: unknown };
 if (typeof appPackage.version !== 'string') throw new Error('package.json is missing a valid version');
 export function applyAuthoritativeLocalProvider(
@@ -160,10 +171,7 @@ export default defineConfig(({ mode }) => {
       host: true,
       port: 5199,
       strictPort: true,
-      allowedHosts: [
-        '.cursorvm.com',
-        'localhost',
-      ],
+      allowedHosts: allowedHostsFromEnv(),
       // Pre-transform the editor entry graph at startup so the first tab
       // (and chat hydration) renders without a multi-second compile stall.
       warmup: {

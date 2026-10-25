@@ -34,4 +34,7 @@ export default {
   '连接中…': 'Connessione…',
   '连接后重启对应客户端生效；Codex 需新开终端使环境变量生效。': 'Riavvia il client dopo la connessione; per Codex apri un nuovo terminale per applicare la variabile di ambiente.',
   '连接失败': 'Connessione non riuscita',
+  '连接 Claudia': 'Connetti Claudia',
+  '把下面的配置交给 Claudia。她从这台电脑以外编辑这个工程。编辑器的域名必须写进 hosting.egressDomains。':
+    'Dai a Claudia la configurazione qui sotto, così modifica questo progetto da fuori da questo PC. Il dominio dell’editor deve essere in hosting.egressDomains.',
 } as Record<string, string>;

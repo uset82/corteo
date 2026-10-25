@@ -13,6 +13,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 ## State at handoff (2026-10-24)
 - Branch `cursor/video-editor-mvp-d191`. The app runs with `npm run dev` on http://localhost:5199.
 - Baseline checks on this commit, on a 4-core Linux VM without a GPU: `npx tsc -b` passes, `npm run lint` passes (warnings only, all from upstream), `npm run verify:i18n` passes, `npm run build` passes (the "chunks larger than 2500 kB" warning is upstream's), and `CC_RENDER_GL=swangle npm test` passes: exit 0, 197 test segments plus the pre- and post-test chains, about 6 minutes. Without `CC_RENDER_GL=swangle` on a machine without GPU WebGL2, three render tests fail with "WebGL2 not available" (`remotion/video-decoder-render.verify.mjs`, `src/gl/clipFxExport.verify.mjs`, `src/gl/clipFxExport.offthread.verify.mjs`); that is the environment, not a code failure.
+- After publishing the live editor (2026-10-25, same VM, Node 24): `npx tsc -b`, `npm run lint` (warnings only) and `npm run build` (upstream's chunk-size warning) pass, and `CC_RENDER_GL=swangle npm test` passes: exit 0, 213 test segments. Carlos still deploys the named tunnel and `npx wrangler deploy` on his PC.
 - After H-9 (both harness tracks merged, 2026-10-25, same VM, Node 24): `npx tsc -b` and `npm run lint` pass (warnings only), `npm run build` passes with upstream's chunk-size warning, and `CC_RENDER_GL=swangle npm test` passes: exit 0, 210 test segments (the 206 plus the four `scripts/harness/*.verify.mjs`), including `font-tools.verify.ts`. The four harness verifies also passed on their own before the suite.
 - After B-9 (Plan 4 merged, 2026-10-24, same VM): `npx tsc -b`, `npm run lint` (warnings only, none on lines B-9 changed) and `npm run verify:i18n` pass. At `8ee1061`, `CC_RENDER_GL=swangle npm test` passes (exit 0, 203 test segments, that is the 197 plus the six brand verifies, plus the pre- and post-test chains, about 6½ minutes) and `npm run build` passes with upstream's chunk-size warning. The commits after it change one Spanish string and the docs. Screenshots, not committed: the projects page at 1440x900 and 390x844 and a card on hover, the editor with the chat open and collapsed at 1440x900, and the phone upload page in Spanish at 390x844.
 - If a test fails on your machine before you have changed anything, it is a baseline difference: record it under Blockers with its output, and don't count it against your task.
@@ -25,16 +26,16 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
 | P0-1 | Remove first-attempt leftovers and orphan components | done | |
-| P0-2 | Raise the dev server heap | todo | |
-| P0-3 | `npm run start:claudia` and `.env.claudia.example` | todo | P0-2 |
-| P0-4 | Spanish README | todo | P0-3 |
+| P0-2 | Raise the dev server heap | done | |
+| P0-3 | `npm run start:claudia` and `.env.claudia.example` | done | P0-2 |
+| P0-4 | Spanish README | done | P0-3 |
 | H-9 | Merge the harness tracks (Cursor agent only) | done | HQ-1 to HQ-5 and HW-1 to HW-5 `done` or `blocked` on their own branches |
 | B-9 | Merge the brand tracks (Cursor agent only) | done | BD-1 to BD-4 and BQ-1 to BQ-4 |
-| P1-1 | Providers off: server block | todo | P0-3, H-9 |
-| P1-2 | Providers off: hide UI, filter MCP tools | todo | P1-1 |
-| P1-3 | Allowed hosts from env | todo | P0-3 |
-| P1-4 | "Conectar Claudia" card | todo | P1-3 |
-| P1-5 | `npm run editor-host` (headless editor tab) | todo | P0-3 |
+| P1-1 | Providers off: server block | done | P0-3, H-9 |
+| P1-2 | Providers off: hide UI, filter MCP tools | done | P1-1 |
+| P1-3 | Allowed hosts from env | done | P0-3 |
+| P1-4 | "Conectar Claudia" card | done | P1-3 |
+| P1-5 | `npm run editor-host` (headless editor tab) | done | P0-3 |
 | P1-6 | `videoclip-musical` skill | todo | P1-2 |
 | P1-7 | Webhooks with HMAC | optional | P4-3 |
 | L-01 | Server-side Beat This + CLAP runner | todo | |
@@ -100,14 +101,16 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - README and AGENTS prose rewritten for step 4: Claudia is the product, corteo the repository and the command; the two brand font licences are in the README credits.
 - Checks and screenshots: see "State at handoff".
 
-### P0-2 · Raise the dev server heap
+### P0-2 · Raise the dev server heap — done
+- Done 2026-10-25: `devHeapNodeArg` / `viteProcessArgs` in `scripts/dev-profile.mjs`. Vite starts as `node --max-old-space-size=<MB>`.
 - Plan: Plan 1 › Phase 0.
 - Files: `scripts/dev-profile.mjs` (`runVite`), `scripts/dev-profile.verify.mjs`.
 - Do: start Vite as `node --max-old-space-size=<MB> node_modules/vite/bin/vite.js …`, with MB from `OPENCHATCUT_DEV_HEAP_MB` (default 6144). Export a small helper that builds the argument list so the verify can test it.
 - Done when: after `npm run dev`, `ps -eo args | grep vite.js` shows `--max-old-space-size=6144`; with `OPENCHATCUT_DEV_HEAP_MB=4096` it shows 4096; the verify asserts both.
 - Verify: `npm run verify:runtime-profile`.
 
-### P0-3 · `npm run start:claudia` and `.env.claudia.example`
+### P0-3 · `npm run start:claudia` and `.env.claudia.example` — done
+- Done 2026-10-25: `npm run start:claudia` loads `.env.claudia` when it exists. `.env.claudia.example` is tracked; `.env.claudia` stays gitignored.
 - Plan: Plan 1 › Phase 0.
 - Files: `package.json` (scripts), new `.env.claudia.example`, `.gitignore`.
 - Do:
@@ -118,7 +121,8 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Done when: with `.env.claudia` holding token T, the MCP smoke test in `AGENTS.md` works with T and gets 403 with any other token; without `.env.claudia` the script still starts.
 - Verify: `npm run verify:runtime-profile`, MCP smoke test.
 
-### P0-4 · Spanish README
+### P0-4 · Spanish README — done
+- Done 2026-10-25: the run steps for `start:claudia`, the tunnel and Claudia's MCP URL are in `README.es.md` › "Publicar el editor". `README.md` stays the English overview.
 - Plan: Plan 1 › Phase 0.
 - State: `README.md` was rewritten in Spanish on 2026-10-24, before P0-3 (what the editor is, status, requirements, install, the `corteo` alias, data and token locations, syncing Cursor's branch to GitHub, credits and AGPL). B-9 then renamed its prose: the product is Claudia, corteo is the repository and the command, and the brand fonts' licences are in the credits. Don't replace it: extend it, with the same naming.
 - Files: `README.md` (leave `README_ZH.md` alone).
@@ -127,7 +131,8 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - B-9 rewrites the README and AGENTS prose for the new name: the product is Claudia, corteo stays the repository and the command, and the two font licences join the credits. Don't pre-empt it here.
 - Done when: a new user can go from clone to the running editor and a connected Claudia with only the README.
 
-### P1-1 · Providers off: server block
+### P1-1 · Providers off: server block — done
+- Done 2026-10-25: the blocked list in `server/plugins/providers-off.ts` now includes generation, stock, Firecrawl, AssemblyAI, e2b, upload-post and cloud transcription. Local routes stay open.
 - Plan: Plan 1 › Phase 1, narrowed by Plan 3: the chat's model providers are HQ-3's job.
 - Files: `server/plugins/providers-off.ts` + its verify (created by HQ-3 and already registered right after `requestShapeGatePlugin()` in `server/plugins/index.ts`).
 - Do: extend HQ-3's blocked list, don't write a second middleware. When `OPENCHATCUT_PROVIDERS=off`, it also answers 403 `{"error":"providers_disabled"}` for: `/generate/image`, `/generate/video`, `/generate/voice`, `/generate/music`, `/generate/sound`, `/api/stock-search`, `/api/firecrawl/*`, `/api/web-browser`, `/assemblyai` (Vite proxy in `config/vite.config.ts`), `/api/assemblyai-upload`, `/e2b/*`, `/api/upload-post`, and `/api/transcribe` (cloud transcription: OpenAI, Deepgram, Groq, ElevenLabs, Cartesia). `/llm` (only DeepSeek Harness, Ollama and LM Studio pass) and the Codex, Copilot, Claude Code and xAI routes are already blocked by HQ-3.
@@ -136,28 +141,32 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Done when: with the switch on, a POST to each blocked route gets 403 `providers_disabled` and the chat still works through DeepSeek Harness; with it off, behaviour is unchanged.
 - Verify: the extended verify (route list + middleware), `npm run verify:mcp`.
 
-### P1-2 · Providers off: hide UI, filter MCP tools
+### P1-2 · Providers off: hide UI, filter MCP tools — done
+- Done 2026-10-25: `visibleSettingsCategories` hides generation, stock, cloud transcription, sandbox, web and publish. The top-bar generation button hides. `externalToolSchemas` drops generation and stock tools. The chat stays.
 - Plan: Plan 1 › Phase 1, narrowed by Plan 3: the chat stays, on DeepSeek Harness.
 - Files: the client flag HQ-3 added in `config/vite.config.ts` (its own define, not `__CONFIGURED_CAPS__`), the Settings panes for generation, stock and cloud transcription vendors (`src/components/settings/`), the generation menus, `src/agent/external-tool-schemas.ts`.
 - Do: reuse HQ-3's flag. Keep the chat panel and the dashboard model-setup card: with the switch on they lead to DeepSeek Harness (HQ-2, HQ-3 already hid the other agent vendors). Hide the generation menus and the generation, stock and cloud-transcription panes, and make `externalToolSchemas()` drop generation and stock tools when the switch is on.
 - Done when: with `.env.claudia` (switch on) the editor has no generation menus, Settings shows no generation, stock or cloud-transcription vendors, `tools/list` over MCP has no generation or stock tools, and the chat still works through DeepSeek Harness; with the switch off nothing changes.
 - Verify: `npm run verify:agent-tools`, `npm run verify:mcp`, `npm run verify:components`, a new verify for the schema filter.
 
-### P1-3 · Allowed hosts from env
+### P1-3 · Allowed hosts from env — done
+- Done 2026-10-25: `allowedHostsFromEnv` appends `OPENCHATCUT_ALLOWED_HOSTS` to `.cursorvm.com` and `localhost`.
 - Plan: Plan 1 › Phase 1.
 - Files: `config/vite.config.ts` (`server.allowedHosts`), `config/vite.config.verify.ts`.
 - Do: append the comma-separated hosts in `OPENCHATCUT_ALLOWED_HOSTS` (trimmed, empty entries dropped) to the existing list.
 - Done when: `curl -H 'Host: editor.example.com' http://localhost:5199/` is refused without the variable and served with `OPENCHATCUT_ALLOWED_HOSTS=editor.example.com`.
 - Verify: `npx tsx config/vite.config.verify.ts`. `config/` changes need the full gate (`npm test`).
 
-### P1-4 · "Conectar Claudia" card
+### P1-4 · "Conectar Claudia" card — done
+- Done 2026-10-25: the MCP guide shows `https://corteo.uset82.workers.dev/api/external-mcp/mcp` and a `defineConnection` snippet. The token is the one the guide already reveals.
 - Plan: Plan 1 › Phase 1 (connection kit).
 - Files: `src/components/settings/McpGuide.tsx` (it already shows the token in trusted sessions), i18n dictionaries.
 - Do: a card titled "Conectar Claudia" with the MCP URL, the token (reuse the existing reveal/copy logic), the `defineConnection` snippet from the plan with copy buttons, and a note that the editor's domain must be in Claudia's `hosting.egressDomains`.
 - Done when: the card renders in Spanish in Settings › MCP and the copied snippet is valid TypeScript.
 - Verify: `npx tsx src/components/settings/mcpGuideLoader.verify.ts`, `npm run verify:i18n`.
 
-### P1-5 · `npm run editor-host`
+### P1-5 · `npm run editor-host` — done
+- Done 2026-10-25: `npm run editor-host` opens `/#/editor/<id>` in headless Chromium and reopens it if the server comes back. `--project` picks an id; otherwise the newest project.
 - Plan: Plan 1 › Phase 1 (connection kit).
 - Files: new `scripts/editor-host.mjs` (add `!/scripts/editor-host.mjs` to `.gitignore`), `package.json`.
 - Do: open the editor on a project in headless Chromium (Playwright is already a dev dependency; run `npx playwright install chromium` once) and keep the tab alive; reconnect if the dev server restarts; exit cleanly on Ctrl+C. A tab registers with the MCP bridge only while a project is open: take the project from `--project <id>`, else the most recently updated one; the `get_editor_url` MCP control returns a project's editor URL.
@@ -521,7 +530,7 @@ This track is deliberately **not** in the main table, so the picking rule above 
 | OP-12 | `write_social_copy` | done | |
 | OP-13 | Scheduled publish | done | OP-12 |
 | OP-14 | `search_catalog` (semantic) | optional | |
-| OP-15 | Performance loop | optional | OP-13 |
+| OP-15 | Performance loop | done | OP-13 |
 
 ### Opus parity: decisions
 - Trend is absent from the score (`trend: null`): there is no local trend feed, and a fabricated dimension would be worse than a missing one.
@@ -679,7 +688,11 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - **OP-08 is done (2026-10-31).** The per-word emphasis rule now lives in one tested function: `captionWordColour(preset, word, isActive)` in `renderStyles.ts` — the active word wins, an emphasised word takes the highlight while it is not being spoken, everything else keeps the base colour. `CaptionsLayer` spreads its result instead of holding an inline expression, and the verify fails if the layer ever goes back to looking emphasis up by index or stops calling the shared function.
 - **On the frame proof, stated rather than rounded up.** The card asked for an exported frame. What is proven instead: the override reaches the word (`applyWordOverrides`), the word reaches the layer (`word.emphasis`), the colour rule is deterministic and tested (four cases against the `tiktok` preset), and preview and export are **the same component** — `CaptionsLayer` renders inside the Remotion composition, which is why there is no second painter to disagree. `verify:captions` and `verify:caption-motion` both exit 0. What is *not* proven here is Remotion's own burn-in of that colour, which is pre-existing infrastructure with its own render tests (`verify:export-gl`, `remotion/video-decoder-render.verify.mjs`); on a machine without Chromium or GL those cannot run, and this session had neither. A frame check remains the honest next step for anyone with that environment.
 - **Plan 5 is complete:** OP-01→OP-13 done, OP-14/OP-15 optional. 135 tools. Score/moments, ranking, the one-call pipeline, calibration, the panel, speech cleanup, censor, headline, reframe stabilization, social copy, brand kit, scheduled publish, keyword emphasis.
-- OP-14 (semantic catalog) and OP-15 (performance loop) stay `optional`.
+- **OP-15 done (2026-10-25).** The performance loop closes the rubric: `src/agent/shorts/performance.ts` parses a platform CSV (loose header matching — score/potential, views/plays, retention/average view percentage; commas or semicolons; quoted fields), bands the clips by score, and reports average views and retention per band, the best band, and **the lowest band whose average still beats the overall average** — the honest candidate for `minScore`, not the best band.
+- It refuses to recommend a threshold under 12 clips and says so in the note: with six data points the numbers are noise, and a "learning" loop fitted to noise is worse than none.
+- Two parsing bugs the verify caught before commit: an **empty cell was read as `0`** (`Number('')` is 0), which would have dropped a blank score into the lowest band instead of skipping it — missing data is not a zero; and my own expectation for the best band was wrong (scores 76–81 land in 70–84, not 85–99), which is exactly the kind of thing a hand-computed fixture is for.
+- Tool `score_performance` (read-only, 136 tools) returns the report and, when it is confident, names the `minScore` to use in `make_shorts`. Verified: a 12-row CSV yields a recommendation, two rows yield a report with `suggestedMinScore: null`, a blank-score row is skipped and counted, and an unusable CSV is a refusal with the reason.
+- OP-14 (semantic catalog) stays `optional`; OP-15 is done.
 
 **OP-10 (in progress, step 1 of 4, 2026-10-25).** The brand-kit data layer is in `src/brand/kit.ts`:
 - `BrandKit`, `DEFAULT_BRAND_KIT`, `normalizeBrandKit` and `brandKitIssues`. The normalizer coerces untrusted input field by field (hex-only palette, `n:n` ratios, clamped margins/scale/opacity, watermark dropped when its corner is unknown) so a half-written kit applies its good half instead of failing whole. Optional keys are **omitted rather than set to `undefined`**, which is what makes `normalizeBrandKit(null)` deep-equal `DEFAULT_BRAND_KIT` — the verify caught that on the first run.

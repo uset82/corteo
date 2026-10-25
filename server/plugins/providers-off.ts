@@ -11,13 +11,27 @@ import { llmProviderForRequest } from './llm-proxy.ts';
 
 export { PROVIDERS_OFF_ALLOWED, providersOffAllows, providersOffEnv };
 
-/** Whole mounts that only serve a remote or subscription backend. P1-1 adds
- * the generation, stock and cloud-transcription routes to this file. */
+/** Whole mounts that only serve a remote or paid backend. Local editing,
+ * `/generate/progress`, `/api/hf-proxy`, subtitles, voice isolation and
+ * auto-grade stay open. `/llm` is gated separately by provider id. */
 export const PROVIDERS_OFF_BLOCKED_PREFIXES = [
   '/api/codex',
   '/api/copilot',
   '/api/claude-code',
   '/api/xai-oauth',
+  '/generate/image',
+  '/generate/video',
+  '/generate/voice',
+  '/generate/music',
+  '/generate/sound',
+  '/api/stock-search',
+  '/api/firecrawl',
+  '/api/web-browser',
+  '/assemblyai',
+  '/api/assemblyai-upload',
+  '/e2b',
+  '/api/upload-post',
+  '/api/transcribe',
 ] as const;
 
 export function providersOff(env: NodeJS.ProcessEnv = process.env): boolean {

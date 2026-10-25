@@ -40,15 +40,13 @@ Y una cosa nueva de Claudia: el chat del editor funciona con modelos gratis a tr
 Con dos salvedades:
 
 - La interfaz arranca en español, pero solo unos 200 de sus 2.520 textos están traducidos: la página de proyectos, la barra superior y lo primero que se ve del chat. El resto sale en inglés.
-- Los proveedores de pago de OpenChatCut y sus funciones de generación (imágenes, voz, video, música) siguen ahí. Con `OPENCHATCUT_PROVIDERS=off` (ya va en el [alias `corteo`](#el-alias-corteo)) el editor solo muestra y deja usar DeepSeek Harness, Ollama y LM Studio. Quitar la generación del todo son las tareas P1-1 y P1-2.
+- Con `OPENCHATCUT_PROVIDERS=off` (el alias `corteo` y `npm run start:claudia`) el chat solo usa DeepSeek Harness, Ollama y LM Studio. Las rutas de generación, de stock y de transcripción en la nube responden 403, y esos ajustes no se muestran. El skill `videoclip-musical` sigue pendiente (P1-6).
 
 ### Lo que falta
 
 | Qué | Tareas |
 |---|---|
-| Que el servidor tenga memoria suficiente sin `NODE_OPTIONS` | P0-2 |
-| Conectar a Claudia desde fuera de tu PC: `npm run start:claudia`, token fijo, túnel, tarjeta «Conectar Claudia» y una pestaña del editor sin pantalla para exportar por MCP | P0-3, P1-3 a P1-5 |
-| Apagar la generación de imágenes, voz, video y música dentro del editor; skill `videoclip-musical` para Claudia | P1-1, P1-2, P1-6 |
+| Skill `videoclip-musical` para Claudia | P1-6 |
 | «Claudia escucha la canción»: ritmo, secciones, emoción y coros, para que los efectos y movimientos sigan la música | L-01 a L-13 |
 | Ken Burns, subtítulos de verso y coro, importar ASS/VTT, detector de tomas repetidas, exportación HEVC, cuenta regresiva, atajos de Premiere | P2-1 a P2-6 |
 | Importar desde YouTube, Vimeo o Bilibili con sus créditos (yt-dlp) | P3-1 a P3-4 |
@@ -112,7 +110,7 @@ NODE_OPTIONS=--max-old-space-size=6144 npm run dev
 
 Abre **http://localhost:5199** en Chrome o Edge en Windows. Usa `localhost` y no la IP de WSL: el navegador solo activa las funciones de video que necesita el editor (WebCodecs, Web Crypto) en `localhost` o con HTTPS. Para parar el servidor, Ctrl+C en esa terminal.
 
-`NODE_OPTIONS=--max-old-space-size=6144` le da al servidor 6 GB de memoria; sin eso se puede caer por falta de memoria. La tarea P0-2 lo hará automático.
+El servidor arranca con 6 GB de memoria (`OPENCHATCUT_DEV_HEAP_MB`, por defecto 6144). Ya no hace falta poner `NODE_OPTIONS` a mano.
 
 ### El alias `corteo`
 
@@ -166,7 +164,52 @@ Imprime la URL (normalmente `http://127.0.0.1:18899/v1`) y la clave. Sin `--show
 - Dirección: `http://localhost:5199/api/external-mcp/mcp`, con el encabezado `Authorization: Bearer <token>`.
 - Token: en la página de proyectos, el botón de arriba a la derecha «Agentes externos (MCP)» (el nombre aparece al pasar el ratón), o el archivo `mcp-token` de la carpeta de tu perfil.
 
-Hoy esto sirve para clientes que corren en el mismo PC. Claudia no corre en tu PC: para llegar al editor necesita un túnel (Cloudflare Tunnel o Tailscale Funnel), que el editor todavía no acepta, y la tarjeta «Conectar Claudia». Son las tareas P1-3 y P1-4.
+Hoy eso sirve para clientes en el mismo PC. Para Claudia, que no corre en tu PC, la dirección es la de abajo.
+
+### Publicar el editor
+
+https://corteo.uset82.workers.dev/ deja de ser una copia estática y pasa a ser el editor que corre en tu PC. Quien abre esa dirección ve tus proyectos y usa los modelos gratis. Claudia llama a `https://corteo.uset82.workers.dev/api/external-mcp/mcp` con el token. Es un solo editor compartido: el chat gasta la cuota gratis de tu PC, y la clave de reenvío no sale de tu PC.
+
+Hace falta un túnel con nombre en un dominio de tu cuenta de Cloudflare, por ejemplo `editor.uset82.com`. Un túnel rápido (`trycloudflare.com`) corta el stream del chat y de MCP. Ese dominio solo lo usa el Worker por dentro. La dirección pública sigue siendo `corteo.uset82.workers.dev`.
+
+**1. El token y el arranque**, una vez:
+
+```bash
+cd ~/corteo
+cp .env.claudia.example .env.claudia
+# escribe un token en OPENCHATCUT_MCP_TOKEN (el ejemplo dice cómo generarlo)
+npm run harness
+```
+
+Deja esa terminal abierta. En otra:
+
+```bash
+cd ~/corteo && npm run start:claudia
+```
+
+Y en otra, para que Claudia pueda editar aunque nadie tenga la página abierta:
+
+```bash
+cd ~/corteo && npx playwright install chromium
+npm run editor-host
+```
+
+**2. El túnel.** Edita [`cloudflare/tunnel.yml`](cloudflare/tunnel.yml): el hostname, y la ruta del archivo de credenciales que crea `cloudflared tunnel create corteo`. Luego:
+
+```bash
+cloudflared tunnel route dns corteo editor.uset82.com
+npm run tunnel
+```
+
+**3. El Worker**, una vez, con la cuenta de Cloudflare que ya tiene `corteo.uset82.workers.dev`. Si tu hostname no es `editor.uset82.com`, cámbialo en `wrangler.jsonc` (`TUNNEL_ORIGIN`) y en `cloudflare/tunnel.yml`.
+
+```bash
+npx wrangler deploy
+```
+
+Eso sustituye la copia estática. Los proyectos que solo existían en el navegador de esa copia dejan de verse: la página muestra los del PC.
+
+**4. Claudia.** En el editor, «Agentes externos (MCP)» → «Conectar Claudia». Copia el snippet. En Claudia, `OPENCHATCUT_MCP_URL` es `https://corteo.uset82.workers.dev/api/external-mcp/mcp`, `OPENCHATCUT_MCP_TOKEN` es el de `.env.claudia`, y `hosting.egressDomains` incluye `corteo.uset82.workers.dev`.
 
 ## Sincronizar la rama de Cursor con GitHub
 
