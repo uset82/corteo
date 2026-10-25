@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const outfile = resolve(root, 'cli-dist/occ.mjs');
+const workerOutfile = resolve(root, 'cli-dist/inference-worker.mjs');
 
 await mkdir(dirname(outfile), { recursive: true });
 await build({
@@ -25,4 +26,16 @@ await build({
   sourcemap: true,
   banner: { js: '#!/usr/bin/env node' },
 });
+// analyze_music spawns this worker from beside the CLI bundle
+// (server/music-listen/inference.ts).
+await build({
+  entryPoints: [resolve(root, 'server/music-listen/inference-worker.ts')],
+  outfile: workerOutfile,
+  bundle: true,
+  platform: 'node',
+  format: 'esm',
+  packages: 'external',
+  sourcemap: true,
+});
 process.stdout.write(`[build:cli] ${outfile}\n`);
+process.stdout.write(`[build:cli] ${workerOutfile}\n`);

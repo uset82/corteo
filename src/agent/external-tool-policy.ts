@@ -60,6 +60,12 @@ const SERVER_DIRECT_READ_TOOL_NAMES: Record<string, true> = {
   // Local media discovery: the same core the desktop app browses with, gated by
   // AGENT_IMPORT_ROOTS like the import tools below.
   browse_local_media: true,
+  // On-device music analysis: server/music-listen runs the same Beat This and
+  // CLAP cores in a worker process and writes the project-store analysis record
+  // the browser badge reads. Missing model packs answer with a
+  // missing-model-packs action rather than failing.
+  analyze_music: true,
+  inspect_music: true,
 };
 
 const SERVER_DIRECT_EDIT_TOOL_NAMES: Record<string, true> = {

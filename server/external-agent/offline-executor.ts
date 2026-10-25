@@ -46,6 +46,11 @@ const PATH_IMPORT_TOOL_NAMES: Record<string, true> = {
   import_folder: true,
 };
 
+const MUSIC_ANALYSIS_TOOL_NAMES: Record<string, true> = {
+  analyze_music: true,
+  inspect_music: true,
+};
+
 /**
  * Catalog-driven tools. Loaded lazily for the same reason as the GL-backed pair:
  * core-tools pulls the template sandbox and the model client, which the desktop
@@ -93,6 +98,10 @@ export async function executeOfflineTool(
   if (name === 'export_jianying_draft') {
     const { executeOfflineJianyingExport } = await import('./offline-jianying-export.js');
     return executeOfflineJianyingExport(name, args, ctx);
+  }
+  if (MUSIC_ANALYSIS_TOOL_NAMES[name] === true) {
+    const { execServerMusicTool } = await import('../music-listen/tool.js');
+    return execServerMusicTool(name, args, ctx);
   }
   if (name === 'read_agent_artifact') return execAgentRuntimeTool(name, args, ctx);
   if (CORE_DATA_TOOL_NAMES.has(name)) return execCoreDataTool(name, args, ctx);
