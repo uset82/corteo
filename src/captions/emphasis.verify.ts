@@ -3,6 +3,8 @@
 import assert from 'node:assert';
 import { readFile } from 'node:fs/promises';
 import { applyWordOverrides } from './resolve';
+import { captionWordColour } from './renderStyles';
+import { CAPTION_STYLES } from './styles';
 import type { CaptionWordOverride } from './types';
 import type { TranscriptWord } from '../transcript/types';
 
@@ -52,9 +54,24 @@ const refs = ['w1', 'w2', 'w3'];
 // ── 5) The layer reads the word, never an index into the override map ───────────────
 {
   const source = await readFile(new URL('./CaptionsLayer.tsx', import.meta.url), 'utf8');
-  assert.ok(source.includes('word.emphasis'), 'the layer reads the emphasis from the word');
   assert.ok(!/wordOverrides\[.*emphasis/.test(source), 'the layer does not look emphasis up by index');
-  assert.ok(/index !== currentIndex/.test(source), 'the active word wins when both apply');
+  assert.ok(source.includes('captionWordColour('), 'the colour rule is the shared function, not an inline expression');
+}
+
+// ── 6) The colour rule, tested without a Remotion context ───────────────────────────
+{
+  const preset = CAPTION_STYLES.find((style) => style.id === 'tiktok')!;
+  assert.ok(preset.highlightColor && preset.color, 'the preset has two distinct colours');
+  assert.notStrictEqual(preset.highlightColor, preset.color);
+
+  assert.strictEqual(captionWordColour(preset, { emphasis: true }, false), preset.highlightColor, 'an emphasised word takes the highlight');
+  assert.strictEqual(captionWordColour(preset, {}, false), preset.color, 'a plain word takes the base colour');
+  assert.strictEqual(captionWordColour(preset, { emphasis: true }, true), preset.highlightColor, 'the active word is highlighted either way');
+  assert.strictEqual(captionWordColour(preset, {}, true), preset.highlightColor, 'and it is highlighted when not emphasised too');
+
+  // The layer asks this function, so the rule cannot drift back into the component.
+  const layer = await readFile(new URL('./CaptionsLayer.tsx', import.meta.url), 'utf8');
+  assert.ok(layer.includes('captionWordColour(preset, word, index === currentIndex)'), 'the layer uses the shared rule');
 }
 
 console.log('captions/emphasis.verify: ok');

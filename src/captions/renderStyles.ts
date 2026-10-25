@@ -260,3 +260,22 @@ export function containerStyle(
   }
   return { ...placed, bottom: finiteNumber(height, 0) * 0.08, transform: `translate(${offsetX}px, ${-offsetY}px) ${visualTransform}` };
 }
+
+
+/**
+ * The colour a single caption word is painted with (Plan 5, OP-08).
+ *
+ * Extracted from the layer so the decision is testable without a Remotion context or a GPU:
+ * the active word always wins, an emphasised word takes the highlight colour while it is not
+ * being spoken, and everything else is the base colour. This is the whole per-word emphasis
+ * rule in one place — the layer only spreads its result.
+ */
+export function captionWordColour(
+  preset: CaptionStyle,
+  word: { emphasis?: boolean },
+  isActive: boolean,
+): string {
+  if (isActive) return preset.highlightColor;
+  if (word.emphasis) return preset.highlightColor;
+  return preset.color;
+}

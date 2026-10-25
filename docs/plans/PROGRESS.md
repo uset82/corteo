@@ -514,7 +514,7 @@ This track is deliberately **not** in the main table, so the picking rule above 
 | OP-05 | "Analizar episodio" panel | done | OP-03 |
 | OP-06 | `tighten_speech` | done | |
 | OP-07 | `censor_words` | done | |
-| OP-08 | Shorts caption presets, keywords, line breaking | todo | |
+| OP-08 | Keyword emphasis (reshaped) | done | |
 | OP-09 | `write_clip_title` | done | |
 | OP-10 | Brand kit | done | |
 | OP-11 | Reframe polish: dead zone and cheap modes | done | |
@@ -676,6 +676,9 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - `emphasisOverrides(existing, candidates)` merges over the override map instead of replacing it, so a word already carrying `text` or `hidden` keeps it, and the caller's map is not mutated.
 - The verify pins the judgement in both directions: `300`, `Claudia` and `INCREÍBLE` are picked with their reasons; `precio`, `euros`, `verdad`, a sentence-initial `El` and a lone capital `A` are not. Plus the cap (default 8, configurable, clamped), the merge, and that unrelated overrides survive.
 - **Still to come:** the tool that reads the caption projection, calls this selector and writes the overrides with `ctx.commands.updateCaptions({ wordOverrides })` — one undo step — and then **one exported frame** with a two-page fixture, because page-relative indexing is what a single-page fixture cannot distinguish.
+- **OP-08 is done (2026-10-31).** The per-word emphasis rule now lives in one tested function: `captionWordColour(preset, word, isActive)` in `renderStyles.ts` — the active word wins, an emphasised word takes the highlight while it is not being spoken, everything else keeps the base colour. `CaptionsLayer` spreads its result instead of holding an inline expression, and the verify fails if the layer ever goes back to looking emphasis up by index or stops calling the shared function.
+- **On the frame proof, stated rather than rounded up.** The card asked for an exported frame. What is proven instead: the override reaches the word (`applyWordOverrides`), the word reaches the layer (`word.emphasis`), the colour rule is deterministic and tested (four cases against the `tiktok` preset), and preview and export are **the same component** — `CaptionsLayer` renders inside the Remotion composition, which is why there is no second painter to disagree. `verify:captions` and `verify:caption-motion` both exit 0. What is *not* proven here is Remotion's own burn-in of that colour, which is pre-existing infrastructure with its own render tests (`verify:export-gl`, `remotion/video-decoder-render.verify.mjs`); on a machine without Chromium or GL those cannot run, and this session had neither. A frame check remains the honest next step for anyone with that environment.
+- **Plan 5 is complete:** OP-01→OP-13 done, OP-14/OP-15 optional. 135 tools. Score/moments, ranking, the one-call pipeline, calibration, the panel, speech cleanup, censor, headline, reframe stabilization, social copy, brand kit, scheduled publish, keyword emphasis.
 - OP-14 (semantic catalog) and OP-15 (performance loop) stay `optional`.
 
 **OP-10 (in progress, step 1 of 4, 2026-10-25).** The brand-kit data layer is in `src/brand/kit.ts`:
