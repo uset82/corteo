@@ -3,6 +3,9 @@
 import assert from 'node:assert';
 import { DEFAULT_BRAND_KIT, brandKitIssues, brandKitOf, normalizeBrandKit, withBrandKit } from './kit';
 import type { ProjectDoc } from '../editor/projectTypes';
+import { makeDraft } from '../editor/store';
+import { docFromTimeline } from '../persist/projectStore';
+import type { TimelineState } from '../editor/types';
 
 // ── 1) Anything becomes a usable kit, field by field ────────────────────────────────
 assert.deepStrictEqual(normalizeBrandKit(null), DEFAULT_BRAND_KIT, 'no kit → the defaults, unchanged');
@@ -82,5 +85,31 @@ assert.strictEqual(repaired.watermark, undefined, 'a corrupted watermark is drop
 
 // Writing through the helper is also idempotent.
 assert.deepStrictEqual(withBrandKit(saved, saved.brandKit), saved, 're-applying the same kit is a no-op');
+
+// ── 7) Committing the kit through the editor: normalized on the way in, one history step ──
+{
+  const state: TimelineState = {
+    fps: 30, width: 1920, height: 1080, selectedId: null,
+    items: [{ id: 'v', track: 'V1', startFrame: 0, durationInFrames: 30, name: 'v', kind: 'video', src: '/v.mp4' }],
+  };
+  const draft = makeDraft(docFromTimeline(state));
+  assert.deepStrictEqual(brandKitOf(draft.getDoc()), DEFAULT_BRAND_KIT, 'a fresh project has no kit');
+
+  draft.commands.setBrandKit({ name: 'Canal', palette: ['#101010'], safeMargin: 9 });
+  const stored = brandKitOf(draft.getDoc());
+  assert.strictEqual(stored.name, 'Canal', 'the command writes the document');
+  assert.deepStrictEqual(stored.palette, ['#101010']);
+  assert.strictEqual(stored.safeMargin, 0.2, 'a value the reducer had to clamp is clamped in the doc, not later');
+
+  // A malformed kit cannot corrupt the document, because the reducer normalizes it.
+  draft.commands.setBrandKit({ palette: 'rojo', watermark: { position: 'middle' } });
+  const repairedInDoc = brandKitOf(draft.getDoc());
+  assert.deepStrictEqual(repairedInDoc.palette, DEFAULT_BRAND_KIT.palette, 'garbage in the payload never reaches the doc');
+  assert.strictEqual(repairedInDoc.watermark, undefined);
+
+  draft.commands.setBrandKit(null);
+  assert.deepStrictEqual(brandKitOf(draft.getDoc()), DEFAULT_BRAND_KIT, 'null clears the kit back to the defaults');
+  assert.strictEqual(draft.getDoc().brandKit, undefined, 'the field is absent, not an empty object');
+}
 
 console.log('brand/kit.verify: ok');
