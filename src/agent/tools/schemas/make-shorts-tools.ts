@@ -32,6 +32,11 @@ export const MAKE_SHORTS_TOOL_SCHEMAS: AgentToolSchema[] = [
           enum: ['auto', 'podcast', 'interview', 'tutorial', 'vlog', 'livestream'],
           description: 'Content-type prior for the rubric. Default auto.',
         },
+        calibration: {
+          type: 'boolean',
+          description: 'Apply the weights learned from this profile\'s approve/reject decisions (default false). '
+            + 'Needs 12 decisions; otherwise it is a no-op.',
+        },
         captionsPreset: { type: 'string', description: 'Caption preset to turn on for every clip (omit to leave captions untouched).' },
         captionMotion: {
           type: 'string',

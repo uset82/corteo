@@ -483,7 +483,7 @@ This track is deliberately **not** in the main table, so the picking rule above 
 | OP-01 | `score_moments`: rubric engine | done | |
 | OP-02 | `find_highlights` ranks, snaps, dedupes | done | OP-01 |
 | OP-03 | `make_shorts`: source in, clips out | done | OP-02 |
-| OP-04 | Calibration ledger | todo | OP-01 |
+| OP-04 | Calibration ledger | done | OP-01 |
 | OP-05 | "Analizar episodio" panel | todo | OP-03 |
 | OP-06 | `tighten_speech` | todo | |
 | OP-07 | `censor_words` | todo | |
@@ -523,6 +523,14 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - **Deviation from the card, recorded:** there is no new `analysisId` job store. Each clip's render is an existing render job, polled with `track_export`; inventing a second job system would have duplicated the queue, the recovery and the UI. The clip-level work is synchronous, which is honest for 5–10 clips.
 - Degradation: no DOM → `reframe: 'skipped'` and a Spanish note; a caption failure never fails the run; `minScore` above every score returns `count: 0` with a note and creates nothing.
 - Verify: `src/agent/tools/make-shorts-tools.verify.ts` covers the happy path, reframe-without-DOM, captions on, the below-threshold path and the two error paths.
+
+**OP-04 (done 2026-10-25).** Calibration from the user's own approve/reject decisions. 125 → 126 tools.
+- `src/agent/shorts/calibration.ts`: ledger, `recordDecision` (one row per span, newest wins, capped at 500), `computeCalibration` (weights, suggested `minScore`, confidence) and `clearDecisions`. Verify: `src/agent/shorts/calibration.verify.ts`.
+- The math is deliberately small and honest: under 12 decisions, or with fewer than 5 on either side, the weights are identity and the note says so. Above that, a dimension that separates approved from rejected moments gains weight through `tanh(gap/20)`, capped 0.6–1.6, renormalised to sum 4 so the 0–99 scale means the same thing. `composite()` takes the multipliers; identity reproduces the unweighted score exactly, which the verify asserts.
+- `score_moments` and `make_shorts` accept `calibration: true` (default false) and pass the weights through `analyzeMoments` → `rankMoments`; `score_moments` reports which calibration it used.
+- New read-only tool `calibrate_scores` returns decisions, weights, suggested `minScore` and whether it is applied.
+- **Decision, recorded:** the ledger lives in the browser profile (the same place caption presets live), not in SQLite. The editor is single-user and local, and a server table for twelve numbers would be infrastructure without a reason. OP-05 is what writes real decisions into it.
+- Not done here on purpose: nothing in the UI records approvals yet, so in a fresh profile `calibrate_scores` reports 0 decisions — true, not a stub.
 
 
 ### Opus parity: blockers

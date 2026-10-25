@@ -2,6 +2,7 @@ export { MAKE_SHORTS_TOOL_SCHEMAS, MAKE_SHORTS_TOOL_NAMES } from './schemas/make
 import type { AgentContext } from '../context';
 import { ASPECT_PRESETS } from '../../editor/types';
 import { analyzeMoments } from '../shorts/analyze';
+import { computeCalibration } from '../shorts/calibration';
 import { PUBLISH_THRESHOLD } from '../shorts/score';
 import { readGenre } from '../shorts/score-ranges';
 import { pickTranscribedItem } from '../shorts/transcript-item';
@@ -106,6 +107,7 @@ export async function execMakeShortsTool(name: string, args: Args, ctx: AgentCon
   const wantRender = args.render === 'previews';
 
   const words = item.transcript.map((w) => ({ text: w.text, start: w.start, end: w.end }));
+  const calibration = args.calibration === true ? computeCalibration() : null;
   const analysis = await analyzeMoments(words, {
     minMs,
     maxMs,
@@ -113,6 +115,7 @@ export async function execMakeShortsTool(name: string, args: Args, ctx: AgentCon
     genre: readGenre(args.genre),
     direction: typeof args.direction === 'string' ? args.direction : undefined,
     topic: typeof args.topic === 'string' ? args.topic : undefined,
+    ...(calibration?.confident ? { weights: calibration.weights } : {}),
   });
 
   if (!analysis.candidates) {

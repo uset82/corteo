@@ -1,3 +1,4 @@
+import type { CalibrationWeights } from './calibration';
 import type { Candidate, Dimensions, DimensionKey, ModelVerdict, ScoredMoment } from './types';
 
 /**
@@ -35,9 +36,16 @@ export function blendScores(det: Dimensions, model: ModelVerdict | null): Dimens
   };
 }
 
-/** Weighted composite, 0-99 (OpusClip's scale, not 0-100). */
-export function composite(dims: Dimensions): number {
-  const raw = (Object.keys(WEIGHTS) as DimensionKey[]).reduce((sum, key) => sum + dims[key] * WEIGHTS[key], 0);
+/**
+ * Weighted composite, 0-99 (OpusClip's scale, not 0-100).
+ * `multipliers` are the calibration weights; they are normalised so the identity vector
+ * reproduces the unweighted score exactly and the 0-99 scale keeps its meaning.
+ */
+export function composite(dims: Dimensions, multipliers?: Partial<CalibrationWeights>): number {
+  const keys = Object.keys(WEIGHTS) as DimensionKey[];
+  const scaled = keys.map((key) => WEIGHTS[key] * (multipliers?.[key] ?? 1));
+  const total = scaled.reduce((sum, value) => sum + value, 0) || 1;
+  const raw = keys.reduce((sum, key, index) => sum + dims[key] * scaled[index], 0) / total;
   return Math.max(0, Math.min(99, Math.round(raw)));
 }
 
@@ -58,13 +66,17 @@ export interface RankInput {
 }
 
 /** Score and gate every candidate, best first. */
-export function rankMoments(inputs: readonly RankInput[], opts: GateOptions): ScoredMoment[] {
+export function rankMoments(
+  inputs: readonly RankInput[],
+  opts: GateOptions,
+  multipliers?: Partial<CalibrationWeights>,
+): ScoredMoment[] {
   const scored = inputs.map((input) => {
     const subscores = blendScores(input.deterministic, input.verdict);
     const gateReasons = gateMoment(input.candidate, subscores, opts);
     return {
       ...input.candidate,
-      score: composite(subscores),
+      score: composite(subscores, multipliers),
       subscores,
       gate: (gateReasons.length ? 'rejected' : 'pass') as ScoredMoment['gate'],
       gateReasons,

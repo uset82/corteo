@@ -37,8 +37,22 @@ export const SHORTS_TOOL_SCHEMAS: AgentToolSchema[] = [
           enum: ['auto', 'podcast', 'interview', 'tutorial', 'vlog', 'livestream'],
           description: 'Content-type prior for the rubric. Default auto (the model classifies it first).',
         },
+        calibration: {
+          type: 'boolean',
+          description: 'Apply the weights learned from this profile\'s approve/reject decisions (default false). '
+            + 'Needs 12 decisions with at least 5 on each side; otherwise it is a no-op.',
+        },
       },
     },
+  },
+  {
+    name: 'calibrate_scores',
+    description:
+      'Report the local calibration for the shorts rubric: how many approve/reject decisions this profile has, '
+      + 'the per-dimension weights learned from them, the suggested minScore and whether there are enough '
+      + 'decisions for the weights to mean anything. Read-only; it never changes the project. '
+      + 'Use when the user asks whether the score has learned anything, or before deciding a minScore.',
+    input_schema: { type: 'object', properties: {} },
   },
 ];
 

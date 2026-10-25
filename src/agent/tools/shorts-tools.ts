@@ -3,6 +3,7 @@ export { setRubricScorer } from '../shorts/rubric';
 import type { AgentContext } from '../context';
 import { msToFrame } from '../../transcript/types';
 import { analyzeMoments } from '../shorts/analyze';
+import { computeCalibration } from '../shorts/calibration';
 import { PUBLISH_THRESHOLD } from '../shorts/score';
 import { readGenre } from '../shorts/score-ranges';
 import { pickTranscribedItem } from '../shorts/transcript-item';
@@ -66,6 +67,17 @@ function toMoment(moment: ScoredMoment, itemStartFrame: number, fps: number): Mo
 }
 
 export async function execShortsTool(name: string, args: Args, ctx: AgentContext): Promise<unknown> {
+  if (name === 'calibrate_scores') {
+    const calibration = computeCalibration();
+    return {
+      ok: true,
+      ...calibration,
+      applied: calibration.confident,
+      note: calibration.confident
+        ? calibration.note
+        : `${calibration.note} Aprueba o descarta momentos en el panel de clips para que la puntuación aprenda.`,
+    };
+  }
   if (name !== 'score_moments') return { error: `unknown tool ${name}` };
 
   const state = ctx.getState();
@@ -84,6 +96,7 @@ export async function execShortsTool(name: string, args: Args, ctx: AgentContext
   const maxMs = Math.round(maxSeconds * 1000);
 
   const words = item.transcript.map((w) => ({ text: w.text, start: w.start, end: w.end }));
+  const calibration = args.calibration === true ? computeCalibration() : null;
   const analysis = await analyzeMoments(words, {
     minMs,
     maxMs,
@@ -91,6 +104,7 @@ export async function execShortsTool(name: string, args: Args, ctx: AgentContext
     genre: readGenre(args.genre),
     direction: typeof args.direction === 'string' ? args.direction : undefined,
     topic: typeof args.topic === 'string' ? args.topic : undefined,
+    ...(calibration?.confident ? { weights: calibration.weights } : {}),
   });
 
   if (!analysis.candidates) {
@@ -122,6 +136,9 @@ export async function execShortsTool(name: string, args: Args, ctx: AgentContext
     moments,
     rejected,
     alternates: Math.max(0, analysis.passing - moments.length),
+    ...(calibration
+      ? { calibration: { decisions: calibration.decisions, applied: calibration.confident } }
+      : {}),
     note,
   };
 }

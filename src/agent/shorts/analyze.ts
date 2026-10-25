@@ -3,6 +3,7 @@ import { segmentChapters } from './chapters';
 import { modelVerdicts } from './rubric';
 import { corpusStats, deterministicScores } from './signals';
 import { dedupeByOverlap, rankMoments, selectForReview } from './score';
+import type { CalibrationWeights } from './calibration';
 import type { Genre, ModelVerdict, ScoredMoment, WordLike } from './types';
 
 /**
@@ -25,6 +26,8 @@ export interface AnalyzeOptions {
   topic?: string;
   /** false skips the model: measured scores only, for a fast or offline run. */
   useModel?: boolean;
+  /** Calibration multipliers from the approve/reject ledger; omitted means neutral. */
+  weights?: Partial<CalibrationWeights>;
 }
 
 export interface AnalyzeResult {
@@ -93,6 +96,7 @@ export async function analyzeMoments(
       verdict: verdicts.get(index) ?? null,
     })),
     { minMs: opts.minMs, maxMs: opts.maxMs },
+    opts.weights,
   );
 
   const passing = dedupeByOverlap(ranked.filter((m) => m.gate === 'pass'));

@@ -119,6 +119,24 @@ const bareResult = await execShortsTool('score_moments', {}, bareCtx) as Result;
 assert.ok(bareResult.error && /transcri/i.test(bareResult.error), 'missing transcript returns a clear Spanish error');
 assert.strictEqual(bare.getDoc().timelines.length, 1, 'the error path creates nothing');
 
+// ── 5) calibrate_scores reports the ledger; score_moments accepts `calibration` ────────
+const calibrated = await execShortsTool('calibrate_scores', {}, ctx) as {
+  ok: boolean; decisions: number; confident: boolean; applied: boolean;
+  weights: { hook: number; flow: number; value: number; sound: number }; suggestedMinScore: number;
+};
+assert.strictEqual(calibrated.ok, true, 'calibrate_scores answers');
+assert.strictEqual(calibrated.decisions, 0, 'a profile with no storage has no decisions');
+assert.strictEqual(calibrated.confident, false, 'no decisions means no calibration');
+assert.strictEqual(calibrated.applied, false, 'nothing is applied on thin data');
+assert.deepStrictEqual(calibrated.weights, { hook: 1, flow: 1, value: 1, sound: 1 }, 'neutral weights');
+assert.strictEqual(calibrated.suggestedMinScore, 55);
+
+const withCalibration = await execShortsTool('score_moments', {
+  count: 2, minSeconds: 1, maxSeconds: 5, calibration: true,
+}, ctx) as Result & { calibration?: { decisions: number; applied: boolean } };
+assert.strictEqual(withCalibration.ok, true, 'calibration:true does not break scoring');
+assert.deepStrictEqual(withCalibration.calibration, { decisions: 0, applied: false }, 'the run reports the calibration it used');
+
 // ── 5) Unknown tool name is refused, not silently accepted ─────────────────────────────
 const unknown = await execShortsTool('score_everything', {}, ctx) as { error?: string };
 assert.ok(unknown.error, 'unknown tool name errors');
