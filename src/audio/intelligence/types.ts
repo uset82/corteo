@@ -10,7 +10,9 @@ export const MUSIC_ANALYZER_FINGERPRINT = [
   MUSIC_MODEL_PACK_FINGERPRINTS.rhythm,
   MUSIC_MODEL_PACK_FINGERPRINTS.semantic,
   'energy-change-v1',
-  'clap-profile-v1',
+  // v2 adds the Latin prototypes and a mood per section; cached v1 records are
+  // re-analyzed instead of being served without one.
+  'clap-profile-v2',
 ].join('|');
 
 
@@ -36,6 +38,8 @@ export interface MusicSection {
   role: MusicSectionRole;
   energy: number;
   boundaryConfidence: number;
+  /** Best mood prototype over this section's CLAP windows; canonical label, displayed in Spanish. */
+  mood?: MusicTag;
 }
 
 export interface BeatThisAnalysis {
