@@ -68,6 +68,10 @@ export function proxyMiddleware(route: ProxyRoute): Middleware {
     }
     headers.host = target.host;
     for (const [k, v] of Object.entries(route.headers(req))) if (v) headers[k] = v;
+    // A line fix has to read plain text. Asking for `identity` is the only way to be
+    // sure: a compressed body would reach the utf8 decoder below and never match.
+    const lineFix = route.sseLineFix?.(req);
+    if (lineFix) headers['accept-encoding'] = 'identity';
 
     const basePath = target.pathname.replace(/\/$/, '');
     const rawUrl = req.url ?? '/';
@@ -112,12 +116,17 @@ export function proxyMiddleware(route: ProxyRoute): Middleware {
           outHeaders['content-type'] = 'application/json';
         }
       }
-      const lineFix = String(outHeaders['content-type'] ?? '').includes('text/event-stream')
-        ? route.sseLineFix?.(req)
+      // `identity` is only a request. If upstream compressed anyway, decoding it as
+      // utf8 would turn the body into U+FFFD and the rule would silently stop matching,
+      // so hand the bytes through untouched and leave `content-encoding` for the caller.
+      const encoding = String(outHeaders['content-encoding'] ?? '').toLowerCase();
+      const compressed = encoding !== '' && encoding !== 'identity';
+      const rewrite = lineFix && !compressed && String(outHeaders['content-type'] ?? '').includes('text/event-stream')
+        ? lineFix
         : undefined;
-      if (lineFix) delete outHeaders['content-length'];
+      if (rewrite) delete outHeaders['content-length'];
       res.writeHead(status, outHeaders);
-      if (lineFix) upRes.pipe(sseLineTransform(lineFix)).pipe(res);
+      if (rewrite) upRes.pipe(sseLineTransform(rewrite)).pipe(res);
       else upRes.pipe(res);
     });
 

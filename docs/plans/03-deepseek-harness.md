@@ -188,6 +188,28 @@ Each card says which files to start from, what to do, when it counts as done, an
 - Done when: the model ids, the result of each edit (worked, partly, failed and why) and the latency per message are recorded in the Qoder section of `PROGRESS.md`. A model that fails is a result, not a blocker; the task is blocked only if no model can complete the cut.
 - Verify: screenshots in `test-results/harness/` (never committed).
 
+#### HQ-6 · Cover and harden the tool-call repair H-9 shipped
+- Context: `eed3137` already repairs the bare `{"index":0}` deltas in the `/llm` proxy (`server/sse-tool-call-fix.ts`, a `sseLineFix` hook on `ProxyRoute`). This card adds no second normalizer.
+- Files: new `server/agent-runs/dsh-sse-repair.verify.ts`, `server/proxy.ts`, `server/sse-tool-call-fix.ts`, `package.json` (`verify:server-runs` and `test:serial`).
+- Do:
+  - Test the rule through the real `/llm` route with a stub gateway: stub frame, empty `type`, end-to-end tool round trip, CRLF with split UTF-8, unterminated tail, non-SSE response, 429 body, and a gateway that compresses anyway.
+  - Ask upstream for `accept-encoding: identity` whenever a route rewrites lines, and if it compresses regardless, pass the body through untouched with `content-encoding` intact rather than decoding it as text.
+  - Drop an empty `type` in `fixToolCallDeltaLine`, as the browser normalizer already does.
+- Done when: the verify is registered in both scripts and green, and it fails when the repair is removed.
+- Verify: `npx tsx server/agent-runs/dsh-sse-repair.verify.ts`.
+
+#### HQ-7 · Deliver the providers switch at runtime
+- Files: `server/plugins/settings.ts`, `src/agent/providers-off.ts`, `src/app/appShell.ts`, `src/agent/model-selection.ts`, `src/components/settings/settingsAgentProviders.ts`, `src/components/settings/settingsSchema.ts`, `src/app/appShell.verify.ts`.
+- Do: `settingsBody()` returns `providersOff`; `appShell` applies it next to `applyLiveCaps`; every client reader goes through `providersOff()` instead of the build-time constant.
+- Done when: a payload with `providersOff: true` hides every vendor except `dsh`, `lmstudio` and `ollama`, and `appShell.verify` asserts exactly that.
+- Verify: `npx tsx src/app/appShell.verify.ts`.
+
+#### HQ-8 · Stop the run layer importing a Vite plugin module
+- Files: `server/agent-runs/execution-input.ts`.
+- Do: import `providersOff`, `providersOffAllows` and `providersOffEnv` from `shared/providers-off.ts`, not from `server/plugins/providers-off.ts`, which pulls in `import.meta.env`.
+- Done when: the run layer loads under plain tsx with no Vite define present.
+- Verify: `npx tsx server/agent-runs/executor.verify.ts`.
+
 ### WorkBuddy track: harness side
 
 #### HW-1 · Pin and install
