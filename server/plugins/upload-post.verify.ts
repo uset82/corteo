@@ -235,6 +235,9 @@ try {
   await utimes(sameStampFile, originalTime, originalTime);
   const sameStampFields = { ...base, source: '/media/uploads/same-stamp.mp4' };
   const sameStampPreview = await publish(config, parsePublishRequest(sameStampFields));
+  // This filesystem can stamp the rewrite with the same ctime when it lands in the
+  // same tick as the preview. ctime is what invalidates a restored mtime.
+  await new Promise((resolve) => setTimeout(resolve, 30));
   await writeFile(sameStampFile, Buffer.alloc(1024, 2));
   await utimes(sameStampFile, originalTime, originalTime);
   await assert.rejects(

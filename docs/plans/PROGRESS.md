@@ -599,8 +599,7 @@ Approved 2026-10-25. Task cards: `docs/plans/05-corteo.md`. Its own table, same 
 
 ## Opus parity (Plan 6)
 Executed 2026-10-25. Task cards and the full record live in `docs/plans/06-opus-parity.md`.
-This table is the current status; nothing here is open except OP-14, which the plan marked
-`optional`.
+This table is the current status. OP-14 is done.
 
 | ID | Task | Status |
 |----|------|--------|
