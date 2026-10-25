@@ -2915,6 +2915,51 @@
       }
     },
     {
+      "name": "score_moments",
+      "description": "Score candidate moments in one transcribed long video so the best ones can be cut into shorts. Segments the transcript into chapters, builds sentence-aligned windows inside each chapter, measures them (hook, flow, value, sound) and has the model judge hook/flow/value, then returns one ranked list with a 0-99 score, four sub-scores, a reason and risk flags per moment, plus the candidates it rejected and why. Use before find_highlights, or when the user asks \"which parts are worth posting\", \"puntúa los momentos\", \"find the best moments\" or wants a ranking rather than clips. This is a transparent rubric, NOT a model trained on platform performance: treat the score as a ranking signal and prefer the reasons. Read-only: it never edits the timeline. The clip must be transcribed first with transcribe_track. Needs a browser tab (reads the live project).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Transcribed video/audio clip to analyse. Defaults to the clip with the most transcript words."
+          },
+          "count": {
+            "type": "integer",
+            "description": "How many passing moments to return, best first. Default 8, max 20."
+          },
+          "minSeconds": {
+            "type": "number",
+            "description": "Shortest acceptable moment. Default 12."
+          },
+          "maxSeconds": {
+            "type": "number",
+            "description": "Longest acceptable moment. Default 90."
+          },
+          "direction": {
+            "type": "string",
+            "description": "Free-text steering from the user, in their words (for example \"lo más divertido\" or \"the part about pricing\"). It steers which moments win, never the render settings."
+          },
+          "topic": {
+            "type": "string",
+            "description": "Optional: only moments about this topic."
+          },
+          "genre": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "podcast",
+              "interview",
+              "tutorial",
+              "vlog",
+              "livestream"
+            ],
+            "description": "Content-type prior for the rubric. Default auto (the model classifies it first)."
+          }
+        }
+      }
+    },
+    {
       "name": "auto_reframe",
       "description": "Auto-reframe a video clip: sample its frames, detect the subject/focal point per interval, and write reframe keyframes (builtin:zoom __openchatcutReframeCurve) so the crop window follows the subject when the canvas aspect differs (e.g. 16:9→9:16). Clears the clip's existing reframe keyframes first, then re-detects. Browser-only (needs the actual video pixels); returns an error if run headless or if the target isn't a video with a source.",
       "input_schema": {
@@ -4532,7 +4577,7 @@
     },
     {
       "name": "load_skill",
-      "description": "Load one bundled or selected custom skill under the active model round input budget. Omit selectors for SKILL.md; if it is paged, follow nextOffset until null before support files. Exactly one selector per call: either files=[...] to load whole omitted files, or file with offset and limit to page a single file. Never send file and files in the same call. Bundled skills: ai-cinematic-short-film, asset-import, batch-montage-variants, beat-sync-montage, create-motion-graphics, ecommerce-product-montage, explainer-video, export, image-gen, known-errors, livestream-to-clips, long-video-to-shorts, motion-graphic-placement, multi-clips-to-reels, music, music-intelligence, news-rough-cut, openchatcut-plugin-basics, product-ad-video-script, product-help, shader-gen, skill-creator, storyboard-shot-breakdown, talking-head-guide, transcription, verification, video-gen, video-thumbnail-generator, voice, widget-forms.",
+      "description": "Load one bundled or selected custom skill under the active model round input budget. Omit selectors for SKILL.md; if it is paged, follow nextOffset until null before support files. Exactly one selector per call: either files=[...] to load whole omitted files, or file with offset and limit to page a single file. Never send file and files in the same call. Bundled skills: ai-cinematic-short-film, asset-import, batch-montage-variants, beat-sync-montage, create-motion-graphics, ecommerce-product-montage, escuchar-cancion, explainer-video, export, image-gen, known-errors, livestream-to-clips, long-video-to-shorts, motion-graphic-placement, multi-clips-to-reels, music, music-intelligence, news-rough-cut, openchatcut-plugin-basics, product-ad-video-script, product-help, shader-gen, skill-creator, storyboard-shot-breakdown, talking-head-guide, transcription, verification, video-gen, video-thumbnail-generator, voice, widget-forms.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -5966,6 +6011,51 @@
       }
     },
     {
+      "name": "score_moments",
+      "description": "Score candidate moments in one transcribed long video so the best ones can be cut into shorts. Segments the transcript into chapters, builds sentence-aligned windows inside each chapter, measures them (hook, flow, value, sound) and has the model judge hook/flow/value, then returns one ranked list with a 0-99 score, four sub-scores, a reason and risk flags per moment, plus the candidates it rejected and why. Use before find_highlights, or when the user asks \"which parts are worth posting\", \"puntúa los momentos\", \"find the best moments\" or wants a ranking rather than clips. This is a transparent rubric, NOT a model trained on platform performance: treat the score as a ranking signal and prefer the reasons. Read-only: it never edits the timeline. The clip must be transcribed first with transcribe_track. Needs a browser tab (reads the live project).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Transcribed video/audio clip to analyse. Defaults to the clip with the most transcript words."
+          },
+          "count": {
+            "type": "integer",
+            "description": "How many passing moments to return, best first. Default 8, max 20."
+          },
+          "minSeconds": {
+            "type": "number",
+            "description": "Shortest acceptable moment. Default 12."
+          },
+          "maxSeconds": {
+            "type": "number",
+            "description": "Longest acceptable moment. Default 90."
+          },
+          "direction": {
+            "type": "string",
+            "description": "Free-text steering from the user, in their words (for example \"lo más divertido\" or \"the part about pricing\"). It steers which moments win, never the render settings."
+          },
+          "topic": {
+            "type": "string",
+            "description": "Optional: only moments about this topic."
+          },
+          "genre": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "podcast",
+              "interview",
+              "tutorial",
+              "vlog",
+              "livestream"
+            ],
+            "description": "Content-type prior for the rubric. Default auto (the model classifies it first)."
+          }
+        }
+      }
+    },
+    {
       "name": "search_fonts",
       "description": "Search the font catalog the local/headless renderer can load (Google Fonts bundled in-app + locally bundled Chinese foundry faces, source:\"bundled\"). Use when export reports unsupported fonts or when picking fontFamily for motion-graphic items / captions. Returns canonical family names to use verbatim. Substring-matches family AND native-name aliases (case/punctuation-insensitive) — e.g. \"inter\", \"playfair\", \"noto sc\", \"思源黑体\", \"得意黑\", \"抖音美好体\". loadable=false means catalogued only; prefer a loadable alternative or confirmFontFallback on export.",
       "input_schema": {
@@ -6037,7 +6127,7 @@
     },
     {
       "name": "load_skill",
-      "description": "Load one bundled or selected custom skill under the active model round input budget. Omit selectors for SKILL.md; if it is paged, follow nextOffset until null before support files. Exactly one selector per call: either files=[...] to load whole omitted files, or file with offset and limit to page a single file. Never send file and files in the same call. Bundled skills: ai-cinematic-short-film, asset-import, batch-montage-variants, beat-sync-montage, create-motion-graphics, ecommerce-product-montage, explainer-video, export, image-gen, known-errors, livestream-to-clips, long-video-to-shorts, motion-graphic-placement, multi-clips-to-reels, music, music-intelligence, news-rough-cut, openchatcut-plugin-basics, product-ad-video-script, product-help, shader-gen, skill-creator, storyboard-shot-breakdown, talking-head-guide, transcription, verification, video-gen, video-thumbnail-generator, voice, widget-forms.",
+      "description": "Load one bundled or selected custom skill under the active model round input budget. Omit selectors for SKILL.md; if it is paged, follow nextOffset until null before support files. Exactly one selector per call: either files=[...] to load whole omitted files, or file with offset and limit to page a single file. Never send file and files in the same call. Bundled skills: ai-cinematic-short-film, asset-import, batch-montage-variants, beat-sync-montage, create-motion-graphics, ecommerce-product-montage, escuchar-cancion, explainer-video, export, image-gen, known-errors, livestream-to-clips, long-video-to-shorts, motion-graphic-placement, multi-clips-to-reels, music, music-intelligence, news-rough-cut, openchatcut-plugin-basics, product-ad-video-script, product-help, shader-gen, skill-creator, storyboard-shot-breakdown, talking-head-guide, transcription, verification, video-gen, video-thumbnail-generator, voice, widget-forms.",
       "input_schema": {
         "type": "object",
         "properties": {

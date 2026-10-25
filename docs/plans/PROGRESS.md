@@ -480,7 +480,7 @@ This track is deliberately **not** in the main table, so the picking rule above 
 
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
-| OP-01 | `score_moments`: rubric engine | todo | |
+| OP-01 | `score_moments`: rubric engine | done | |
 | OP-02 | `find_highlights` ranks, snaps, dedupes | todo | OP-01 |
 | OP-03 | `make_shorts`: source in, clips out | todo | OP-02 |
 | OP-04 | Calibration ledger | todo | OP-01 |
@@ -501,5 +501,16 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - Chapters before candidates: segment by transcript topic shift crossed with `detect_scenes`, then score inside each chapter.
 - Forking is off the table for all sixteen reviewed projects (Python-first or non-OSI licences); nine MIT artefacts are ported instead, listed in the plan, section 5.2.
 
+**OP-01 (done 2026-10-25).** `score_moments` shipped as a read-only tool: 123 → 124 tools.
+- `src/agent/shorts/` holds the engine (`chapters`, `candidates`, `signals`, `rubric`, `score`, `types`, `transcript-item`); `src/agent/tools/shorts-tools.ts` is the tool. Verifies: `src/agent/shorts/rubric.verify.ts` and `src/agent/tools/shorts-tools.verify.ts`, both in `test:serial`.
+- The score is 0-99 over Hook / Flow / Value / Sound. `sound` replaces Opus's Trend: there is no trend feed, and the model never scores delivery because it cannot hear it. Measured signals are 60 %, the model 40 %, and with no provider the measured score still ranks.
+- The candidate contract is word indices, not timestamps: a verdict that does not match a candidate's own indices is dropped, so a drifting model cannot move a cut.
+- `genre` replaces ClipAnything's visual profile. There is no local vision model at runtime, and pretending to multimodal analysis would be dishonest; scene alignment stays for a later task.
+- Chapters merge below 8 s, so a short source is one chapter and the candidates are then split by `maxSeconds`.
+- UI lands in OP-05: OP-01 is agent-only on purpose, and the plan says so.
+
+
 ### Opus parity: blockers
-None.
+- **Untracked leftovers from the Plan 2 session break the gates.** `src/agent/skills/escuchar-cancion/` (untracked) makes `npm run verify:agent-tools` fail at `skills-catalog.verify` ("内置技能全部在册,无多无少", actual list contains `escuchar-cancion`), and untracked `src/editor/musicReactions.ts`, `src/components/inspector/MusicReactionControls.tsx` and `src/agent/tools/music-reaction-tools.ts` make `npx tsc -b` report 28 errors (`MusicReactionRecord` is not exported, `musicReactions` is not on `TimelineItem`, `setMusicReactions` is not a command). They are not this track's files.
+  - Worked around, not fixed: `mv src/agent/skills/escuchar-cancion /tmp/leftover-escuchar-cancion`, run the gates, `mv` it back. With it moved aside, `verify:agent-tools` and `verify:mcp` both exit 0, and `npx tsc -b` reports no error in any Plan 5 file.
+  - Unblocked by committing or deleting that WIP, or by the Plan 2 session finishing it.
