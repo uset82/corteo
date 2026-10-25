@@ -1,0 +1,20 @@
+{
+  "dsh": {
+    "package": "@deepseek-ai/dsh",
+    "version": "0.2.1-rc.2",
+    "fallbackVersion": "0.1.7-rc.2"
+  },
+  "plugin": {
+    "name": "dsh-our-free-model",
+    "repo": "https://github.com/Ebony-Vinyl/dsh-our-free-model.git",
+    "tag": "v2.5.9",
+    "commit": "25ab765d6bb860779dbd8c53062953524f3cac09"
+  },
+  "home": "~/.corteo-harness",
+  "profile": "web",
+  "ports": {
+    "web": 3080,
+    "forward": 18899
+  },
+  "forwardPortRange": 10
+}

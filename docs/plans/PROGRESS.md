@@ -17,7 +17,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 - If a test fails on your machine before you have changed anything, it is a baseline difference: record it under Blockers with its output, and don't count it against your task.
 - Grok's attempt: Grok worked in `~/corteo` from the old `IMPLEMENTATION_PLAN.md` (a first-draft plan with Python WhisperX/demucs, Zustand, i18next and a UI redesign) and got stuck. That file is deleted. None of Grok's work is on this branch: the user parks it on a branch `grok-wip` for review. Do not merge, cherry-pick or build on `grok-wip`; if something there is worth keeping, it comes back as a task card here.
 - Qoder and WorkBuddy's attempt: the GitHub fork's branch `cursor/video-editor-mvp-d191` (https://github.com/uset82/corteo, at `56676ff` on 2026-10-24) was built from `1d00e0a` with the old `IMPLEMENTATION_PLAN.md`. It has first versions of P2-1 to P2-5 plus extras, with known bugs found in a review on 2026-10-24: duplicate detection samples the middle of the whole file, ASS import ignores `\kf` and drops text before the first tag, HEVC files are tagged `hev1` instead of `hvc1`, the cool white balance rotates every hue, the tool catalog is stale so `npm run build` fails, and three files are over 500 lines. It is not merged: the user decides whether it comes in. Until then, the same rule as `grok-wip` applies.
-- Plan 3 (approved 2026-10-24): the built-in chat moves to free models through DeepSeek Harness. Qoder (HQ) and WorkBuddy (HW) work on it in parallel in the worktrees `~/corteo-qoder` and `~/corteo-workbuddy`, on the GitHub branches `harness-qoder` and `harness-workbuddy`; H-9 merges them into this branch. H-9 is done (2026-10-25): the Qoder track is in, and the WorkBuddy track is blocked (see Blockers), so DeepSeek Harness is still installed and started by hand.
+- Plan 3 (approved 2026-10-24): the built-in chat moves to free models through DeepSeek Harness. Qoder (HQ) and WorkBuddy (HW) work on it in parallel in the worktrees `~/corteo-qoder` and `~/corteo-workbuddy`, on the GitHub branches `harness-qoder` and `harness-workbuddy`; H-9 merges them into this branch. H-9 is done (2026-10-25): the Qoder track landed first, and this merge brings WorkBuddy's HW-1 to HW-5, so `npm run harness`, `npm run harness:doctor` and `npm run harness:install` are the way to start it.
 
 ## Task table
 
@@ -99,6 +99,11 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - README and AGENTS prose rewritten for step 4: Claudia is the product, corteo the repository and the command; the two brand font licences are in the README credits.
 - Checks and screenshots: see "State at handoff".
 
+### B-9 · Merge the brand tracks
+- Plan: Plan 4 › B-9. Only a Cursor agent takes it.
+- Needs: `git fetch github`, then `git show github/harness-workbuddy:docs/plans/PROGRESS.md`. Both brand tracks were executed on `harness-workbuddy` (the DeepSeek and Qoder agents were unavailable), so `brand-deepseek` and `brand-qoder` do not exist: the merge is that branch, plus `harness-qoder` once H-9 is done. It diverged from this branch at `1d00e0a`, so expect a real merge, not a fast-forward.
+- Do and Done when: the five steps in the plan doc — review both diffs against the brief and the AI-tells list, rewrite the README and AGENTS prose, run `npx tsc -b`, `npm run lint`, `npm test` and `npm run build`, check the projects page and the chat at 1440 and 390 px wide, and ask Carlos before publishing.
+
 ### P0-2 · Raise the dev server heap
 - Plan: Plan 1 › Phase 0.
 - Files: `scripts/dev-profile.mjs` (`runVite`), `scripts/dev-profile.verify.mjs`.
@@ -123,6 +128,7 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Files: `README.md` (leave `README_ZH.md` alone).
 - Do: in Spanish: what the editor is (Claudia, a fork of OpenChatCut for music videos, driven by Claudia over MCP; the repository is corteo), requirements (WSL/Linux, Node 24, ffmpeg comes with npm), `npm install`, `npm run dev`, `npm run start:claudia`, how to connect Claudia (URL, token, `.env.claudia`), where data lives (`~/.openchatcut`), AGPL v3 note with a link to upstream OpenChatCut (https://github.com/0xsline/OpenChatCut).
 - Remaining: once P0-3 and P1-4 are done, add `npm run start:claudia`, `.env.claudia` and the steps to connect Claudia, and update its "Estado" section.
+- B-9 rewrites the README and AGENTS prose for the new name: the product is Claudia, corteo stays the repository and the command, and the two font licences join the credits. Don't pre-empt it here.
 - Done when: a new user can go from clone to the running editor and a connected Claudia with only the README.
 
 ### P1-1 · Providers off: server block
@@ -317,6 +323,7 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Plan: Plan 1 › Phase 5.
 - Files: `src/i18n/dict/es/` (mirror the 19 modules of `src/i18n/dict/en/`, then make `src/i18n/dict/es/index.ts` assemble them like `src/i18n/dict/it/index.ts`), `src/i18n/dictRegistry.ts`.
 - Do: one commit per module. Keys stay the Chinese originals; keep every `{placeholder}`.
+- Also fold `src/i18n/dict/en/brand.ts` and `src/i18n/dict/es/brand.ts` (Plan 4) into the per-module files, then drop the spread in `dictRegistry.ts` and the last entry in `en/index.ts`.
 - Pitfall: source files may not exceed 500 lines (`scripts/verify-gate-coverage.verify.mjs`). Split a long module into parts, or add it to that file's `dataModules` list like `src/i18n/dict/en/settings.ts`.
 - Fold `es/brand.ts` (about 120 keys from Plan 4 and B-9) into the modules too. Where `es/index.ts` has a harness entry for the same key (Plan 3), the harness text wins. Its sentence-case style is the one to follow.
 - Already in Spanish: the projects page, the editor's top bar (button labels), the chat's header, onboarding, starters and quick actions, the composer with its workflow and model pickers, and the capability banner. Still English: the rest of the chat (165 keys under `src/components/chat/`), the run inspector, the generation-task and export-history panels, and the media (including 手机传素材), preview, timeline, inspector and export panels.
@@ -339,6 +346,7 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 Add a line when you choose something the plans leave open: date, task ID, decision, reason.
 
 - 2026-10-24 · Plan 3 · The built-in chat stays, with free models through the local DeepSeek Harness (plus Ollama and LM Studio); `AGENTS.md` rule 1 changed accordingly. P1-1 and P1-2 now only cover generation, stock and cloud transcription, and P1-1 waits for H-9 so `server/plugins/providers-off.ts` is created once (by HQ-3). Reason: Carlos wants Claudia's chat in the editor on free models, without paid APIs.
+- 2026-10-24 · Plan 4 · The eight brand cards ran on `harness-workbuddy` in the WorkBuddy worktree, not as two tracks on `brand-deepseek` and `brand-qoder`: neither agent was available and the cards were ready. The file split in the plan still holds for the review, because each card touched the files its track owns. Reason: waiting for two idle agents would have left the name and the look undone.
 - 2026-10-24 · B-9 · Settings is "Ajustes" in Spanish (`设置`, `设置 · API 密钥`), replacing "Configuración". Reason: the harness strings already say "Pégalas en Ajustes › DeepSeek Harness" and the banner says "Ir a ajustes".
 - 2026-10-24 · B-9 · A copy of a project with no name is "Copia de proyecto", and new empty projects get a Spanish noun and adjective ("Latido nocturno"; every noun is masculine so any adjective agrees). Reason: the Chinese fallbacks showed on Spanish screens.
 - 2026-10-24 · B-9 · `es/brand.ts` never defines a key the harness translates in `es/index.ts` (written into `AGENTS.md` › UI text). Reason: it is spread last and would hide the harness text after H-9.
@@ -348,7 +356,7 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.
 
-- HW-1 to HW-5 (recorded by H-9, 2026-10-25). The WorkBuddy agent can't run any command in WSL: `wsl.exe` is on its sandbox's Program Blacklist, the same refusal recorded under both brand tracks' blockers below (WorkBuddy ran those cards too). Its card says to stop and ask rather than run git or npm over `\\wsl$`, so `harness-workbuddy` has no HW commits. H-9 merged without them. Unblock: Carlos removes `wsl.exe` from WorkBuddy's Security Center → Command Security → Program Blacklist; then WorkBuddy rebases `harness-workbuddy` on this branch and starts at HW-1. HW-3 should retest the free lanes now that the proxy repairs bare-index tool-call deltas (H-9 card).
+- HW-1 to HW-5 · resolved 2026-10-25. An earlier note said WorkBuddy was blocked because `wsl.exe` was on its Program Blacklist and `harness-workbuddy` had no HW commits. It finished the five tasks the same day, and this merge brings them in.
 
 ## Harness track · Qoder (HQ)
 Only the Qoder agent edits this section, in `~/corteo-qoder` on branch `harness-qoder`. Task cards: `docs/plans/03-deepseek-harness.md` › Qoder track.
@@ -393,20 +401,42 @@ Only the WorkBuddy agent edits this section, in `~/corteo-workbuddy` on branch `
 
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
-| HW-1 | Pin and install | blocked | |
-| HW-2 | `npm run harness` and `npm run harness:doctor` | blocked | HW-1 |
-| HW-3 | Which free models can edit | blocked | HW-2 |
-| HW-4 | DeepSeek Harness edits corteo over MCP | blocked | HW-2 |
-| HW-5 | Guide for Carlos | blocked | HW-2, HW-3, HW-4 |
+| HW-1 | Pin and install | done | |
+| HW-2 | `npm run harness` and `npm run harness:doctor` | done | HW-1 |
+| HW-3 | Which free models can edit | done | HW-2 |
+| HW-4 | DeepSeek Harness edits corteo over MCP | done | HW-2 |
+| HW-5 | Guide for Carlos | done | HW-2, HW-3, HW-4 |
 
 ### WorkBuddy: decisions
-None yet. Same format as "Decisions made during the work".
+- 2026-10-25 · HW-1 · `config/harness.json` holds the pins once; `scripts/harness/lib.mjs` reads them, so no script repeats `0.2.1-rc.2`, `v2.5.9` or the commit. The installer refuses the settings rewrite only when a write is needed: a re-run that already finds `distribution: managed` is a no-op even with the harness running. Reason: the harness stays up for hours and must not force a stop just to confirm the pins.
+- 2026-10-25 · HW-1 · `0.2.1-rc.2` stays. The manual install from HQ-5 already runs with the plugin, so the `0.1.7-rc.2` fallback is documented but unused.
+- 2026-10-25 · HW-2 · "Harness is up" means any HTTP answer on 3080: dsh web answers 401 until its login link is opened, so a status-code check would refuse to start next to a live instance. The doctor finds the forward port the same way it is configured: 401 without the key and 200 with it on each port, which also proves the plugin loaded.
+- 2026-10-25 · HW-2 · `npm run harness` omits the MCP patch when no token exists yet, instead of sending `Bearer undefined`; it says why and asks for a restart once corteo created the token. Reason: a broken MCP server in the DSH chat is worse than no server.
+- 2026-10-25 · HW-2 · Real run on 2026-10-25: `npm run harness:doctor` passed all five steps against the running harness (34 models, `http://127.0.0.1:18899/v1`, key masked), and `npm run harness` with the instance up reported it and exited 0 without spawning a second one.
+- 2026-10-25 · HW-3 · The report ranks only models that returned a schema-valid `split_item` call with the right arguments, then by latency. A 429 is the lane's quota, not a model defect, so those rows stay in the report as "rate limit" instead of being retried; retrying would burn the same shared quota.
+- 2026-10-25 · HW-3 · The five tool schemas come from corteo's own `assets/agent/openchatcut-tool-schemas.json`, so a model is judged against what the editor really exposes. One request per model with 300 ms between them; the sweep takes ~4 minutes.
+- 2026-10-25 · HW-4 · `--patch` has to be the first app argument. dsh's launcher stops parsing at the first token it does not own, so `web --no-open --host … --port … --patch <file>` hands `--patch` to the web app, which rejects it. The start script now emits `web --patch <file> --no-open …` and the verify pins that order.
+- 2026-10-25 · HW-4 · The MCP client uses full tool exposure, not `?toolExposure=progressive`. Progressive's boot set leaves out `list_edit_sessions` and `recover_edit_session`, and ToolSearch cannot activate them, so any session orphaned by a `target_project` rebind or an editor reload wedges the chat on "An edit session is already active" with no way out. Reproduced live; with full exposure the client loaded 103 tools and `list_edit_sessions` answered directly.
+- 2026-10-25 · HW-4 · The chat applies edits with `approvalMode: "auto"` and `review_edit_session`; manual mode only publishes a proposal and waits for a click in the editor. The edit session id returned by `begin_edit_session` must be reused for every later call — a `target_project` in between orphans it, so the guide tells the model to bind once and then stay put.
+- 2026-10-25 · HW-4 · Real run on 2026-10-25: `npm run harness` bound project `97e6d98d` at `http://localhost:5201`; the dsh chat read the timeline, opened an auto session and applied `split_item` at frame 60; the editor showed V1 as 00:02 + 00:01 (Video2 unchanged at 00:03) and the store recorded proposal `cad8879c` as `applied` with 1 operation.
+- 2026-10-25 · HW-5 · The walkthrough in `docs/harness.md` was followed once from a clean `--home /tmp/corteo-harness-clean`: `harness:install` finished and a second run printed "Nada que hacer"; `npm run harness -- --home … --web-port 3081` left the plugin forwarding on 18900 because 18899 was taken by the main instance; `harness:doctor -- --home … --web-port 3081` passed 5/5 and printed `http://127.0.0.1:18900/v1` (34 models). The install has no `--web-port` (it always probes 3080), so the guide says to run it with no harness up.
+- 2026-10-25 · HW-5 · Handoff for H-9, checked with a dry-run merge: `git merge-tree --write-tree` of this branch into `cursor/video-editor-mvp-d191` (`dd6e999`, which already carries Qoder's track and `f4b5165`) conflicts only in `AGENTS.md`, `docs/plans/04-claudia-brand.md`, `docs/plans/PROGRESS.md` and `package.json`. The two brand docs are unchanged by HW, so the target's text wins; `package.json` keeps both sides' scripts and our four `scripts/harness/*.verify.mjs` stay at the tail of `test:serial`; PROGRESS keeps both sections. The font-tools blocker above disappears with that merge.
 
 ### WorkBuddy: blockers
-None yet. Same format as "Blockers".
+- HW-5 · `npm test` stops at `src/agent/tools/font-tools.verify.ts:141`: `assert.ok(xmlPrem.includes('ChatCut Export'))` fails because `src/export/fcpxml.ts:416` already names the event `Claudia Export`. The same mismatch is already in the branch base `1fabc26`, and no HW commit touches `src/`, `shared/` or `server/`. The fix is on `github/main` as `f4b5165 B-9: follow the Claudia rename in two verifies`; `src/` belongs to Qoder, so WorkBuddy does not cherry-pick it. Unblock: H-9 merges `github/main` into `harness-workbuddy` (or cherry-picks `f4b5165`); until then `npm test` cannot reach the `test:serial` half. The four harness verifies pass alone under Node 24 (4 + 6 + 6 + 3 scenarios) and `npm run build` passes. Resolved by this merge (2026-10-25): the target already contains `f4b5165`, so the verify expects `Claudia Export`.
 
 ### WorkBuddy: model results (HW-3, HW-4)
-The top three models with their checks and latency, and the model used for the MCP edit.
+Sweep of 2026-10-25 22:54Z over all 34 models on `127.0.0.1:18899`, one request each («Corta el clip c1 en el fotograma 120»), schemas from `assets/agent/openchatcut-tool-schemas.json`. Report: `~/.corteo-harness/reports/harness-models-2026-10-24T22-54-13.{json,md}`. Nine lanes answered 200, nine of those returned a valid `split_item` call and eight got the arguments right; nine lanes are quota-exhausted (429), eight need an account key (401) and two no longer exist (404).
+
+| # | Model | Schema | Tool | Args valid | Correct | Latency |
+|---|-------|--------|------|------------|---------|---------|
+| 1 | `liquid/lfm-2.5-2.6b:free` | yes | `split_item` | yes | yes | 1185 ms |
+| 2 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` | yes | `split_item` | yes | yes | 1256 ms |
+| 3 | `nvidia/nemotron-3-ultra-550b-a55b:free` | yes | `split_item` | yes | yes | 1769 ms |
+
+Also correct: `nvidia/nemotron-3.5-super-vl:free` (1810 ms), `kilo-auto/free` (2026 ms), `cohere/north-mini-code:free` (2700 ms), `dots-studio/dots-3-note-preview:free` (3555 ms), `nvidia/nemotron-3.5-lightning:free` (6184 ms), `openrouter/free` (8882 ms). Four lanes knew the schema but called `read_timeline` instead of splitting; `stealth/glyph-cluster` emitted no call.
+
+Model used for the HW-4 MCP edit: `nvidia/nemotron-3-ultra-550b-a55b:free` («Kilo Nemotron 3 Ultra», reasoning High) in the dsh chat. It read the timeline, opened an auto session and applied `split_item` at frame 60 of `seed_1` in project `97e6d98d`; the editor then showed V1 as 00:02 + 00:01 and the store marked the proposal `applied` with 1 operation. Two earlier models did not get there: `liquid/lfm-2.5-2.6b:free` hit its lane quota (429) on the first turn, and `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` read «línea de tiempo» as the workspace's task list and opened `PROGRESS.md` instead of the MCP tools.
 
 ---
 
@@ -459,7 +489,7 @@ Executed by the WorkBuddy agent on 2026-10-24 (the Qoder agent was not available
 - The gate now also covers those six identity files and `product-help/SKILL.md`, so BQ-2 cannot silently regress.
 
 ### Qoder (brand): blockers
-- `npm test` and `npm run build` need WSL, which the sandbox refused for the whole session (`wsl.exe` on the Program Blacklist). Git itself works over the UNC path, so the three commits below are real: `1ddc7bd` (BD), `f179f63` (BQ), `01bbb02` (B-0). The work was verified over UNC instead: `tsc` on both projects, `check-i18n`, and the affected verifies, run individually.
+- `npm test` and `npm run build` need WSL, which this sandbox refuses (`wsl.exe` on the Program Blacklist; re-checked 2026-10-25 00:00). Git itself works over the UNC path, so the commits below are real: `1ddc7bd` (BD), `f179f63` (BQ), `01bbb02` (B-0), `1fabc26` (the PROGRESS entry). The work was verified over UNC instead: `tsc` on both projects, `check-i18n`, and the affected verifies, run individually.
 - `scripts/verify-registration.verify.mjs` fails until the six new verify files are committed: it compares `package.json` against `git ls-files`, and untracked files read as "registered but not tracked". `scripts/verify-gate-coverage.verify.mjs` already passes (636 verify files, all reachable).
 - `vite build` was attempted on Windows and cannot work from the UNC path: the win32 `@rolldown/binding` and `lightningcss` binaries load, but rolldown's native resolver fails on `\\wsl.localhost\...` ("Failed to resolve entry for package @vitejs/plugin-react"), and the share cannot be mapped to a drive (`net use` → system error 64). The client bundle stays unbuilt until WSL is back.
 - Resolved by B-9 on 2026-10-24, on Linux: `npx tsc -b` passes (the 87 "SDK-drift" errors seen on the node project over UNC don't reproduce), `scripts/verify-registration.verify.mjs` passes now that the files are committed, and `npm test` and `npm run build` ran (results under "State at handoff"). `wsl.exe` is still blocked for the WorkBuddy agent, which also blocks its HW tasks.

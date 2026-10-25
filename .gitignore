@@ -85,6 +85,9 @@ MODEL-OPT-PLAN.md
 # scripts/*.verify.mjs registered in package.json was silently skipped by
 # `git add -A`, and CI died with MODULE_NOT_FOUND on a file that exists locally.
 /scripts/*
+# DeepSeek Harness scripts get their own tracked folder; `*` above does not
+# descend into it, so this one line re-includes every file inside.
+!/scripts/harness/
 !/scripts/sync-mediapipe.mjs
 # Stable regressions are *.verify.* by convention (see the *.check.* rule
 # above), so they are never local-only.
