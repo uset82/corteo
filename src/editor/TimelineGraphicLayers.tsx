@@ -3,6 +3,7 @@ import { AbsoluteFill, Internals } from 'remotion';
 import { getCompiledTemplate } from '../template-host';
 import type { AspectFit, TimelineItem, Watermark } from './types';
 import { VisualClipSurface } from './TimelineMediaLayer';
+import { DEFAULT_TEXT_BODY } from './defaultNames';
 import { fontFamilyCss } from '../fonts/googleFontCatalog';
 import { motionGraphicTime } from './motionGraphicTime';
 
@@ -51,6 +52,8 @@ export function TextLayer({ item, canvasW, canvasH, fit }: {
   const props = item.props ?? {};
   const align = (props.align === 'left' || props.align === 'right' ? props.align : 'center') as 'left' | 'center' | 'right';
   const justify = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
+  const position = props.position === 'top' || props.position === 'bottom' ? props.position : 'center';
+  const vertical = position === 'top' ? 'flex-start' : position === 'bottom' ? 'flex-end' : 'center';
 
   // Typography properties:
   const rawFamily = String(props.fontFamily ?? '').trim();
@@ -85,7 +88,7 @@ export function TextLayer({ item, canvasW, canvasH, fit }: {
       whiteSpace: 'pre-wrap',
       width: bgEnabled ? undefined : '100%',
     }}>
-      {String(props.text ?? '文字')}
+      {String(props.text ?? DEFAULT_TEXT_BODY)}
     </div>
   );
 
@@ -129,7 +132,7 @@ export function TextLayer({ item, canvasW, canvasH, fit }: {
 
   return (
     <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-      <div style={{ width: dw, height: dh, flexShrink: 0, transform: `scale(${scale})`, display: 'flex', alignItems: 'center', justifyContent: justify, padding: '0 96px', boxSizing: 'border-box' }}>
+      <div style={{ width: dw, height: dh, flexShrink: 0, transform: `scale(${scale})`, display: 'flex', alignItems: vertical, justifyContent: justify, padding: position === 'center' ? '0 96px' : 96, boxSizing: 'border-box' }}>
         {body}
       </div>
     </AbsoluteFill>

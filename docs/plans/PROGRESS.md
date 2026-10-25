@@ -1,6 +1,6 @@
 # Progress
 
-The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2), `docs/plans/03-deepseek-harness.md` (Plan 3) and `docs/plans/04-claudia-brand.md` (Plan 4) and `docs/plans/05-corteo.md` (Plan 5). Rules and the work loop: `AGENTS.md`.
+The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2), `docs/plans/03-deepseek-harness.md` (Plan 3), `docs/plans/04-claudia-brand.md` (Plan 4), `docs/plans/05-claudia-portable.md` (P-CL), `docs/plans/05-opus-parity.md` and `docs/plans/06-opus-parity.md` (Plan 6). Rules and the work loop: `AGENTS.md`.
 
 **Picking the next task:** if a task is `doing`, a previous session stopped in the middle of it: resume it first. Otherwise go down the table and take the first task whose status is `todo` and whose "Needs" are all `done`. Change its status to `doing`, finish it, set `done`, and commit this file together with the work.
 
@@ -36,6 +36,18 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P1-3 | Allowed hosts from env | done | P0-3 |
 | P1-4 | "Conectar Claudia" card | done | P1-3 |
 | P1-5 | `npm run editor-host` (headless editor tab) | done | P0-3 |
+| P-CL-1 | Installer unsets NPM_CONFIG_PREFIX before nvm | done | |
+| P-CL-2 | corteo-env.sh and a wrapper that selects Node 24 | done | P-CL-1 |
+| P-CL-3 | Self-test reports the step that failed | done | P-CL-1 |
+| P-CL-4 | No Remotion browser download at render time | done | |
+| P-CL-5 | Audio with no trackId creates an audio track | done | |
+| P-CL-6 | Text keeps fromFrame on an overlay track | done | |
+| P-CL-7 | split JSON returns the new item id | done | |
+| P-CL-8 | Headless `corteo mcp token` | done | |
+| P-CL-9 | Spanish defaults in CLI JSON | done | |
+| P-CL-10 | Vite warmup path | done | |
+| P-CL-11 | SKILL.md recipes, copy-paste tested | done | P-CL-2, P-CL-5, P-CL-6, P-CL-7, P-CL-8 |
+| P-CL-12 | claudia-acceptance.sh on Node 20 with the prefix set | done | P-CL-1 to P-CL-11 |
 | P1-6 | `videoclip-musical` skill | todo | P1-2 |
 | P1-7 | Webhooks with HMAC | optional | P4-3 |
 | L-01 | Server-side Beat This + CLAP runner | done | |
@@ -368,6 +380,10 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-25 · H-9 · The `dsh` default model is `nvidia/nemotron-3-ultra-550b-a55b:free`, from HW-3 and HW-4, not the plugin's `combo:recommended-free` group and not the two faster lanes. Reason: the group was not among the lanes that returned a correct `split_item`, liquid hit a 429 on the real edit, and the nano reasoning model never called the timeline. Ultra did.
 - 2026-10-25 · GitHub main · Merged `3790a69` (HQ-6, plus HQ-7 and HQ-8) into this branch. `package.json` keeps both sides: the Claudia scripts and verifies, and `dsh-sse-repair.verify.ts`. The settings hide now follows `providersOff()` so HQ-7's runtime switch still hides paid panes. Reason: GitHub main had moved, and the publish has to be a fast-forward.
 - 2026-10-25 · Claudia bots · `scripts/claudia-install.sh` is the one-shot install for any Claudia bot's Linux VM, and `skills/corteo/SKILL.md` is the agent guide. The free-model harness stays optional. Reason: every Claudia bot has its own VM, so corteo has to install there without a tunnel and without secrets.
+- 2026-10-25 · P-CL · Names the CLI prints (`Texto`, `Secuencia 1`, `Color`, `Títulos`) are Spanish, not the UI locale. A headless shell has no locale, and the product language is Spanish. i18n keys stay Chinese.
+- 2026-10-25 · P-CL-4 · When `google-chrome` (or Chromium) runs, renders set `CC_BROWSER_EXECUTABLE` and skip Remotion's headless shell. If there is no system Chrome, the installer downloads that shell and says so.
+- 2026-10-25 · P-CL-8 · `corteo mcp token` prints the path. `--show` prints the token only on stdout. The endpoint stays localhost-only. Nothing in git is a token.
+- 2026-10-25 · P-CL-12 · `scripts/claudia-acceptance.sh` on this VM, with `node` at v20.20.2 and `NPM_CONFIG_PREFIX=/home/ubuntu/.local`, printed `ACCEPTANCE=PASS`. The installer self-test was `CORTEO_SELF_TEST=PASS` and used `/usr/local/bin/google-chrome` (no headless-shell download). The 6s render was 1920x1080 with an audio stream. There is no CI workflow in the repo, so the script is syntax-checked from `test:serial` and the full run is manual. This VM's ffmpeg is 6.1.1, not the reference 7.1.
 - 2026-10-25 · Claudia's VM · She runs corteo on her own Linux box. `npm run claudia:local` binds 127.0.0.1 with paid providers off, and `npm run corteo` is the existing `occ` shell, now able to `media import` a disk path. The Worker and named tunnel stay optional for a browser. Reason: she can clone, install and render on that VM, so the public URL is not the limb.
 - 2026-10-24 · B-9 · The Spanish pass covers the screens Plan 4 owns, read literally: the projects page with its tooltips, the top bar's button labels, the chat's first view (header, onboarding, starters, composer, workflow and model pickers, capability banner) and the phone upload page. The panels those buttons open stay for P5-1. Reason: the plan's scope line, and P5-1 is the full dictionary.
 

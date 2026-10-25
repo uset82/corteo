@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# ~/corteo/scripts/corteo <args>
+# Works from any shell: clears NPM_CONFIG_PREFIX, selects Node 24, then runs the CLI.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck disable=SC1091
+source "$ROOT/scripts/corteo-env.sh"
+cd "$CORTEO_ROOT"
+if [[ -z "${OPENCHATCUT_DEV_PROFILE_ID:-}" ]]; then
+  OPENCHATCUT_DEV_PROFILE_ID="$(node --input-type=module -e '
+    import { resolveDevProfile } from "./scripts/dev-profile.mjs";
+    const profile = await resolveDevProfile();
+    process.stdout.write(profile.id);
+  ')"
+  export OPENCHATCUT_DEV_PROFILE_ID
+fi
+exec npm run --silent corteo -- "$@"

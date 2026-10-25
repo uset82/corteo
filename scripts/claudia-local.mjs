@@ -4,6 +4,16 @@
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
+const nodeMajor = Number(process.versions.node.split('.')[0]);
+if (!Number.isFinite(nodeMajor) || nodeMajor < 24) {
+  process.stderr.write(
+    `[corteo] Node ${process.versions.node} is too old. corteo needs Node 24.\n`
+    + 'A fresh shell may still have Node 20 as `node` and NPM_CONFIG_PREFIX set.\n'
+    + 'Run ~/corteo/scripts/corteo or npm run claudia:local (that script selects Node 24).\n',
+  );
+  process.exit(1);
+}
+
 if (!process.env.OPENCHATCUT_PROVIDERS) process.env.OPENCHATCUT_PROVIDERS = 'off';
 if (!process.env.OPENCHATCUT_DEV_HEAP_MB) process.env.OPENCHATCUT_DEV_HEAP_MB = '6144';
 

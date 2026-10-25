@@ -1,4 +1,5 @@
 import type { AgentContext } from '../context';
+import { DEFAULT_SOLID_NAME, DEFAULT_TEXT_ITEM_NAME } from '../../editor/defaultNames';
 import type { ClipEffect, TimelineItem, TransitionType, ZoomEffect } from '../../editor/types';
 import { applyGeneric } from './edit-item-generic';
 import { transitionAssetId } from './library-catalog';
@@ -159,6 +160,10 @@ function commitMotionGraphicPlan(ctx: AgentContext, plan: OpResult, ripple: bool
   };
 }
 
+function landed(ctx: AgentContext, itemId: string) {
+  return ctx.getState().items.find((item) => item.id === itemId);
+}
+
 function commitMediaPlan(ctx: AgentContext, plan: OpResult): OpResult {
   const asset = (ctx.getDoc().assets ?? []).find((item) => item.id === plan.assetId);
   if (!asset) return { error: `pool asset vanished: ${String(plan.assetId)}` };
@@ -166,10 +171,11 @@ function commitMediaPlan(ctx: AgentContext, plan: OpResult): OpResult {
     ? { ...asset, durationInFrames: Number(plan.durationInFrames) }
     : asset;
   const itemId = ctx.commands.addMediaItem(placed, {
-    track: plan.track as string,
+    track: plan.track as string | undefined,
     startFrame: plan.startFrame as number | undefined,
     srcInFrame: plan.srcInFrame as number | undefined,
   });
+  const item = landed(ctx, itemId);
   return {
     ok: true,
     kind: plan.kind,
@@ -178,9 +184,9 @@ function commitMediaPlan(ctx: AgentContext, plan: OpResult): OpResult {
       itemId,
       name: asset.name,
       kind: asset.kind,
-      track: plan.track,
-      startFrame: plan.startFrame ?? 'appended',
-      durationInFrames: placed.durationInFrames,
+      track: item?.track ?? plan.track,
+      startFrame: item?.startFrame ?? plan.startFrame ?? 'appended',
+      durationInFrames: item?.durationInFrames ?? placed.durationInFrames,
       srcInFrame: plan.srcInFrame,
     },
   };
@@ -198,19 +204,22 @@ function commitTextPlan(ctx: AgentContext, plan: OpResult, ripple: boolean): OpR
     color: plan.color as string | undefined,
     fontWeight: plan.fontWeight as number | undefined,
     align: plan.align as 'left' | 'center' | 'right' | undefined,
+    position: plan.position as 'top' | 'center' | 'bottom' | undefined,
   });
+  const item = landed(ctx, itemId);
   return {
     ok: true,
     kind: 'text',
     placed: {
       itemId,
-      name: plan.name ?? '文字',
+      name: item?.name ?? plan.name ?? DEFAULT_TEXT_ITEM_NAME,
       text: plan.text,
-      track: plan.track,
-      startFrame: plan.startFrame ?? 'appended',
-      durationInFrames: plan.durationInFrames ?? 90,
+      track: item?.track ?? plan.track,
+      startFrame: item?.startFrame ?? plan.startFrame ?? 'appended',
+      durationInFrames: item?.durationInFrames ?? plan.durationInFrames ?? 90,
       color: plan.color,
       fontSize: plan.fontSize,
+      ...(plan.position ? { position: plan.position } : {}),
     },
     ripple,
   };
@@ -230,7 +239,7 @@ function commitSolidPlan(ctx: AgentContext, plan: OpResult, ripple: boolean): Op
     kind: 'solid',
     placed: {
       itemId,
-      name: plan.name ?? '纯色',
+      name: plan.name ?? DEFAULT_SOLID_NAME,
       color: plan.color ?? '#1a1a1a',
       track: plan.track,
       startFrame: plan.startFrame ?? 'appended',

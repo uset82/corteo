@@ -73,4 +73,43 @@ const solidId = draft.commands.addSolidItem({
 });
 assert.equal(draft.getState().items.find((entry) => entry.id === solidId)?.kind, 'solid');
 
+// Text with no track stays at fromFrame on an overlay, not at the end of V1.
+const occupied = docFromTimeline({
+  fps: 30, width: 1920, height: 1080, items: [{
+    id: 'clip', track: 'v1', startFrame: 0, durationInFrames: 600, kind: 'solid', name: 'fondo',
+  }], selectedId: null, assets: [],
+  trackOrder: ['v1'],
+  tracks: { v1: { kind: 'video' } },
+});
+const overlay = makeDraft(occupied);
+const titleId = overlay.commands.addTextClip({ startFrame: 30, text: 'Hola', durationInFrames: 60, position: 'bottom' });
+const title = overlay.getState().items.find((entry) => entry.id === titleId);
+assert.equal(title?.startFrame, 30, 'fromFrame is kept');
+assert.notEqual(title?.track, 'v1', 'text does not land on the clip track');
+assert.equal(title?.props?.position, 'bottom');
+assert.equal(title?.name, 'Texto');
+
+const audioAsset = {
+  id: 'tone', kind: 'audio', name: 'tono', src: '/tmp/tone.wav', durationInFrames: 180,
+} as MediaAsset;
+const audioPlan = validateGenericAdd(
+  { items: [], fps: 30, trackOrder: ['v1'], tracks: { v1: { kind: 'video' } }, width: 1920, height: 1080, selectedId: null } as unknown as TimelineState,
+  [audioAsset],
+  { type: 'audio', assetId: 'tone', fromFrame: 12 },
+);
+assert.equal(audioPlan.error, undefined, String(audioPlan.error));
+assert.equal(audioPlan.track, undefined, 'missing audio track is created at commit, not rejected');
+const audioDraft = makeDraft(docFromTimeline({
+  fps: 30, width: 1920, height: 1080, items: [], selectedId: null, assets: [audioAsset],
+  trackOrder: ['v1'], tracks: { v1: { kind: 'video' } },
+}));
+const audioId = audioDraft.commands.addMediaItem(audioAsset, { startFrame: 12 });
+const audioItem = audioDraft.getState().items.find((entry) => entry.id === audioId);
+assert.equal(audioItem?.kind, 'audio');
+assert.equal(audioItem?.startFrame, 12);
+assert.equal(
+  Object.values(audioDraft.getState().tracks ?? {}).filter((track) => track?.kind === 'audio').length,
+  1,
+);
+
 console.log('edit-item-authored.verify: ok');

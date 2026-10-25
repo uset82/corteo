@@ -12,6 +12,7 @@ import {
   type TimelineLinkGroup,
   type TimelineState,
 } from '../../editor/types.js';
+import { DEFAULT_SEQUENCE_NAME } from '../../editor/defaultNames.js';
 import { isBackgroundFillStrength } from '../../editor/backgroundFill.js';
 import { isSourceClockMetadata } from '../../editor/timecode.js';
 import { withMediaSourceRevision } from '../../editor/mediaSourceRevision.js';
@@ -413,7 +414,7 @@ export function timelineToV1(value: TimelineState): LooseProjectShape & { versio
   const timeline: Timeline = {
     ...raw,
     id,
-    name: typeof raw.name === 'string' && raw.name ? raw.name : '序列 1',
+    name: typeof raw.name === 'string' && raw.name ? raw.name : DEFAULT_SEQUENCE_NAME,
     order: typeof raw.order === 'number' ? raw.order : 0,
   };
   return { version: 1, timelines: [timeline], activeTimelineId: id };

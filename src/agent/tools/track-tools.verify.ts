@@ -85,4 +85,11 @@ captionDraft.commands.updateTrack(second, { order: 0 });
 assert.equal(captionsOnTrack(captionDraft.getState(), second)?.template, 'netflix', 'caption payload follows the stable track through reorder');
 assert.equal(captionDraft.getState().captions?.template, 'netflix', 'legacy primary mirrors the new C1');
 
+const asObject = await execTrackTool('edit_track', {
+  action: 'create',
+  json: { trackType: 'audio', name: 'Musica' },
+}, ctx) as { ok?: boolean; created?: { name: string | null }[] };
+assert.equal(asObject.ok, true, 'edit_track json may be an object');
+assert.equal(asObject.created?.[0]?.name, 'Musica');
+
 console.log('track-tools.check: ok');

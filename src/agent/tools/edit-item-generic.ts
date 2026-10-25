@@ -4,6 +4,7 @@
 import type {
   ItemKeyframes, Keyframe, KeyframeProp, MediaAsset, TimelineItem, TimelineState,
 } from '../../editor/types';
+import { DEFAULT_TEXT_BODY } from '../../editor/defaultNames';
 import { defaultTrackId, resolveTrackId, selectedIdsOf } from '../../editor/types';
 import { isValidEasing } from '../../editor/keyframes';
 import { validateBackgroundFillUpdate } from './edit-item-background-fill';
@@ -110,6 +111,7 @@ const AUTHORED_ADD_KEYS: Record<string, true> = {
   color: true,
   fontWeight: true,
   align: true,
+  position: true,
   // solid also uses color + name
 };
 const SLIP_UPDATE_KEYS: Record<string, true> = {
@@ -353,9 +355,16 @@ export function validateAuthoredAdd(
   if (entry.assetId !== undefined) {
     return { error: `${type} is authored — do not pass assetId; set text/color/name props directly` };
   }
-  const track = resolveTrackId(state, entry.track ?? entry.trackId ?? 'V1', 'video')
-    ?? defaultTrackId(state, 'video');
-  if (!track) return { error: 'no video track for placement — create one with edit_track first' };
+  const explicitTrack = entry.track ?? entry.trackId;
+  const namedTrack = explicitTrack !== undefined && String(explicitTrack).trim() !== '';
+  let track: string | undefined;
+  if (namedTrack) {
+    track = resolveTrackId(state, explicitTrack, 'video') ?? undefined;
+    if (!track) return { error: `no video track "${String(explicitTrack)}" — create one with edit_track first` };
+  } else if (type !== 'text') {
+    track = resolveTrackId(state, 'V1', 'video') ?? defaultTrackId(state, 'video') ?? undefined;
+    if (!track) return { error: 'no video track for placement — create one with edit_track first' };
+  }
   const startFrame = finiteNum(entry.startFrame) ?? finiteNum(entry.fromFrame);
   const durationInFrames = finiteNum(entry.durationInFrames);
   const name = typeof entry.name === 'string' && entry.name.trim() ? entry.name.trim() : undefined;
@@ -374,8 +383,14 @@ export function validateAuthoredAdd(
         : {}),
     };
   }
-  const text = typeof entry.text === 'string' && entry.text.trim() ? entry.text.trim() : '文字';
+  const text = typeof entry.text === 'string' && entry.text.trim() ? entry.text.trim() : DEFAULT_TEXT_BODY;
   const color = isHexColor(entry.color) ? entry.color.trim() : '#ffffff';
+  const position = entry.position === 'top' || entry.position === 'center' || entry.position === 'bottom'
+    ? entry.position
+    : undefined;
+  if (entry.position !== undefined && position === undefined) {
+    return { error: 'text position must be top, center, or bottom' };
+  }
   const fontSize = finiteNum(entry.fontSize);
   const fontWeight = finiteNum(entry.fontWeight);
   const align = entry.align === 'left' || entry.align === 'right' || entry.align === 'center'
@@ -389,6 +404,7 @@ export function validateAuthoredAdd(
     text,
     color,
     align,
+    ...(position ? { position } : {}),
     ...(name ? { name } : {}),
     ...(fontSize !== undefined && fontSize > 0 ? { fontSize } : {}),
     ...(fontWeight !== undefined && fontWeight > 0 ? { fontWeight } : {}),
@@ -432,9 +448,18 @@ export function validateGenericAdd(
     return { error: `asset ${asset.id} is kind=${asset.kind}, not ${type} — pass type:"${asset.kind}"` };
   }
   const family = type === 'audio' ? 'audio' : 'video';
-  const track = resolveTrackId(state, entry.track ?? entry.trackId ?? (family === 'audio' ? 'A1' : 'V1'), family)
-    ?? defaultTrackId(state, family);
-  if (!track) return { error: `no ${family} track for placement — create one with edit_track first` };
+  const explicitMediaTrack = entry.track ?? entry.trackId;
+  const namedMediaTrack = explicitMediaTrack !== undefined && String(explicitMediaTrack).trim() !== '';
+  const track = namedMediaTrack
+    ? (resolveTrackId(state, explicitMediaTrack, family) ?? undefined)
+    : (defaultTrackId(state, family) ?? undefined);
+  if (namedMediaTrack && !track) {
+    return { error: `no ${family} track "${String(explicitMediaTrack)}" — create one with edit_track first` };
+  }
+  // Audio with no trackId creates the lane in the same batch as the clip.
+  if (!track && family !== 'audio') {
+    return { error: `no ${family} track for placement — create one with edit_track first` };
+  }
   const startFrame = finiteNum(entry.startFrame) ?? finiteNum(entry.fromFrame);
   const durationInFrames = finiteNum(entry.durationInFrames);
   const sourceWindow = validateSourceWindow(type, asset, state.fps || 30, entry, durationInFrames);

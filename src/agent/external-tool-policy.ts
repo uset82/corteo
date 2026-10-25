@@ -39,6 +39,7 @@ const DRAFT_EDIT_TOOL_NAMES = new Set([
   // Local-path media import lands assets in the session's pool; the file copy
   // itself is a library write, reviewed in offline-tool-authorization.ts.
   'import_asset', 'import_assets', 'import_folder',
+  'detect_beats',
 ]);
 
 const SERVER_DIRECT_READ_TOOL_NAMES: Record<string, true> = {
@@ -106,6 +107,8 @@ const SERVER_DIRECT_EDIT_TOOL_NAMES: Record<string, true> = {
   // Draft export writes into the CapCut/JianYing store through capcut-cli; it
   // touches no project state, so no draft commit is involved.
   export_jianying_draft: true,
+  // On-device beat analysis. Marker writes go through the draft's commands.
+  detect_beats: true,
 };
 
 const SERVER_DIRECT_BROWSER_ACTIONS: Record<string, true> = {

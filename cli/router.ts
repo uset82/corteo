@@ -7,6 +7,7 @@ import { UsageError } from './errors.ts';
 import { runEditCommand } from './commands/edit.ts';
 import { runExportCommand } from './commands/export.ts';
 import { runItemCommand } from './commands/item.ts';
+import { runMcpCommand } from './commands/mcp.ts';
 import { runMediaCommand } from './commands/media.ts';
 import { runProjectCommand } from './commands/project.ts';
 import { runRenderCommand } from './commands/render.ts';
@@ -31,6 +32,8 @@ export async function runCommand(commandLine: CommandLine): Promise<void> {
       return runItemCommand(positionals, commandLine, json);
     case 'media':
       return runMediaCommand(positionals, commandLine, json);
+    case 'mcp':
+      return runMcpCommand(positionals, commandLine, json);
     case 'render':
       return runRenderCommand(subLine(commandLine, positionals), json);
     case 'export':

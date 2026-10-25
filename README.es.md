@@ -111,7 +111,7 @@ Ella ejecuta esto una vez. No pide claves. Al final imprime `CORTEO_SELF_TEST=PA
 curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/scripts/claudia-install.sh | bash
 ```
 
-El editor queda en `~/corteo`. Lo arranca con `npm run claudia:local` y lo maneja con `npm run corteo -- ...`. La guía para el bot está en [`skills/corteo/SKILL.md`](skills/corteo/SKILL.md). El túnel de Cloudflare es opcional y solo sirve para abrir el editor en un navegador.
+El editor queda en `~/corteo`. Aunque el shell traiga Node 20 y `NPM_CONFIG_PREFIX`, el instalador los aparta y usa Node 24. Lo arranca con `npm run claudia:local` y lo maneja con `~/corteo/scripts/corteo`, sin preparar el shell. La guía para el bot está en [`skills/corteo/SKILL.md`](skills/corteo/SKILL.md). El túnel de Cloudflare es opcional y solo sirve para abrir el editor en un navegador.
 
 ## Uso
 
@@ -182,20 +182,20 @@ Hoy eso sirve para un cliente en la misma máquina. Claudia usa su propia máqui
 
 Claudia no corre en el PC de Carlos. Tiene una máquina Linux propia. Ahí clona este repo y arranca el editor en local. No hace falta el túnel ni que el PC de Carlos esté encendido.
 
-Node 24 (`nvm use`), luego `npm install`. En una terminal:
+El instalador deja Node 24. En una terminal:
 
 ```bash
 npm run claudia:local
 ```
 
-Eso escucha solo en `http://127.0.0.1:5199`. El MCP está en `http://127.0.0.1:5199/api/external-mcp/mcp`. Los proveedores de pago quedan apagados. En otra terminal, el shell (sin navegador):
+Eso escucha solo en `http://127.0.0.1:5199`. El MCP está en `http://127.0.0.1:5199/api/external-mcp/mcp`. El token no se imprime solo: `~/corteo/scripts/corteo mcp token` dice la ruta, y `--show` imprime el token en stdout. Los proveedores de pago quedan apagados. En otra terminal, el shell (sin navegador, y sin depender de que `node` sea la 24):
 
 ```bash
-npm run corteo -- project new "Prueba" --json
-npm run corteo -- media import /ruta/absoluta/clip.mp4 --apply --json
-npm run corteo -- tools call edit_item --args '{"adds":[{"type":"video","assetId":"ID","fromFrame":0}]}' --apply
-npm run corteo -- project show Prueba --doc --out proyecto.json
-CC_RENDER_GL=swangle npm run corteo -- render --out /ruta/salida.mp4
+~/corteo/scripts/corteo project new "Prueba" --json
+~/corteo/scripts/corteo media import /ruta/absoluta/clip.mp4 --apply --json
+~/corteo/scripts/corteo tools call edit_item --args '{"adds":[{"type":"video","assetId":"ID","fromFrame":0}]}' --apply
+~/corteo/scripts/corteo project show Prueba --doc --out proyecto.json
+CC_RENDER_GL=swangle ~/corteo/scripts/corteo render --out /ruta/salida.mp4
 ```
 
 `proyecto.json` es el documento del proyecto para leerlo. El archivo no es la biblioteca: para cambiar el corte se usa el shell. Sin GPU, `CC_RENDER_GL=swangle`.
