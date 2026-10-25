@@ -481,7 +481,7 @@ This track is deliberately **not** in the main table, so the picking rule above 
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
 | OP-01 | `score_moments`: rubric engine | done | |
-| OP-02 | `find_highlights` ranks, snaps, dedupes | todo | OP-01 |
+| OP-02 | `find_highlights` ranks, snaps, dedupes | done | OP-01 |
 | OP-03 | `make_shorts`: source in, clips out | todo | OP-02 |
 | OP-04 | Calibration ledger | todo | OP-01 |
 | OP-05 | "Analizar episodio" panel | todo | OP-03 |
@@ -508,6 +508,12 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - `genre` replaces ClipAnything's visual profile. There is no local vision model at runtime, and pretending to multimodal analysis would be dishonest; scene alignment stays for a later task.
 - Chapters merge below 8 s, so a short source is one chapter and the candidates are then split by `maxSeconds`.
 - UI lands in OP-05: OP-01 is agent-only on purpose, and the plan says so.
+
+**OP-02 (done 2026-10-25).** `find_highlights` ranks and filters with the same score, inline.
+- `src/agent/shorts/score-ranges.ts` scores already-chosen word ranges (same 60/40 blend, **no gates**: the caller chose the spans, so a gate must not silently shrink the batch). Verify: `src/agent/shorts/score-ranges.verify.ts`.
+- New args: `minScore` (0-99, default 0, so existing callers are unchanged), `score` (default true; false skips the model for a fast cut) and `genre`. Every short now carries `score`, `subscores`, `reason` and `risks`; dropped moments come back in `rejected[]` with `por debajo de minScore N`, and `scoreModel` says whether the model was used.
+- Selection still decides the spans; scoring only ranks and filters. `highlight-tool.verify.ts` keeps its original assertions and adds score/sub-score checks plus a `minScore: 99` case that produces zero sequences and two reported rejections.
+- Cost: one extra model call per `find_highlights` when scoring is on (`score:false` opts out).
 
 
 ### Opus parity: blockers

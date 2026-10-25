@@ -2872,7 +2872,7 @@
     },
     {
       "name": "find_highlights",
-      "description": "Create short-form highlights from long-form content: read the word-level transcript of a timeline clip, use an LLM to select the strongest self-contained moments, duplicate each into a vertical sequence (default 9:16), and trim it to the selected frame range. The clip must be transcribed first with transcribe_track. Returns each sequence id, title, and frame range. Falls back to information-density heuristics if LLM selection fails.",
+      "description": "Create short-form highlights from long-form content: read the word-level transcript of a timeline clip, use an LLM to select the strongest self-contained moments, duplicate each into a vertical sequence (default 9:16), and trim it to the selected frame range. The clip must be transcribed first with transcribe_track. Each selected moment is then scored with the same 0-99 rubric as score_moments and gets a reason and risk flags; minScore drops the ones below it and returns them in rejected. Returns each sequence id, title, frame range, score and sub-scores. Falls back to information-density heuristics if LLM selection fails.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -2910,6 +2910,26 @@
           "maxSeconds": {
             "type": "number",
             "description": "Maximum duration per highlight; default 60 seconds."
+          },
+          "minScore": {
+            "type": "number",
+            "description": "Drop moments scored below this (0-99). Default 0 keeps every selection; 55 is the publishable line."
+          },
+          "score": {
+            "type": "boolean",
+            "description": "Score and rank the selection (default true). false skips the scoring pass for a fast cut."
+          },
+          "genre": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "podcast",
+              "interview",
+              "tutorial",
+              "vlog",
+              "livestream"
+            ],
+            "description": "Content-type prior for the scoring rubric. Default auto."
           }
         }
       }
