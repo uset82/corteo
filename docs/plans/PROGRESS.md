@@ -617,7 +617,10 @@ This track is deliberately **not** in the main table, so the picking rule above 
   - two due entries fire oldest-slot-first, and one failure does not abort the other;
   - a late slot still publishes and is reported in `late[]` — the declared "publish late, record it" rule;
   - a future, `running` or `cancelled` entry is left untouched.
-- Still to come: the SQLite glue (`server/publish/schedule-store.ts` over the repo's `sqliteReadEntry`/`sqliteWriteEntry` KV pattern), the 30 s interval that calls `runTick`, the three MCP tools, `when` on `publish_to_social`, and the week calendar.
+- **OP-13, the store done (2026-10-25).** `server/publish/schedule-store.ts` holds the queue in the same SQLite KV row the generation jobs use (`publish.schedule.v1`): one storage mechanism, one migration story, one place to look when something is stuck. It is deliberately thin glue — `loadSchedule` (idempotent, recovers `running` rows on first load), `addScheduled`, `removeScheduled`, `commitScheduled` for the tick, `scheduledById`.
+- The payload rules moved to `shared/` so they are testable without a database: `parseSchedulePayload` / `serializeSchedulePayload` drop unusable rows and **count** them (a hand-edited or older-build file loses the bad row, not the schedule), report an unknown version instead of guessing, and sort by slot on the way in. Nine assertions cover the round trip, seven kinds of garbage, and the sort.
+- Same trap as the brand kit, caught again by the round-trip assertion: parsed entries must **omit** absent optional fields rather than set them to `undefined`, or a stored entry does not deep-equal the object that was written.
+- Still to come: the 30 s interval that calls `runTick` + `commitScheduled`, the three MCP tools (`schedule_publish`, `list_scheduled_publishes`, `cancel_scheduled_publish`) with `when` on `publish_to_social`, and the week calendar.
 - **Gate note:** this touched `shared/`, so `AGENTS.md` requires `npm test` before OP-13 can be called done — not just `verify:affected`.
 - OP-14 (semantic catalog) and OP-15 (performance loop) stay `optional`.
 

@@ -8,7 +8,9 @@ import {
   findEntry,
   isMissed,
   parseInstant,
+  parseSchedulePayload,
   recoverInterrupted,
+  serializeSchedulePayload,
   removeEntry,
   summarize,
   upsertEntry,
@@ -115,5 +117,41 @@ const recovered = interrupted.entries.find((e) => e.id === 'r')!;
 assert.strictEqual(recovered.state, 'failed', 'a half-published entry becomes failed, not planned');
 assert.ok(/interrump/i.test(recovered.lastError ?? ''), 'and it says why, so the user can check');
 assert.strictEqual(interrupted.entries.find((e) => e.id === 'p')!.state, 'planned', 'untouched entries stay planned');
+
+// ── 9) A stored payload is untrusted: bad rows are dropped and counted ───────────────
+const good = entry({ id: 'ok', state: 'planned' });
+const payload = serializeSchedulePayload([good]);
+assert.strictEqual(payload.version, 1);
+assert.strictEqual(payload.entries.length, 1);
+
+const roundTrip = parseSchedulePayload(JSON.parse(JSON.stringify(payload)));
+assert.strictEqual(roundTrip.version, 1);
+assert.strictEqual(roundTrip.dropped, 0);
+assert.deepStrictEqual(roundTrip.entries, [good], 'a stored entry survives serialization exactly');
+
+const messy = parseSchedulePayload({
+  version: 1,
+  entries: [
+    good,
+    { ...good, id: 'no-source', source: '' },
+    { ...good, id: 'no-preview', previewId: undefined },
+    { ...good, id: 'bad-date', scheduledFor: 'ayer' },
+    { ...good, id: 'bad-state', state: 'published-ish' },
+    { ...good, id: 'no-platforms', platforms: [] },
+    null,
+    'basura',
+  ],
+});
+assert.strictEqual(messy.entries.length, 1, 'only the valid row survives');
+assert.strictEqual(messy.dropped, 7, 'every dropped row is counted, not swallowed');
+assert.deepStrictEqual(parseSchedulePayload(null), { entries: [], dropped: 0, version: null }, 'no payload is empty, not fatal');
+assert.deepStrictEqual(parseSchedulePayload({ version: 2 }), { entries: [], dropped: 0, version: 2 }, 'a future version is reported, not guessed at');
+
+// Entries come back sorted by slot, so the calendar does not have to sort them again.
+const unsorted = parseSchedulePayload({
+  version: 1,
+  entries: [entry({ id: 'z', scheduledFor: iso(30) }), entry({ id: 'a', scheduledFor: iso(-30) })],
+});
+assert.deepStrictEqual(unsorted.entries.map((e) => e.id), ['a', 'z']);
 
 console.log('shared/publish-schedule.verify: ok');

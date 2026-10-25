@@ -130,6 +130,75 @@ export interface QueueSummary {
   cancelled: number;
 }
 
+/* ── Persistence payload ────────────────────────────────────────────────────────────
+ * A stored queue is untrusted input: an older build wrote it, or a hand-edited file did.
+ * Parsing drops entries it cannot use and reports how many, rather than throwing away the
+ * whole schedule or letting a malformed row crash the tick.
+ */
+
+export const SCHEDULE_PAYLOAD_VERSION = 1;
+
+export interface SchedulePayload {
+  version: number;
+  entries: ScheduledPublish[];
+}
+
+const STATES: readonly PublishState[] = ['planned', 'running', 'published', 'failed', 'cancelled'];
+
+function parseEntry(raw: unknown): ScheduledPublish | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const o = raw as Record<string, unknown>;
+  if (typeof o.id !== 'string' || !o.id) return null;
+  if (typeof o.scheduledFor !== 'string' || parseInstant(o.scheduledFor) === null) return null;
+  if (typeof o.source !== 'string' || !o.source) return null;
+  if (typeof o.previewId !== 'string' || !o.previewId) return null;
+  if (typeof o.title !== 'string') return null;
+  const state = STATES.find((candidate) => candidate === o.state);
+  if (!state) return null;
+  const platforms = Array.isArray(o.platforms)
+    ? o.platforms.filter((p): p is string => typeof p === 'string' && p.length > 0)
+    : [];
+  if (!platforms.length) return null;
+  const attempts = Number.isFinite(Number(o.attempts)) ? Math.max(0, Math.trunc(Number(o.attempts))) : 0;
+  const entry: ScheduledPublish = {
+    id: o.id,
+    scheduledFor: o.scheduledFor,
+    source: o.source,
+    platforms,
+    title: o.title.slice(0, 200),
+    previewId: o.previewId,
+    state,
+    attempts,
+  };
+  // Optional fields are omitted, never set to undefined: a stored entry has to round-trip to
+  // exactly the object that was written, and `{ lastError: undefined }` is not `{}`.
+  if (typeof o.description === 'string') entry.description = o.description.slice(0, 5000);
+  if (typeof o.lastError === 'string') entry.lastError = o.lastError.slice(0, 300);
+  if (typeof o.publishedAt === 'string' && parseInstant(o.publishedAt) !== null) entry.publishedAt = o.publishedAt;
+  return entry;
+}
+
+/** Parse a stored payload. Anything unusable is dropped and counted, never thrown. */
+export function parseSchedulePayload(value: unknown): { entries: ScheduledPublish[]; dropped: number; version: number | null } {
+  if (!value || typeof value !== 'object') return { entries: [], dropped: 0, version: null };
+  const payload = value as { version?: unknown; entries?: unknown };
+  const version = typeof payload.version === 'number' ? payload.version : null;
+  if (!Array.isArray(payload.entries)) return { entries: [], dropped: 0, version };
+  const entries: ScheduledPublish[] = [];
+  let dropped = 0;
+  for (const raw of payload.entries) {
+    const entry = parseEntry(raw);
+    if (entry) entries.push(entry);
+    else dropped += 1;
+  }
+  entries.sort((a, b) => (parseInstant(a.scheduledFor) ?? 0) - (parseInstant(b.scheduledFor) ?? 0));
+  return { entries, dropped, version };
+}
+
+export function serializeSchedulePayload(entries: readonly ScheduledPublish[]): SchedulePayload {
+  return { version: SCHEDULE_PAYLOAD_VERSION, entries: entries.map((entry) => ({ ...entry, platforms: [...entry.platforms] })) };
+}
+
 /** Insert or replace by id, keeping the list ordered by slot so the calendar reads naturally. */
 export function upsertEntry(
   entries: readonly ScheduledPublish[],
