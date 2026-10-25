@@ -32,6 +32,7 @@ import { BRAND_TOOL_NAMES, BRAND_TOOL_SCHEMAS } from './tools/schemas/brand-tool
 import { SCHEDULE_TOOL_NAMES, SCHEDULE_TOOL_SCHEMAS } from './tools/schemas/schedule-tools';
 import { EMPHASIS_TOOL_NAMES, EMPHASIS_TOOL_SCHEMAS } from './tools/schemas/emphasis-tools';
 import { PERFORMANCE_TOOL_NAMES, PERFORMANCE_TOOL_SCHEMAS } from './tools/schemas/performance-tools';
+import { CATALOG_SEARCH_TOOL_NAMES, CATALOG_SEARCH_TOOL_SCHEMAS } from './tools/schemas/catalog-search-tools';
 import { KEN_BURNS_TOOL_NAMES, KEN_BURNS_TOOL_SCHEMAS } from './tools/schemas/ken-burns-tools';
 import { REFRAME_TOOL_NAMES, REFRAME_TOOL_SCHEMAS } from './tools/schemas/reframe-tools';
 import { EXPORT_TOOL_NAMES, EXPORT_TOOL_SCHEMAS } from './tools/schemas/export-tools';
@@ -145,8 +146,10 @@ export const TOOL_SCHEMAS: AgentToolSchema[] = [
   ...SCHEDULE_TOOL_SCHEMAS,
   // Opus parity (Plan 5): keyword emphasis on the caption overlay.
   ...EMPHASIS_TOOL_SCHEMAS,
-  // Opus parity (Plan 5): the performance loop (score bands against real views).
+  // Opus parity (Plan 6): the performance loop (score bands against real views).
   ...PERFORMANCE_TOOL_SCHEMAS,
+  // Plan 6 (OP-14): remember-it-in-your-own-words search across every project.
+  ...CATALOG_SEARCH_TOOL_SCHEMAS,
   // Plan 1 Phase 2: Ken Burns on a still, as transform keyframes in one undo step.
   ...KEN_BURNS_TOOL_SCHEMAS,
   // Auto reframe: sample frames → detect subject focus → setReframeKeyframe through the existing render path.
@@ -283,6 +286,7 @@ const EXECUTOR_GROUPS: ReadonlyArray<readonly [ReadonlySet<string>, ToolExecutor
   [SCHEDULE_TOOL_NAMES, async () => (await import('./tools/schedule-tools')).execScheduleTool],
   [EMPHASIS_TOOL_NAMES, async () => (await import('./tools/emphasis-tools')).execEmphasisTool],
   [PERFORMANCE_TOOL_NAMES, async () => (await import('./tools/performance-tools')).execPerformanceTool],
+  [CATALOG_SEARCH_TOOL_NAMES, async () => (await import('./tools/catalog-search-tools')).execCatalogSearchTool],
   [KEN_BURNS_TOOL_NAMES, async () => (await import('./tools/ken-burns-tools')).execKenBurnsTool],
   [REFRAME_TOOL_NAMES, async () => (await import('./tools/reframe-tools')).execReframeTool],
   [EXPORT_TOOL_NAMES, async () => (await import('./tools/export-tools')).execExportTool],

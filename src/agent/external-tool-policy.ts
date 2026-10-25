@@ -8,6 +8,7 @@ const READ_ONLY_TOOL_NAMES = new Set([
   'read_script', 'view_timeline_frames', 'view_asset_frames', 'browse_library',
   'read_captions', 'read_project', 'read_transcript', 'find_transcript',
   'search_media', 'search_stock_media', 'search_fonts', 'analyze_music', 'inspect_music', 'music_edit_plan', 'music_image_plan',
+  'search_catalog',
   'read_agent_artifact', 'browse_local_media', 'score_moments', 'calibrate_scores', 'write_social_copy',
   'list_scheduled_publishes', 'score_performance',
 ]);

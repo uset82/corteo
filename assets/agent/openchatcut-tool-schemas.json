@@ -3405,6 +3405,30 @@
       }
     },
     {
+      "name": "search_catalog",
+      "description": "Search every project for a scene or a phrase, the way a person remembers it. The phrase is first rewritten into the words an editor would have written (free local model), then the existing full-text index over chats, captions and transcripts of every project is queried with all of them, and hits are merged and ranked by how many terms matched. Read-only. Use when the user says \"¿dónde explico el estribillo?\", \"find the project where I talk about the chorus\", \"which clip mentions the price\". Without a model it still searches the literal phrase. This is recall over words the project already contains; it does not understand a picture.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "What the user remembers, in their words (a phrase, not keywords)."
+          },
+          "projectId": {
+            "type": "string",
+            "description": "Optional: restrict to one project."
+          },
+          "limit": {
+            "type": "number",
+            "description": "Max hits to return. Default 12, max 40."
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    },
+    {
       "name": "apply_ken_burns",
       "description": "Give a photo motion: a slow zoom in, a zoom out, a pan in one of four directions, or a seeded random move, written as scale/x/y keyframes over the whole clip. Preview and export both sample those keyframes, so no render step is needed. One call is one undo step. It replaces earlier x, y and scale keyframes on that clip and leaves the static transform alone. Use it on stills (images); for video push-ins use edit_item with explicit keyframes. Defaults to the selected clip and a 12% push in.",
       "input_schema": {
@@ -6619,6 +6643,30 @@
         },
         "required": [
           "csv"
+        ]
+      }
+    },
+    {
+      "name": "search_catalog",
+      "description": "Search every project for a scene or a phrase, the way a person remembers it. The phrase is first rewritten into the words an editor would have written (free local model), then the existing full-text index over chats, captions and transcripts of every project is queried with all of them, and hits are merged and ranked by how many terms matched. Read-only. Use when the user says \"¿dónde explico el estribillo?\", \"find the project where I talk about the chorus\", \"which clip mentions the price\". Without a model it still searches the literal phrase. This is recall over words the project already contains; it does not understand a picture.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "What the user remembers, in their words (a phrase, not keywords)."
+          },
+          "projectId": {
+            "type": "string",
+            "description": "Optional: restrict to one project."
+          },
+          "limit": {
+            "type": "number",
+            "description": "Max hits to return. Default 12, max 40."
+          }
+        },
+        "required": [
+          "query"
         ]
       }
     },
