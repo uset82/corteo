@@ -6,7 +6,7 @@ import { currentWordIndex, activeTranslation, joinCaptionWords } from './types';
 import type { TimelineItem } from '../editor/types';
 import { laneGroupsFromPages, type LanePage } from './lanes';
 import { activeCaptionPages, buildCaptionPages } from './captionPages';
-import { captionFlowStyle, captionTextStyle, containerStyle, effectivePreset } from './renderStyles';
+import { captionFlowStyle, captionTextStyle, captionWordColour, containerStyle, effectivePreset } from './renderStyles';
 import { buildCaptionWordRuns } from './captionWordRuns';
 import { captionPageMotionStyle, captionWordMotionStyle } from './captionMotion';
 
@@ -123,6 +123,9 @@ function CaptionWordFlow({
                 style={{
                   position: 'relative',
                   ...captionTextStyle(preset, height, index === currentIndex),
+                  // Plan 5, OP-08: one rule for the colour, defined in renderStyles and
+                  // tested without a GPU. The active word still wins.
+                  color: captionWordColour(preset, word, index === currentIndex),
                   ...captionWordMotionStyle(motionPreset, word, ms),
                 }}
               >

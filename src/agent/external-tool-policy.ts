@@ -8,7 +8,9 @@ const READ_ONLY_TOOL_NAMES = new Set([
   'read_script', 'view_timeline_frames', 'view_asset_frames', 'browse_library',
   'read_captions', 'read_project', 'read_transcript', 'find_transcript',
   'search_media', 'search_stock_media', 'search_fonts', 'analyze_music', 'inspect_music', 'music_edit_plan', 'music_image_plan',
-  'read_agent_artifact', 'browse_local_media',
+  'search_catalog',
+  'read_agent_artifact', 'browse_local_media', 'score_moments', 'calibrate_scores', 'write_social_copy',
+  'list_scheduled_publishes', 'score_performance',
 ]);
 
 const DRAFT_EDIT_TOOL_NAMES = new Set([
@@ -17,6 +19,20 @@ const DRAFT_EDIT_TOOL_NAMES = new Set([
   'set_aspect_ratio', 'manage_timelines', 'edit_track', 'apply_script',
   'edit_item', 'manage_effects', 'edit_captions', 'update_watermark',
   'manage_markers', 'apply_caption_avoidance', 'place_graphics_in_safe_zone', 'auto_reframe',
+  // Plan 5: one call that cuts sequences, turns captions on and may reframe — all draft edits.
+  'make_shorts',
+  // Plan 5: word-level cleanup; destructive but reversible in one undo step.
+  'tighten_speech',
+  // Plan 5: writes caption emphasis overrides (one updateCaptions call).
+  'emphasize_keywords',
+  // Plan 5: writes volume keyframes over the offending words, as one batch.
+  'censor_words',
+  // Plan 5: adds a title clip (one command, one undo step).
+  'write_clip_title',
+  // Plan 5: caption style per sequence, and optionally the project kit (both draft edits).
+  'apply_brand_kit',
+  // Plan 1 Phase 2: writes scale/x/y keyframes for a still in one batch (one undo step).
+  'apply_ken_burns',
   'manage_design_style',
   'import_timeline',
   'export_jianying_draft',
@@ -45,6 +61,12 @@ const SERVER_DIRECT_READ_TOOL_NAMES: Record<string, true> = {
   // Local media discovery: the same core the desktop app browses with, gated by
   // AGENT_IMPORT_ROOTS like the import tools below.
   browse_local_media: true,
+  // On-device music analysis: server/music-listen runs the same Beat This and
+  // CLAP cores in a worker process and writes the project-store analysis record
+  // the browser badge reads. Missing model packs answer with a
+  // missing-model-packs action rather than failing.
+  analyze_music: true,
+  inspect_music: true,
 };
 
 const SERVER_DIRECT_EDIT_TOOL_NAMES: Record<string, true> = {

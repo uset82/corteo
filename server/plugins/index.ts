@@ -12,6 +12,7 @@ import { exportPlugin } from "./export.ts";
 import { exportQaPlugin } from "./export-qa.ts";
 import { exportDestinationPlugin } from "./export-destination.ts";
 import { uploadPostPlugin } from "./upload-post.ts";
+import { publishSchedulePlugin } from './publish-schedule.ts';
 import { exportMediaSourcesPlugin } from "./export-media-sources.ts";
 import { exportStagePlugin } from "./export-stage.ts";
 import { uploadPlugin } from "./upload.ts";
@@ -21,6 +22,7 @@ import { extractAudioPlugin } from "./extract-audio.ts";
 import { hfProxyPlugin } from "./hf-proxy.ts";
 import { asrModelsPlugin } from "./asr-models.ts";
 import { modelPacksPlugin } from "./model-packs.ts";
+import { musicListenPlugin } from "../music-listen/plugin.ts";
 import { assemblyAiUploadPlugin } from "./assemblyai-upload.ts";
 import { transcriptionPlugin } from "./transcription.ts";
 import { extractFramesPlugin } from "./extract-frames.ts";
@@ -92,6 +94,7 @@ export function serverPlugins(options: { projectStoreHttp?: boolean } = {}): Plu
     exportPlugin(),
     exportDestinationPlugin(),
     uploadPostPlugin(),
+    publishSchedulePlugin(),
     exportMediaSourcesPlugin(),
     exportQaPlugin(),
     uploadMultipartPlugin(),
@@ -101,6 +104,7 @@ export function serverPlugins(options: { projectStoreHttp?: boolean } = {}): Plu
     hfProxyPlugin(),
     asrModelsPlugin(),
     modelPacksPlugin(),
+    musicListenPlugin(),
     assemblyAiUploadPlugin(),
     transcriptionPlugin(transcriptionOptions()),
     extractFramesPlugin(),

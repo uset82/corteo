@@ -16,9 +16,9 @@ const EXPECTED = [
   'motion-graphic-placement',
   'multi-clips-to-reels', 'music', 'music-intelligence', 'news-rough-cut',
   'openchatcut-plugin-basics', 'product-ad-video-script',
-  'product-help', 'shader-gen', 'skill-creator', 'storyboard-shot-breakdown', 'talking-head-guide',
-  'transcription', 'verification', 'video-gen', 'video-thumbnail-generator', 'voice',
-  'widget-forms',
+  'product-help', 'shader-gen', 'shorts-virales', 'skill-creator', 'storyboard-shot-breakdown', 'talking-head-guide',
+  'transcription', 'verification', 'video-gen', 'video-thumbnail-generator', 'videoclip-musical',
+  'voice', 'widget-forms',
 ];
 
 // Every expected skill dir is present, and no extras.

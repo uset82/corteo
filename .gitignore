@@ -94,6 +94,7 @@ MODEL-OPT-PLAN.md
 !/scripts/claudia-local.sh
 !/scripts/claudia-install.sh
 !/scripts/claudia-acceptance.sh
+!/scripts/sync-publish.sh
 !/scripts/corteo
 !/scripts/corteo-env.sh
 !/scripts/tunnel.mjs

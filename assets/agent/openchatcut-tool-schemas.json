@@ -2879,7 +2879,7 @@
     },
     {
       "name": "find_highlights",
-      "description": "Create short-form highlights from long-form content: read the word-level transcript of a timeline clip, use an LLM to select the strongest self-contained moments, duplicate each into a vertical sequence (default 9:16), and trim it to the selected frame range. The clip must be transcribed first with transcribe_track. Returns each sequence id, title, and frame range. Falls back to information-density heuristics if LLM selection fails.",
+      "description": "Create short-form highlights from long-form content: read the word-level transcript of a timeline clip, use an LLM to select the strongest self-contained moments, duplicate each into a vertical sequence (default 9:16), and trim it to the selected frame range. The clip must be transcribed first with transcribe_track. Each selected moment is then scored with the same 0-99 rubric as score_moments and gets a reason and risk flags; minScore drops the ones below it and returns them in rejected. Returns each sequence id, title, frame range, score and sub-scores. Falls back to information-density heuristics if LLM selection fails.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -2917,6 +2917,556 @@
           "maxSeconds": {
             "type": "number",
             "description": "Maximum duration per highlight; default 60 seconds."
+          },
+          "minScore": {
+            "type": "number",
+            "description": "Drop moments scored below this (0-99). Default 0 keeps every selection; 55 is the publishable line."
+          },
+          "score": {
+            "type": "boolean",
+            "description": "Score and rank the selection (default true). false skips the scoring pass for a fast cut."
+          },
+          "genre": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "podcast",
+              "interview",
+              "tutorial",
+              "vlog",
+              "livestream"
+            ],
+            "description": "Content-type prior for the scoring rubric. Default auto."
+          }
+        }
+      }
+    },
+    {
+      "name": "score_moments",
+      "description": "Score candidate moments in one transcribed long video so the best ones can be cut into shorts. Segments the transcript into chapters, builds sentence-aligned windows inside each chapter, measures them (hook, flow, value, sound) and has the model judge hook/flow/value, then returns one ranked list with a 0-99 score, four sub-scores, a reason and risk flags per moment, plus the candidates it rejected and why. Use before find_highlights, or when the user asks \"which parts are worth posting\", \"puntúa los momentos\", \"find the best moments\" or wants a ranking rather than clips. This is a transparent rubric, NOT a model trained on platform performance: treat the score as a ranking signal and prefer the reasons. Read-only: it never edits the timeline. The clip must be transcribed first with transcribe_track. Needs a browser tab (reads the live project).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Transcribed video/audio clip to analyse. Defaults to the clip with the most transcript words."
+          },
+          "count": {
+            "type": "integer",
+            "description": "How many passing moments to return, best first. Default 8, max 20."
+          },
+          "minSeconds": {
+            "type": "number",
+            "description": "Shortest acceptable moment. Default 12."
+          },
+          "maxSeconds": {
+            "type": "number",
+            "description": "Longest acceptable moment. Default 90."
+          },
+          "direction": {
+            "type": "string",
+            "description": "Free-text steering from the user, in their words (for example \"lo más divertido\" or \"the part about pricing\"). It steers which moments win, never the render settings."
+          },
+          "topic": {
+            "type": "string",
+            "description": "Optional: only moments about this topic."
+          },
+          "genre": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "podcast",
+              "interview",
+              "tutorial",
+              "vlog",
+              "livestream"
+            ],
+            "description": "Content-type prior for the rubric. Default auto (the model classifies it first)."
+          },
+          "calibration": {
+            "type": "boolean",
+            "description": "Apply the weights learned from this profile's approve/reject decisions (default false). Needs 12 decisions with at least 5 on each side; otherwise it is a no-op."
+          }
+        }
+      }
+    },
+    {
+      "name": "calibrate_scores",
+      "description": "Report the local calibration for the shorts rubric: how many approve/reject decisions this profile has, the per-dimension weights learned from them, the suggested minScore and whether there are enough decisions for the weights to mean anything. Read-only; it never changes the project. Use when the user asks whether the score has learned anything, or before deciding a minScore.",
+      "input_schema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "make_shorts",
+      "description": "Turn one transcribed long video into finished short clips in a single call: score the strongest moments, cut each into its own sequence at the target ratio, optionally turn captions on and apply a caption style, optionally reframe on the subject, and optionally queue a 480p preview render per clip. Use when the user says \"hazme shorts\", \"corta esto en clips\", \"saca 5 clips de este vídeo\", \"turn this into shorts\" or wants clips rather than a ranking. For the ranking alone (no cutting) use score_moments; for a single clip use find_highlights. Each returned clip carries its 0-99 score, sequence id, caption and reframe state, and a renderId when a render was queued — poll those with track_export. The source clip must be transcribed first with transcribe_track. Reframe needs a browser tab; without one the clips are cut and centred instead, and the result says so.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Transcribed video/audio clip to cut. Defaults to the clip with the most transcript words."
+          },
+          "count": {
+            "type": "integer",
+            "description": "How many clips to create. Default 5, max 10."
+          },
+          "minSeconds": {
+            "type": "number",
+            "description": "Shortest clip. Default 12."
+          },
+          "maxSeconds": {
+            "type": "number",
+            "description": "Longest clip. Default 90."
+          },
+          "ratio": {
+            "type": "string",
+            "enum": [
+              "9:16",
+              "16:9",
+              "1:1",
+              "4:3",
+              "3:4"
+            ],
+            "description": "Target canvas. Default 9:16."
+          },
+          "ranges": {
+            "type": "array",
+            "description": "Exact moments to cut, as returned by score_moments (word indices). When given, analysis is skipped and exactly these spans are cut, still scored for the report. Use this when the user picked specific moments or a panel passed a selection.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "startWord": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "endWord": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "startWord",
+                "endWord"
+              ]
+            }
+          },
+          "minScore": {
+            "type": "number",
+            "description": "Only cut moments at or above this score (0-99). Default 55, the publishable line."
+          },
+          "direction": {
+            "type": "string",
+            "description": "Free-text steering in the user’s words (for example \"lo más divertido\"). It steers which moments win, never the render settings."
+          },
+          "topic": {
+            "type": "string",
+            "description": "Optional: only moments about this topic."
+          },
+          "genre": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "podcast",
+              "interview",
+              "tutorial",
+              "vlog",
+              "livestream"
+            ],
+            "description": "Content-type prior for the rubric. Default auto."
+          },
+          "calibration": {
+            "type": "boolean",
+            "description": "Apply the weights learned from this profile's approve/reject decisions (default false). Needs 12 decisions; otherwise it is a no-op."
+          },
+          "applyBrandKit": {
+            "type": "boolean",
+            "description": "Inherit the project's brand kit (Plan 5, OP-10): its caption preset and motion become the defaults for this batch, unless captionsPreset / captionMotion override them. Default false."
+          },
+          "captionsPreset": {
+            "type": "string",
+            "description": "Caption preset to turn on for every clip (omit to leave captions untouched)."
+          },
+          "captionMotion": {
+            "type": "string",
+            "enum": [
+              "none",
+              "fade-up",
+              "pop",
+              "word-pop",
+              "karaoke-pulse"
+            ],
+            "description": "Optional caption motion preset applied after the style."
+          },
+          "reframe": {
+            "type": "boolean",
+            "description": "Reframe on the subject per clip (default true). False keeps the source framing."
+          },
+          "render": {
+            "type": "string",
+            "enum": [
+              "none",
+              "previews"
+            ],
+            "description": "none (default) cuts only; previews also queues a 480p MP4 per clip and returns renderIds."
+          }
+        }
+      }
+    },
+    {
+      "name": "tighten_speech",
+      "description": "Tighten a transcribed clip: remove filler words (\"eh\", \"este\", \"o sea\", \"¿no?\"), false starts and long pauses, the way OpusClip's Speech Cleanup does. Two steps, always: the first call returns the review list (which words and which pauses, with timestamps and the time recovered) and edits NOTHING; only after the user approves, call again with apply:true. The edit runs through clean_script, so it is ONE undo step, and it never lengthens a pause beyond the silence already in the recording. Use when the user says \"aprieta el habla\", \"quita las muletillas\", \"tighten this\", \"remove the ums\". For silence only, prefer remove_silence; for word-level cuts, read_script / apply_script.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Transcribed clip to tighten. Defaults to the clip with the most transcript words."
+          },
+          "apply": {
+            "type": "boolean",
+            "description": "Omit (or false) for the review list. true applies it after the user approves."
+          },
+          "minPauseMs": {
+            "type": "number",
+            "description": "Pauses longer than this are compressed to it. Default 400."
+          },
+          "extraFillers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Extra filler words for this speaker, matched case- and punctuation-insensitively."
+          },
+          "cutPadMs": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 500,
+            "description": "Breathing room kept around each removed word. Default 0 (cut on the boundary)."
+          }
+        }
+      }
+    },
+    {
+      "name": "write_social_copy",
+      "description": "Write the copy a finished clip needs to be posted: a title, a short description and a few hashtags, per platform, each clamped to that platform’s real limits. Read-only: it never edits the timeline and never publishes. Use after the clip exists and before publish_to_social, then pass the chosen title and description straight into publish_to_social. Prefer the clip’s own word range so the copy is about that moment and not the whole source. Without a model it still returns the clip’s opening sentence as the title, with modelUsed:false, so a publish is never blocked by copy generation.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Transcribed clip the copy is about. Defaults to the clip with the most transcript words."
+          },
+          "startWord": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "First word of the moment (inclusive). Omit for the whole clip."
+          },
+          "endWord": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Last word of the moment (inclusive). Omit for the whole clip."
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "tiktok",
+                "instagram",
+                "youtube",
+                "linkedin",
+                "facebook",
+                "x",
+                "threads",
+                "pinterest",
+                "bluesky"
+              ]
+            },
+            "minItems": 1,
+            "description": "Platforms to write for. Defaults to tiktok, instagram and youtube."
+          },
+          "direction": {
+            "type": "string",
+            "description": "Tone and call to action in the user’s words (for example \"tono cercano, invita a comentar\")."
+          },
+          "language": {
+            "type": "string",
+            "description": "Language for the copy. Default: the language of the transcript."
+          }
+        }
+      }
+    },
+    {
+      "name": "censor_words",
+      "description": "Find and mute profanity in a transcribed clip. Two steps, always: the first call returns the hit list (word, time, how long the mute lasts) and edits NOTHING; after the user approves, call again with apply:true. Applying writes volume keyframes (0 across the word, back to the clip volume after it) as ONE undo step, so the cut is untouched and the mute can be removed later. Use when the user says \"censura las palabrotas\", \"censor this\", \"bleep the swearing\". Only the mute mode exists: a bleep tone or burned-in **** would need a tone asset or a caption run, which this tool does not create. The clip must be transcribed first.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Transcribed clip. Defaults to the clip with the most transcript words."
+          },
+          "apply": {
+            "type": "boolean",
+            "description": "Omit (or false) for the hit list. true applies the mutes after the user approves."
+          },
+          "extraWords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Extra words to censor for this speaker or context."
+          },
+          "padMs": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 500,
+            "description": "Extra mute on each side of the word, for a hard consonant the ASR clipped. Default 0."
+          }
+        }
+      }
+    },
+    {
+      "name": "write_clip_title",
+      "description": "Write the auto headline for a short clip: one hook line of at most six words, added as a title clip on the top video track at the start of the moment. Uses the free model for the wording and falls back to the clip’s own opening phrase, so a publish is never blocked. One undo step removes it. Use when the user says \"ponle un titular\", \"add a headline\", \"título para el short\", or as the last packaging step after make_shorts. Not a summary: the line has to make someone stop. The clip must be transcribed first; pass the word range so the headline is about that moment.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Transcribed clip the headline is about. Defaults to the clip with the most transcript words."
+          },
+          "startWord": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "First word of the moment (inclusive). Omit for the whole clip."
+          },
+          "endWord": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Last word of the moment (inclusive). Omit for the whole clip."
+          },
+          "maxWords": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 10,
+            "description": "Longest headline in words. Default 6."
+          },
+          "fontSize": {
+            "type": "number",
+            "minimum": 24,
+            "maximum": 200,
+            "description": "Title size in canvas pixels. Default 72, readable on 9:16."
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 15,
+            "description": "How long the headline stays on screen. Default 4."
+          },
+          "apply": {
+            "type": "boolean",
+            "description": "Default true. false only returns the wording, for a preview in chat."
+          }
+        }
+      }
+    },
+    {
+      "name": "apply_brand_kit",
+      "description": "Apply the project’s brand kit to finished clips so a batch looks like one channel: the caption preset, and optionally the caption motion, on every target sequence. Read the kit from the project by default, or pass one inline (it is normalized first). With save:true it also becomes the project’s kit, which is the same value make_shorts reads through brandKitId. Use when the user says \"aplica la marca\", \"pon el mismo estilo a todos los clips\", or as the packaging step after make_shorts. One call, and the active sequence is restored when it finishes. Not wired yet: the logo/watermark and the palette, which belong to update_watermark and manage_design_style — this tool says so in its result instead of pretending it applied them.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "kit": {
+            "type": "object",
+            "description": "Brand kit to apply. Omit to use the project’s own kit (or the defaults if it has none)."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "all",
+              "active"
+            ],
+            "description": "all (default) applies to every sequence in the project; active only to the current one."
+          },
+          "save": {
+            "type": "boolean",
+            "description": "true stores this kit on the project (one undo step), so later calls and make_shorts reuse it."
+          }
+        }
+      }
+    },
+    {
+      "name": "schedule_publish",
+      "description": "Queue a finished render to be published at a future time (Plan 5, OP-13). Always in two steps, like publishing now: first call publish_to_social WITHOUT confirm for the platform you want, show the user its preview, and — because someone approved it — pass that previewId here with the ISO time. Nothing is queued without an approved previewId; the server refuses it. The server publishes while it runs: a slot that passes while the editor is closed publishes late, once, and the result is recorded rather than retried forever. Use `list_scheduled_publishes` to see the queue and `cancel_scheduled_publish` to take one back.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "downloadUrl of a completed render (/media/uploads/...)."
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "tiktok",
+                "instagram",
+                "youtube",
+                "linkedin",
+                "facebook",
+                "x",
+                "threads",
+                "pinterest",
+                "bluesky"
+              ]
+            },
+            "minItems": 1
+          },
+          "title": {
+            "type": "string",
+            "description": "Caption/title used on every platform. YouTube allows 100 characters."
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional longer text for YouTube, LinkedIn, Facebook and Pinterest."
+          },
+          "when": {
+            "type": "string",
+            "description": "ISO 8601 instant WITH an offset or Z (for example 2026-10-26T18:30:00+01:00). At least one minute in the future and at most a year ahead."
+          },
+          "previewId": {
+            "type": "string",
+            "description": "The requestId returned by the publish_to_social preview the user approved. Required: it is the confirm gate."
+          }
+        },
+        "required": [
+          "source",
+          "platforms",
+          "title",
+          "when",
+          "previewId"
+        ]
+      }
+    },
+    {
+      "name": "list_scheduled_publishes",
+      "description": "List the scheduled-publish queue with the server clock: which entries are planned, running, published, failed or cancelled, when each slot is, and how many attempts it took. Read-only. Use it when the user asks \"¿qué tengo programado?\", \"what is queued\", or before rescheduling something.",
+      "input_schema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "cancel_scheduled_publish",
+      "description": "Remove one entry from the scheduled-publish queue by id, before its slot. It does not touch an upload that is already running. Returns 404-equivalent when the id is unknown, so a double cancel is harmless. Use when the user says \"cancela la publicación del martes\".",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Entry id from list_scheduled_publishes."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "name": "emphasize_keywords",
+      "description": "Emphasise the words that carry the numbers: figures, names and shouted words get the caption highlight colour, so the eye lands on \"300\" and \"Claudia\" instead of on every adjective. This is OpusClip’s AI Keywords, decided from the transcript rather than guessed by a model. Works on the caption data of the active timeline; one undo step. Call with apply:false first when the user has not seen the list — it returns the candidates and their reasons and changes nothing. Captions must be on (edit_captions action=enable). Emphasis composes with existing per-word overrides and never overrides the active-word highlight while a word is being spoken.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "max": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30,
+            "description": "How many words to emphasise at most. Default 8."
+          },
+          "apply": {
+            "type": "boolean",
+            "description": "Default true. false only returns the candidates, for a preview."
+          }
+        }
+      }
+    },
+    {
+      "name": "score_performance",
+      "description": "Close the loop on the shorts rubric: paste the CSV a platform exports (score/views/retention per clip) and this reports how each score band actually performed, which band did best, and the lowest score that still beat the average — the honest candidate for `minScore`. Read-only. It refuses to recommend a threshold from fewer than 12 clips: with six data points the numbers are noise. Use when the user asks \"¿acertó la puntuación?\", \"did the score pick well\", or after publishing a batch. Column names are matched loosely (score/potential, views/plays, retention/average view percentage); rows with no score or no views are skipped and counted, never treated as zero.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "csv": {
+            "type": "string",
+            "description": "The CSV text, header included. Comma or semicolon separated, quoted fields supported."
+          }
+        },
+        "required": [
+          "csv"
+        ]
+      }
+    },
+    {
+      "name": "search_catalog",
+      "description": "Search every project for a scene or a phrase, the way a person remembers it. The phrase is first rewritten into the words an editor would have written (free local model), then the existing full-text index over chats, captions and transcripts of every project is queried with all of them, and hits are merged and ranked by how many terms matched. Read-only. Use when the user says \"¿dónde explico el estribillo?\", \"find the project where I talk about the chorus\", \"which clip mentions the price\". Without a model it still searches the literal phrase. This is recall over words the project already contains; it does not understand a picture.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "What the user remembers, in their words (a phrase, not keywords)."
+          },
+          "projectId": {
+            "type": "string",
+            "description": "Optional: restrict to one project."
+          },
+          "limit": {
+            "type": "number",
+            "description": "Max hits to return. Default 12, max 40."
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    },
+    {
+      "name": "apply_ken_burns",
+      "description": "Give a photo motion: a slow zoom in, a zoom out, a pan in one of four directions, or a seeded random move, written as scale/x/y keyframes over the whole clip. Preview and export both sample those keyframes, so no render step is needed. One call is one undo step. It replaces earlier x, y and scale keyframes on that clip and leaves the static transform alone. Use it on stills (images); for video push-ins use edit_item with explicit keyframes. Defaults to the selected clip and a 12% push in.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Image clip to animate. Defaults to the selected clip."
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "in",
+              "out",
+              "left",
+              "right",
+              "up",
+              "down",
+              "random"
+            ],
+            "description": "in, out, left, right, up, down, or random (a stable pick from the clip id unless seed is given). Default in."
+          },
+          "strength": {
+            "type": "number",
+            "minimum": 0.02,
+            "maximum": 0.5,
+            "description": "Zoom travel as a fraction: 0.12 means 100% to 112%. Pans keep that scale and travel 40% of it. Default 0.12."
+          },
+          "seed": {
+            "type": "integer",
+            "description": "Only for direction random: the same seed always picks the same move."
           }
         }
       }
@@ -4539,7 +5089,7 @@
     },
     {
       "name": "load_skill",
-      "description": "Load one bundled or selected custom skill under the active model round input budget. Omit selectors for SKILL.md; if it is paged, follow nextOffset until null before support files. Exactly one selector per call: either files=[...] to load whole omitted files, or file with offset and limit to page a single file. Never send file and files in the same call. Bundled skills: ai-cinematic-short-film, asset-import, batch-montage-variants, beat-sync-montage, create-motion-graphics, ecommerce-product-montage, explainer-video, export, image-gen, known-errors, livestream-to-clips, long-video-to-shorts, motion-graphic-placement, multi-clips-to-reels, music, music-intelligence, news-rough-cut, openchatcut-plugin-basics, product-ad-video-script, product-help, shader-gen, skill-creator, storyboard-shot-breakdown, talking-head-guide, transcription, verification, video-gen, video-thumbnail-generator, voice, widget-forms.",
+      "description": "Load one bundled or selected custom skill under the active model round input budget. Omit selectors for SKILL.md; if it is paged, follow nextOffset until null before support files. Exactly one selector per call: either files=[...] to load whole omitted files, or file with offset and limit to page a single file. Never send file and files in the same call. Bundled skills: ai-cinematic-short-film, asset-import, batch-montage-variants, beat-sync-montage, create-motion-graphics, ecommerce-product-montage, explainer-video, export, image-gen, known-errors, livestream-to-clips, long-video-to-shorts, motion-graphic-placement, multi-clips-to-reels, music, music-intelligence, news-rough-cut, openchatcut-plugin-basics, product-ad-video-script, product-help, shader-gen, shorts-virales, skill-creator, storyboard-shot-breakdown, talking-head-guide, transcription, verification, video-gen, video-thumbnail-generator, videoclip-musical, voice, widget-forms.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -5973,6 +6523,161 @@
       }
     },
     {
+      "name": "score_moments",
+      "description": "Score candidate moments in one transcribed long video so the best ones can be cut into shorts. Segments the transcript into chapters, builds sentence-aligned windows inside each chapter, measures them (hook, flow, value, sound) and has the model judge hook/flow/value, then returns one ranked list with a 0-99 score, four sub-scores, a reason and risk flags per moment, plus the candidates it rejected and why. Use before find_highlights, or when the user asks \"which parts are worth posting\", \"puntúa los momentos\", \"find the best moments\" or wants a ranking rather than clips. This is a transparent rubric, NOT a model trained on platform performance: treat the score as a ranking signal and prefer the reasons. Read-only: it never edits the timeline. The clip must be transcribed first with transcribe_track. Needs a browser tab (reads the live project).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Transcribed video/audio clip to analyse. Defaults to the clip with the most transcript words."
+          },
+          "count": {
+            "type": "integer",
+            "description": "How many passing moments to return, best first. Default 8, max 20."
+          },
+          "minSeconds": {
+            "type": "number",
+            "description": "Shortest acceptable moment. Default 12."
+          },
+          "maxSeconds": {
+            "type": "number",
+            "description": "Longest acceptable moment. Default 90."
+          },
+          "direction": {
+            "type": "string",
+            "description": "Free-text steering from the user, in their words (for example \"lo más divertido\" or \"the part about pricing\"). It steers which moments win, never the render settings."
+          },
+          "topic": {
+            "type": "string",
+            "description": "Optional: only moments about this topic."
+          },
+          "genre": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "podcast",
+              "interview",
+              "tutorial",
+              "vlog",
+              "livestream"
+            ],
+            "description": "Content-type prior for the rubric. Default auto (the model classifies it first)."
+          },
+          "calibration": {
+            "type": "boolean",
+            "description": "Apply the weights learned from this profile's approve/reject decisions (default false). Needs 12 decisions with at least 5 on each side; otherwise it is a no-op."
+          }
+        }
+      }
+    },
+    {
+      "name": "calibrate_scores",
+      "description": "Report the local calibration for the shorts rubric: how many approve/reject decisions this profile has, the per-dimension weights learned from them, the suggested minScore and whether there are enough decisions for the weights to mean anything. Read-only; it never changes the project. Use when the user asks whether the score has learned anything, or before deciding a minScore.",
+      "input_schema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "write_social_copy",
+      "description": "Write the copy a finished clip needs to be posted: a title, a short description and a few hashtags, per platform, each clamped to that platform’s real limits. Read-only: it never edits the timeline and never publishes. Use after the clip exists and before publish_to_social, then pass the chosen title and description straight into publish_to_social. Prefer the clip’s own word range so the copy is about that moment and not the whole source. Without a model it still returns the clip’s opening sentence as the title, with modelUsed:false, so a publish is never blocked by copy generation.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Transcribed clip the copy is about. Defaults to the clip with the most transcript words."
+          },
+          "startWord": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "First word of the moment (inclusive). Omit for the whole clip."
+          },
+          "endWord": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Last word of the moment (inclusive). Omit for the whole clip."
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "tiktok",
+                "instagram",
+                "youtube",
+                "linkedin",
+                "facebook",
+                "x",
+                "threads",
+                "pinterest",
+                "bluesky"
+              ]
+            },
+            "minItems": 1,
+            "description": "Platforms to write for. Defaults to tiktok, instagram and youtube."
+          },
+          "direction": {
+            "type": "string",
+            "description": "Tone and call to action in the user’s words (for example \"tono cercano, invita a comentar\")."
+          },
+          "language": {
+            "type": "string",
+            "description": "Language for the copy. Default: the language of the transcript."
+          }
+        }
+      }
+    },
+    {
+      "name": "list_scheduled_publishes",
+      "description": "List the scheduled-publish queue with the server clock: which entries are planned, running, published, failed or cancelled, when each slot is, and how many attempts it took. Read-only. Use it when the user asks \"¿qué tengo programado?\", \"what is queued\", or before rescheduling something.",
+      "input_schema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "score_performance",
+      "description": "Close the loop on the shorts rubric: paste the CSV a platform exports (score/views/retention per clip) and this reports how each score band actually performed, which band did best, and the lowest score that still beat the average — the honest candidate for `minScore`. Read-only. It refuses to recommend a threshold from fewer than 12 clips: with six data points the numbers are noise. Use when the user asks \"¿acertó la puntuación?\", \"did the score pick well\", or after publishing a batch. Column names are matched loosely (score/potential, views/plays, retention/average view percentage); rows with no score or no views are skipped and counted, never treated as zero.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "csv": {
+            "type": "string",
+            "description": "The CSV text, header included. Comma or semicolon separated, quoted fields supported."
+          }
+        },
+        "required": [
+          "csv"
+        ]
+      }
+    },
+    {
+      "name": "search_catalog",
+      "description": "Search every project for a scene or a phrase, the way a person remembers it. The phrase is first rewritten into the words an editor would have written (free local model), then the existing full-text index over chats, captions and transcripts of every project is queried with all of them, and hits are merged and ranked by how many terms matched. Read-only. Use when the user says \"¿dónde explico el estribillo?\", \"find the project where I talk about the chorus\", \"which clip mentions the price\". Without a model it still searches the literal phrase. This is recall over words the project already contains; it does not understand a picture.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "What the user remembers, in their words (a phrase, not keywords)."
+          },
+          "projectId": {
+            "type": "string",
+            "description": "Optional: restrict to one project."
+          },
+          "limit": {
+            "type": "number",
+            "description": "Max hits to return. Default 12, max 40."
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    },
+    {
       "name": "search_fonts",
       "description": "Search the font catalog the local/headless renderer can load (Google Fonts bundled in-app + locally bundled Chinese foundry faces, source:\"bundled\"). Use when export reports unsupported fonts or when picking fontFamily for motion-graphic items / captions. Returns canonical family names to use verbatim. Substring-matches family AND native-name aliases (case/punctuation-insensitive) — e.g. \"inter\", \"playfair\", \"noto sc\", \"思源黑体\", \"得意黑\", \"抖音美好体\". loadable=false means catalogued only; prefer a loadable alternative or confirmFontFallback on export.",
       "input_schema": {
@@ -6044,7 +6749,7 @@
     },
     {
       "name": "load_skill",
-      "description": "Load one bundled or selected custom skill under the active model round input budget. Omit selectors for SKILL.md; if it is paged, follow nextOffset until null before support files. Exactly one selector per call: either files=[...] to load whole omitted files, or file with offset and limit to page a single file. Never send file and files in the same call. Bundled skills: ai-cinematic-short-film, asset-import, batch-montage-variants, beat-sync-montage, create-motion-graphics, ecommerce-product-montage, explainer-video, export, image-gen, known-errors, livestream-to-clips, long-video-to-shorts, motion-graphic-placement, multi-clips-to-reels, music, music-intelligence, news-rough-cut, openchatcut-plugin-basics, product-ad-video-script, product-help, shader-gen, skill-creator, storyboard-shot-breakdown, talking-head-guide, transcription, verification, video-gen, video-thumbnail-generator, voice, widget-forms.",
+      "description": "Load one bundled or selected custom skill under the active model round input budget. Omit selectors for SKILL.md; if it is paged, follow nextOffset until null before support files. Exactly one selector per call: either files=[...] to load whole omitted files, or file with offset and limit to page a single file. Never send file and files in the same call. Bundled skills: ai-cinematic-short-film, asset-import, batch-montage-variants, beat-sync-montage, create-motion-graphics, ecommerce-product-montage, explainer-video, export, image-gen, known-errors, livestream-to-clips, long-video-to-shorts, motion-graphic-placement, multi-clips-to-reels, music, music-intelligence, news-rough-cut, openchatcut-plugin-basics, product-ad-video-script, product-help, shader-gen, shorts-virales, skill-creator, storyboard-shot-breakdown, talking-head-guide, transcription, verification, video-gen, video-thumbnail-generator, videoclip-musical, voice, widget-forms.",
       "input_schema": {
         "type": "object",
         "properties": {

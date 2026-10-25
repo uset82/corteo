@@ -4,6 +4,7 @@ import { ASPECT_PRESETS, type AspectPreset, type TimelineItem } from '../../edit
 import { sourceWindowForTimelineRange } from '../../editor/sourceLimit';
 import { hasOperationalTranscript, msToFrame, type TranscriptWord } from '../../transcript/types';
 import { generateAgentText } from '../client';
+import { readGenre, scoreRanges, type RangeScore } from '../shorts/score-ranges';
 
 // find_highlights - smart slicing / convert long to short into slices.
 //
@@ -380,15 +381,56 @@ export async function execHighlightTool(name: string, args: Args, ctx: AgentCont
     };
   }
 
-  const shorts = assembleShorts(ctx, srcTimelineId, item, highlights, preset);
+  // Score the chosen ranges with the Plan 5 rubric (OP-02), so every short carries a
+  // number, a reason and its risks, and `minScore` can drop what is not worth posting.
+  // Nothing is cut differently: selection still decides the spans, the score only ranks
+  // and filters them.
+  const { scores, modelUsed } = await scoreRanges(
+    words.map((w) => ({ text: w.t, start: w.start, end: w.end })),
+    highlights.map((h) => ({ startWord: h.startWordIndex, endWord: h.endWordIndex })),
+    {
+      genre: readGenre(args.genre),
+      direction: typeof args.instruction === 'string' ? args.instruction : undefined,
+      topic: typeof args.topic === 'string' ? args.topic : undefined,
+      useModel: args.score !== false,
+    },
+  );
+  const minScore = Number.isFinite(Number(args.minScore))
+    ? Math.max(0, Math.min(99, Number(args.minScore)))
+    : 0;
+  const kept: Array<{ highlight: Highlight; score: RangeScore }> = [];
+  const rejected: Array<{ title: string; score: number; reason: string }> = [];
+  highlights.forEach((highlight, index) => {
+    const scored = scores[index];
+    if (scored && scored.score >= minScore) kept.push({ highlight, score: scored });
+    else {
+      rejected.push({
+        title: highlight.title,
+        score: scored?.score ?? 0,
+        reason: `por debajo de minScore ${minScore}`,
+      });
+    }
+  });
+
+  const shorts = assembleShorts(ctx, srcTimelineId, item, kept.map((k) => k.highlight), preset);
   ctx.commands.switchTimeline(originalActiveId); // Restore the user view to the original sequence (duplicate with activate:false)
 
   return {
     ok: true,
     sourceItemId: item.id,
     count: shorts.length,
-    shorts,
+    shorts: shorts.map((short, index) => ({
+      ...short,
+      score: kept[index].score.score,
+      subscores: kept[index].score.subscores,
+      reason: kept[index].score.reason,
+      risks: kept[index].score.risks,
+    })),
+    rejected,
     selector: source,
+    scoreModel: modelUsed,
+    minScore,
+    ...(kept.length ? {} : { note: `Ningún momento llegó a minScore ${minScore}; baja el umbral o pide otra selección.` }),
     ...(minSeconds != null || maxSeconds != null
       ? { durationBounds: { minSeconds: minSeconds ?? null, maxSeconds: maxSeconds ?? null } }
       : {}),

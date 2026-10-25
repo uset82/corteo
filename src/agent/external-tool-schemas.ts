@@ -1,4 +1,5 @@
 import { providersOffEnv } from '../../shared/providers-off.ts';
+import { PROVIDERS_OFF } from './providers-off.ts';
 import { TOOL_SCHEMAS } from './tools.js';
 import { validateAgentToolInvocation } from './execution-policy.js';
 import { ExternalEditSessionOutcomeError } from './external-edit-session.js';
@@ -37,7 +38,12 @@ export const PROVIDERS_OFF_HIDDEN_TOOLS = new Set([
 
 /** MCP-facing catalog: stateless reads, lifecycle controls, then session-bound editor tools. */
 export function externalToolSchemas(): ExternalRegisteredTool[] {
-  const visible = providersOffEnv(process.env)
+  // This module reaches the browser bundle (through the editor bridge), where
+  // `process` does not exist: the build-time define covers that path, and the
+  // env read stays for tsx/server callers.
+  const off = PROVIDERS_OFF
+    || (typeof process !== 'undefined' && providersOffEnv(process.env));
+  const visible = off
     ? TOOL_SCHEMAS.filter((tool) => !PROVIDERS_OFF_HIDDEN_TOOLS.has(tool.name))
     : TOOL_SCHEMAS;
   const globalReadTools = externalGlobalReadSchemas(visible);

@@ -1,6 +1,6 @@
 # Progress
 
-The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2), `docs/plans/03-deepseek-harness.md` (Plan 3), `docs/plans/04-claudia-brand.md` (Plan 4) and `docs/plans/05-claudia-portable.md` (Plan 5). Rules and the work loop: `AGENTS.md`.
+The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2), `docs/plans/03-deepseek-harness.md` (Plan 3), `docs/plans/04-claudia-brand.md` (Plan 4), `docs/plans/05-claudia-portable.md` (P-CL), `docs/plans/05-opus-parity.md` and `docs/plans/06-opus-parity.md` (Plan 6). Rules and the work loop: `AGENTS.md`.
 
 **Picking the next task:** if a task is `doing`, a previous session stopped in the middle of it: resume it first. Otherwise go down the table and take the first task whose status is `todo` and whose "Needs" are all `done`. Change its status to `doing`, finish it, set `done`, and commit this file together with the work.
 
@@ -50,7 +50,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P-CL-12 | claudia-acceptance.sh on Node 20 with the prefix set | done | P-CL-1 to P-CL-11 |
 | P1-6 | `videoclip-musical` skill | todo | P1-2 |
 | P1-7 | Webhooks with HMAC | optional | P4-3 |
-| L-01 | Server-side Beat This + CLAP runner | todo | |
+| L-01 | Server-side Beat This + CLAP runner | done | |
 | L-02 | Listening DSP in `src/audio/listen/` | todo | |
 | L-03 | Mood per section + Latin labels | todo | L-01 |
 | L-04 | Lyric lines, chorus candidates, SongMap + cache | todo | L-02 |
@@ -58,7 +58,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | L-06 | `listen_to_song` MCP tool | todo | L-01, L-03, L-05 |
 | L-07 | Real-ear relay (off by default) | todo | L-06 |
 | L-08 | Keyframable filters + binary-search sampling | todo | |
-| P2-1 | Ken Burns | todo | |
+| P2-1 | Ken Burns | done | |
 | L-09 | Music reactions + tools | todo | L-06, L-08, P2-1 |
 | L-10 | Caption motion `latido` | todo | L-06 |
 | L-11 | Music UI: inspector section, timeline map, song dialog | todo | L-09 |
@@ -197,7 +197,10 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Do: `OPENCHATCUT_WEBHOOK_URL` + `OPENCHATCUT_WEBHOOK_SECRET`; POST JSON for `export.completed`, `export.failed`, `import.completed`, `variant.chosen` with an `X-Corteo-Signature: sha256=<hex>` HMAC of the body; retries with backoff; never blocks the export.
 - Verify: a verify with a local HTTP receiver checking the signature.
 
-### L-01 · Server-side Beat This + CLAP runner
+### L-01 · Server-side Beat This + CLAP runner — done
+- Done 2026-10-25: the inference cores moved to `shared/music-inference/` (`RhythmInference`, `ClapInference`) and both the desktop workers and a forked server worker use them; ffmpeg decodes to 22.05 kHz mono with a 15-minute cap, the analysis lands under the same `musicAnalysisCacheKey` plus analyzer fingerprint, and `analyze_music` / `inspect_music` are server-direct and in the offline catalog.
+- Proof over the real MCP handler with the packs installed and no editor tab: `analyze_music` took 35,301 ms and returned BPM 120, meter 1, confidence 0.991, 416 beats, 379 downbeats, 3 sections, 4 tags; `inspect_music` answered from the cache in 269 ms with the same numbers; `review_edit_session` committed the imported song. The media card badge then read `120 BPM · Unknown` (`data-state="ready"`, aria-label `Music analysis: song-328.wav, 120 BPM · Unknown`) from that same project-store record. The CLAP profile labels this clip "unknown" in every category, which is its conservative answer, not a missing tag.
+- Gates: `npx tsc -b`, `npm run lint` (0 errors), `npm run verify:music-intelligence`, `npm run verify:agent-tools`, `npm run verify:mcp`, `npm run verify:desktop-inference`, `npx tsx desktop/update-packaging.verify.ts`, `npm run desktop:build:main`, `npm run build:cli`.
 - Plan: Plan 2 › Part A (server runner).
 - Files: `desktop/native-rhythm-worker.ts`, `desktop/native-clap-worker.ts` (move the inference cores to shared modules), new `server/music-listen/`, `src/audio/intelligence/store.ts` (cache key), `src/agent/external-tool-policy.ts`, `server/external-agent/offline-tools.ts`, `server/external-agent/offline-executor.ts`.
 - Do: run the cores in a `worker_threads` worker with ffmpeg decoding to 22.05 kHz mono; same cache key; make `analyze_music` and `inspect_music` server-direct and add them to the offline catalog.
@@ -249,7 +252,9 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Done when: a brightness keyframe pair changes the preview and the export identically, and `sampleKeyframes` gives the same results as before on the existing tests.
 - Verify: `npx tsx src/editor/keyframes.verify.ts`, `npm run verify:editor`, `npm run verify:export-gl`.
 
-### P2-1 · Ken Burns
+### P2-1 · Ken Burns — done
+- Done 2026-10-25: the inspector's Animation tab and the clip context menu write one batch of scale/x/y keyframes through the existing keyframe channel, so preview and export sample the same ramp and it is one undo step; `apply_ken_burns` does the same over MCP and refuses non-stills, locked tracks and clips under two frames in Spanish. Committed as `36bb9e2`.
+- Re-run 2026-10-25: `npx tsx src/editor/kenBurns.verify.ts` and `npx tsx src/components/inspector/inspector-controls.verify.ts` both pass.
 - Plan: Plan 1 › Phase 2 (Ken Burns).
 - Files: new `src/editor/kenBurns.ts` + verify; `AnimationTab` in `src/components/inspector/InspectorContent.tsx`; the timeline clip context menu; new tool `apply_ken_burns`.
 - Done when: in the editor, a photo gets "Ken Burns" from the inspector or the context menu in one undo step; over MCP `apply_ken_burns` does the same; two exported frames of the photo differ.
@@ -377,6 +382,8 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-25 · P-CL-12 · `scripts/claudia-acceptance.sh` on this VM, with `node` at v20.20.2 and `NPM_CONFIG_PREFIX=/home/ubuntu/.local`, printed `ACCEPTANCE=PASS`. The installer self-test was `CORTEO_SELF_TEST=PASS` and used `/usr/local/bin/google-chrome` (no headless-shell download). The 6s render was 1920x1080 with an audio stream. There is no CI workflow in the repo, so the script is syntax-checked from `test:serial` and the full run is manual. This VM's ffmpeg is 6.1.1, not the reference 7.1.
 - 2026-10-25 · Claudia's VM · She runs corteo on her own Linux box. `npm run claudia:local` binds 127.0.0.1 with paid providers off, and `npm run corteo` is the existing `occ` shell, now able to `media import` a disk path. The Worker and named tunnel stay optional for a browser. Reason: she can clone, install and render on that VM, so the public URL is not the limb.
 - 2026-10-24 · B-9 · The Spanish pass covers the screens Plan 4 owns, read literally: the projects page with its tooltips, the top bar's button labels, the chat's first view (header, onboarding, starters, composer, workflow and model pickers, capability banner) and the phone upload page. The panels those buttons open stay for P5-1. Reason: the plan's scope line, and P5-1 is the full dictionary.
+
+- 2026-10-25 · L-01 · `analyze_music` and `inspect_music` run their cores in a forked child process per core (`child_process.fork`), not the `worker_threads` the card names. Reason: the rhythm core uses the top-level `onnxruntime-node@1.22.0-rev` and the CLAP core nests `onnxruntime-node@1.24.3` inside `@huggingface/transformers`; both ship `libonnxruntime.so.1`, so loading them in one process makes the second load shadow the first and the native session fails. One child per core keeps each soname in its own address space; inside Electron the children start with `ELECTRON_RUN_AS_NODE=1`.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.
@@ -538,3 +545,98 @@ Executed by the WorkBuddy agent on 2026-10-24 (the Qoder agent was not available
   - The editor has no phone layout upstream: at 390 px the chat is a column about 95 px wide. The plan only asks for the projects page to work at 390 px.
   - The panels the top bar and the chat open (generation tasks, export history, run inspector, settings) are still mostly English: P5-1.
 - Known remainder, deliberately out of scope: the old name still appears in `src/agent/skills/**/SKILL.md`, in `X-OpenChatCut-*` header constants, in `assets/agent/openchatcut-tool-schemas.json` and in the agent tool descriptions in `src/agent/external-tool-shape.ts`. Those are identifiers and agent-facing contract text, not product copy; renaming the headers or the schema path would break the desktop and MCP bridges.
+
+---
+
+## Plan 5 · corteo
+
+Approved 2026-10-25. Task cards: `docs/plans/05-corteo.md`. Its own table, same picking rule: the first `todo` whose "Needs" are `done`, in ID order. Phase A is the identity, Phase B the rename (C-05 lands its gate in the same commit as the sweep), Phase C the Grok Bot door, Phase D the proof.
+
+| ID | Task | Status | Needs |
+|----|------|--------|-------|
+| C-01 | Skin `corteo`: tokens, default, migration | todo | |
+| C-02 | Marks, favicon, tab, fonts | todo | C-01 |
+| C-03 | Wordmark in the chat panel and the projects page | todo | C-02 |
+| C-04 | Identity review against the AI-tells list | todo | C-03 |
+| C-05 | The rename sweep and its gate | todo | |
+| C-06 | Identifiers: scripts, env files, directories, service names | todo | |
+| C-07 | Copy outside the dictionaries, the assistant, the exports | todo | C-05 |
+| C-08 | The repo's own prose (README, AGENTS, CHANGELOG, install guide) | todo | C-06, C-07 |
+| C-09 | One installer, one contract (`CORTEO_*`, `--json`, `--self-test`) | todo | C-06 |
+| C-10 | Non-blocking renders (`render --detach`, `job status/wait`) | todo | |
+| C-11 | The bot template: profile, four skills, build gate | todo | C-09, C-10 |
+| C-12 | "Conectar un bot" card | todo | C-09 |
+| C-13 | The bot run proof on a clean VM | todo | C-11, C-12 |
+| C-14 | End-to-end proof, with the name checked | todo | C-04, C-08, C-13 |
+| C-15 | Release: publish and the note | optional | C-14 |
+
+### Plan 5: decisions
+- The product is **corteo** and Claudia becomes a *client* of the editor (one bot among Grok Bot, Claude Code, Codex). Nothing user-facing names her again; `docs/plans/01`, `02` and `04` keep their text as history and the rename gate skips them.
+- New skin `corteo` replaces `claudia`: the surfaces and text tokens stay (measured, and the chrome must recede), the accent moves from clay `#d97757` to "corte" `#ff4a1f` (5.86:1 on `bg`), and `danger` moves to `#e5484d` so an error never reads as the primary button. A saved `claudia` or `graphite` skin migrates to `corteo` once.
+- The mark is a 20×20 frame split on the 45° diagonal with the halves slid apart, accent up-left, bone down-right. It is the only idea: no star, no streak, no play triangle. **Approved by Carlos on 2026-10-25** from `docs/plans/corteo-brand/preview.html`; the vertical-splice alternative is discarded (at 16 px the two bars read as a separator) and kept there as a record. One geometry at every size: the gap stays 2.83, and if 16 px ever fails it grows, never shrinks.
+- One brand face instead of two: the wordmark joins the display type in DINish Condensed Black (OFL), and TeX Gyre Heros leaves with its licence and its preload.
+- The two installers become one. `install.sh` is the door for a human and for a bot: `--json` prints one object, `--self-test` renders 2 seconds and prints `CORTEO_SELF_TEST=PASS`, and the token reaches stdout only with `--print-token` (the default block carries the token's path, so a bot never puts it in a chat).
+- A corteo bot needs no Claude plan. claudia-bot needs Opus on the VM because `slop` is deep; the editor's `occ` is shallow by design, so the bot's own model drives it. C-13 is the proof of that bet, and if it fails the fallback is fewer, bigger `occ` calls rather than more, smaller ones.
+- A Grok Bot turn dies about 5 minutes into a long tool call, so a render must be startable and forgettable: C-10 (`render --detach` + `job wait`) is a dependency of the bot template, not a nicety.
+- The bot template copies claudia-bot's *mechanics* (recipe → replay, ≤6 KB per skill, ≤80 KB total, "Use when …" descriptions, detached installs, `/workspace` persistence, secrets only through the secret card) and none of its content: no claudia.gallery, no canon, no relay, no `slop`.
+
+## Opus parity (Plan 6)
+Executed 2026-10-25. Task cards and the full record live in `docs/plans/06-opus-parity.md`.
+This table is the current status; nothing here is open except OP-14, which the plan marked
+`optional`.
+
+| ID | Task | Status |
+|----|------|--------|
+| OP-01 | `score_moments` rubric engine | done |
+| OP-02 | `find_highlights` ranks, snaps, dedupes | done |
+| OP-03 | `make_shorts`: source in, clips out | done |
+| OP-04 | Calibration ledger + `calibrate_scores` | done |
+| OP-05 | "Analizar episodio" panel | done |
+| OP-06 | `tighten_speech` | done |
+| OP-07 | `censor_words` | done |
+| OP-08 | Keyword emphasis (reshaped: no new presets) | done |
+| OP-09 | `write_clip_title` | done |
+| OP-10 | Brand kit (type, command, tool, panel) | done |
+| OP-11 | Reframe stabilization | done |
+| OP-12 | `write_social_copy` | done |
+| OP-13 | Scheduled publish (queue, tick, tools, calendar) | done |
+| OP-14 | `search_catalog` (semantic) | optional |
+| OP-15 | Performance loop (`score_performance`) | done |
+
+`main` at `35b127c` (this section) and green: full gate 215/215, exit 0 at `26d36ec`. The tool count went 123 to 136.
+
+### Blocker: the emphasis frame proof (attempted 2026-10-25, 3 attempts)
+
+Attempted `remotion/caption-emphasis-render.verify.mjs`: build a materialised state with one
+video item, render the same frame twice with `renderTimelineStills` — once with
+`wordOverrides = { 1: { emphasis: true } }` and once without — and compare the base64 JPEGs, with
+a control pair rendered from identical input.
+
+**What it showed:** the two stills are byte-identical, and the control pair also matches, so the
+harness itself works. The conclusion is not "emphasis does nothing" but "the caption overlay is
+not on the frame at all": the JPEG is a near-uniform 320x180 image of the clip's solid colour.
+
+**Tried:**
+1. `captions: { enabled, template: 'tiktok', pacing: 'word' }` + item transcript — identical stills.
+2. Added `sourceMode: 'timeline'`, since `mergedSourceItems` in `src/captions/resolve.ts` only
+   collects transcript-bearing items in that mode — identical stills.
+3. Re-ran to confirm the failing assertion was still the emphasis diff, not the control — yes.
+
+**What is not yet known:** whether the still composition mounts `CaptionsLayer` at all. The
+Player does; `renderTimelineStills` goes through the server composition, and nothing in
+`remotion/` was checked for a captions mount. That is the next thing to read, not another
+tweak to the fixture.
+
+**Unblocked by:** reading `remotion/Root.tsx` (and the timeline composition it selects) for where
+`state.captions` is consumed, and confirming the composition receives it. Then the same test
+should be written again — the fixture shape is sound, the render path is the unknown.
+
+The file was removed rather than committed failing; it is unchanged in this note.
+
+**OP-14 needs a decision, not code.** The existing `src/media/semantic-search/` embeds
+*frames* with a vision model for duplicate detection; there is no text-embedding model and
+`search_content` is FTS5. Making it semantic means either a new local text-embedding
+dependency (rule 2 needs the card to name it) or switching the feature to image-similarity
+search over the vision model that already exists. See the card note in `06-opus-parity.md`.
+Known gap: the per-word emphasis rule and its channel are unit-tested, but **no exported frame
+has been compared in pixels**; a render on a machine with Chromium closes it.

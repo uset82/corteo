@@ -178,6 +178,7 @@ export default {
   // ---- InspectorPanel:Keyframe Track (KfCell) ----
   '上一关键帧': 'Previous keyframe',
   '下一关键帧': 'Next keyframe',
+  'Ken Burns 效果': 'Ken Burns effect',
   '更新播放头处的关键帧': 'Update the keyframe at the playhead',
   '在播放头打关键帧': 'Add a keyframe at the playhead',
   '删除播放头处的关键帧': 'Delete the keyframe at the playhead',

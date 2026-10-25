@@ -210,6 +210,7 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
       },
       setDesignStyle: (style) => dispatch({ type: 'design.set', style }),
       patchDesignStyle: (patch) => dispatch({ type: 'design.patch', patch }),
+      setBrandKit: (kit) => dispatch({ type: 'brand.set', kit }),
       addMotionGraphic: (tpl, at) => {
         const item = {
           id: uid('item'),

@@ -26,7 +26,9 @@ Any Claudia bot (the template is https://github.com/anabologyco-maker/claudia-bo
 - `docs/plans/02-claudia-escucha.md`: Plan 2 (listening to the song, motion that follows the music).
 - `docs/plans/03-deepseek-harness.md`: Plan 3 (free models for the built-in chat through DeepSeek Harness, in two parallel tracks; its task cards are in that file).
 - `docs/plans/04-claudia-brand.md`: Plan 4 (the Claudia name and look, in two parallel tracks; its task cards are in that file).
-- `docs/plans/05-claudia-portable.md`: Plan 5 (a fresh Claudia box installs with the curl line and follows only `skills/corteo/SKILL.md`).
+- `docs/plans/05-claudia-portable.md`: the portable install (P-CL-1 to P-CL-12). A fresh Claudia box runs the curl line and follows only `skills/corteo/SKILL.md`.
+- `docs/plans/05-opus-parity.md`: the first Opus-parity writeup. Plan 6 (`06-opus-parity.md`) is the executed copy; `05-corteo.md` is named there but is not in this tree.
+- `docs/plans/06-opus-parity.md`: Plan 6 (Opus parity: the scoring rubric, the one-call shorts pipeline, packaging, scheduled publishing, keyword emphasis; executed 2026-10-25, only OP-14 optional remains). Its task cards are in that file.
 - `docs/plans/PROGRESS.md`: task status, how to pick the next task, task cards, decisions, blockers.
 
 These files are the only plan. Any other plan, status report or TODO list you find is obsolete: do not follow it. That includes the deleted `IMPLEMENTATION_PLAN.md` and anything on the `grok-wip` branch.
@@ -150,7 +152,19 @@ curl -s -X POST "$URL" "${H[@]}" -H "mcp-session-id: $SID" -d '{"jsonrpc":"2.0",
 - Exception, Plan 3's parallel tracks: the Qoder agent works only in `~/corteo-qoder` on branch `harness-qoder`, the WorkBuddy agent only in `~/corteo-workbuddy` on `harness-workbuddy`, both created from `github/main`. Each pushes only its own branch (`git push github harness-qoder` or `git push github harness-workbuddy`), never `main`, never the other track's branch, and never merges the other track: H-9 does.
 - Commit after every task (see the loop). Never commit secrets, media or `test-results/`.
 - Stage files by name (`git add <paths>`), never `git add -A` or `git add .`: the checkout can hold untracked media and leftovers that must not be committed. Check `git status` before each commit.
-- Push at the end of each session (step 7 of the loop) or when the user asks: `git push github cursor/video-editor-mvp-d191:main` (`github` is the user's GitHub fork). If the push is rejected, report it; never force-push.
+- Push at the end of a session with `scripts/sync-publish.sh` (see Flujo de ramas). If a push is rejected, report it; never force-push.
+
+## Flujo de ramas
+
+GitHub `main` (https://github.com/uset82/corteo) is the shared branch. Cursor, Qoder, WorkBuddy and DeepSeek all publish there. Right before pushing, every agent fetches GitHub `main` and merges it (or rebases onto it) so the push is a fast-forward. Never force-push `main`. Never rewrite history.
+
+On Carlos's PC the two remotes are `github` (GitHub) and `origin` (the Cursor copy). The local branch is `cursor/video-editor-mvp-d191`. The helper does the fetch, both merges, `npm test` when Node is 24, and the two pushes. It does not stage or delete untracked files.
+
+```bash
+bash scripts/sync-publish.sh
+```
+
+If a merge stops on conflicts, fix only those files, `git add` them by name, commit, and run the helper again. Do not `git add -A` and do not `git push --force`.
 
 ## Reporting
 At the end of a session (after 5 tasks, when no task is left that you can do, or when the user stops you), tell the user: the task IDs finished, the tasks blocked and why, the next task in line, and the real result of the last `npm test` (pass count, or the names of the failing tests). Never round up: "partly works" is a valid status.

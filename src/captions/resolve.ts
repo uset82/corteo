@@ -150,9 +150,16 @@ export function applyWordOverrides(
     if (override?.forceBreak && out.length > 0) breakBefore.add(out.length);
     const timingOffsetMs = override?.timingOffsetMs ?? 0;
     const word = words[position]!;
-    out.push(override?.text || timingOffsetMs
-      ? { ...word, ...(override?.text ? { text: override.text } : {}), start: word.start + timingOffsetMs, end: word.end + timingOffsetMs }
-      : word);
+    const carried: TranscriptWord = override?.text || timingOffsetMs || override?.emphasis
+      ? {
+          ...word,
+          ...(override?.text ? { text: override.text } : {}),
+          ...(override?.emphasis ? { emphasis: true } : {}),
+          start: word.start + timingOffsetMs,
+          end: word.end + timingOffsetMs,
+        }
+      : word;
+    out.push(carried);
     outIndices.push(indices[position]!);
     outRefs.push(ref ?? '');
     applied.push(override);

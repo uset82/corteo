@@ -199,6 +199,8 @@ export interface EditorCommands {
   // ── Design style = project brand ────────────────────────────────────────
   /** apply a whole design style to the project (null clears it) */
   setDesignStyle: (style: DesignStyle | null) => void;
+  /** Plan 5 brand kit; null clears it. The value is normalized by the reducer. */
+  setBrandKit: (kit: unknown) => void;
   /** merge a partial design style into the current one */
   patchDesignStyle: (patch: Partial<DesignStyle>) => void;
   undo: () => void;

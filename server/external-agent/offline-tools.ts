@@ -20,6 +20,7 @@ import { TRANSCRIPT_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/transcrip
 import { WATERMARK_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/watermark-tools.js';
 import { TIMELINE_IMPORT_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/timeline-import-tools.js';
 import { BEAT_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/beat-tools.js';
+import { MUSIC_INTELLIGENCE_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/music-intelligence-tools.js';
 
 const OFFLINE_TOOL_DESCRIPTIONS: Record<string, string> = {
   begin_edit_session: 'Start an offline server draft. approvalMode must be auto; open the editor URL for manual approval.',
@@ -42,6 +43,7 @@ const OFFLINE_SCHEMA_GROUPS = [
   EFFECT_TOOL_SCHEMAS,
   LIBRARY_TOOL_SCHEMAS,
   TIMELINE_TOOL_SCHEMAS,
+  MUSIC_INTELLIGENCE_TOOL_SCHEMAS,
   TRACK_TOOL_SCHEMAS,
   SCRIPT_TOOL_SCHEMAS,
   CAPTIONS_TOOL_SCHEMAS,
