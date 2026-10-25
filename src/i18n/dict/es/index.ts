@@ -174,4 +174,13 @@ export default {
   '已批准，评分会记住这个选择': 'Aprobado: la puntuación recordará esta elección',
   '已丢弃，评分会避开这一类': 'Descartado: la puntuación evitará este tipo de momento',
   '评分是参考，不是预测': 'La puntuación es orientativa, no una predicción',
+
+  // Plan 5 · sección «Marca» del panel de estilo
+  '品牌': 'Marca',
+  '品牌名称': 'Nombre de la marca',
+  '字幕样式': 'Estilo de subtítulos',
+  '安全边距': 'Margen seguro',
+  '保存品牌': 'Guardar marca',
+  '已保存': 'Guardado',
+  'Claudia puede aplicar esta marca a todos los clips': 'Claudia puede aplicar esta marca a todos los clips',
 } as Record<string, string>;

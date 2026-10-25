@@ -9,6 +9,7 @@ import { useEditorMediaIngest } from '../media/useEditorMediaIngest';
 import { resumeOpenGenerationJobs } from '../persist/jobRegistryStore';
 import type { ProjectMeta } from '../persist/projectStoreCoordinators';
 import { showAppToast } from '../ui/appToast';
+import { brandKitOf } from '../brand/kit';
 import { flexCropInsetPatch } from './flexCrop';
 import { isBackgroundFillEligible } from './backgroundFill';
 import type { EditorWorkspaceViewProps } from './EditorWorkspaceView';
@@ -116,7 +117,15 @@ function buildEditorWorkspaceViewProps(
     gridTemplateRows: panelLayout.gridTemplateRows,
     topBar: { projectId: project.id, projectName: project.name, onOpenShorts: () => setShortsOpen(true), exporting: activeExportJobs > 0, exportJobCount: activeExportJobs, canUndo, canRedo, onHome: handleHome, onRename, onResumeGeneration: () => resumeOpenGenerationJobs(project.id, { getState: () => stateRef.current, onAsset: (asset) => { if ((docRef.current.assets ?? []).some((item) => item.id === asset.id || item.src === asset.src)) return; commands.addAsset(asset); if (asset.kind !== 'audio') enqueueVisualAnalysis(asset); }, timeoutSeconds: 180 }).then(() => undefined) },
     exportDialog: exportOpen ? { state, project: doc, projectId: project.id, projectName: project.name, exportJobs, onClose: () => setExportOpen(false) } : null,
-    designStylePanel: showDesign ? { style: doc.designStyle, onApply: commands.setDesignStyle, onClose: () => setShowDesign(false) } : null,
+    designStylePanel: showDesign
+      ? {
+          style: doc.designStyle,
+          onApply: commands.setDesignStyle,
+          brandKit: brandKitOf(doc),
+          onSaveBrandKit: (kit) => commands.setBrandKit(kit),
+          onClose: () => setShowDesign(false),
+        }
+      : null,
     shortsPanel: shortsOpen ? { ctx: agentCtx, onClose: () => setShortsOpen(false) } : null,
     versionHistory: showVersions ? { projectId: project.id, currentDoc: doc, onRestore: (d) => { commands.applyDoc(d); setShowVersions(false); }, onClose: () => setShowVersions(false) } : null,
     shortcutsDialog: showShortcuts ? { onClose: () => setShowShortcuts(false) } : null,

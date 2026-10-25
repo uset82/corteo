@@ -516,7 +516,7 @@ This track is deliberately **not** in the main table, so the picking rule above 
 | OP-07 | `censor_words` | done | |
 | OP-08 | Shorts caption presets, keywords, line breaking | todo | |
 | OP-09 | `write_clip_title` | done | |
-| OP-10 | Brand kit | doing | |
+| OP-10 | Brand kit | done | |
 | OP-11 | Reframe polish: dead zone and cheap modes | done | |
 | OP-12 | `write_social_copy` | done | |
 | OP-13 | Scheduled publish | todo | OP-12 |
@@ -633,7 +633,10 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - **Step 4 (the panel) — where it belongs, decided 2026-10-25.** The card said "Settings gains a Marca page", but the editor already has a project-identity surface: `src/components/settings/DesignStylePanel.tsx`, opened from the top bar's palette button (`open-design`) through the `designStylePanel` view prop, wired to `commands.setDesignStyle`. A brand kit **is** that concept — palette, fonts, caption style, logo — so a second Settings route would create two places to edit one idea.
   - The step is therefore: add a "Marca" section to `DesignStylePanel` — name, caption preset (from `CAPTION_STYLES`), safe margin, and a "aplicar a todas las secuencias" action that calls the existing `apply_brand_kit` tool — with `setBrandKit` passed in the same way `onApply`/`setDesignStyle` already is. No new route, no new registration, and the panel keeps working if the kit is absent (`brandKitOf` returns the defaults).
   - i18n: the new labels go in `src/i18n/dict/en/shorts.ts` (already Plan 5's module) and the Spanish block at the end of `es/index.ts`. Remember `check-i18n.mjs` only reads object-literal default exports.
-  - This is the last piece of OP-10; steps 1–3c are wired and verified.
+  - **Step 4 done (2026-10-25): the "Marca" section exists and OP-10 is complete.** `src/components/brand/BrandKitSection.tsx` sits inside `DesignStylePanel` (between the body and the footer) and edits the three fields a person actually tunes: name, caption preset (from `CAPTION_STYLES`, so there is no second list of presets) and safe margin. It commits through `commands.setBrandKit` — the same command the agent's `apply_brand_kit` uses — so the panel and the tool cannot disagree about what a kit is.
+- It is a *controlled* section: the kit arrives as a prop from `brandKitOf(doc)` and the section hands back a new kit; it never reads or writes the document itself. The verify enforces that (no `setBrandKit(` call inside it, presets from the catalogue, the three fields present, every `t()` key in the English dictionary).
+- **One trap, again i18n-shaped:** living under `src/components/settings/` made `verify:i18n` classify the new strings as *settings* keys and demand them in the Italian (and every other) settings dictionary. Moving the file to `src/components/brand/` keeps the obligation at "English required, Spanish provided, others fall back", which is the right level for a Plan 5 panel. Worth knowing before adding UI under `components/settings`.
+- **OP-10 is done:** type + defaults + validator, document field + reader/writer, `brand.set` command, `apply_brand_kit` tool, `make_shorts` inheriting the kit via `applyBrandKit`, and the panel. 131 tools.
 
 **Two type errors found and fixed in passing (2026-10-25).** A whole-output `npx tsc -b` — instead of the per-file greps used earlier — showed two mistakes of mine that the filtered checks had hidden: the `Result` interface in `make-shorts-tools.verify.ts` was missing `chapters`, and `es/index.ts` had a duplicate `'关闭'` key that already existed before Plan 5. Both are fixed; excluding the Plan 2 session's untracked `musicReactions`/`listen` files, the project now type-checks with **0 errors**. Lesson for the next session: grep the whole tsc output, not just the files you touched.
 

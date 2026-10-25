@@ -22,4 +22,11 @@ export default {
   '已批准，评分会记住这个选择': 'Approved — the score will remember this',
   '已丢弃，评分会避开这一类': 'Rejected — the score will avoid this kind',
   '评分是参考，不是预测': 'The score is a rubric, not a prediction',
+  '品牌': 'Brand',
+  '品牌名称': 'Brand name',
+  '字幕样式': 'Caption style',
+  '安全边距': 'Safe margin',
+  '保存品牌': 'Save brand',
+  '已保存': 'Saved',
+  'Claudia puede aplicar esta marca a todos los clips': 'Claudia can apply this brand to every clip',
 } as Record<string, string>;
