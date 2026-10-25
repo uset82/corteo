@@ -184,7 +184,7 @@ node -e '
 const { execFileSync } = require("child_process");
 const file = process.argv[1];
 const duration = Number(execFileSync("ffprobe", ["-v","error","-show_entries","format=duration","-of","default=nw=1:nk=1", file], { encoding: "utf8" }));
-const size = execFileSync("ffprobe", ["-v","error","-select_streams","v:0","-show_entries","stream=width,height","-of","csv=p=0", file], { encoding: "utf8" }).trim();
+const size = execFileSync("ffprobe", ["-v","error","-select_streams","v:0","-show_entries","stream=width,height","-of","csv=p=0", file], { encoding: "utf8" }).trim().replace(/,+$/, "");
 const audio = execFileSync("ffprobe", ["-v","error","-select_streams","a","-show_entries","stream=codec_type","-of","csv=p=0", file], { encoding: "utf8" }).trim();
 if (!(duration > 5.9 && duration < 6.1)) { console.error("duration " + duration); process.exit(1); }
 if (size !== "1920,1080") { console.error("size " + size); process.exit(1); }
@@ -194,7 +194,7 @@ if (!audio.includes("audio")) { console.error("audio " + audio); process.exit(1)
 OPENCHATCUT_RENDER_CONCURRENCY=1 CC_RENDER_GL=swangle "$CORTEO" render --out "$WORK/musical-4k.mp4" --from 0 --to 1s --resolution 4k --quiet
 node -e '
 const { execFileSync } = require("child_process");
-const size = execFileSync("ffprobe", ["-v","error","-select_streams","v:0","-show_entries","stream=width,height","-of","csv=p=0", process.argv[1]], { encoding: "utf8" }).trim();
+const size = execFileSync("ffprobe", ["-v","error","-select_streams","v:0","-show_entries","stream=width,height","-of","csv=p=0", process.argv[1]], { encoding: "utf8" }).trim().replace(/,+$/, "");
 if (size !== "3840,2160") { console.error(size); process.exit(1); }
 ' "$WORK/musical-4k.mp4"
 
@@ -244,7 +244,7 @@ CLIP="$(json_field "$WORK/import.json" ops.0.result.imported.0.id)"
 CC_RENDER_GL=swangle "$CORTEO" render --out "$WORK/short.mp4" --to 1s --resolution 1080p --quiet
 node -e '
 const { execFileSync } = require("child_process");
-const size = execFileSync("ffprobe", ["-v","error","-select_streams","v:0","-show_entries","stream=width,height","-of","csv=p=0", process.argv[1]], { encoding: "utf8" }).trim();
+const size = execFileSync("ffprobe", ["-v","error","-select_streams","v:0","-show_entries","stream=width,height","-of","csv=p=0", process.argv[1]], { encoding: "utf8" }).trim().replace(/,+$/, "");
 if (size !== "1080,1920") { console.error(size); process.exit(1); }
 ' "$WORK/short.mp4"
 
