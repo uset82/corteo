@@ -589,33 +589,26 @@ This table is the current status; nothing here is open except OP-14, which the p
 
 `main` at `35b127c` (this section) and green: full gate 215/215, exit 0 at `26d36ec`. The tool count went 123 to 136.
 
-### Blocker: the emphasis frame proof (attempted 2026-10-25, 3 attempts)
+### The frame proof, done 2026-10-25
 
-Attempted `remotion/caption-emphasis-render.verify.mjs`: build a materialised state with one
-video item, render the same frame twice with `renderTimelineStills` — once with
-`wordOverrides = { 1: { emphasis: true } }` and once without — and compare the base64 JPEGs, with
-a control pair rendered from identical input.
+`remotion/caption-emphasis-render.verify.mjs` renders the same frame four times and compares the
+JPEGs:
 
-**What it showed:** the two stills are byte-identical, and the control pair also matches, so the
-harness itself works. The conclusion is not "emphasis does nothing" but "the caption overlay is
-not on the frame at all": the JPEG is a near-uniform 320x180 image of the clip's solid colour.
+- the same timeline twice → **identical** (the harness is deterministic);
+- the caption overlay off vs on → **different** (the layer really paints);
+- `wordOverrides: { 1: { emphasis: true } }` vs none → **different** (the mark changes pixels);
+- an empty override map vs none → **identical** (and nothing else does).
 
-**Tried:**
-1. `captions: { enabled, template: 'tiktok', pacing: 'word' }` + item transcript — identical stills.
-2. Added `sourceMode: 'timeline'`, since `mergedSourceItems` in `src/captions/resolve.ts` only
-   collects transcript-bearing items in that mode — identical stills.
-3. Re-ran to confirm the failing assertion was still the emphasis diff, not the control — yes.
+Two things this proved that reading the code did not:
 
-**What is not yet known:** whether the still composition mounts `CaptionsLayer` at all. The
-Player does; `renderTimelineStills` goes through the server composition, and nothing in
-`remotion/` was checked for a captions mount. That is the next thing to read, not another
-tweak to the fixture.
-
-**Unblocked by:** reading `remotion/Root.tsx` (and the timeline composition it selects) for where
-`state.captions` is consumed, and confirming the composition receives it. Then the same test
-should be written again — the fixture shape is sound, the render path is the unknown.
-
-The file was removed rather than committed failing; it is unchanged in this note.
+1. **Captions are painted from a track, not from `state.captions`.** `captionTrackEntries` filters
+   by `trackKind(id) === 'caption'`, which for a plain state means an id starting with `C`. The
+   first version of the fixture had no `C1` track, so the still was the clip's own colour and
+   every comparison passed for the wrong reason — including "emphasis changes nothing".
+2. **The frame has to be one where the marked word is not the active one.** With `pacing: 'word'`
+   the marked word is by definition the spoken one, and the active word already paints in the
+   highlight colour, so the mark is invisible. The test uses `pacing: 'phrase'` at frame 3.
+   A unit test of `captionWordColour` cannot catch that; only a render can.
 
 **OP-14 needs a decision, not code.** The existing `src/media/semantic-search/` embeds
 *frames* with a vision model for duplicate detection; there is no text-embedding model and
