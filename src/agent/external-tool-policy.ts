@@ -25,6 +25,8 @@ const DRAFT_EDIT_TOOL_NAMES = new Set([
   'censor_words',
   // Plan 5: adds a title clip (one command, one undo step).
   'write_clip_title',
+  // Plan 5: caption style per sequence, and optionally the project kit (both draft edits).
+  'apply_brand_kit',
   'manage_design_style',
   'import_timeline',
   'export_jianying_draft',

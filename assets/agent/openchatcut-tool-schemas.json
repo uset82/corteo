@@ -3263,6 +3263,31 @@
       }
     },
     {
+      "name": "apply_brand_kit",
+      "description": "Apply the project’s brand kit to finished clips so a batch looks like one channel: the caption preset, and optionally the caption motion, on every target sequence. Read the kit from the project by default, or pass one inline (it is normalized first). With save:true it also becomes the project’s kit, which is the same value make_shorts reads through brandKitId. Use when the user says \"aplica la marca\", \"pon el mismo estilo a todos los clips\", or as the packaging step after make_shorts. One call, and the active sequence is restored when it finishes. Not wired yet: the logo/watermark and the palette, which belong to update_watermark and manage_design_style — this tool says so in its result instead of pretending it applied them.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "kit": {
+            "type": "object",
+            "description": "Brand kit to apply. Omit to use the project’s own kit (or the defaults if it has none)."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "all",
+              "active"
+            ],
+            "description": "all (default) applies to every sequence in the project; active only to the current one."
+          },
+          "save": {
+            "type": "boolean",
+            "description": "true stores this kit on the project (one undo step), so later calls and make_shorts reuse it."
+          }
+        }
+      }
+    },
+    {
       "name": "auto_reframe",
       "description": "Auto-reframe a video clip: sample its frames, detect the subject/focal point per interval, and write reframe keyframes (builtin:zoom __openchatcutReframeCurve) so the crop window follows the subject when the canvas aspect differs (e.g. 16:9→9:16). Clears the clip's existing reframe keyframes first, then re-detects. Browser-only (needs the actual video pixels); returns an error if run headless or if the target isn't a video with a source.",
       "input_schema": {
