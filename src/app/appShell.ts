@@ -6,7 +6,7 @@ import { fetchCodexModels, fetchCodexStatus } from '../agent/codex/client';
 import { fetchCopilotModels, fetchCopilotStatus } from '../agent/copilot/client';
 import { fetchClaudeCodeModels, fetchClaudeCodeStatus } from '../agent/claude-code/client';
 import { applyAgentModelStatus, applyClaudeCodeAgentStatus, applyCodexAgentStatus, applyCopilotAgentStatus, applyDshModels, selectAgentModel, getActiveAgentModelChoice, getAgentModelSnapshot } from '../agent/model-selection';
-import { PROVIDERS_OFF } from '../agent/providers-off';
+import { applyProvidersOff, PROVIDERS_OFF, providersOff } from '../agent/providers-off';
 import { loadAgentModelPref } from '../persist/sessionPrefs';
 import type { ProjectDoc, TimelineState } from '../editor/types';
 import {
@@ -25,6 +25,7 @@ interface LiveAgentStatus {
   readonly caps?: Record<string, boolean>;
   readonly keys?: Record<string, { readonly configured: boolean }>;
   readonly models?: Record<string, string>;
+  readonly providersOff?: boolean;
 }
 
 const emptyState = (): TimelineState => ({
@@ -130,8 +131,12 @@ export async function syncAgentBackends(isActive: () => boolean): Promise<void> 
   let savedCodexReasoningEffort: string | undefined;
   let savedClaudeCodeModel: string | undefined;
   if (keyResult.status === 'fulfilled') {
-    const { caps, keys, models } = keyResult.value;
+    const { caps, keys, models, providersOff: providersOffLive } = keyResult.value;
     if (caps) applyLiveCaps(caps);
+    // Before any model list is built below: the vendor pages and the choices
+    // read providersOff(), and a stale build-time flag would show the wrong
+    // providers (HQ-7).
+    if (typeof providersOffLive === 'boolean') applyProvidersOff(providersOffLive);
     if (keys) applyLiveKeyStatus(keys);
     if (models) {
       applyLiveModels(models);
@@ -139,7 +144,7 @@ export async function syncAgentBackends(isActive: () => boolean): Promise<void> 
       savedCodexModel = models.CODEX_MODEL;
       savedCodexReasoningEffort = models.CODEX_REASONING_EFFORT;
       savedClaudeCodeModel = models.CLAUDE_CODE_MODEL;
-      if (!PROVIDERS_OFF
+      if (!providersOff()
         && (models.COPILOT_MODEL || loadAgentModelPref()?.startsWith('copilot:'))) {
         void syncCopilotBackend(isActive, models.COPILOT_MODEL, models.COPILOT_REASONING_EFFORT);
       }
@@ -153,7 +158,7 @@ export async function syncAgentBackends(isActive: () => boolean): Promise<void> 
   // status` can take seconds, and configured API/Codex models must stay usable
   // while it runs. Unlike Copilot it is never gated on a saved model, because
   // an unconfigured install is exactly the case this has to surface.
-  if (!PROVIDERS_OFF) void syncClaudeCodeBackend(isActive, savedClaudeCodeModel);
+  if (!providersOff()) void syncClaudeCodeBackend(isActive, savedClaudeCodeModel);
   if (codexResult.status !== 'fulfilled' || !codexResult.value) return;
   const modelResult = codexResult.value.installed && codexResult.value.account?.type !== 'apiKey'
     ? await fetchCodexModels().catch(() => null)

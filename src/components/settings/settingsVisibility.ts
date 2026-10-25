@@ -1,4 +1,4 @@
-import { PROVIDERS_OFF } from '../../agent/providers-off';
+import { providersOff as providersOffNow } from '../../agent/providers-off';
 import {
   SETTINGS_CATEGORIES,
   type SettingsCategory,
@@ -21,7 +21,7 @@ function visibleGroup(group: SettingsGroup, providersOff: boolean): SettingsGrou
 
 /** Settings tree the dialog shows. Paid generation, stock and cloud transcription
  * disappear when the deployment forces free and local models only. */
-export function visibleSettingsCategories(providersOff = PROVIDERS_OFF): readonly SettingsCategory[] {
+export function visibleSettingsCategories(providersOff = providersOffNow()): readonly SettingsCategory[] {
   if (!providersOff) return SETTINGS_CATEGORIES;
   return SETTINGS_CATEGORIES.flatMap((category) => {
     if (HIDDEN_CATEGORIES.has(category.key)) return [];
@@ -32,7 +32,7 @@ export function visibleSettingsCategories(providersOff = PROVIDERS_OFF): readonl
   });
 }
 
-export function findVisibleGroup(key: string, providersOff = PROVIDERS_OFF): SettingsGroup {
+export function findVisibleGroup(key: string, providersOff = providersOffNow()): SettingsGroup {
   const categories = visibleSettingsCategories(providersOff);
   return categories.flatMap((category) => category.groups).find((group) => group.key === key)
     ?? categories[0].groups[0];

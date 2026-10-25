@@ -4,6 +4,8 @@ import { loadInitialProjects, refreshDshModels, syncAgentBackends, type ProjectS
 import { getActiveAgentModelChoice, getAgentModelSnapshot, getDshHarnessState, selectAgentModel, subscribeAgentModels } from '../agent/model-selection';
 import type { ProjectMeta } from '../persist/projectStoreCoordinators';
 import { syncDesktopNativeInferenceEnabled } from '../transcript/desktop-inference-preference';
+import { providersOff } from '../agent/providers-off';
+import { agentVendorPagesWithVision } from '../components/settings/settingsAgentProviders';
 
 const demo = { id: 'demo', name: '示例工程', updatedAt: 1 };
 
@@ -246,6 +248,26 @@ try {
   globalThis.fetch = dshFetch;
   if (dshLocalStorage) Object.defineProperty(globalThis, 'localStorage', dshLocalStorage);
   else Reflect.deleteProperty(globalThis, 'localStorage');
+}
+
+// ── HQ-7: the providers switch arrives with /api/keys, not the bundle ─────
+{
+  assert.equal(providersOff(), false, 'nothing is switched off before the settings payload arrives');
+  const visibleKeys = (): string[] => agentVendorPagesWithVision()
+    .map((page) => page.key.split('/')[1] ?? '')
+    .filter((provider) => provider !== '');
+  assert.ok(visibleKeys().includes('openai'), 'every provider is offered by default');
+  globalThis.fetch = async (input) => {
+    const path = String(input);
+    if (path === '/api/keys') return Response.json({ keys: {}, models: {}, providersOff: true });
+    if (path === '/api/codex/status') return Response.json({ installed: false });
+    if (path === '/api/claude-code/status') return Response.json({ installed: false, version: null, account: null });
+    return Response.json({ keys: {}, models: {} });
+  };
+  await syncAgentBackends(() => true);
+  assert.equal(providersOff(), true, 'the runtime switch wins over the build-time default');
+  assert.deepEqual(visibleKeys().sort(), ['dsh', 'lmstudio', 'ollama'],
+    'only the harness and the two keyless local runtimes stay visible');
 }
 
 console.log('appShell.verify: project startup and optional-backend isolation passed');

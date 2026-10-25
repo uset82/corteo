@@ -35,7 +35,7 @@ import {
   VOICE_SETTINGS_GROUP,
   localAsrPage,
 } from './settingsMediaProviders';
-import { AGENT_VENDOR_PAGES_WITH_VISION, PROXY_PAGE } from './settingsAgentProviders';
+import { agentVendorPagesWithVision, PROXY_PAGE } from './settingsAgentProviders';
 
 export type {
   FieldKind,
@@ -92,7 +92,9 @@ export const SETTINGS_CATEGORIES: readonly SettingsCategory[] = [
     groups: [
       { key: 'llm', title: 'Agent 大脑',
         hint: '对话与工具调用的核心，未配置无法对话。',
-        vendors: AGENT_VENDOR_PAGES_WITH_VISION },
+        // A getter, not a value: the vendor list depends on the runtime
+        // providers switch, which arrives after this module is imported (HQ-7).
+        get vendors() { return agentVendorPagesWithVision(); } },
     ],
   },
   {

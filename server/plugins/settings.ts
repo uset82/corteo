@@ -24,6 +24,7 @@ import {
   relocatedMediaDestination,
   writeDataDirPointer,
 } from '../data-dir.ts';
+import { providersOffEnv } from '../../shared/providers-off.ts';
 import { sqliteStoreReady } from '../storage/sqlite-store.ts';
 import { pausePublishing } from './upload-post.ts';
 import { UploadPostError } from './upload-post-client.ts';
@@ -96,6 +97,10 @@ function settingsBody(restartRequired = false) {
     models: { ...status.models, [DATA_DIR_ENV]: configured },
     mediaDir: uploadDir(),
     dataDir: profile.rootDir,
+    // The browser cannot read process.env: a packaged desktop build bakes
+    // __PROVIDERS_OFF__ at build time, so the runtime switch has to travel with
+    // this payload or the UI and the server gate disagree (HQ-7).
+    providersOff: providersOffEnv(process.env),
     ...(restartRequired ? { restartRequired: true } : {}),
   };
 }

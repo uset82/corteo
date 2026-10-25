@@ -27,7 +27,14 @@ export function fixToolCallDeltaLine(line: string): string {
   for (const choice of chunk.choices) {
     if (!isRecord(choice) || !isRecord(choice.delta) || !Array.isArray(choice.delta.tool_calls)) continue;
     for (const call of choice.delta.tool_calls) {
-      if (isRecord(call) && !isRecord(call.function)) {
+      if (!isRecord(call)) continue;
+      // StepFun-compatible gateways put an empty `type` on continuation chunks; the
+      // chunk schema wants the literal `function`, so the placeholder has to go.
+      if (call.type === '') {
+        delete call.type;
+        changed = true;
+      }
+      if (!isRecord(call.function)) {
         call.function = {};
         changed = true;
       }
