@@ -1,0 +1,143 @@
+/**
+ * Scheduled publish — the queue maths (Plan 5, OP-13).
+ *
+ * The server owns the timer and the storage; this module owns the *decisions*, so the tool
+ * (which schedules), the tick (which fires) and the UI (which lists) cannot disagree about
+ * what "due" means. Shared on purpose: the browser and the Vite server import the same file.
+ *
+ * Two rules carry most of the value:
+ * - a publish is only due when it is `planned` and its slot has passed;
+ * - a missed slot is published late ONCE, never retried forever, and never silently dropped.
+ */
+
+export type PublishState = 'planned' | 'running' | 'published' | 'failed' | 'cancelled';
+
+export interface ScheduledPublish {
+  id: string;
+  /** ISO instant the user picked. */
+  scheduledFor: string;
+  /** Download URL of the finished render, as `publish_to_social` expects. */
+  source: string;
+  platforms: string[];
+  title: string;
+  description?: string;
+  /** The approved preview this entry is allowed to publish (the confirm gate's token). */
+  previewId: string;
+  state: PublishState;
+  attempts: number;
+  lastError?: string;
+  /** Filled when the tick publishes it. */
+  publishedAt?: string;
+}
+
+export interface QueueOptions {
+  /** Attempts before an entry is parked as failed. Default 3. */
+  maxAttempts?: number;
+  /** Minutes to wait between attempts, multiplied by the attempt number. Default 10. */
+  backoffMinutes?: number;
+  /** How late a slot may be and still publish. Default 12 h. */
+  graceMinutes?: number;
+}
+
+const MAX_ATTEMPTS = 3;
+const BACKOFF_MINUTES = 10;
+const GRACE_MINUTES = 12 * 60;
+
+const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
+
+export function parseInstant(iso: string): number | null {
+  const value = Date.parse(iso);
+  return Number.isFinite(value) ? value : null;
+}
+
+/**
+ * A slot has to be in the future and inside a sane horizon. A past slot is a mistake worth
+ * refusing at scheduling time, not a publish that fires immediately.
+ */
+export function validateSlot(
+  iso: string,
+  now: number,
+  maxAheadDays = 365,
+): { ok: true; at: number } | { ok: false; reason: string } {
+  const at = parseInstant(iso);
+  if (at === null) return { ok: false, reason: 'La fecha no es válida (se espera ISO 8601).' };
+  if (at <= now + 60_000) return { ok: false, reason: 'La fecha tiene que ser al menos un minuto en el futuro.' };
+  if (at > now + maxAheadDays * 86_400_000) return { ok: false, reason: `La fecha está a más de ${maxAheadDays} días.` };
+  return { ok: true, at };
+}
+
+/** Planned entries whose slot has passed, oldest slot first. */
+export function dueEntries(entries: readonly ScheduledPublish[], now: number): ScheduledPublish[] {
+  return entries
+    .filter((entry) => entry.state === 'planned')
+    .filter((entry) => {
+      const at = parseInstant(entry.scheduledFor);
+      return at !== null && at <= now;
+    })
+    .sort((a, b) => (parseInstant(a.scheduledFor) ?? 0) - (parseInstant(b.scheduledFor) ?? 0));
+}
+
+/** True when the slot is so old that publishing now would be a surprise. */
+export function isMissed(entry: ScheduledPublish, now: number, opts: QueueOptions = {}): boolean {
+  if (entry.state !== 'planned') return false;
+  const at = parseInstant(entry.scheduledFor);
+  if (at === null) return false;
+  const grace = clamp(opts.graceMinutes ?? GRACE_MINUTES, 0, 7 * 24 * 60);
+  return at + grace * 60_000 < now;
+}
+
+/**
+ * Whether this entry may be attempted now. A running entry is locked (a tick that crashed
+ * leaves it running; the caller decides how to recover, this module does not guess), a
+ * failed-too-often entry is parked, and the backoff grows with the attempt count.
+ */
+export function canAttempt(entry: ScheduledPublish, now: number, opts: QueueOptions = {}): boolean {
+  if (entry.state !== 'planned') return false;
+  const maxAttempts = clamp(Math.trunc(opts.maxAttempts ?? MAX_ATTEMPTS), 1, 10);
+  if (entry.attempts >= maxAttempts) return false;
+  const at = parseInstant(entry.scheduledFor);
+  if (at === null) return false;
+  if (at > now) return false;
+  const backoff = clamp(opts.backoffMinutes ?? BACKOFF_MINUTES, 0, 24 * 60) * entry.attempts;
+  return now >= at + backoff * 60_000;
+}
+
+/** The entry with its next state applied. Pure: the caller persists the result. */
+export function advance(
+  entry: ScheduledPublish,
+  outcome: { ok: true; at: number } | { ok: false; at: number; error: string },
+  opts: QueueOptions = {},
+): ScheduledPublish {
+  const maxAttempts = clamp(Math.trunc(opts.maxAttempts ?? MAX_ATTEMPTS), 1, 10);
+  if (outcome.ok) {
+    return { ...entry, state: 'published', attempts: entry.attempts + 1, publishedAt: new Date(outcome.at).toISOString(), lastError: undefined };
+  }
+  const attempts = entry.attempts + 1;
+  return {
+    ...entry,
+    attempts,
+    state: attempts >= maxAttempts ? 'failed' : 'planned',
+    lastError: outcome.error.slice(0, 300),
+  };
+}
+
+export interface QueueSummary {
+  planned: number;
+  due: number;
+  missed: number;
+  published: number;
+  failed: number;
+  cancelled: number;
+}
+
+/** Counts for the calendar's header: what is scheduled, what is late, what already went. */
+export function summarize(entries: readonly ScheduledPublish[], now: number): QueueSummary {
+  const summary: QueueSummary = { planned: 0, due: 0, missed: 0, published: 0, failed: 0, cancelled: 0 };
+  const dueIds = new Set(dueEntries(entries, now).map((entry) => entry.id));
+  for (const entry of entries) {
+    summary[entry.state] += 1;
+    if (dueIds.has(entry.id)) summary.due += 1;
+    if (isMissed(entry, now)) summary.missed += 1;
+  }
+  return summary;
+}

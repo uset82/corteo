@@ -519,7 +519,7 @@ This track is deliberately **not** in the main table, so the picking rule above 
 | OP-10 | Brand kit | done | |
 | OP-11 | Reframe polish: dead zone and cheap modes | done | |
 | OP-12 | `write_social_copy` | done | |
-| OP-13 | Scheduled publish | todo | OP-12 |
+| OP-13 | Scheduled publish | doing | OP-12 |
 | OP-14 | `search_catalog` (semantic) | optional | |
 | OP-15 | Performance loop | optional | OP-13 |
 
@@ -608,6 +608,10 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - **OP-08 · caption presets and keyword emphasis — its first bullet is already done by other styles.** The repo ships 22 caption templates; the four "shorts presets" the card asks for would be near-duplicates of `tiktok`, `story`, `bold-outline` and `bili`, and `CaptionStyleMenu` would gain four more items nobody can tell apart. The genuine gap is the second bullet: **keyword emphasis**. `CaptionStyle` carries one `highlightColor` for the *active* word, and word overrides only carry `display_text`, so per-word colour or scale runs for numbers and proper nouns need a new style field, `renderStyles.ts`, and the Remotion caption component to agree — a real change, not a data addition. Either reshape the card (drop the presets, keep keywords) or accept that presets-only is checkbox work.
 - **OP-10 · brand kit — document-level, the biggest of the three.** `BrandKit` on `ProjectDoc` means a persistence round trip and a decision about projects that predate the field; then `apply_brand_kit` over sequences and a "Marca" Settings page. It reuses `update_watermark`, `manage_design_style` and `search_fonts`, but the document change is the cost.
 - **OP-13 · scheduled publish — server-level, medium.** Durable queue in SQLite, a 30 s tick while the dev server runs, idempotent resume, `schedule_publish` / `list_scheduled_publishes` / `cancel_scheduled_publish`, `when` on `publish_to_social`, and a week calendar. It must not weaken the existing preview/confirm gate.
+- **OP-13, the pure half done (2026-10-25).** `shared/publish-schedule.ts` holds the queue decisions that the tool, the tick and the calendar must agree on: `validateSlot` (a past slot is refused, not fired at once), `dueEntries` (planned + past, oldest first), `isMissed` (12 h grace, so "late" is not the same as "lost"), `canAttempt` (backoff × attempts, parked at the cap, `running` locked), `advance` (publish once; retry twice; then park with the error), and `summarize` for the calendar header. Verify: `shared/publish-schedule.verify.ts`.
+- It lives in `shared/` on purpose: the browser (the tool and the calendar) and the Vite server (the tick) import the same file, so there is one definition of "due" — the bug this prevents is a UI that says "late" while the tick says "not yet".
+- **Still to come for OP-13:** the SQLite-backed store + `server/plugins/publish-schedule.ts` with the 30 s tick and idempotent resume; the three MCP tools (`schedule_publish`, `list_scheduled_publishes`, `cancel_scheduled_publish`) and `when` on `publish_to_social`; the week calendar UI. The tick must only execute entries that carry an approved `previewId`, and must reuse the existing `preview_mismatch` refusal.
+- **Gate note:** this touched `shared/`, so `AGENTS.md` requires `npm test` before OP-13 can be called done — not just `verify:affected`.
 - OP-14 (semantic catalog) and OP-15 (performance loop) stay `optional`.
 
 **OP-10 (in progress, step 1 of 4, 2026-10-25).** The brand-kit data layer is in `src/brand/kit.ts`:
