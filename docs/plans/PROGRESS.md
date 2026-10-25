@@ -1,6 +1,6 @@
 # Progress
 
-The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2), `docs/plans/03-deepseek-harness.md` (Plan 3) and `docs/plans/04-claudia-brand.md` (Plan 4). Rules and the work loop: `AGENTS.md`.
+The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2), `docs/plans/03-deepseek-harness.md` (Plan 3) and `docs/plans/04-claudia-brand.md` (Plan 4) and `docs/plans/05-corteo.md` (Plan 5). Rules and the work loop: `AGENTS.md`.
 
 **Picking the next task:** if a task is `doing`, a previous session stopped in the middle of it: resume it first. Otherwise go down the table and take the first task whose status is `todo` and whose "Needs" are all `done`. Change its status to `doing`, finish it, set `done`, and commit this file together with the work.
 
@@ -522,3 +522,64 @@ Executed by the WorkBuddy agent on 2026-10-24 (the Qoder agent was not available
   - The editor has no phone layout upstream: at 390 px the chat is a column about 95 px wide. The plan only asks for the projects page to work at 390 px.
   - The panels the top bar and the chat open (generation tasks, export history, run inspector, settings) are still mostly English: P5-1.
 - Known remainder, deliberately out of scope: the old name still appears in `src/agent/skills/**/SKILL.md`, in `X-OpenChatCut-*` header constants, in `assets/agent/openchatcut-tool-schemas.json` and in the agent tool descriptions in `src/agent/external-tool-shape.ts`. Those are identifiers and agent-facing contract text, not product copy; renaming the headers or the schema path would break the desktop and MCP bridges.
+
+---
+
+## Plan 5 · corteo
+
+Approved 2026-10-25. Task cards: `docs/plans/05-corteo.md`. Its own table, same picking rule: the first `todo` whose "Needs" are `done`, in ID order. Phase A is the identity, Phase B the rename (C-05 lands its gate in the same commit as the sweep), Phase C the Grok Bot door, Phase D the proof.
+
+| ID | Task | Status | Needs |
+|----|------|--------|-------|
+| C-01 | Skin `corteo`: tokens, default, migration | todo | |
+| C-02 | Marks, favicon, tab, fonts | todo | C-01 |
+| C-03 | Wordmark in the chat panel and the projects page | todo | C-02 |
+| C-04 | Identity review against the AI-tells list | todo | C-03 |
+| C-05 | The rename sweep and its gate | todo | |
+| C-06 | Identifiers: scripts, env files, directories, service names | todo | |
+| C-07 | Copy outside the dictionaries, the assistant, the exports | todo | C-05 |
+| C-08 | The repo's own prose (README, AGENTS, CHANGELOG, install guide) | todo | C-06, C-07 |
+| C-09 | One installer, one contract (`CORTEO_*`, `--json`, `--self-test`) | todo | C-06 |
+| C-10 | Non-blocking renders (`render --detach`, `job status/wait`) | todo | |
+| C-11 | The bot template: profile, four skills, build gate | todo | C-09, C-10 |
+| C-12 | "Conectar un bot" card | todo | C-09 |
+| C-13 | The bot run proof on a clean VM | todo | C-11, C-12 |
+| C-14 | End-to-end proof, with the name checked | todo | C-04, C-08, C-13 |
+| C-15 | Release: publish and the note | optional | C-14 |
+
+### Plan 5: decisions
+- The product is **corteo** and Claudia becomes a *client* of the editor (one bot among Grok Bot, Claude Code, Codex). Nothing user-facing names her again; `docs/plans/01`, `02` and `04` keep their text as history and the rename gate skips them.
+- New skin `corteo` replaces `claudia`: the surfaces and text tokens stay (measured, and the chrome must recede), the accent moves from clay `#d97757` to "corte" `#ff4a1f` (5.86:1 on `bg`), and `danger` moves to `#e5484d` so an error never reads as the primary button. A saved `claudia` or `graphite` skin migrates to `corteo` once.
+- The mark is a 20×20 frame split on the 45° diagonal with the halves slid apart, accent up-left, bone down-right. It is the only idea: no star, no streak, no play triangle. **Approved by Carlos on 2026-10-25** from `docs/plans/corteo-brand/preview.html`; the vertical-splice alternative is discarded (at 16 px the two bars read as a separator) and kept there as a record. One geometry at every size: the gap stays 2.83, and if 16 px ever fails it grows, never shrinks.
+- One brand face instead of two: the wordmark joins the display type in DINish Condensed Black (OFL), and TeX Gyre Heros leaves with its licence and its preload.
+- The two installers become one. `install.sh` is the door for a human and for a bot: `--json` prints one object, `--self-test` renders 2 seconds and prints `CORTEO_SELF_TEST=PASS`, and the token reaches stdout only with `--print-token` (the default block carries the token's path, so a bot never puts it in a chat).
+- A corteo bot needs no Claude plan. claudia-bot needs Opus on the VM because `slop` is deep; the editor's `occ` is shallow by design, so the bot's own model drives it. C-13 is the proof of that bet, and if it fails the fallback is fewer, bigger `occ` calls rather than more, smaller ones.
+- A Grok Bot turn dies about 5 minutes into a long tool call, so a render must be startable and forgettable: C-10 (`render --detach` + `job wait`) is a dependency of the bot template, not a nicety.
+- The bot template copies claudia-bot's *mechanics* (recipe → replay, ≤6 KB per skill, ≤80 KB total, "Use when …" descriptions, detached installs, `/workspace` persistence, secrets only through the secret card) and none of its content: no claudia.gallery, no canon, no relay, no `slop`.
+
+## Opus parity (Plan 6)
+Executed 2026-10-25. Task cards and the full record live in `docs/plans/06-opus-parity.md`.
+This table is the current status; nothing here is open except OP-14, which the plan marked
+`optional`.
+
+| ID | Task | Status |
+|----|------|--------|
+| OP-01 | `score_moments` rubric engine | done |
+| OP-02 | `find_highlights` ranks, snaps, dedupes | done |
+| OP-03 | `make_shorts`: source in, clips out | done |
+| OP-04 | Calibration ledger + `calibrate_scores` | done |
+| OP-05 | "Analizar episodio" panel | done |
+| OP-06 | `tighten_speech` | done |
+| OP-07 | `censor_words` | done |
+| OP-08 | Keyword emphasis (reshaped: no new presets) | done |
+| OP-09 | `write_clip_title` | done |
+| OP-10 | Brand kit (type, command, tool, panel) | done |
+| OP-11 | Reframe stabilization | done |
+| OP-12 | `write_social_copy` | done |
+| OP-13 | Scheduled publish (queue, tick, tools, calendar) | done |
+| OP-14 | `search_catalog` (semantic) | optional |
+| OP-15 | Performance loop (`score_performance`) | done |
+
+`main` at `26d36ec`: full gate 215/215, exit 0. The tool count went 123 to 136.
+Known gap: the per-word emphasis rule and its channel are unit-tested, but **no exported frame
+has been compared in pixels**; a render on a machine with Chromium closes it.

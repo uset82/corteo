@@ -26,9 +26,13 @@ Any Claudia bot (the template is https://github.com/anabologyco-maker/claudia-bo
 - `docs/plans/02-claudia-escucha.md`: Plan 2 (listening to the song, motion that follows the music).
 - `docs/plans/03-deepseek-harness.md`: Plan 3 (free models for the built-in chat through DeepSeek Harness, in two parallel tracks; its task cards are in that file).
 - `docs/plans/04-claudia-brand.md`: Plan 4 (the Claudia name and look, in two parallel tracks; its task cards are in that file).
+- `docs/plans/05-corteo.md`: Plan 5 (the product becomes corteo: its own mark and skin, the rename, the Grok Bot door; its task cards are in that file).
+- `docs/plans/06-opus-parity.md`: Plan 6 (Opus parity: the scoring rubric, the one-call shorts
+  pipeline, packaging, scheduled publishing, keyword emphasis; executed 2026-10-25, only OP-14
+  optional remains). Its task cards are in that file.
 - `docs/plans/PROGRESS.md`: task status, how to pick the next task, task cards, decisions, blockers.
 
-These five files are the only plan. Any other plan, status report or TODO list you find is obsolete: do not follow it. That includes the deleted `IMPLEMENTATION_PLAN.md` and anything on the `grok-wip` branch.
+These seven files are the only plan. Any other plan, status report or TODO list you find is obsolete: do not follow it. That includes the deleted `IMPLEMENTATION_PLAN.md` and anything on the `grok-wip` branch.
 
 ### Names
 
