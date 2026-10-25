@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { CorteoMark, CorteoWordmark } from './CorteoMarks';
+import { CorteoLockup, CorteoMark, CorteoWordmark } from './CorteoMarks';
 
 const wordmark = renderToStaticMarkup(<CorteoWordmark size={14} />);
 assert.match(wordmark, />corteo</, '字标必须是真的 "corteo" 小写文字，读屏才读得出一个词');
@@ -24,6 +24,16 @@ const RAW_COLOR = /#[0-9a-fA-F]{3,8}\b|rgba?\(/;
 for (const [label, markup] of [['wordmark', wordmark], ['mark', mark]] as const) {
   assert.doesNotMatch(markup, RAW_COLOR, `${label}: 不能有写死的颜色`);
 }
+
+// The lockup: the mark and the wordmark together, which is what the top bar and the
+// chat header actually render. With one brand face this is the pair that carries the
+// identity, so it gets its own assertions.
+const lockup = renderToStaticMarkup(<CorteoLockup markSize={16} size={13} />);
+assert.match(lockup, /class="cc-lockup"/, '组合用 .cc-lockup');
+assert.match(lockup, /points="2,2 20,2 2,20"/, '组合里有标记');
+assert.match(lockup, /points="22,22 4,22 22,4"/, '组合里有标记的另一半');
+assert.match(lockup, />corteo</, '组合里有字标');
+assert.doesNotMatch(lockup, RAW_COLOR, 'lockup: 不能有写死的颜色');
 
 // One geometry at every size: the two polygons never move, only the box does.
 for (const size of [14, 16, 20, 24]) {
@@ -49,4 +59,4 @@ assert.match(favicon, /#ff4a1f/, 'favicon: accent 值');
 assert.match(favicon, /#f7f3ea/, 'favicon: bone 值');
 assert.match(favicon, /rx="7"/, 'favicon: 圆角');
 
-console.log('CorteoMarks.verify: ok（字标、标记、favicon、标签页与预载）');
+console.log('CorteoMarks.verify: ok（字标、标记、组合、favicon、标签页与预载）');

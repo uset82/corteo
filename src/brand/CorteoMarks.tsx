@@ -36,3 +36,17 @@ export function CorteoMark({ size = 16 }: { size?: number }) {
     </svg>
   );
 }
+
+/** The lockup: the mark, then the wordmark, 9px apart. Used wherever the brand has to
+ * be recognised at a glance rather than merely read — the projects top bar and the chat
+ * header. With one brand face the wordmark alone has no typographic voice of its own (it
+ * shares DINish with the display titles), so the shape carries the identity and the word
+ * only has to say the name. */
+export function CorteoLockup({ markSize = 16, size = 13 }: { markSize?: number; size?: number }) {
+  return (
+    <span className="cc-lockup">
+      <CorteoMark size={markSize} />
+      <CorteoWordmark size={size} />
+    </span>
+  );
+}
