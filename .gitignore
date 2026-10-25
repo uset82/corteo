@@ -91,6 +91,7 @@ MODEL-OPT-PLAN.md
 !/scripts/harness/
 !/scripts/editor-host.mjs
 !/scripts/claudia-local.mjs
+!/scripts/claudia-install.sh
 !/scripts/tunnel.mjs
 !/scripts/sync-mediapipe.mjs
 # Stable regressions are *.verify.* by convention (see the *.check.* rule

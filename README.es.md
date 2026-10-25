@@ -101,6 +101,18 @@ npx playwright install-deps chromium
 
 No le pongas `sudo` delante: con nvm, `sudo` no encuentra `npx`, y el comando ya pide permisos por su cuenta.
 
+## Instalar en tu Claudia (Grok Bot)
+
+Dile a tu Claudia: «Instala corteo y úsalo para crear y editar mis videos en tu máquina.»
+
+Ella ejecuta esto una vez. No pide claves. Al final imprime `CORTEO_SELF_TEST=PASS`.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/scripts/claudia-install.sh | bash
+```
+
+El editor queda en `~/corteo`. Lo arranca con `npm run claudia:local` y lo maneja con `npm run corteo -- ...`. La guía para el bot está en [`skills/corteo/SKILL.md`](skills/corteo/SKILL.md). El túnel de Cloudflare es opcional y solo sirve para abrir el editor en un navegador.
+
 ## Uso
 
 ```bash

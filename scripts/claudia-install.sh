@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+# Idempotent installer for any Claudia bot's Linux VM.
+#
+#   curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/scripts/claudia-install.sh | bash
+#
+# Installs nvm and Node 24 if needed, clones or updates ~/corteo, installs
+# dependencies, turns paid providers off, and renders a 2 second test MP4.
+# No API keys. The free-model harness is optional and is not installed here.
+set -euo pipefail
+umask 022
+
+REPO_URL_DEFAULT="https://github.com/uset82/corteo.git"
+REF_DEFAULT="main"
+NODE_MAJOR="24"
+NVM_VERSION="v0.40.8"
+
+fail_printed=0
+say() { printf '[corteo] %s\n' "$*"; }
+die() { fail_printed=1; printf '[corteo] FAIL: %s\n' "$*" >&2; printf 'CORTEO_SELF_TEST=FAIL\n'; exit 1; }
+on_exit() {
+  local code=$?
+  if (( code != 0 && fail_printed == 0 )); then
+    printf 'CORTEO_SELF_TEST=FAIL\n'
+  fi
+}
+trap on_exit EXIT
+
+script_file=""
+if [[ -n "${BASH_SOURCE[0]:-}" && -f "${BASH_SOURCE[0]}" ]]; then
+  script_file="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+fi
+
+DIR="${CORTEO_DIR:-$HOME/corteo}"
+REF="${CORTEO_REF:-$REF_DEFAULT}"
+if [[ -n "$script_file" ]]; then
+  checkout="$(cd "$(dirname "$script_file")/.." && pwd)"
+  if [[ -f "$checkout/package.json" && -f "$checkout/cli/main.ts" ]]; then
+    ORIGIN="${CORTEO_GIT_URL:-$checkout}"
+  else
+    ORIGIN="${CORTEO_GIT_URL:-$REPO_URL_DEFAULT}"
+  fi
+else
+  ORIGIN="${CORTEO_GIT_URL:-$REPO_URL_DEFAULT}"
+fi
+
+ensure_node() {
+  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+  if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
+    say "installing nvm $NVM_VERSION"
+    curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash
+  fi
+  # shellcheck disable=SC1091
+  . "$NVM_DIR/nvm.sh"
+  if ! command -v node >/dev/null 2>&1 || [[ "$(node -p 'process.versions.node.split(".")[0]')" != "$NODE_MAJOR" ]]; then
+    say "installing Node $NODE_MAJOR"
+    nvm install "$NODE_MAJOR"
+  fi
+  nvm alias default "$NODE_MAJOR" >/dev/null
+  nvm use "$NODE_MAJOR" >/dev/null
+  hash -r
+  say "node $(node -v)"
+}
+
+ensure_repo() {
+  mkdir -p "$(dirname "$DIR")"
+  if [[ -d "$DIR/.git" ]]; then
+    say "updating $DIR"
+    git -C "$DIR" fetch --tags origin "$REF" 2>/dev/null || git -C "$DIR" fetch origin || true
+    if git -C "$DIR" rev-parse --verify "origin/$REF" >/dev/null 2>&1; then
+      git -C "$DIR" checkout "$REF" 2>/dev/null || git -C "$DIR" checkout -B "$REF" "origin/$REF"
+      git -C "$DIR" pull --ff-only origin "$REF" || true
+    fi
+  elif [[ -d "$DIR" && -n "$(ls -A "$DIR" 2>/dev/null || true)" ]]; then
+    die "$DIR exists and is not a git checkout"
+  else
+    say "cloning $ORIGIN into $DIR"
+    if [[ -d "$ORIGIN/.git" ]]; then
+      git clone "$ORIGIN" "$DIR"
+    else
+      git clone --branch "$REF" "$ORIGIN" "$DIR"
+    fi
+  fi
+}
+
+ensure_deps() {
+  cd "$DIR"
+  if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
+    die "ffmpeg and ffprobe must be installed (apt-get install -y ffmpeg)"
+  fi
+  say "ffmpeg $(ffmpeg -version | head -n 1)"
+  if ! command -v nvidia-smi >/dev/null 2>&1; then
+    export ONNXRUNTIME_NODE_INSTALL=skip
+  fi
+  say "npm install"
+  npm install
+  if ! command -v google-chrome >/dev/null 2>&1 \
+    && ! command -v google-chrome-stable >/dev/null 2>&1 \
+    && ! command -v chromium >/dev/null 2>&1 \
+    && ! command -v chromium-browser >/dev/null 2>&1; then
+    say "no system Chrome; installing Playwright Chromium"
+    npx --yes playwright install chromium
+  else
+    say "Chrome is already installed; skipping Playwright browser download"
+  fi
+}
+
+write_env() {
+  local env_file="$DIR/.env.claudia"
+  if [[ ! -f "$env_file" ]]; then
+    cat >"$env_file" <<'EOF'
+# Written by scripts/claudia-install.sh. Paid providers stay off.
+# The free-model harness is optional and is not configured here.
+OPENCHATCUT_PROVIDERS=off
+OPENCHATCUT_DEV_HEAP_MB=6144
+EOF
+    chmod 600 "$env_file"
+  elif ! grep -q '^OPENCHATCUT_PROVIDERS=' "$env_file"; then
+    printf '\nOPENCHATCUT_PROVIDERS=off\n' >>"$env_file"
+  fi
+}
+
+self_test() {
+  local work="$DIR/.claudia-self-test"
+  local clip="$work/clip.mp4"
+  local out="$DIR/claudia-self-test.mp4"
+  rm -rf "$work"
+  mkdir -p "$work"
+  rm -f "$out"
+  say "generating a 2 second test clip"
+  ffmpeg -y -hide_banner -loglevel error \
+    -f lavfi -i "color=c=0x1a1a1a:s=640x360:d=2:r=30" \
+    -f lavfi -i "anullsrc=r=48000:cl=stereo" \
+    -t 2 -c:v libx264 -pix_fmt yuv420p -c:a aac -shortest "$clip"
+  export OPENCHATCUT_PROVIDERS=off
+  export OPENCHATCUT_DATA_DIR="$work/library"
+  export OPENCHATCUT_DEV_HEAP_MB=6144
+  export CC_RENDER_GL=swangle
+  unset OPENCHATCUT_DEV_PROFILE_ID || true
+  cd "$DIR"
+  say "creating a project and importing the clip"
+  npm run --silent corteo -- project new "Claudia self-test" --fps 30 --size 640x360 --json >/dev/null
+  npm run --silent corteo -- media import "$clip" --apply --json >/dev/null
+  local asset
+  asset="$(npm run --silent corteo -- media ls --json | node -e '
+    let raw = "";
+    process.stdin.on("data", (chunk) => { raw += chunk; });
+    process.stdin.on("end", () => {
+      const parsed = JSON.parse(raw);
+      const asset = (parsed.assets || [])[0];
+      if (!asset || !asset.id) process.exit(1);
+      process.stdout.write(asset.id);
+    });
+  ')"
+  say "placing the clip and rendering"
+  npm run --silent corteo -- tools call edit_item \
+    --args "{\"adds\":[{\"type\":\"video\",\"assetId\":\"${asset}\",\"fromFrame\":0}]}" \
+    --apply --json >/dev/null
+  npm run --silent corteo -- render --out "$out" --to 2s --resolution 480p --quiet
+  local duration
+  duration="$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$out")"
+  node -e '
+    const duration = Number(process.argv[1]);
+    if (!Number.isFinite(duration) || duration < 1.5 || duration > 2.5) {
+      console.error("duration out of range: " + process.argv[1]);
+      process.exit(1);
+    }
+  ' "$duration"
+  say "self-test video: $out (${duration}s)"
+}
+
+ensure_node
+ensure_repo
+ensure_deps
+write_env
+if ! self_test; then
+  die "self-test failed"
+fi
+printf 'CORTEO_SELF_TEST=PASS\n'
+printf 'CORTEO_DIR=%s\n' "$DIR"
+printf 'CORTEO_MCP_URL=http://127.0.0.1:5199/api/external-mcp/mcp\n'
+printf 'CORTEO_START=cd %s && npm run claudia:local\n' "$DIR"
+say "PASS"
