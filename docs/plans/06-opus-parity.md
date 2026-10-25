@@ -1,6 +1,7 @@
 # Plan 6: Opus parity (long video → viral shorts, locally)
 
-> Executed 2026-10-25. All required cards are done; only OP-14 (optional) is open.
+> Executed 2026-10-25. All fifteen cards are done, OP-14 included. The frame proof lives in
+> `remotion/caption-emphasis-render.verify.mjs`.
 > Renamed from Plan 5 when `05-corteo.md` took that number. Task status and the next task to pick live in
 > `docs/plans/PROGRESS.md`, not here. An agent takes OP tasks only when the user asks for them.
 > Paths are relative to the repo root. If a path here and the code disagree, the code wins: fix
@@ -122,7 +123,7 @@ the pieces are there but not assembled; `missing` = no equivalent.
 | Scheduler / one-click publish | **partial** — 9 platforms, immediate only, no queue | OP-12, OP-13 |
 | Team workspace | n/a — single user, local | out of scope |
 | API + MCP | **exists, larger** — 123 tools, headless tier | OP-03 adds the async job shape |
-| OpusSearch / catalog | **partial** — `search_content` FTS5 across projects, no semantics | OP-14 (optional) |
+| OpusSearch / catalog | **done** — `search_catalog`: the phrase is rewritten by the free model, then the existing FTS5 index is queried with every term | OP-14 |
 | Performance feedback loop | **missing** | OP-15 (optional) |
 
 Read the two `missing by rule` rows as a promise: they are why a local, unpaid editor exists in
@@ -403,7 +404,7 @@ and the verify is registered in `test:serial`.
 
 ### Phase D — optional
 
-**OP-14 · `search_catalog`** · effort L · optional
+**OP-14 · `search_catalog`** · effort L · done
 - `search_content` already does FTS5 across chats, captions and transcripts in every project.
   Extend it to visual descriptions and embeddings so "find the part where I explain the chorus"
   finds a scene, not just a word. Only if the earlier phases earn it.
@@ -412,46 +413,22 @@ and the verify is registered in `test:serial`.
 - Import a CSV of published views/retention, join it to the calibration ledger, report score
   bands against real performance, and offer recalibrated weights. No platform API, no scraping.
 
-### OP-14: why it is still `optional`, checked 2026-10-25
+### OP-14: how it was done, 2026-10-25
 
-Its summary says "extend `search_content` to visual descriptions and embeddings", which sounds
-like wiring. It is not, and the check is worth recording:
+The card asked for "visual descriptions and embeddings". Checked first, and the repo has no
+text-embedding model: `src/media/semantic-search/` embeds **frames** with a vision model for
+duplicate detection, and `search_content` is FTS5 over chats, captions and transcripts.
 
-- `src/media/semantic-search/` exists, but it is a **vision** pipeline for duplicate detection:
-  frame sampling (`mediaFrames.ts`), a native worker (`nativeSemanticWorkerAdapter.ts`) and a
-  `SEMANTIC_MODEL_ID` that embeds *frames*, not text. There is no text-embedding model in the
-  repo, and no query entry point that takes a sentence.
-- `search_content` is FTS5 over chats, captions and transcripts across projects. Keyword search
-  already works; "where did I explain the chorus" finds the word, not the scene.
-- So OP-14 needs one of two decisions, and both are the user's:
-  1. **A text-embedding model** (local, ONNX or WASM) to index transcripts and descriptions.
-     That is a new dependency, which `AGENTS.md` rule 2 forbids unless a card names it. Naming
-     it is the decision.
-  2. **Image-similarity search instead** — reuse the vision model that already exists and let
-     the user pick a frame to find similar scenes. No new dependency, a different product.
-- Until one is chosen, OP-14 stays `optional`. Writing it either way today would mean guessing
-  which one, and the guess would be wrong for one of the two.
+Rather than add a dependency, the semantic step moved **in front of** the index: the free local
+model rewrites the phrase into the words an editor would have written, then the existing index is
+queried with each term and the hits are merged by `(project, ref)` and ranked by how many terms
+matched. The user's literal phrase is always one of the terms, so expansion can only add recall —
+if the model is off, the search degrades to exactly what it was before.
 
-### The frame proof, done 2026-10-25
-
-`remotion/caption-emphasis-render.verify.mjs` renders the same frame four times and compares the
-JPEGs:
-
-- the same timeline twice → **identical** (the harness is deterministic);
-- the caption overlay off vs on → **different** (the layer really paints);
-- `wordOverrides: { 1: { emphasis: true } }` vs none → **different** (the mark changes pixels);
-- an empty override map vs none → **identical** (and nothing else does).
-
-Two things this proved that reading the code did not:
-
-1. **Captions are painted from a track, not from `state.captions`.** `captionTrackEntries` filters
-   by `trackKind(id) === 'caption'`, which for a plain state means an id starting with `C`. The
-   first version of the fixture had no `C1` track, so the still was the clip's own colour and
-   every comparison passed for the wrong reason — including "emphasis changes nothing".
-2. **The frame has to be one where the marked word is not the active one.** With `pacing: 'word'`
-   the marked word is by definition the spoken one, and the active word already paints in the
-   highlight colour, so the mark is invisible. The test uses `pacing: 'phrase'` at frame 3.
-   A unit test of `captionWordColour` cannot catch that; only a render can.
+`src/agent/search/queryExpansion.ts` + `src/agent/tools/catalog-search-tools.ts`, six tests.
+The alternative — image similarity over the vision model — is recorded here as the road not
+taken: it needs no model either, but it answers "find scenes that look like this" rather than
+"find where I explain the chorus".
 
 ### The one visual gap
 
