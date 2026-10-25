@@ -517,7 +517,7 @@ This track is deliberately **not** in the main table, so the picking rule above 
 | OP-08 | Shorts caption presets, keywords, line breaking | todo | |
 | OP-09 | `write_clip_title` | todo | |
 | OP-10 | Brand kit | todo | |
-| OP-11 | Reframe polish: dead zone and cheap modes | todo | |
+| OP-11 | Reframe polish: dead zone and cheap modes | done | |
 | OP-12 | `write_social_copy` | done | |
 | OP-13 | Scheduled publish | todo | OP-12 |
 | OP-14 | `search_catalog` (semantic) | optional | |
@@ -586,6 +586,13 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - **The mute is a volume-keyframe envelope, not a cut**: `setKeyframe(volume, 0)` on the word and back to the clip's own volume after it, both in one `ctx.commands.batch`. The clip keeps its duration, so every other track stays frame-aligned — which matters in this editor far more than in Opus's per-clip projects. The verify asserts the envelope, the ordering and that `durationInFrames` did not change.
 - Tool `censor_words`: preview lists word/time/mute length and edits nothing; `apply:true` writes it; `extraWords` per speaker; `padMs` for a clipped consonant.
 - **Deviation, recorded:** only the mute mode exists. A bleep tone needs a generated audio asset and burned `****` needs a caption word override; neither is built, and the schema says so instead of pretending the enum has three modes.
+
+**OP-11 (done 2026-10-25, one half deferred on purpose).** Reframe stabilization.
+- `src/reframe/stabilize.ts` ports clipmint's crop math (MIT): hold inside a 12 % dead zone, hold 2 s after a move (minimum shot), and close at most `intervalSeconds / 0.45 s` of the remaining distance per sample. Wired into `auto_reframe` after **both** detection paths (geometry and energy grid), before any keyframe is written; the tool result reports `stabilized: true`.
+- Why it was needed: `detect.ts` already smooths with an EMA, but an EMA moves on *every* sample, so a tracker that jumps between two nearby faces still twitches. This fixes the behaviour between samples, not the detector.
+- clipmint's "speaker-switch margin" is deliberately not ported: it arbitrates between two tracked subjects, and every detector here emits one focal point per sample.
+- **Deferred half, with the reason:** the cheap reframe modes (`centred-black-bars`, `centred-blurred-fill`). `AspectFit` is only `contain | cover` and it is a **sequence-level** property, while `auto_reframe` is clip-level; setting it from the clip tool would silently re-frame every other clip in the sequence. Doing it honestly needs either a sequence-level mode or a per-clip background fill, which is a different task than "port two strings". The plan would rather leave it listed than ship a mode that quietly changes the whole timeline.
+- Verify: `src/reframe/stabilize.verify.ts` — jitter inside the dead zone never moves, a 0.6 jump eases by exactly `interval/ease`, the crop then holds for the minimum shot, output stays inside 0..1, and empty/single/fps-0 inputs are safe. `verify:agent-tools` exits 0 with it registered.
 
 
 ### Opus parity: blockers

@@ -7,6 +7,7 @@ import {
   magnificationForAspect,
 } from '../../reframe/detect';
 import { focalFramesFromGeometry } from '../../reframe/geometry-focus';
+import { stabilizeFocalPath } from '../../reframe/stabilize';
 import { analyzeAssetGeometry } from '../../geometry/visual-geometry';
 
 // auto_reframe — Custom tool.
@@ -127,8 +128,19 @@ export async function execReframeTool(name: string, args: Args, ctx: AgentContex
       return { error: `auto_reframe: 未能从 clip ${item.id} 采到任何帧(视频可能不可读)`, keyframes: 0 };
     }
 
+    // Plan 5 OP-11: dead-zone + minimum-shot stabilization. The detector already smooths with
+    // an EMA, but an EMA still moves on every sample, so a tracker that jumps between two
+    // nearby faces produces a twitch. This holds still inside 12 % of the frame and for 2 s
+    // after each move, and eases the rest (clipmint's crop math, MIT).
+    const stabilized = stabilizeFocalPath(
+      keyframes.map((k) => ({ x: k.focalPointX, y: k.focalPointY })),
+      { fps: state.fps, intervalFrames },
+    );
     clearReframe(ctx, item);
-    for (const k of keyframes) ctx.commands.setReframeKeyframe(item.id, k.frame, k.focalPointX, k.focalPointY, k.magnification);
+    keyframes.forEach((k, index) => {
+      const point = stabilized[index] ?? k;
+      ctx.commands.setReframeKeyframe(item.id, k.frame, point.x, point.y, k.magnification);
+    });
 
     return {
       ok: true,
@@ -138,6 +150,7 @@ export async function execReframeTool(name: string, args: Args, ctx: AgentContex
       dstAspect: Number(dstAspect.toFixed(4)),
       smooth: smooth ?? DEFAULT_REFRAME_SMOOTH,
       source: usedGeometry ? 'geometry' : 'energy-grid',
+      stabilized: true,
       note: usedGeometry
         ? '基于人像/人脸几何生成焦点（无需像素采样）。'
         : magnification <= 1.05
