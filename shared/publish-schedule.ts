@@ -125,6 +125,7 @@ export interface QueueSummary {
   planned: number;
   due: number;
   missed: number;
+  running: number;
   published: number;
   failed: number;
   cancelled: number;
@@ -233,7 +234,7 @@ export function findEntry(
  */
 export function recoverInterrupted(
   entries: readonly ScheduledPublish[],
-  now: number,
+  _now: number,
 ): { entries: ScheduledPublish[]; recovered: number } {
   let recovered = 0;
   const next = entries.map((entry) => {
@@ -251,7 +252,7 @@ export function recoverInterrupted(
 
 /** Counts for the calendar's header: what is scheduled, what is late, what already went. */
 export function summarize(entries: readonly ScheduledPublish[], now: number): QueueSummary {
-  const summary: QueueSummary = { planned: 0, due: 0, missed: 0, published: 0, failed: 0, cancelled: 0 };
+  const summary: QueueSummary = { planned: 0, due: 0, missed: 0, running: 0, published: 0, failed: 0, cancelled: 0 };
   const dueIds = new Set(dueEntries(entries, now).map((entry) => entry.id));
   for (const entry of entries) {
     summary[entry.state] += 1;

@@ -83,7 +83,7 @@ assert.strictEqual(advance(parked, { ok: false, at: NOW, error: 'x' }).state, 'f
 
 // ── 6) summarize(): what the calendar header shows ───────────────────────────────────
 const summary = summarize(queue, NOW);
-assert.deepStrictEqual(summary, { planned: 3, due: 2, missed: 0, published: 1, failed: 0, cancelled: 1 });
+assert.deepStrictEqual(summary, { planned: 3, due: 2, missed: 0, running: 0, published: 1, failed: 0, cancelled: 1 });
 const withMissed = summarize([entry({ scheduledFor: iso(-20 * 60) })], NOW);
 assert.strictEqual(withMissed.missed, 1, 'a slot past the grace window is counted as missed');
 

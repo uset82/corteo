@@ -12,6 +12,7 @@ import { exportPlugin } from "./export.ts";
 import { exportQaPlugin } from "./export-qa.ts";
 import { exportDestinationPlugin } from "./export-destination.ts";
 import { uploadPostPlugin } from "./upload-post.ts";
+import { publishSchedulePlugin } from './publish-schedule.ts';
 import { exportMediaSourcesPlugin } from "./export-media-sources.ts";
 import { exportStagePlugin } from "./export-stage.ts";
 import { uploadPlugin } from "./upload.ts";
@@ -92,6 +93,7 @@ export function serverPlugins(options: { projectStoreHttp?: boolean } = {}): Plu
     exportPlugin(),
     exportDestinationPlugin(),
     uploadPostPlugin(),
+    publishSchedulePlugin(),
     exportMediaSourcesPlugin(),
     exportQaPlugin(),
     uploadMultipartPlugin(),
