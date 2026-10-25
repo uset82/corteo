@@ -27,6 +27,20 @@ export const CREATIVE_SKILL_METADATA: CreativeSkillMetadata[] = [
     ]
   },
   {
+    id: '11111111-1240-4000-8000-000000000099',
+    slug: 'shorts-virales',
+    name: 'Shorts Virales',
+    nameZh: '病毒短视频',
+    summary: '把一条长视频按可解释的评分剪成多个竖屏短视频：先评分、再剪、再包装、最后发布或排期。',
+    scenarios: [
+      'shorts-virales',
+      'clips-virales',
+      'viral-shorts',
+      'convertir-video-largo',
+      'short-form'
+    ]
+  },
+  {
     id: '11111111-1240-4000-8000-000000000004',
     slug: 'long-video-to-shorts',
     name: 'Long Video to Shorts',
