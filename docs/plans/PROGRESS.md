@@ -627,7 +627,12 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - **What it refuses, in sentences a user can act on:** a slot in the past, a slot that does not parse, a missing video, a missing title, no platforms, and — the one that matters most — **a missing `previewId`**. Nothing enters the queue without an approved preview, which is the confirm gate surviving into scheduling.
 - `GET` returns the server clock next to the entries, so the calendar cannot disagree with the tick about what is due.
 - Two type errors of mine surfaced on the way and are fixed: `QueueSummary` did not count `running`, which made `summary[entry.state]` unsound, and `recoverInterrupted` kept an unused clock parameter. Both were hiding behind an incremental `tsc -b` that had nothing to re-emit; the lesson recorded earlier — read the whole output, and do not trust a cached silence — applies again.
-- Still to come: the three MCP tools that call these routes and `when` on `publish_to_social`, plus the week calendar.
+- **OP-13, the tools done (2026-10-25).** `schedule_publish`, `list_scheduled_publishes` and `cancel_scheduled_publish` are thin clients of `/api/publish-schedule`: they add no scheduling logic, so the due/missed/backoff rules stay tested once in `shared/`. 131 → 134 tools.
+- `schedule_publish` requires `when` **with an offset** and a `previewId` from a `publish_to_social` preview the human approved — the confirm gate is enforced by the route, not merely asked for in prose. Its note says plainly that the server publishes even with the editor closed.
+- `list_scheduled_publishes` is classified read-only; scheduling and cancelling are real effects, so they go through approval. The listing returns the **server** clock so the agent compares slots against the right "now".
+- The verify stubs `fetch` and checks the request each tool sends, that a server refusal reaches the agent unchanged (a missing `previewId` is refused with the server's own sentence), that an empty id never reaches the network, and that a 404 on cancel is a normal answer.
+- Same lesson a third time: the request payload must **omit** `description` when absent. The round-trip assertion caught the explicit `undefined` before the route ever saw it.
+- Still to come for OP-13: start the loop with the real uploader in a plugin, `when` on `publish_to_social`, and the week calendar.
 - **Gate note:** this touched `shared/`, so `AGENTS.md` requires `npm test` before OP-13 can be called done — not just `verify:affected`.
 - OP-14 (semantic catalog) and OP-15 (performance loop) stay `optional`.
 
