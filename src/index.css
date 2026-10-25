@@ -192,6 +192,16 @@ button, input, select { font: inherit; }
   user-select: none;
 }
 
+/* The lockup (C-04): the mark, then the wordmark, the approved 9px apart. The
+ * wordmark is nudged up a hair because centring the inline box centres its ascender
+ * space too, which leaves the caps reading low against the square mark. */
+.cc-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.cc-lockup .cc-wordmark { margin-top: -0.05em; }
+
 /* Projects page (docs/plans/04-claudia-brand.md, BD-4). Frameless cards: the
  * thumbnail is the object, the chrome is a hairline. The title is the page's one
  * bold move — condensed black, uppercase — and "Nuevo proyecto" is its one clay

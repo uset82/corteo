@@ -101,7 +101,7 @@ function buildMg(pack: InstalledPack): TimelineState {
     0,
     false,
   );
-  if (!applied) throw new Error('Claudia rejected the MG template');
+  if (!applied) throw new Error('corteo rejected the MG template');
   return draft.getState();
 }
 
@@ -158,7 +158,7 @@ function buildVisual(
     resourcePayload(pack, category),
     item,
   );
-  if (!applied) throw new Error(notice || `Claudia rejected ${category}`);
+  if (!applied) throw new Error(notice || `corteo rejected ${category}`);
   if (category === 'transition') {
     const transition = draft.getState().transitions?.find(
       (candidate) => candidate.incomingItemId === itemId,

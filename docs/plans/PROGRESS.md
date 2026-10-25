@@ -617,7 +617,7 @@ This table is the current status; nothing here is open except OP-14, which the p
 | OP-11 | Reframe stabilization | done |
 | OP-12 | `write_social_copy` | done |
 | OP-13 | Scheduled publish (queue, tick, tools, calendar) | done |
-| OP-14 | `search_catalog` (semantic) | optional |
+| OP-14 | `search_catalog` (query expansion + FTS5) | done |
 | OP-15 | Performance loop (`score_performance`) | done |
 
 `main` at `35b127c` (this section) and green: full gate 215/215, exit 0 at `26d36ec`. The tool count went 123 to 136.
@@ -643,7 +643,7 @@ Two things this proved that reading the code did not:
    highlight colour, so the mark is invisible. The test uses `pacing: 'phrase'` at frame 3.
    A unit test of `captionWordColour` cannot catch that; only a render can.
 
-**OP-14 needs a decision, not code.** The existing `src/media/semantic-search/` embeds
+**OP-14 is done and needed no new dependency.** The existing `src/media/semantic-search/` embeds
 *frames* with a vision model for duplicate detection; there is no text-embedding model and
 `search_content` is FTS5. Making it semantic means either a new local text-embedding
 dependency (rule 2 needs the card to name it) or switching the feature to image-similarity

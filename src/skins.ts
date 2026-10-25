@@ -168,7 +168,7 @@ export const SKINS: readonly SkinDef[] = [
 const STORAGE_KEY = 'cc.skin';
 /** One-shot marker: the rename to corteo already rewrote this profile's saved skin. */
 const CORTEO_MIGRATION_KEY = 'cc.skin.corteo';
-/** Marker left behind by the previous rename (Graphite → Claudia). Cleared once, below. */
+/** Marker left behind by the previous rename (Graphite → the old default). Cleared once, below. */
 const LEGACY_CLAUDIA_MIGRATION_KEY = 'cc.skin.claudia';
 export const DEFAULT_SKIN = 'corteo';
 
@@ -212,7 +212,7 @@ export function applySkin(id: string): void {
  * otherwise never see the new default. Runs once per profile: a skin the user picks again
  * afterwards stays. Any other saved skin (mocha, nord, tokyo, midnight, latte) is kept.
  * The marker key is new on purpose — that is what lets a profile that already ran the
- * Graphite → Claudia migration run this one too. The old marker is cleared so a future
+ * Graphite → old-default migration run this one too. The old marker is cleared so a future
  * rename does not have to guess which generation it is looking at. */
 function migrateToCorteo(): void {
   try {

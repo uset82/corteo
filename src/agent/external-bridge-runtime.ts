@@ -220,7 +220,7 @@ export class ExternalBridgeRuntime {
       confirmationId: guard.guardId,
       tool,
       status: 'pending',
-      note: '这个操作会作用于真实工程。请在 Claudia 中确认后重试同一次调用。',
+      note: '这个操作会作用于真实工程。请在 corteo 中确认后重试同一次调用。',
     };
   }
   async confirmRealTool(guardId: string, allow: boolean): Promise<void> {

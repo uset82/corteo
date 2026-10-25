@@ -610,7 +610,7 @@ function sourceFrameAt(xml: string, name: string, frame: number, fps: number): Q
   };
   const resolveXml = timelineToFcpxml(state, { nleFormat: 'fcp_xml_resolve' });
   assert.ok(resolveXml.includes('colorSpace="1-1-1 (Rec. 709)"'), 'Resolve 变体带 Rec.709');
-  assert.ok(resolveXml.includes('<event name="Claudia Export (Resolve)">'), 'Resolve 事件名');
+  assert.ok(resolveXml.includes('<event name="corteo Export (Resolve)">'), 'Resolve 事件名');
   assert.ok(!timelineToFcpxml(state).includes('colorSpace'), '默认变体不带 colorSpace');
 }
 

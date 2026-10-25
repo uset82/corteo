@@ -11,8 +11,8 @@ import type { TimelineState } from '../editor/types';
 assert.deepStrictEqual(normalizeBrandKit(null), DEFAULT_BRAND_KIT, 'no kit → the defaults, unchanged');
 assert.deepStrictEqual(normalizeBrandKit({}), DEFAULT_BRAND_KIT, 'an empty object is the defaults');
 
-const partial = normalizeBrandKit({ name: '  Claudia  ', captionPreset: 'bili' });
-assert.strictEqual(partial.name, 'Claudia', 'the name is trimmed');
+const partial = normalizeBrandKit({ name: '  Valeria  ', captionPreset: 'bili' });
+assert.strictEqual(partial.name, 'Valeria', 'the name is trimmed');
 assert.strictEqual(partial.captionPreset, 'bili', 'a valid preset is kept');
 assert.deepStrictEqual(partial.palette, DEFAULT_BRAND_KIT.palette, 'missing palette falls back, it does not empty');
 

@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom';
 import { theme } from '../../theme';
 import { Icon } from '../icons';
-import { CorteoMark, CorteoWordmark } from '../../brand/CorteoMarks';
+import { CorteoLockup, CorteoMark } from '../../brand/CorteoMarks';
 import { AgentChangeLogMenu } from './AgentChangeLogMenu';
 import { AgentRunInspector } from './AgentRunInspector';
 import { ChatComposer } from './ChatComposer';
@@ -54,7 +54,7 @@ function ChatHeader({ controller }: { controller: ChatPanelController }) {
   return <div className="cc-chat-header">
     <div className="cc-chat-brand">
       <span className="cc-chat-brand-copy">
-        <CorteoWordmark size={13} />
+        <CorteoLockup />
         <small>{t('编辑助手')}</small>
       </span>
     </div>
