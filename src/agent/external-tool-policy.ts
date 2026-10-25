@@ -23,6 +23,8 @@ const DRAFT_EDIT_TOOL_NAMES = new Set([
   'tighten_speech',
   // Plan 5: writes volume keyframes over the offending words, as one batch.
   'censor_words',
+  // Plan 5: adds a title clip (one command, one undo step).
+  'write_clip_title',
   'manage_design_style',
   'import_timeline',
   'export_jianying_draft',

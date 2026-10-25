@@ -515,7 +515,7 @@ This track is deliberately **not** in the main table, so the picking rule above 
 | OP-06 | `tighten_speech` | done | |
 | OP-07 | `censor_words` | done | |
 | OP-08 | Shorts caption presets, keywords, line breaking | todo | |
-| OP-09 | `write_clip_title` | todo | |
+| OP-09 | `write_clip_title` | done | |
 | OP-10 | Brand kit | todo | |
 | OP-11 | Reframe polish: dead zone and cheap modes | done | |
 | OP-12 | `write_social_copy` | done | |
@@ -593,6 +593,13 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - clipmint's "speaker-switch margin" is deliberately not ported: it arbitrates between two tracked subjects, and every detector here emits one focal point per sample.
 - **Deferred half, with the reason:** the cheap reframe modes (`centred-black-bars`, `centred-blurred-fill`). `AspectFit` is only `contain | cover` and it is a **sequence-level** property, while `auto_reframe` is clip-level; setting it from the clip tool would silently re-frame every other clip in the sequence. Doing it honestly needs either a sequence-level mode or a per-clip background fill, which is a different task than "port two strings". The plan would rather leave it listed than ship a mode that quietly changes the whole timeline.
 - Verify: `src/reframe/stabilize.verify.ts` — jitter inside the dead zone never moves, a 0.6 jump eases by exactly `interval/ease`, the crop then holds for the minimum shot, output stays inside 0..1, and empty/single/fps-0 inputs are safe. `verify:agent-tools` exits 0 with it registered.
+
+**OP-09 (done 2026-10-25).** `write_clip_title`: OpusClip's auto headline. 129 → 130 tools.
+- `src/agent/shorts/headline.ts` holds the prompt and a clamping function (six words, 60 chars, no quotes, no trailing period, word-boundary truncation) plus a fallback that uses the clip's own opening sentence. Verify: `src/agent/shorts/headline.verify.ts`.
+- The tool takes a word range (so the line is about that moment, not the whole source), `maxWords`, `fontSize`, `seconds`, and `apply:false` for a wording-only preview.
+- **One undo step by construction:** it calls `addTextClip` once — a single command — instead of `addTextClip` + `setItemTransform` under a history gesture. The verify checks the created clip (kind `text`, the wording, `startFrame`, 4 s at 30 fps, weight 800, on a track above the source) and that a preview creates nothing.
+- **Deviation, recorded:** placement is the text track's default (centred). Moving the headline into the caption safe zone needs the geometry pass that `place_graphics_in_safe_zone` owns, and doing it here would have meant either a second command (two undo steps) or a duplicated safe-zone calculation. The card's "place it in the caption safe zone" is therefore not built; the headline sits above the source and below nothing.
+- Gates: catalog regenerated, lint 0 errors, `verify:agent-tools` and `verify:mcp` exit 0.
 
 
 ### Opus parity: blockers
