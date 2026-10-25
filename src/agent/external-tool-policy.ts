@@ -17,6 +17,8 @@ const DRAFT_EDIT_TOOL_NAMES = new Set([
   'set_aspect_ratio', 'manage_timelines', 'edit_track', 'apply_script',
   'edit_item', 'manage_effects', 'edit_captions', 'update_watermark',
   'manage_markers', 'apply_caption_avoidance', 'place_graphics_in_safe_zone', 'auto_reframe',
+  // Plan 5: one call that cuts sequences, turns captions on and may reframe — all draft edits.
+  'make_shorts',
   'manage_design_style',
   'import_timeline',
   'export_jianying_draft',

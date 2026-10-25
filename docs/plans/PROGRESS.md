@@ -482,7 +482,7 @@ This track is deliberately **not** in the main table, so the picking rule above 
 |----|------|--------|-------|
 | OP-01 | `score_moments`: rubric engine | done | |
 | OP-02 | `find_highlights` ranks, snaps, dedupes | done | OP-01 |
-| OP-03 | `make_shorts`: source in, clips out | todo | OP-02 |
+| OP-03 | `make_shorts`: source in, clips out | done | OP-02 |
 | OP-04 | Calibration ledger | todo | OP-01 |
 | OP-05 | "Analizar episodio" panel | todo | OP-03 |
 | OP-06 | `tighten_speech` | todo | |
@@ -514,6 +514,15 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - New args: `minScore` (0-99, default 0, so existing callers are unchanged), `score` (default true; false skips the model for a fast cut) and `genre`. Every short now carries `score`, `subscores`, `reason` and `risks`; dropped moments come back in `rejected[]` with `por debajo de minScore N`, and `scoreModel` says whether the model was used.
 - Selection still decides the spans; scoring only ranks and filters. `highlight-tool.verify.ts` keeps its original assertions and adds score/sub-score checks plus a `minScore: 99` case that produces zero sequences and two reported rejections.
 - Cost: one extra model call per `find_highlights` when scoring is on (`score:false` opts out).
+
+**OP-03 (done 2026-10-25).** `make_shorts`: one call from a transcribed source to finished clips. 124 → 125 tools.
+- The analysis was extracted to `src/agent/shorts/analyze.ts`, and both `score_moments` and `make_shorts` call it. That was the point of the card: the pipeline may compose, it may not re-implement.
+- Composition only: `assembleShorts` (the `find_highlights` cut path), `edit_captions` (`action=enable`, then optional `motionPreset`), `auto_reframe`, `submit_render_job`. Nothing new renders, crops or paginates captions.
+- Args: `count`, `minSeconds`/`maxSeconds`, `ratio`, `minScore` (default 55), `direction`, `topic`, `genre`, `captionsPreset`, `captionMotion`, `reframe` (default true), `render` (`none` | `previews`).
+- Returns per clip: `sequenceId`, `startFrame`/`endFrame`, `seconds`, `score`, `subscores`, `reason`, `risks`, `captions` (`applied`/`failed`/`skipped`), `reframe` (`applied`/`skipped`), and `renderId` when a preview was queued; plus `alternates`, `belowThreshold` and the rejected list.
+- **Deviation from the card, recorded:** there is no new `analysisId` job store. Each clip's render is an existing render job, polled with `track_export`; inventing a second job system would have duplicated the queue, the recovery and the UI. The clip-level work is synchronous, which is honest for 5–10 clips.
+- Degradation: no DOM → `reframe: 'skipped'` and a Spanish note; a caption failure never fails the run; `minScore` above every score returns `count: 0` with a note and creates nothing.
+- Verify: `src/agent/tools/make-shorts-tools.verify.ts` covers the happy path, reframe-without-DOM, captions on, the below-threshold path and the two error paths.
 
 
 ### Opus parity: blockers
