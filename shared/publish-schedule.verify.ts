@@ -124,10 +124,12 @@ const payload = serializeSchedulePayload([good]);
 assert.strictEqual(payload.version, 1);
 assert.strictEqual(payload.entries.length, 1);
 
-const roundTrip = parseSchedulePayload(JSON.parse(JSON.stringify(payload)));
+const withRequest = entry({ id: "req", request: { platforms: ["tiktok"], title: "Clip", aiGenerated: false } });
+const roundTrip = parseSchedulePayload(JSON.parse(JSON.stringify(serializeSchedulePayload([withRequest]))));
 assert.strictEqual(roundTrip.version, 1);
 assert.strictEqual(roundTrip.dropped, 0);
-assert.deepStrictEqual(roundTrip.entries, [good], 'a stored entry survives serialization exactly');
+assert.deepStrictEqual(roundTrip.entries, [withRequest], 'a stored entry survives serialization exactly, request included');
+assert.deepStrictEqual(roundTrip.entries[0].request, withRequest.request, 'the publish request is preserved verbatim');
 
 const messy = parseSchedulePayload({
   version: 1,

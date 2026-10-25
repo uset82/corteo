@@ -23,6 +23,13 @@ export interface ScheduledPublish {
   description?: string;
   /** The approved preview this entry is allowed to publish (the confirm gate's token). */
   previewId: string;
+  /**
+   * The exact publish request the preview was issued for. The preview id is derived from it
+   * (platforms, title, description, privacy flags, aiGenerated), so a queue that kept only the
+   * fields the calendar shows could never re-derive the id it must prove. Opaque here on
+   * purpose: this module does not know the upload shape.
+   */
+  request?: Record<string, unknown>;
   state: PublishState;
   attempts: number;
   lastError?: string;
@@ -174,6 +181,9 @@ function parseEntry(raw: unknown): ScheduledPublish | null {
   // Optional fields are omitted, never set to undefined: a stored entry has to round-trip to
   // exactly the object that was written, and `{ lastError: undefined }` is not `{}`.
   if (typeof o.description === 'string') entry.description = o.description.slice(0, 5000);
+  if (o.request && typeof o.request === 'object' && !Array.isArray(o.request)) {
+    entry.request = { ...(o.request as Record<string, unknown>) };
+  }
   if (typeof o.lastError === 'string') entry.lastError = o.lastError.slice(0, 300);
   if (typeof o.publishedAt === 'string' && parseInstant(o.publishedAt) !== null) entry.publishedAt = o.publishedAt;
   return entry;
@@ -197,7 +207,14 @@ export function parseSchedulePayload(value: unknown): { entries: ScheduledPublis
 }
 
 export function serializeSchedulePayload(entries: readonly ScheduledPublish[]): SchedulePayload {
-  return { version: SCHEDULE_PAYLOAD_VERSION, entries: entries.map((entry) => ({ ...entry, platforms: [...entry.platforms] })) };
+  return {
+    version: SCHEDULE_PAYLOAD_VERSION,
+    entries: entries.map((entry) => ({
+      ...entry,
+      platforms: [...entry.platforms],
+      ...(entry.request ? { request: { ...entry.request } } : {}),
+    })),
+  };
 }
 
 /** Insert or replace by id, keeping the list ordered by slot so the calendar reads naturally. */
