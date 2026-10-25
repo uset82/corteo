@@ -1,6 +1,6 @@
 # Progress
 
-The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2), `docs/plans/03-deepseek-harness.md` (Plan 3) and `docs/plans/04-claudia-brand.md` (Plan 4). Rules and the work loop: `AGENTS.md`.
+The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2), `docs/plans/03-deepseek-harness.md` (Plan 3), `docs/plans/04-claudia-brand.md` (Plan 4) and `docs/plans/05-opus-parity.md` (Plan 5). Rules and the work loop: `AGENTS.md`.
 
 **Picking the next task:** if a task is `doing`, a previous session stopped in the middle of it: resume it first. Otherwise go down the table and take the first task whose status is `todo` and whose "Needs" are all `done`. Change its status to `doing`, finish it, set `done`, and commit this file together with the work.
 
@@ -471,3 +471,35 @@ Executed by the WorkBuddy agent on 2026-10-24 (the Qoder agent was not available
   - The editor has no phone layout upstream: at 390 px the chat is a column about 95 px wide. The plan only asks for the projects page to work at 390 px.
   - The panels the top bar and the chat open (generation tasks, export history, run inspector, settings) are still mostly English: P5-1.
 - Known remainder, deliberately out of scope: the old name still appears in `src/agent/skills/**/SKILL.md`, in `X-OpenChatCut-*` header constants, in `assets/agent/openchatcut-tool-schemas.json` and in the agent tool descriptions in `src/agent/external-tool-shape.ts`. Those are identifiers and agent-facing contract text, not product copy; renaming the headers or the schema path would break the desktop and MCP bridges.
+
+---
+
+## Opus parity track (OP)
+Plan: `docs/plans/05-opus-parity.md` (written 2026-10-25, not started). Its task cards are in that file.
+This track is deliberately **not** in the main table, so the picking rule above never returns it: take an OP task only when the user asks for Opus-parity work.
+
+| ID | Task | Status | Needs |
+|----|------|--------|-------|
+| OP-01 | `score_moments`: rubric engine | todo | |
+| OP-02 | `find_highlights` ranks, snaps, dedupes | todo | OP-01 |
+| OP-03 | `make_shorts`: source in, clips out | todo | OP-02 |
+| OP-04 | Calibration ledger | todo | OP-01 |
+| OP-05 | "Analizar episodio" panel | todo | OP-03 |
+| OP-06 | `tighten_speech` | todo | |
+| OP-07 | `censor_words` | todo | |
+| OP-08 | Shorts caption presets, keywords, line breaking | todo | |
+| OP-09 | `write_clip_title` | todo | |
+| OP-10 | Brand kit | todo | |
+| OP-11 | Reframe polish: dead zone and cheap modes | todo | |
+| OP-12 | `write_social_copy` | todo | |
+| OP-13 | Scheduled publish | todo | OP-12 |
+| OP-14 | `search_catalog` (semantic) | optional | |
+| OP-15 | Performance loop | optional | OP-13 |
+
+### Opus parity: decisions
+- Trend is absent from the score (`trend: null`): there is no local trend feed, and a fabricated dimension would be worse than a missing one.
+- Chapters before candidates: segment by transcript topic shift crossed with `detect_scenes`, then score inside each chapter.
+- Forking is off the table for all sixteen reviewed projects (Python-first or non-OSI licences); nine MIT artefacts are ported instead, listed in the plan, section 5.2.
+
+### Opus parity: blockers
+None.
