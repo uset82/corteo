@@ -51,6 +51,11 @@ export const MAKE_SHORTS_TOOL_SCHEMAS: AgentToolSchema[] = [
           description: 'Apply the weights learned from this profile\'s approve/reject decisions (default false). '
             + 'Needs 12 decisions; otherwise it is a no-op.',
         },
+        applyBrandKit: {
+          type: 'boolean',
+          description: 'Inherit the project\'s brand kit (Plan 5, OP-10): its caption preset and motion become '
+            + 'the defaults for this batch, unless captionsPreset / captionMotion override them. Default false.',
+        },
         captionsPreset: { type: 'string', description: 'Caption preset to turn on for every clip (omit to leave captions untouched).' },
         captionMotion: {
           type: 'string',

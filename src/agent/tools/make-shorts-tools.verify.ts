@@ -177,5 +177,38 @@ setRubricScorer(async (candidates) => ({
   assert.strictEqual(res.clips[0].startFrame, 0, 'the clamp starts at the first word');
 }
 
+// ── 8) The project's brand kit supplies the caption defaults ──────────────────────────
+{
+  const { draft, ctx } = freshContext();
+  draft.commands.setBrandKit({ name: 'Canal', captionPreset: 'tiktok', captionMotion: 'pop' });
+  const res = await execMakeShortsTool('make_shorts', {
+    count: 1, minSeconds: 1, maxSeconds: 4, minScore: 0, reframe: false, applyBrandKit: true,
+  }, ctx) as Result;
+  assert.strictEqual(res.ok, true);
+  assert.strictEqual(res.clips[0].captions, 'applied', 'the kit turns captions on without being asked twice');
+}
+
+// ── 9) An explicit preset still beats the kit ────────────────────────────────────────
+{
+  const { draft, ctx } = freshContext();
+  draft.commands.setBrandKit({ name: 'Canal', captionPreset: 'tiktok' });
+  const res = await execMakeShortsTool('make_shorts', {
+    count: 1, minSeconds: 1, maxSeconds: 4, minScore: 0, reframe: false,
+    applyBrandKit: true, captionsPreset: 'plain',
+  }, ctx) as Result;
+  assert.strictEqual(res.ok, true);
+  assert.strictEqual(res.clips[0].captions, 'applied', 'an explicit preset is applied, not ignored');
+}
+
+// ── 10) Without the flag the kit is not used (captions stay off) ─────────────────────
+{
+  const { draft, ctx } = freshContext();
+  draft.commands.setBrandKit({ name: 'Canal', captionPreset: 'tiktok' });
+  const res = await execMakeShortsTool('make_shorts', {
+    count: 1, minSeconds: 1, maxSeconds: 4, minScore: 0, reframe: false,
+  }, ctx) as Result;
+  assert.strictEqual(res.clips[0].captions, 'skipped', 'applyBrandKit defaults to false');
+}
+
 setRubricScorer(null);
 console.log('make-shorts-tools.verify: ok');

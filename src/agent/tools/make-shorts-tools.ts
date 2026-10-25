@@ -1,6 +1,7 @@
 export { MAKE_SHORTS_TOOL_SCHEMAS, MAKE_SHORTS_TOOL_NAMES } from './schemas/make-shorts-tools';
 import type { AgentContext } from '../context';
 import { ASPECT_PRESETS } from '../../editor/types';
+import { brandKitOf } from '../../brand/kit';
 import { analyzeMoments } from '../shorts/analyze';
 import { computeCalibration } from '../shorts/calibration';
 import { PUBLISH_THRESHOLD } from '../shorts/score';
@@ -159,8 +160,12 @@ export async function execMakeShortsTool(name: string, args: Args, ctx: AgentCon
   const minMs = Math.round(minSeconds * 1000);
   const maxMs = Math.round(maxSeconds * 1000);
   const minScore = clampScore(args.minScore, PUBLISH_THRESHOLD);
-  const captionsPreset = typeof args.captionsPreset === 'string' && args.captionsPreset.trim() ? args.captionsPreset.trim() : '';
-  const captionMotion = typeof args.captionMotion === 'string' ? args.captionMotion : undefined;
+  // The project's kit supplies defaults; an explicit argument always wins.
+  const kit = args.applyBrandKit === true ? brandKitOf(ctx.getDoc()) : null;
+  const captionsPreset = typeof args.captionsPreset === 'string' && args.captionsPreset.trim()
+    ? args.captionsPreset.trim()
+    : (kit?.captionPreset ?? '');
+  const captionMotion = typeof args.captionMotion === 'string' ? args.captionMotion : kit?.captionMotion;
   const wantReframe = args.reframe !== false;
   const wantRender = args.render === 'previews';
 
