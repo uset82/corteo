@@ -8,7 +8,9 @@ import {
   loadSchedule,
   removeScheduled,
 } from '../publish/schedule-store.ts';
-import type { PublishRequest } from './upload-post.ts';
+import { createScheduler } from '../publish/scheduler.ts';
+import { publishToUploadPost, type PublishRequest } from './upload-post.ts';
+import { uploadPostConfig } from './upload-post-client.ts';
 
 /**
  * HTTP surface for the scheduled-publish queue (Plan 5, OP-13).
@@ -131,6 +133,34 @@ export async function cancelScheduled(id: string, opts: CommandOptions = {}): Pr
     : { status: 404, body: { error: 'No existe esa publicación programada.' } };
 }
 
+/**
+ * Publish one queue entry through the same path `publish_to_social` uses. The request stored
+ * on the entry is the one the human approved, and `confirm: true` with that `previewId` is
+ * what the upload route expects — the queue is not a second publishing mechanism.
+ *
+ * `unconfirmed_delivery` counts as a failure on purpose: the ledger makes a retry a
+ * reconciliation, not a second upload, so trying again is safe and keeping the entry planned
+ * is more honest than claiming it published.
+ */
+export async function publishScheduledEntry(
+  entry: ScheduledPublish,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const request = entry.request as unknown as PublishRequest | undefined;
+  if (!request) {
+    return { ok: false, error: 'La entrada no guarda la petición original; vuelve a programarla desde publish_to_social.' };
+  }
+  const outcome = await publishToUploadPost(uploadPostConfig(), {
+    ...request,
+    confirm: true,
+    previewId: entry.previewId,
+  });
+  if (outcome.phase === 'admitted' || outcome.phase === 'resumed') return { ok: true };
+  if (outcome.phase === 'unconfirmed_delivery') {
+    return { ok: false, error: 'Upload-Post no confirmó la subida; se reintentará sin volver a subirla.' };
+  }
+  return { ok: false, error: 'La publicación no se confirmó.' };
+}
+
 async function readBody(req: IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = [];
   for await (const chunk of req) chunks.push(Buffer.from(chunk));
@@ -146,6 +176,14 @@ export function publishSchedulePlugin(): Plugin {
   return {
     name: 'openchatcut-publish-schedule',
     configureServer(server) {
+      const scheduler = createScheduler({
+        publish: publishScheduledEntry,
+        intervalMs: 30_000,
+        onError: (error) => console.error('[publish-schedule] tick failed:', error),
+      });
+      scheduler.start();
+      server.httpServer?.on('close', () => scheduler.stop());
+
       server.middlewares.use('/api/publish-schedule', async (req: IncomingMessage, res: ServerResponse) => {
         const url = new URL(req.url ?? '/', 'http://localhost');
         try {
