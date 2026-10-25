@@ -1,7 +1,7 @@
 /**
  * BQ-1 gate: the old product name is out of the text.
  *
- * The fork is Claudia. The name `OpenChatCut` survives in exactly two places,
+ * The product is corteo. The name `OpenChatCut` survives in exactly two places,
  * both deliberate:
  *
  *  1. the five desktop-updater strings, which describe the upstream release the
@@ -144,11 +144,13 @@ function dictFiles(dir: string): string[] {
 }
 
 const offenders: { file: string; text: string }[] = [];
+let corteoMentions = 0;
 let claudiaMentions = 0;
 
 for (const locale of ['en', 'es', 'it', 'ru', 'zh']) {
   for (const file of dictFiles(`src/i18n/dict/${locale}`)) {
     const source = read(file);
+    corteoMentions += (source.match(/corteo/g) ?? []).length;
     claudiaMentions += (source.match(/Claudia/g) ?? []).length;
     for (const literal of quoted(source)) {
       const text = body(literal);
@@ -175,19 +177,21 @@ for (const key of UPDATER_KEYS) {
 for (const value of UPDATER_EN) assert.ok(enSource.includes(value), `en 更新器译文变了：${value}`);
 for (const value of UPDATER_RU) assert.ok(ruSource.includes(value), `ru 更新器译文变了：${value}`);
 
-// A sweep that renames the updater keys leaves dead keys behind: the call site
-// still asks for the old string, so the notice would render the raw key.
+// A sweep that renames the updater keys leaves dead keys behind, and these five must
+// not take the product's name either: the notice would claim corteo is installing itself.
 for (const file of dictFiles('src/i18n/dict')) {
   const source = read(file);
   assert.doesNotMatch(
     source,
-    /发现 Claudia|下载 Claudia|Claudia 已下载|安装 Claudia/,
-    `${file} 把更新器键改成了 Claudia，调用方仍然用旧键，会退化成原始键名`,
+    /发现 corteo|下载 corteo|corteo 已下载|安装 corteo/,
+    `${file} 把更新器键改成了 corteo，那条通知会声称 corteo 在安装自己`,
   );
 }
 
-// Every locale that carries product copy names the product.
-assert.ok(claudiaMentions >= 30, `字典里 Claudia 出现次数太少（${claudiaMentions}），改名可能没铺开`);
+// Every locale that carries product copy names the product, and none of them names the
+// old one. The floor is what caught a half-finished sweep the first time.
+assert.ok(corteoMentions >= 30, `字典里 corteo 出现次数太少（${corteoMentions}），改名可能没铺开`);
+assert.equal(claudiaMentions, 0, `字典里还有 ${claudiaMentions} 处旧名字`);
 
 // ── 2. the strings outside the dictionaries ─────────────────────────────────
 
@@ -203,23 +207,24 @@ const COPY_FILES = [
 ];
 
 for (const file of COPY_FILES) {
-  const hits = quoted(read(file))
-    .map(body)
-    .filter((text) => text.includes(OLD));
+  const literals = quoted(read(file)).map(body);
+  const hits = literals.filter((text) => text.includes(OLD));
   assert.deepEqual(hits, [], `${file} 还有面向用户的上游名：${hits.join(' / ')}`);
+  const stale = literals.filter((text) => text.includes('Claudia'));
+  assert.deepEqual(stale, [], `${file} 还有旧名字：${stale.join(' / ')}`);
 }
 
 // The product-help skill's identity lines. Its body may still quote upstream's
 // feature names, but the title and the description say who the product is.
 const productHelp = read('src/agent/skills/product-help/SKILL.md');
-assert.match(productHelp, /^# Claudia Product Help$/m, 'product-help 的标题应为 Claudia');
-assert.match(productHelp, /^ {2}Claudia product knowledge/m, 'product-help 的描述应介绍 Claudia');
+assert.match(productHelp, /^# corteo Product Help$/m, 'product-help 的标题应为 corteo');
+assert.match(productHelp, /^ {2}corteo product knowledge/m, 'product-help 的描述应介绍 corteo');
 assert.doesNotMatch(productHelp, /OpenChatCut/, 'product-help 的标识行里还有上游名');
 
 // ── 3. exported names ───────────────────────────────────────────────────────
 
 const fcpxml = quoted(read('src/export/fcpxml.ts')).map(body);
-for (const name of ['Claudia Timeline', 'Claudia Export', 'Claudia Export (Resolve)']) {
+for (const name of ['corteo Timeline', 'corteo Export', 'corteo Export (Resolve)']) {
   assert.ok(fcpxml.includes(name), `FCPXML 导出名应为 ${name}`);
 }
 assert.ok(
@@ -228,7 +233,7 @@ assert.ok(
 );
 
 const capcut = read('server/external-agent/jianying-export.ts');
-assert.match(capcut, /`Claudia-\$\{/, '剪映草稿名应为 Claudia-<date>');
+assert.match(capcut, /`corteo-\$\{/, '剪映草稿名应为 corteo-<date>');
 assert.doesNotMatch(capcut, /`OpenChatCut-/, '剪映草稿名里还有上游名');
 
 // ── 4. the chat's expand and collapse labels ────────────────────────────────
@@ -245,4 +250,4 @@ for (const [file, [show, hide]] of Object.entries(CHAT_LABELS)) {
   assert.ok(source.includes(`'收起助手': '${hide}'`), `${file} 的收起文案应为 ${hide}`);
 }
 
-console.log(`brand-text.verify: ok（${claudiaMentions} 处 Claudia，上游名只剩 ${ALLOWED.size} 条更新器文案）`);
+console.log(`brand-text.verify: ok（${corteoMentions} 处 corteo，0 处旧名，上游名只剩 ${ALLOWED.size} 条更新器文案）`);

@@ -106,7 +106,7 @@ export function BrandKitSection({ kit, onSave }: BrandKitSectionProps) {
           {saved && !dirty ? t('已保存') : t('保存品牌')}
         </button>
         <span style={{ fontSize: 11, color: theme.textDim }}>
-          {t('Claudia puede aplicar esta marca a todos los clips')}
+          {t('corteo puede aplicar esta marca a todos los clips')}
         </span>
       </div>
     </section>

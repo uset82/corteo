@@ -1,4 +1,4 @@
-// Spanish copy for the Claudia brand work (Plan 4). dictRegistry spreads this over
+// Spanish copy for the corteo brand work (Plan 4). dictRegistry spreads this over
 // es/index.ts, so the BD track never edits that file: sentence case, "tú", plain
 // verbs — "Nuevo proyecto", not "Nuevo Proyecto".
 export default {

@@ -1,7 +1,7 @@
 ---
 name: videoclip-musical
 description: |
-  Claudia's end-to-end workflow for a music video or lyric video from a song the user owns: word-timed lyrics, the beat map, one visual per lyric line, karaoke captions, versions to compare, and the final export with a quality check.
+  corteo's end-to-end workflow for a music video or lyric video from a song the user owns: word-timed lyrics, the beat map, one visual per lyric line, karaoke captions, versions to compare, and the final export with a quality check.
   Use when the user asks for a videoclip, lyric video or a montage cut to the song («hazme un videoclip», «video con la letra», «montaje con la canción», «que siga el ritmo»).
 user-invocable: true
 ---
@@ -15,7 +15,7 @@ This skill is the order of operations, not a second engine: every step calls an 
 - The song has to be a media-pool asset or a clip on an audio track. If it is not, ask for the file; do not download or generate music.
 - `probe_media` first: duration, sample rate, stream presence. When the song sits inside a video, note which item carries it.
 - Ask for the target ratio (16:9 for YouTube, 9:16 for Reels/TikTok), whether the user already has footage or stills per line, and whether the lyrics are known. One short round; if the answer stays vague, choose 16:9 and the user's own pool.
-- With `OPENCHATCUT_PROVIDERS=off` (Claudia's deployment) the generation and stock tools are hidden. Work with the user's media and never promise generated images.
+- With `OPENCHATCUT_PROVIDERS=off` (corteo's deployment) the generation and stock tools are hidden. Work with the user's media and never promise generated images.
 
 ## 1. Song to lyrics with word timings
 

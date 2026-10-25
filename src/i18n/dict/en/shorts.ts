@@ -28,7 +28,7 @@ export default {
   '安全边距': 'Safe margin',
   '保存品牌': 'Save brand',
   '已保存': 'Saved',
-  'Claudia puede aplicar esta marca a todos los clips': 'Claudia can apply this brand to every clip',
+  'corteo puede aplicar esta marca a todos los clips': 'corteo can apply this brand to every clip',
   'Programar publicaciones': 'Schedule posts',
   'Nada programado': 'Nothing scheduled',
   'Actualizar': 'Refresh',

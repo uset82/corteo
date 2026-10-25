@@ -5,7 +5,7 @@ export const EMPHASIS_TOOL_SCHEMAS: AgentToolSchema[] = [
     name: 'emphasize_keywords',
     description:
       'Emphasise the words that carry the numbers: figures, names and shouted words get the caption highlight colour, '
-      + 'so the eye lands on "300" and "Claudia" instead of on every adjective. This is OpusClip\u2019s AI Keywords, '
+      + 'so the eye lands on "300" and "Valeria" instead of on every adjective. This is OpusClip\u2019s AI Keywords, '
       + 'decided from the transcript rather than guessed by a model. '
       + 'Works on the caption data of the active timeline; one undo step. Call with apply:false first when the user has not '
       + 'seen the list \u2014 it returns the candidates and their reasons and changes nothing. '

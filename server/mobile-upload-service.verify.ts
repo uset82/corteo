@@ -28,7 +28,7 @@ try {
   assert.equal(page.status, 200);
   assert.match(page.headers.get('content-security-policy') ?? '', /default-src 'self'/);
   const pageHtml = await page.text();
-  assert.match(pageHtml, /发送素材到 Claudia/);
+  assert.match(pageHtml, /发送素材到 corteo/);
   assert.doesNotMatch(pageHtml, /OpenChatCut/);
 
   const pngBytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -79,15 +79,15 @@ try {
   assert.equal(heic.status, 200);
 
   const englishSession = await service.createSession('en');
-  assert.match(await (await fetch(englishSession.urls[0]!)).text(), /Send media to Claudia/);
+  assert.match(await (await fetch(englishSession.urls[0]!)).text(), /Send media to corteo/);
   const italianSession = await service.createSession('it');
-  assert.match(await (await fetch(italianSession.urls[0]!)).text(), /Send media to Claudia/);
+  assert.match(await (await fetch(italianSession.urls[0]!)).text(), /Send media to corteo/);
   const russianSession = await service.createSession('ru');
-  assert.match(await (await fetch(russianSession.urls[0]!)).text(), /Отправить медиафайлы в Claudia/);
+  assert.match(await (await fetch(russianSession.urls[0]!)).text(), /Отправить медиафайлы в corteo/);
   const spanishSession = await service.createSession('es');
   const spanishPage = await (await fetch(spanishSession.urls[0]!)).text();
   assert.match(spanishPage, /<html lang="es">/);
-  assert.match(spanishPage, /Enviar medios a Claudia/);
+  assert.match(spanishPage, /Enviar medios a corteo/);
   assert.match(spanishPage, /"sent":"Enviado"/);
 
   const tooLarge = await fetch(`${session.urls[0]}/upload?name=large.mp4`, {

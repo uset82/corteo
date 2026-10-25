@@ -1,7 +1,7 @@
 // Italian translations for the external agent (MCP) guide.
 export default {
   '外部 Agent 接入 (MCP)': 'Accesso Agent esterno (MCP)',
-  'Claudia 暴露一个 Streamable HTTP MCP 端点。Claude Code / Codex / Cursor 等外部 Agent 接入后,与内置 Agent 共用同一套编辑工具,可直接读写当前工程。': 'Claudia espone un endpoint MCP HTTP streamable. Agent esterni come Claude Code, Codex e Cursor condividono gli stessi strumenti dell’Agent integrato e possono leggere/modificare il progetto corrente.',
+  'corteo 暴露一个 Streamable HTTP MCP 端点。Claude Code / Codex / Cursor 等外部 Agent 接入后,与内置 Agent 共用同一套编辑工具,可直接读写当前工程。': 'corteo espone un endpoint MCP HTTP streamable. Agent esterni come Claude Code, Codex e Cursor condividono gli stessi strumenti dell’Agent integrato e possono leggere/modificare il progetto corrente.',
   '端点地址': 'Endpoint',
   '内置 Agent 与外部 MCP': 'Agent integrato e MCP esterno',
   '内置 Agent 会先生成可预览的修改提案，由你应用或拒绝；外部 MCP 使用独立编辑会话，manual 模式等待审核，auto 模式在 review 时直接应用。两者都只通过 EditorCore 命令修改工程。': 'L’Agent integrato crea prima una proposta verificabile da applicare o rifiutare. MCP esterno usa una sessione separata: manual attende revisione, auto applica in review. Entrambi modificano solo tramite comandi EditorCore.',
@@ -34,7 +34,7 @@ export default {
   '连接中…': 'Connessione…',
   '连接后重启对应客户端生效；Codex 需新开终端使环境变量生效。': 'Riavvia il client dopo la connessione; per Codex apri un nuovo terminale per applicare la variabile di ambiente.',
   '连接失败': 'Connessione non riuscita',
-  '连接 Claudia': 'Connetti Claudia',
-  '把下面的配置交给 Claudia。她从这台电脑以外编辑这个工程。编辑器的域名必须写进 hosting.egressDomains。':
-    'Dai a Claudia la configurazione qui sotto, così modifica questo progetto da fuori da questo PC. Il dominio dell’editor deve essere in hosting.egressDomains.',
+  '连接 corteo': 'Connetti corteo',
+  '把下面的配置交给 corteo。她从这台电脑以外编辑这个工程。编辑器的域名必须写进 hosting.egressDomains。':
+    'Dai a corteo la configurazione qui sotto, così modifica questo progetto da fuori da questo PC. Il dominio dell’editor deve essere in hosting.egressDomains.',
 } as Record<string, string>;

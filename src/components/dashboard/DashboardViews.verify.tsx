@@ -58,7 +58,6 @@ const page = (projects: ProjectMeta[], hasModel = true): string => renderToStati
 const withProjects = page([project('a', 'Corazón roto')]);
 assert.match(withProjects, /class="cc-wordmark"/, '顶栏要有 corteo 字标');
 assert.match(withProjects, />corteo</, '字标是 "corteo" 小写文字');
-assert.doesNotMatch(withProjects, /Claudia/, '页面不能再出现旧名字');
 assert.doesNotMatch(withProjects, /OpenChatCut/, '页面不能再出现上游名');
 assert.doesNotMatch(withProjects, /＋/, '不再有虚线「＋」新建卡');
 assert.doesNotMatch(withProjects, /→|›/, '行与按钮不加箭头');

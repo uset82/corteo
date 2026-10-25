@@ -1,4 +1,4 @@
-// Spanish UI translations - complete Claudia translation
+// Spanish UI translations - complete corteo translation
 // Chinese text is the key, Spanish is the value
 export default {
   // Dashboard
@@ -189,7 +189,7 @@ export default {
   '安全边距': 'Margen seguro',
   '保存品牌': 'Guardar marca',
   '已保存': 'Guardado',
-  'Claudia puede aplicar esta marca a todos los clips': 'Claudia puede aplicar esta marca a todos los clips',
+  'corteo puede aplicar esta marca a todos los clips': 'corteo puede aplicar esta marca a todos los clips',
 
   // Plan 5 · calendario «Programar»
   'Programar publicaciones': 'Programar publicaciones',
@@ -203,7 +203,7 @@ export default {
   'running': 'publicando',
   'published': 'publicada',
   'failed': 'falló',
-  '连接 Claudia': 'Conectar Claudia',
-  '把下面的配置交给 Claudia。她从这台电脑以外编辑这个工程。编辑器的域名必须写进 hosting.egressDomains。':
-    'Dale a Claudia la configuración de abajo para que edite este proyecto desde fuera de este PC. El dominio del editor tiene que estar en hosting.egressDomains.',
+  '连接 corteo': 'Conectar corteo',
+  '把下面的配置交给 corteo。她从这台电脑以外编辑这个工程。编辑器的域名必须写进 hosting.egressDomains。':
+    'Dale a corteo la configuración de abajo para que edite este proyecto desde fuera de este PC. El dominio del editor tiene que estar en hosting.egressDomains.',
 } as Record<string, string>;

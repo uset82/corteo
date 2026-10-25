@@ -266,7 +266,7 @@ export function McpGuideDialog({ onClose }: { onClose: () => void }) {
 
         <div style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 600 }}>{t('连接 Claudia')}</span>
+            <span style={{ fontSize: 12, fontWeight: 600 }}>{t('连接 corteo')}</span>
             {mcpToken ? (
               <div style={{ marginLeft: 'auto' }}>
                 <CopySnippetButton
@@ -277,7 +277,7 @@ export function McpGuideDialog({ onClose }: { onClose: () => void }) {
             ) : null}
           </div>
           <div style={{ color: theme.textMuted, fontSize: 12, lineHeight: 1.55 }}>
-            {t('把下面的配置交给 Claudia。她从这台电脑以外编辑这个工程。编辑器的域名必须写进 hosting.egressDomains。')}
+            {t('把下面的配置交给 corteo。她从这台电脑以外编辑这个工程。编辑器的域名必须写进 hosting.egressDomains。')}
           </div>
           <pre style={endpointStyle}>{CLAUDIA_MCP_URL}</pre>
           {mcpToken ? <pre style={snippetStyle}>{claudiaDefineConnection(mcpToken)}</pre> : null}

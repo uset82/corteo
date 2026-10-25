@@ -107,7 +107,7 @@ assert.notEqual(SKINS[0].tokens.textStrong, graphite.tokens.textStrong, 'corteo.
 // applySkin() saves the skin on every boot, so an install that existed before this rename has
 // 'graphite' (pre-skins) or 'claudia' (the previous name) stored. Both must move to corteo
 // once, and only once. The marker key changed with the name, so a profile that already ran
-// the Graphite → Claudia migration runs this one too.
+// the Graphite → old-default migration runs this one too.
 interface TestProfile { store: Map<string, string>; boot: () => void }
 
 function profile(saved: string | null): TestProfile {

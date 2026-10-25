@@ -1,4 +1,4 @@
-// English copy for the Claudia brand work (Plan 4). Its own file so the BD track
+// English copy for the corteo brand work (Plan 4). Its own file so the BD track
 // never edits the per-module dictionaries and never collides with the BQ track.
 // Assembled last in ./index.ts, so a key here wins over a stale entry elsewhere.
 export default {
