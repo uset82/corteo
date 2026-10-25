@@ -108,6 +108,8 @@ export interface CaptionWordOverride {
   forceBreak?: boolean;
   /** Display-only timing shift for moving generated cues independently of source media. */
   timingOffsetMs?: number;
+  /** Plan 5, OP-08: emphasise this word (key words, numbers, names). */
+  emphasis?: boolean;
 }
 
 // ──Multi-lane captions (edit_captions three brothers positions / layout_policy / source_update)──

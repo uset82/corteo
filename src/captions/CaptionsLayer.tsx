@@ -123,6 +123,9 @@ function CaptionWordFlow({
                 style={{
                   position: 'relative',
                   ...captionTextStyle(preset, height, index === currentIndex),
+                  // Plan 5, OP-08: an emphasised word keeps the highlight colour when it
+                  // is not the active one; the active word already uses it.
+                  ...(word.emphasis && index !== currentIndex ? { color: preset.highlightColor } : {}),
                   ...captionWordMotionStyle(motionPreset, word, ms),
                 }}
               >

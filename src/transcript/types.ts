@@ -7,6 +7,10 @@ export interface TranscriptWord {
   start: number; // ms
   end: number; // ms
   speaker?: string | null; // 'A' | 'B' | ... when diarization is on
+  /** Display-only caption hint (Plan 5, OP-08): render this word emphasised.
+   *  Carried on the word itself rather than looked up by index, because the caption
+   *  overlay's word index is page-relative and the override map is source-relative. */
+  emphasis?: boolean;
 }
 
 export interface TranscriptCarrier {
