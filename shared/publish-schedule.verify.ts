@@ -5,9 +5,13 @@ import {
   advance,
   canAttempt,
   dueEntries,
+  findEntry,
   isMissed,
   parseInstant,
+  recoverInterrupted,
+  removeEntry,
   summarize,
+  upsertEntry,
   validateSlot,
   type ScheduledPublish,
 } from './publish-schedule';
@@ -80,5 +84,36 @@ const summary = summarize(queue, NOW);
 assert.deepStrictEqual(summary, { planned: 3, due: 2, missed: 0, published: 1, failed: 0, cancelled: 1 });
 const withMissed = summarize([entry({ scheduledFor: iso(-20 * 60) })], NOW);
 assert.strictEqual(withMissed.missed, 1, 'a slot past the grace window is counted as missed');
+
+// ── 7) The list operations the store and the calendar share ──────────────────────────
+const a = entry({ id: 'a', scheduledFor: iso(20) });
+const b = entry({ id: 'b', scheduledFor: iso(10) });
+const c = entry({ id: 'c', scheduledFor: iso(30) });
+const ordered = upsertEntry(upsertEntry(upsertEntry([], c), a), b);
+assert.deepStrictEqual(ordered.map((e) => e.id), ['b', 'a', 'c'], 'upsert keeps the list ordered by slot');
+
+const replaced = upsertEntry(ordered, entry({ id: 'a', scheduledFor: iso(5), title: 'renombrado' }));
+assert.strictEqual(replaced.length, 3, 'upsert replaces, it does not duplicate');
+assert.strictEqual(replaced[0].id, 'a', 'the replacement moves to its new slot position');
+assert.strictEqual(replaced[0].title, 'renombrado');
+
+const removed = removeEntry(replaced, 'a');
+assert.strictEqual(removed.removed, true);
+assert.deepStrictEqual(removed.entries.map((e) => e.id), ['b', 'c']);
+assert.strictEqual(removeEntry(removed.entries, 'nope').removed, false, 'removing an unknown id reports it');
+
+assert.strictEqual(findEntry(removed.entries, 'b')?.id, 'b');
+assert.strictEqual(findEntry(removed.entries, 'zzz'), null);
+
+// ── 8) Recovery after a crash: an interrupted publish is not blindly re-posted ───────
+const interrupted = recoverInterrupted([
+  entry({ id: 'r', state: 'running', attempts: 1 }),
+  entry({ id: 'p', state: 'planned' }),
+], NOW);
+assert.strictEqual(interrupted.recovered, 1, 'one interrupted entry is reported');
+const recovered = interrupted.entries.find((e) => e.id === 'r')!;
+assert.strictEqual(recovered.state, 'failed', 'a half-published entry becomes failed, not planned');
+assert.ok(/interrump/i.test(recovered.lastError ?? ''), 'and it says why, so the user can check');
+assert.strictEqual(interrupted.entries.find((e) => e.id === 'p')!.state, 'planned', 'untouched entries stay planned');
 
 console.log('shared/publish-schedule.verify: ok');

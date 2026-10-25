@@ -130,6 +130,56 @@ export interface QueueSummary {
   cancelled: number;
 }
 
+/** Insert or replace by id, keeping the list ordered by slot so the calendar reads naturally. */
+export function upsertEntry(
+  entries: readonly ScheduledPublish[],
+  entry: ScheduledPublish,
+): ScheduledPublish[] {
+  const next = entries.filter((existing) => existing.id !== entry.id);
+  next.push(entry);
+  next.sort((a, b) => (parseInstant(a.scheduledFor) ?? 0) - (parseInstant(b.scheduledFor) ?? 0));
+  return next;
+}
+
+/** Remove one entry. Returns the list and whether anything was removed. */
+export function removeEntry(
+  entries: readonly ScheduledPublish[],
+  id: string,
+): { entries: ScheduledPublish[]; removed: boolean } {
+  const next = entries.filter((entry) => entry.id !== id);
+  return { entries: next, removed: next.length !== entries.length };
+}
+
+export function findEntry(
+  entries: readonly ScheduledPublish[],
+  id: string,
+): ScheduledPublish | null {
+  return entries.find((entry) => entry.id === id) ?? null;
+}
+
+/**
+ * Anything left `running` when the process starts did not finish: the tick died mid-upload.
+ * Marking it planned again would re-post a video that may already be live, so it becomes
+ * `failed` with an explicit reason and the user decides. Idempotent resume, not blind resume.
+ */
+export function recoverInterrupted(
+  entries: readonly ScheduledPublish[],
+  now: number,
+): { entries: ScheduledPublish[]; recovered: number } {
+  let recovered = 0;
+  const next = entries.map((entry) => {
+    if (entry.state !== 'running') return entry;
+    recovered += 1;
+    return {
+      ...entry,
+      state: 'failed' as const,
+      lastError: 'Se interrumpió mientras publicaba; revisa si el vídeo llegó a salir antes de reintentar.',
+      attempts: entry.attempts,
+    };
+  });
+  return { entries: next, recovered };
+}
+
 /** Counts for the calendar's header: what is scheduled, what is late, what already went. */
 export function summarize(entries: readonly ScheduledPublish[], now: number): QueueSummary {
   const summary: QueueSummary = { planned: 0, due: 0, missed: 0, published: 0, failed: 0, cancelled: 0 };
