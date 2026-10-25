@@ -23,7 +23,7 @@ import {
   type ModelIdentity,
 } from '../../shared/model-capabilities';
 import { setLlmConfig } from './providerConfig';
-import { PROVIDERS_OFF, providerAvailable } from './providers-off';
+import { providerAvailable, providersOff } from './providers-off';
 
 interface KeyStateLike {
   readonly configured: boolean;
@@ -176,7 +176,7 @@ function allChoices(): readonly AgentModelChoice[] {
   ];
 }
 function rebuildClaudeCodeChoices(): void {
-  if (PROVIDERS_OFF || !claudeCodeStatus?.installed || claudeCodeStatus.account?.loggedIn !== true) {
+  if (providersOff() || !claudeCodeStatus?.installed || claudeCodeStatus.account?.loggedIn !== true) {
     claudeCodeModelChoices = [];
     return;
   }
@@ -199,7 +199,7 @@ function rebuildClaudeCodeChoices(): void {
   });
 }
 function rebuildCodexChoices(): void {
-  if (PROVIDERS_OFF || !codexStatus?.installed || codexStatus.account?.type === 'apiKey') {
+  if (providersOff() || !codexStatus?.installed || codexStatus.account?.type === 'apiKey') {
     codexModelChoices = [];
     return;
   }
@@ -230,7 +230,7 @@ function rebuildCodexChoices(): void {
  * every OpenChatCut editing flow needs tool calls.
  */
 function rebuildCopilotChoices(): void {
-  if (PROVIDERS_OFF || !copilotStatus?.installed || !copilotStatus.supported || !copilotStatus.authenticated) {
+  if (providersOff() || !copilotStatus?.installed || !copilotStatus.supported || !copilotStatus.authenticated) {
     copilotModelChoices = [];
     return;
   }

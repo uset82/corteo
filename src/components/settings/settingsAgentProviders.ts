@@ -3,7 +3,7 @@ import {
   isLocalLlmProvider,
   llmProviderConfigNames,
 } from '../../../shared/llm-providers';
-import { PROVIDERS_OFF, providerAvailable } from '../../agent/providers-off';
+import { providerAvailable, providersOff } from '../../agent/providers-off';
 import type { VendorId } from './vendorIcons';
 import { secret, text, type SettingsVendorPage } from './settingsFields';
 
@@ -160,10 +160,11 @@ export const PROXY_PAGE: SettingsVendorPage = {
 // `OPENCHATCUT_PROVIDERS=off` deployments only expose the local harness and
 // the keyless local runtimes; a deep link to a hidden page falls back to the
 // first visible one (seedSelection in SettingsDialog).
-const VISIBLE_AGENT_VENDOR_PAGES: readonly SettingsVendorPage[] = AGENT_VENDOR_PAGES
-  .filter((page) => providerAvailable(page.key.split('/')[1] ?? ''));
-
-export const AGENT_VENDOR_PAGES_WITH_VISION: readonly SettingsVendorPage[] = [
-  ...VISIBLE_AGENT_VENDOR_PAGES,
-  ...(PROVIDERS_OFF ? [] : [VISION_PAGE]),
-];
+// Resolved per call rather than at import: the switch arrives with GET
+// /api/keys, so a module-level constant would freeze the build-time value and
+// leave the UI disagreeing with the server gate (HQ-7).
+export function agentVendorPagesWithVision(): readonly SettingsVendorPage[] {
+  const visible = AGENT_VENDOR_PAGES
+    .filter((page) => providerAvailable(page.key.split('/')[1] ?? ''));
+  return [...visible, ...(providersOff() ? [] : [VISION_PAGE])];
+}
