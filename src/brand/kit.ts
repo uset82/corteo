@@ -8,6 +8,8 @@
  * `ProjectDoc` and applying it to sequences are the next two commits of the same card.
  */
 
+import type { ProjectDoc } from '../editor/projectTypes';
+
 export interface BrandWatermark {
   /** Pool asset id of the logo, when one is set. */
   assetId?: string;
@@ -110,6 +112,22 @@ export function normalizeBrandKit(raw: unknown, fallback: BrandKit = DEFAULT_BRA
   const captionMotion = typeof input.captionMotion === 'string' ? input.captionMotion.trim().slice(0, 40) : '';
   if (captionMotion) kit.captionMotion = captionMotion;
   return kit;
+}
+
+/**
+ * The kit a project actually uses: its own, normalized, or the defaults when it predates the
+ * field. This is the only reader; nothing else should touch `doc.brandKit` directly.
+ */
+export function brandKitOf(doc: Pick<ProjectDoc, 'brandKit'> | null | undefined): BrandKit {
+  return normalizeBrandKit(doc?.brandKit);
+}
+
+/**
+ * A copy of the document carrying `kit`. Pure, so a command or a tool can commit the result
+ * itself; the kit is normalized first, so an unvalidated payload cannot reach the document.
+ */
+export function withBrandKit<T extends Pick<ProjectDoc, 'brandKit'>>(doc: T, kit: unknown): T {
+  return { ...doc, brandKit: normalizeBrandKit(kit) };
 }
 
 export interface BrandKitIssue {

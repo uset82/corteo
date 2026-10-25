@@ -1,7 +1,8 @@
 // Runnable contract check for the brand kit data layer (Plan 5, OP-10, step 1).
 // Pure: defaults, coercion of untrusted input, and what the validator reports.
 import assert from 'node:assert';
-import { DEFAULT_BRAND_KIT, brandKitIssues, normalizeBrandKit } from './kit';
+import { DEFAULT_BRAND_KIT, brandKitIssues, brandKitOf, normalizeBrandKit, withBrandKit } from './kit';
+import type { ProjectDoc } from '../editor/projectTypes';
 
 // ── 1) Anything becomes a usable kit, field by field ────────────────────────────────
 assert.deepStrictEqual(normalizeBrandKit(null), DEFAULT_BRAND_KIT, 'no kit → the defaults, unchanged');
@@ -57,5 +58,29 @@ assert.deepStrictEqual(
 // ── 5) Round trip: a normalized kit normalizes to itself ────────────────────────────
 const twice = normalizeBrandKit(normalizeBrandKit({ name: 'X', palette: ['#000000'], watermark: { position: 'top-left' } }));
 assert.deepStrictEqual(twice, normalizeBrandKit({ name: 'X', palette: ['#000000'], watermark: { position: 'top-left' } }), 'normalization is idempotent');
+
+// ── 6) Documents: a project without a kit reads as the defaults; one with a kit reads its own
+const bareDoc = { version: 9, assets: [], mediaFolders: [], timelines: [], activeTimelineId: '' } as unknown as ProjectDoc;
+assert.deepStrictEqual(brandKitOf(bareDoc), DEFAULT_BRAND_KIT, 'a project that predates the field uses the defaults');
+assert.deepStrictEqual(brandKitOf(null), DEFAULT_BRAND_KIT, 'no document at all is still safe');
+
+const saved = withBrandKit(bareDoc, { name: 'Canal', captionPreset: 'bili', palette: ['#101010'] });
+assert.strictEqual(saved.brandKit?.name, 'Canal');
+assert.deepStrictEqual(brandKitOf(saved), saved.brandKit, 'the reader returns what the writer stored');
+assert.strictEqual(bareDoc.brandKit, undefined, 'withBrandKit does not mutate the input document');
+
+// The kit has to survive the JSON round trip that persistence actually performs.
+const reloaded = JSON.parse(JSON.stringify(saved)) as ProjectDoc;
+assert.deepStrictEqual(brandKitOf(reloaded), saved.brandKit, 'the kit survives serialization unchanged');
+
+// A corrupted stored kit (an older build, a hand-edited file) normalizes instead of throwing.
+const corrupted = { ...bareDoc, brandKit: { palette: 'red', safeMargin: 'mucho', watermark: { position: 'nope' } } } as unknown as ProjectDoc;
+const repaired = brandKitOf(corrupted);
+assert.deepStrictEqual(repaired.palette, DEFAULT_BRAND_KIT.palette, 'a corrupted palette falls back');
+assert.strictEqual(repaired.safeMargin, DEFAULT_BRAND_KIT.safeMargin);
+assert.strictEqual(repaired.watermark, undefined, 'a corrupted watermark is dropped, not guessed');
+
+// Writing through the helper is also idempotent.
+assert.deepStrictEqual(withBrandKit(saved, saved.brandKit), saved, 're-applying the same kit is a no-op');
 
 console.log('brand/kit.verify: ok');

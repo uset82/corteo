@@ -167,7 +167,6 @@ export default {
   '创建所选片段': 'Crear clips seleccionados',
   '批准': 'Aprobar',
   '丢弃': 'Descartar',
-  '关闭': 'Cerrar',
   '选择片段': 'Elegir clip',
   '没有找到合适的片段。': 'Ningún momento llegó al mínimo.',
   '还没有分析结果。': 'Todavía no hay resultados.',

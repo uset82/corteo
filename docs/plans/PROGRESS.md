@@ -616,6 +616,14 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - Verify: `src/brand/kit.verify.ts` (defaults, coercion, watermark clamping, validator fields, idempotence). Registered in `test:serial`.
 - **Remaining steps of this card, in order:** (2) persist on `ProjectDoc` with a reader that returns defaults for projects saved before the field — and no migration that rewrites projects; (3) `apply_brand_kit` over a batch through existing commands, plus wiring the `brandKitId` that `make_shorts` already documents; (4) the "Marca" Settings page. The card is `doing` until step 3 lands.
 
+**OP-10, step 2 done (2026-10-25).** The kit is on the document and readable without a migration.
+- `ProjectDoc` gains `brandKit?: BrandKit` next to `designStyle`. It is optional on purpose: documents saved before the field read as the defaults, so there is no migration and no rewrite of existing projects.
+- `brandKitOf(doc)` is the only reader (normalizes, so a hand-edited or older-build kit cannot throw), and `withBrandKit(doc, kit)` is a pure writer returning a new document — whoever commits it normalizes first, so an unvalidated payload cannot reach the document.
+- The verify now proves the three things that matter: a doc **without** the field deep-equals the defaults; the kit survives `JSON.parse(JSON.stringify(doc))`, which is what persistence actually does; and a corrupted stored kit (palette as a string, watermark with an unknown corner) normalizes instead of throwing or guessing.
+- Still to come: a `brand.set`-style command plus the `apply_brand_kit` tool, then the "Marca" page.
+
+**Two type errors found and fixed in passing (2026-10-25).** A whole-output `npx tsc -b` — instead of the per-file greps used earlier — showed two mistakes of mine that the filtered checks had hidden: the `Result` interface in `make-shorts-tools.verify.ts` was missing `chapters`, and `es/index.ts` had a duplicate `'关闭'` key that already existed before Plan 5. Both are fixed; excluding the Plan 2 session's untracked `musicReactions`/`listen` files, the project now type-checks with **0 errors**. Lesson for the next session: grep the whole tsc output, not just the files you touched.
+
 State at this point: every Plan 5 verify passes, `verify:agent-tools`, `verify:mcp`, `verify:components`, `verify:editor`, `verify:i18n`, `verify:server-tool-catalog` and `npm run lint` are green on the merged tree, and the only full-gate failure is the `verify-gate-coverage` blocker above (the Plan 2 session's five untracked verifies).
 
 

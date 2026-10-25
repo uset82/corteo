@@ -50,6 +50,7 @@ type Result = {
   ok?: boolean; error?: string; count: number; clips: ClipOut[]; alternates: number;
   belowThreshold: number; threshold: number; analysisId: string; modelUsed: boolean;
   rejected: { score: number; title: string; reasons: string[] }[]; note?: string; renderIds?: string[];
+  chapters: number;
 };
 
 setRubricScorer(async (candidates) => ({
