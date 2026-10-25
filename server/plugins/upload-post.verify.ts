@@ -598,7 +598,7 @@ try {
   console.log('upload-post.verify OK');
 } finally {
   await new Promise<void>((resolve) => provider.close(() => resolve()));
-  await rm(root, { recursive: true, force: true });
+  await rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 20 });
   if (original.dataDir === undefined) delete process.env.OPENCHATCUT_DATA_DIR;
   else process.env.OPENCHATCUT_DATA_DIR = original.dataDir;
   if (original.profileId === undefined) delete process.env.OPENCHATCUT_DEV_PROFILE_ID;
