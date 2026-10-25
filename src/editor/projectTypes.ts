@@ -1,4 +1,5 @@
 import type { CURRENT_PROJECT_VERSION } from '../../shared/project-version.js';
+import type { BrandKit } from '../brand/kit.js';
 import type { DesignStyle } from './designTypes.js';
 import type { MediaAsset, MediaFolder } from './mediaTypes.js';
 import type { Timeline } from './timelineTypes.js';
@@ -14,6 +15,10 @@ export interface ProjectDoc {
   activeTimelineId: string;
   /** applied brand identity (manage_design_style); absent = no style set */
   designStyle?: DesignStyle;
+  /** Plan 5 brand kit (per-channel captions, logo, palette). Absent = the defaults in
+   * `src/brand/kit.ts` apply. Never rewritten on load: docs saved before this field
+   * existed simply read as the defaults. */
+  brandKit?: BrandKit;
 }
 
 /** the active timeline of a project (falls back to the first if the id is stale). */

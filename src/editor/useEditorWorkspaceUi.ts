@@ -44,6 +44,12 @@ export interface EditorWorkspaceDialogs {
   setShowVersions: Dispatch<SetStateAction<boolean>>;
   showShortcuts: boolean;
   setShowShortcuts: Dispatch<SetStateAction<boolean>>;
+  /** Plan 5's "Analizar episodio" panel. */
+  shortsOpen: boolean;
+  setShortsOpen: Dispatch<SetStateAction<boolean>>;
+  /** Plan 5's "Programar" calendar. */
+  publishCalendarOpen: boolean;
+  setPublishCalendarOpen: Dispatch<SetStateAction<boolean>>;
   showSettings: boolean;
   setShowSettings: Dispatch<SetStateAction<boolean>>;
   /** Settings vendor key to open on the next settings dialog mount (e.g. 'local/music/packs'). */
@@ -70,6 +76,8 @@ export function useEditorWorkspaceDialogs({
   const [showVersions, setShowVersions] = useState(false);
 
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [shortsOpen, setShortsOpen] = useState(false);
+  const [publishCalendarOpen, setPublishCalendarOpen] = useState(false);
   const [settingsRoute, setSettingsRoute] = useState<string | undefined>(undefined);
   const shortcutApiRef = useRef<TimelineShortcutApi | null>(null);
   const getPlayhead = useCallback(() => playerRef.current?.getCurrentFrame() ?? 0, [playerRef]);
@@ -89,6 +97,10 @@ export function useEditorWorkspaceDialogs({
     setShowVersions,
     showShortcuts,
     setShowShortcuts,
+    shortsOpen,
+    setShortsOpen,
+    publishCalendarOpen,
+    setPublishCalendarOpen,
     shortcutApiRef,
     getPlayhead,
   };

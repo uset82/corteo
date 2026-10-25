@@ -10,6 +10,7 @@ import { canonicalizeMediaAsset } from './mediaContentIdentity.js';
 import { mapTimelineAssetItems, removeAssetFromTimeline, timelineItemUsesAsset } from './mediaAssetUsage';
 import { introducesTrackOverlap } from './trackCollision';
 import { newTranscriptGeneration } from '../transcript/identity';
+import { normalizeBrandKit } from '../brand/kit';
 import type { AnyAction, ProjectAction } from './reducerActions';
 import { isRelinkableMediaKind, relinkTiming, type RelinkableTimelineItem } from './reducerTimelineHelpers';
 import { reduce } from './reducerTimeline';
@@ -17,7 +18,7 @@ import { recountAssetDuration, recountDuration, withProjectFrameRate } from './t
 
 // ── project reducer (routes per-timeline actions to the active timeline) ───
 export const maxOrder = (p: ProjectDoc) => p.timelines.reduce((m, t) => Math.max(m, t.order), -1);
-const isProjectAction = (a: { type: string }): a is ProjectAction => a.type.startsWith('tl.') || a.type.startsWith('pool.') || a.type.startsWith('design.');
+const isProjectAction = (a: { type: string }): a is ProjectAction => a.type.startsWith('tl.') || a.type.startsWith('pool.') || a.type.startsWith('design.') || a.type.startsWith('brand.');
 
 // stamp a per-timeline reducer result back onto its identity (setFullState
 // returns a bare TimelineState, so id/name/order must be re-applied).
@@ -260,6 +261,9 @@ export function projectReduce(p: ProjectDoc, a: AnyAction): ProjectDoc {
         return { ...p, designStyle: a.style ?? undefined };
       case 'design.patch':
         return { ...p, designStyle: { colors: [], fonts: [], ...p.designStyle, ...a.patch } };
+      case 'brand.set':
+        // Normalized here, once, so the document can never hold a half-valid kit.
+        return { ...p, brandKit: a.kit ? normalizeBrandKit(a.kit) : undefined };
       default:
         return p;
     }

@@ -6,6 +6,8 @@ import { setLinkGroup, unlinkItems } from '../../editor/linkGroups';
 import { canMulticamItem, runMulticamSync } from '../../multicam/sync';
 import { TRANSITION_LABELS, ZOOM_SHAPE_LABELS, type TimelineItem, type TimelineState, type TransitionItem } from '../../editor/types';
 import { ALL_FX, LUT_EFFECTS } from '../../gl/fx/effects';
+import { kenBurnsActions, type KenBurnsDirection } from '../../editor/kenBurns';
+import { KEN_BURNS_LABEL_KEYS, KEN_BURNS_MENU_ORDER } from '../kenBurnsMenu';
 import { Icon, type IconName } from '../icons';
 import { useT } from '../../i18n/locale';
 import { contextReferenceItems } from './clipContextSelection';
@@ -142,6 +144,7 @@ export function ClipContextMenu({ item, transitions, x, y, playhead, commands, t
   }, [onClose]);
 
   const [showSpeed, setShowSpeed] = useState(false);
+  const [showKenBurns, setShowKenBurns] = useState(false);
   const [showApplied, setShowApplied] = useState(false);
   // Use conservative clamping for the initial value, and accurately shrink it after measuring the actual size (expanding sub-area/weight when changing anchor)
   const [pos, setPos] = useState(() => ({ left: Math.min(x, window.innerWidth - 210), top: Math.min(y, window.innerHeight - 380) }));
@@ -153,7 +156,7 @@ export function ClipContextMenu({ item, transitions, x, y, playhead, commands, t
       left: Math.max(8, Math.min(x, window.innerWidth - r.width - 8)),
       top: Math.max(8, Math.min(y, window.innerHeight - r.height - 8)),
     });
-  }, [x, y, showApplied, showSpeed]);
+  }, [x, y, showApplied, showSpeed, showKenBurns]);
 
   // List of applied effects: special effects/LUT/zoom/transition, click to remove
   const effects = item.effects ?? [];
@@ -180,6 +183,9 @@ export function ClipContextMenu({ item, transitions, x, y, playhead, commands, t
   const isVisual = item.kind !== 'audio';
   const isDom = item.kind === 'motion-graphic' || item.kind === 'text'; // DOM clips → alpha MG export
   const canSpeed = item.kind === 'video' || item.kind === 'audio' || item.kind === 'sequence';
+  // Ken Burns only makes sense when every clip in the batch is a still.
+  const kenBurnsIds = batchIds.filter((id) => timeline.items.find((x) => x.id === id)?.kind === 'image');
+  const canKenBurns = kenBurnsIds.length === batchN;
   const canRelink = !timeline.tracks?.[item.track]?.locked && !!item.src && ['video', 'audio', 'image', 'gif', 'svg'].includes(item.kind);
   const rate = item.playbackRate ?? 1;
   const displayedRate = displaySpeedRate(rate);
@@ -193,6 +199,15 @@ export function ClipContextMenu({ item, transitions, x, y, playhead, commands, t
     if (fxClip.transform) commands.setItemTransform(item.id, fxClip.transform);
     commands.setItemZoom(item.id, fxClip.zoom ?? null);
     commands.setItemFade(item.id, { fadeInFrames: fxClip.fadeInFrames ?? 0, fadeOutFrames: fxClip.fadeOutFrames ?? 0 });
+  };
+  const applyKenBurns = (direction: KenBurnsDirection) => {
+    const actions = kenBurnsIds.flatMap((id) => {
+      const target = timeline.items.find((x) => x.id === id);
+      if (!target) return [];
+      return kenBurnsActions({ itemId: target.id, durationInFrames: target.durationInFrames, direction, baseX: target.transform?.x ?? 0, baseY: target.transform?.y ?? 0 })?.actions ?? [];
+    });
+    if (actions.length === 0) return;
+    commands.batch(actions, 'Ken Burns');
   };
 
   // keep the menu on-screen: The height of the menu changes with the entry/expanded state. If the height is estimated to be too high, it will overflow at the bottom——
@@ -264,6 +279,19 @@ export function ClipContextMenu({ item, transitions, x, y, playhead, commands, t
       )}
       <Item label={t('复制效果')} icon="sparkles" disabled={!isVisual} onClick={run(copyFx)} />
       <Item label={t('粘贴效果')} icon="clipboard" shortcut={PASTE_HINT} disabled={!isVisual || !fxClip} onClick={run(pasteFx)} />
+      <Item label={t('Ken Burns 效果')} icon="image" chevron disabled={!canKenBurns}
+        onClick={canKenBurns ? () => setShowKenBurns((v) => !v) : undefined} />
+      {showKenBurns && canKenBurns && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: '2px 9px 6px 35px' }}>
+          {KEN_BURNS_MENU_ORDER.map((direction) => (
+            <button key={direction} onClick={run(() => applyKenBurns(direction))}
+              style={{
+                cursor: 'pointer', fontSize: 11, padding: '3px 8px', borderRadius: 5,
+                border: `0.5px solid ${theme.border}`, background: 'none', color: theme.text,
+              }}>{t(KEN_BURNS_LABEL_KEYS[direction])}</button>
+          ))}
+        </div>
+      )}
       <Item label={!matchesSpeedPreset(rate, 1) ? t('变速（{rate}×）', { rate: displayedRate }) : t('变速')} icon="clock" chevron disabled={!canSpeed}
         onClick={canSpeed ? () => setShowSpeed((v) => !v) : undefined} />
       {showSpeed && canSpeed && (
