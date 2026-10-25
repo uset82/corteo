@@ -73,7 +73,6 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
     const existing = resolveTrackId(state, ref, kind) ?? defaultTrackId(state, kind);
     if (existing) return existing;
     const id = uid('track');
-    // Staged until the enclosing command commits it in the same batch.
     pendingTrackCreates.push({ type: 'track.create', track: { id, kind } });
     return id;
   };
@@ -386,6 +385,7 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
       setItemTransform: (id, patch) => dispatch({ type: 'setTransform', id, patch }),
       setItemFilters: (id, patch) => dispatch({ type: 'setFilters', id, patch }),
       setItemBackgroundFill: (id, enabled, strength) => dispatch({ type: 'setBackgroundFill', id, enabled, strength }),
+      setClipFrame: (id, frame) => dispatch({ type: 'setClipFrame', id, ...frame }),
       setItemZoom: (id, patch) => dispatch({ type: 'setZoom', id, patch }),
       setItemEffects: (id, effects, defs) => dispatch({ type: 'setEffects', id, effects, defs }),
       setItemSpeed: (id, rate) => dispatch({ type: 'setSpeed', id, rate }),

@@ -18,6 +18,10 @@ const FLAGS = [
   'duration',
   'fade-in',
   'fade-out',
+  'to',
+  'mode',
+  'background',
+  'color',
   'ripple',
   'at',
   'apply',
@@ -37,6 +41,8 @@ export async function runItemCommand(
       return moveCommand(line, commandLine, json);
     case 'trim':
       return trimCommand(line, commandLine, json);
+    case 'fit':
+      return fitCommand(line, commandLine, json);
     case 'split':
       return splitCommand(line, commandLine, json);
     case 'rm':
@@ -46,7 +52,7 @@ export async function runItemCommand(
     case 'duplicate':
       return duplicateCommand(line, commandLine, json);
     case undefined:
-      throw new UsageError('item needs a subcommand: move | trim | split | rm | dup');
+      throw new UsageError('item needs a subcommand: move | trim | fit | split | rm | dup');
     default:
       throw new UsageError(`unknown item subcommand "${subcommand}"`);
   }
@@ -56,6 +62,8 @@ interface ClipTarget {
   readonly project: ProjectHandle;
   readonly itemId: string;
   readonly fps: number;
+  readonly startFrame: number;
+  readonly kind: string;
 }
 
 /** Resolve `<clip>` + `<project>` the same way in every subcommand. */
@@ -64,7 +72,7 @@ async function clipTarget(line: CommandLine): Promise<ClipTarget> {
   const project = await resolveProject(projectReference(line, 1));
   const doc = await readProjectDoc(project.id);
   const { item, timeline } = resolveClipRef(doc, reference);
-  return { project, itemId: item.id, fps: timeline.fps };
+  return { project, itemId: item.id, fps: timeline.fps, startFrame: item.startFrame, kind: item.kind };
 }
 
 function commit(line: CommandLine, target: ClipTarget, json: boolean, ops: ToolOp[], label: string): Promise<void> {
@@ -98,16 +106,53 @@ async function trimCommand(line: CommandLine, commandLine: CommandLine, json: bo
   const start = flagText(commandLine, 'start');
   if (start !== undefined) args.startFrame = parseFrames(start, target.fps, 'start');
   const duration = flagText(commandLine, 'duration');
-  if (duration !== undefined) args.durationInFrames = parseFrames(duration, target.fps, 'duration');
+  const to = flagText(commandLine, 'to');
+  if (duration !== undefined && to !== undefined) {
+    throw new UsageError('item trim takes --duration or --to, not both');
+  }
+  if (to !== undefined) {
+    const end = parseFrames(to, target.fps, 'to');
+    const startFrame = start !== undefined ? parseFrames(start, target.fps, 'start') : target.startFrame;
+    const frames = end - startFrame;
+    if (frames < 1) throw new UsageError(`--to ${to} is not after the clip start (frame ${startFrame})`);
+    args.durationInFrames = frames;
+  } else if (duration !== undefined) {
+    args.durationInFrames = parseFrames(duration, target.fps, 'duration');
+  }
   const fadeIn = flagText(commandLine, 'fade-in');
   if (fadeIn !== undefined) args.fadeInSeconds = Number(fadeIn);
   const fadeOut = flagText(commandLine, 'fade-out');
   if (fadeOut !== undefined) args.fadeOutSeconds = Number(fadeOut);
   if (flagBoolean(commandLine, 'ripple')) args.ripple = true;
   if (Object.keys(args).length === 1) {
-    throw new UsageError('item trim needs --start, --duration, --fade-in or --fade-out');
+    throw new UsageError('item trim needs --start, --duration, --to, --fade-in or --fade-out');
   }
   await commit(line, target, json, [{ tool: 'set_item_timing', args }], 'retime clip');
+}
+
+async function fitCommand(line: CommandLine, commandLine: CommandLine, json: boolean): Promise<void> {
+  const target = await clipTarget(line);
+  const mode = flagText(commandLine, 'mode');
+  const background = flagText(commandLine, 'background');
+  const color = flagText(commandLine, 'color');
+  if (mode === undefined && background === undefined) {
+    throw new UsageError('item fit needs --mode cover|contain|fill and/or --background blur|color');
+  }
+  if (mode !== undefined && mode !== 'cover' && mode !== 'contain' && mode !== 'fill') {
+    throw new UsageError('--mode must be cover, contain, or fill');
+  }
+  if (background !== undefined && background !== 'blur' && background !== 'color') {
+    throw new UsageError('--background must be blur or color');
+  }
+  const update: Record<string, unknown> = { type: target.kind, itemId: target.itemId };
+  if (mode !== undefined) update.fit = mode;
+  if (background !== undefined) {
+    update.background = color !== undefined ? { type: background, color } : { type: background };
+  }
+  await commit(line, target, json, [{
+    tool: 'edit_item',
+    args: { updates: [update] },
+  }], 'fit clip');
 }
 
 async function splitCommand(line: CommandLine, commandLine: CommandLine, json: boolean): Promise<void> {

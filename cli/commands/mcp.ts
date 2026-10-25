@@ -7,7 +7,10 @@ import { CliError, UsageError } from '../errors.ts';
 import { printJson, writeStdout } from '../output.ts';
 import { loadOrCreateMcpToken, mcpTokenPath } from '../../server/mcp-token.ts';
 
-const MCP_URL = 'http://127.0.0.1:5199/api/external-mcp/mcp';
+function mcpUrl(): string {
+  const port = process.env.CORTEO_PORT?.trim() || '5199';
+  return `http://127.0.0.1:${port}/api/external-mcp/mcp`;
+}
 const FLAGS = ['json', 'show', 'help', 'data-dir'] as const;
 
 function devProfileId(): string {
@@ -54,7 +57,7 @@ export async function runMcpCommand(
     return;
   }
   if (json) {
-    printJson({ path, url: MCP_URL, localhostOnly: true });
+    printJson({ path, url: mcpUrl(), localhostOnly: true });
     return;
   }
   writeStdout(path);

@@ -7,7 +7,7 @@ import type {
 import { DEFAULT_TEXT_BODY } from '../../editor/defaultNames';
 import { defaultTrackId, resolveTrackId, selectedIdsOf } from '../../editor/types';
 import { isValidEasing } from '../../editor/keyframes';
-import { validateBackgroundFillUpdate } from './edit-item-background-fill';
+import { mergeClipFrame } from './edit-item-frame';
 import { getKeyframePropertyDefinition, KEYFRAME_PROPS, supportsKeyframeProperty } from '../../editor/keyframeRegistry';
 import { planSlip } from '../../editor/slip';
 import { rejectUnknownFields } from './edit-item-fields';
@@ -76,6 +76,8 @@ const GENERIC_UPDATE_KEYS: Record<string, true> = {
   transform: true,
   backgroundFill: true,
   backgroundFillStrength: true,
+  fit: true,
+  background: true,
   speed: true,
   playbackRate: true,
   clearKeyframes: true,
@@ -245,18 +247,8 @@ export function validateGenericUpdate(
     }
     plan.transform = patch;
   }
-  const backgroundFill = validateBackgroundFillUpdate(
-    state,
-    it,
-    entry.backgroundFill,
-    entry.backgroundFillStrength,
-    typeof plan.track === 'string' ? plan.track : undefined,
-  );
-  if (backgroundFill && 'error' in backgroundFill) return backgroundFill;
-  if (backgroundFill) {
-    plan.backgroundFill = backgroundFill.enabled;
-    if (backgroundFill.strength !== undefined) plan.backgroundFillStrength = backgroundFill.strength;
-  }
+  const framed = mergeClipFrame(plan, state, it, entry);
+  if (framed) return framed;
   const speedRaw = entry.speed ?? entry.playbackRate;
   if (speedRaw !== undefined) {
     if (it.kind !== 'video' && it.kind !== 'audio' && it.kind !== 'gif') {
@@ -279,11 +271,11 @@ export function validateGenericUpdate(
   const FIELDS = [
     'track', 'startFrame', 'durationInFrames', 'srcInFrame', 'props', 'volume',
     'fadeInFrames', 'fadeOutFrames', 'keyframes', 'filters', 'transform',
-    'backgroundFill', 'backgroundFillStrength', 'speed', 'clearKeyframes',
+    'backgroundFill', 'backgroundFillStrength', 'fit', 'backgroundColor', 'speed', 'clearKeyframes',
   ];
   if (!FIELDS.some((k) => k in plan)) {
     return {
-      error: 'update needs at least one of: track/trackId, startFrame/fromFrame, durationInFrames/sourceDurationInFrames, srcInFrame/sourceStartFrame, assetId, props, volume, fadeInSeconds, fadeOutSeconds, keyframes, clearKeyframes, filters, transform, backgroundFill, backgroundFillStrength, speed',
+      error: 'update needs at least one of: track/trackId, startFrame/fromFrame, durationInFrames/sourceDurationInFrames, srcInFrame/sourceStartFrame, assetId, props, volume, fadeInSeconds, fadeOutSeconds, keyframes, clearKeyframes, filters, transform, backgroundFill, backgroundFillStrength, fit, background, speed',
     };
   }
   return plan;

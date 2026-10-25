@@ -50,6 +50,7 @@ function recorder(relinkResult: MediaRelinkResult = { ok: true, changed: true })
       return relinkResult;
     },
     setItemBackgroundFill: rec('setItemBackgroundFill'),
+    setClipFrame: rec('setClipFrame'),
     removeItem: rec('removeItem'), rippleDeleteItem: rec('rippleDeleteItem'),
   };
   return { calls, commands };
@@ -277,6 +278,35 @@ assert.equal(validateGenericDelete(state, { type: 'video', id: 'v1_abc' }).itemI
 {
   const err = String(validateGenericUpdate(state, { type: 'video', transform: { crop: { left: 10 } } }).error ?? '');
   assert.ok(err.includes('no clip selected'), err);
+}
+
+{
+  const plan = validateGenericUpdate(state, { type: 'video', itemId: 'v1_abc', fit: 'cover' });
+  assert.equal(plan.error, undefined, String(plan.error));
+  assert.equal(plan.fit, 'cover');
+  const { calls, commands } = recorder();
+  applyGeneric(plan, commands);
+  const frame = calls.find((call) => call[0] === 'setClipFrame')?.[2] as { fit?: string } | undefined;
+  assert.equal(frame?.fit, 'cover');
+}
+{
+  const plan = validateGenericUpdate(state, {
+    type: 'video', itemId: 'v1_abc', fit: 'contain', background: { type: 'blur' },
+  });
+  assert.equal(plan.error, undefined, String(plan.error));
+  assert.equal(plan.fit, 'contain');
+  assert.equal(plan.backgroundFill, true);
+}
+{
+  const plan = validateGenericUpdate(state, {
+    type: 'video', itemId: 'v1_abc', background: { type: 'color', color: '#112233' },
+  });
+  assert.equal(plan.backgroundColor, '#112233');
+  assert.equal(plan.backgroundFill, false);
+}
+{
+  const err = String(validateGenericUpdate(state, { type: 'video', itemId: 'v1_abc', fit: 'stretch' }).error ?? '');
+  assert.ok(err.includes('cover, contain, or fill'), err);
 }
 
 console.log('edit-item-generic.check.ts OK');

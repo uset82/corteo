@@ -180,6 +180,19 @@ export function applyClipAction(s: TimelineState, a: Action): TimelineState | un
     case 'setBackgroundFill':
       if (lockedItem(s, a.id)) return s;
       return setBackgroundFillState(s, a.id, a.enabled, a.strength);
+    case 'setClipFrame':
+      if (lockedItem(s, a.id)) return s;
+      return {
+        ...s,
+        items: s.items.map((it) => {
+          if (it.id !== a.id) return it;
+          const next = { ...it };
+          if (a.fit) next.fit = a.fit;
+          if (a.backgroundColor === null) delete next.backgroundColor;
+          else if (typeof a.backgroundColor === 'string') next.backgroundColor = a.backgroundColor;
+          return next;
+        }),
+      };
     case 'setZoom':
       if (lockedItem(s, a.id)) return s;
       return {

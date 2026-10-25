@@ -15,6 +15,10 @@ test-results/
 .vite/
 *.tsbuildinfo
 
+# Installer self-test, if a run is pointed at the repo. Success deletes these.
+.claudia-self-test/
+claudia-self-test.mp4
+
 # OS / editor / temporary files
 *.log
 .DS_Store

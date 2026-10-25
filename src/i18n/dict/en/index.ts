@@ -18,7 +18,7 @@ import settings from './settings';
 import timeline from './timeline';
 import topbar from './topbar';
 import transcript from './transcript';
-import shorts from './shorts';
+import shorts from './shorts.ts';
 
 export const EN: Record<string, string> = Object.assign(
   {},

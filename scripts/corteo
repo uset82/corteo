@@ -6,6 +6,12 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck disable=SC1091
 source "$ROOT/scripts/corteo-env.sh"
 cd "$CORTEO_ROOT"
+if [[ -n "${CORTEO_STORE_DIR:-}" && -z "${OPENCHATCUT_DATA_DIR:-}" ]]; then
+  case "$CORTEO_STORE_DIR" in
+    /*) export OPENCHATCUT_DATA_DIR="$CORTEO_STORE_DIR" ;;
+    *) printf '[corteo] CORTEO_STORE_DIR must be an absolute path\n' >&2; exit 1 ;;
+  esac
+fi
 if [[ -z "${OPENCHATCUT_DEV_PROFILE_ID:-}" ]]; then
   OPENCHATCUT_DEV_PROFILE_ID="$(node --input-type=module -e '
     import { resolveDevProfile } from "./scripts/dev-profile.mjs";

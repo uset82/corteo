@@ -1,4 +1,4 @@
-import type { AspectFit } from './types';
+import type { ClipFrameFit } from './itemFrameFit';
 
 export interface VisualFrameSize {
   width: number;
@@ -18,11 +18,12 @@ const finitePositive = (value: number, fallback: number): number => (
 export function renderedVisualFrameRect(
   canvas: VisualFrameSize,
   source: VisualFrameSize,
-  fit: AspectFit,
+  fit: ClipFrameFit,
 ): VisualFrameRect {
   const canvasWidth = finitePositive(canvas.width, 0);
   const canvasHeight = finitePositive(canvas.height, 0);
   if (!canvasWidth || !canvasHeight) return { x: 0, y: 0, width: 0, height: 0 };
+  if (fit === 'fill') return { x: 0, y: 0, width: Math.round(canvasWidth), height: Math.round(canvasHeight) };
   const sourceWidth = finitePositive(source.width, canvasWidth);
   const sourceHeight = finitePositive(source.height, canvasHeight);
   const scale = fit === 'cover'
@@ -48,7 +49,7 @@ export function renderedVisualFrameRect(
 export function visibleVisualFrameRect(
   canvas: VisualFrameSize,
   source: VisualFrameSize,
-  fit: AspectFit,
+  fit: ClipFrameFit,
 ): VisualFrameRect {
   const rendered = renderedVisualFrameRect(canvas, source, fit);
   return fit === 'cover'
@@ -62,7 +63,7 @@ export function visibleVisualFrameRect(
  * differs from stored width/height (often 5–15px top/bottom) while the orange
  * outline hugs the metadata box. `fill` paints to that box; `cover` stays cover.
  */
-export function objectFitInsideVisualFrame(fit: AspectFit): 'cover' | 'fill' {
+export function objectFitInsideVisualFrame(fit: ClipFrameFit): 'cover' | 'fill' {
   return fit === 'cover' ? 'cover' : 'fill';
 }
 

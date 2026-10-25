@@ -7,7 +7,8 @@ import { disposeRuntimeSlot, ensureRuntimeSlot } from './runtimeSlot';
 import { buildEffectShaderFrame } from './shaderFrame';
 import { glPreviewFailureReason } from './previewAdapter';
 import type { SelectedPreviewFallbackReason, SelectedPreviewStatusListener } from './previewAdapter';
-import type { AspectFit, TimelineItem } from '../editor/types';
+import type { TimelineItem } from '../editor/types';
+import type { ClipFrameFit } from '../editor/itemFrameFit';
 import { sourceFrameAt } from '../editor/sourceLimit';
 import { offthreadTrimBefore, offthreadVideoTransparent, useRuntimeVideoDecoder } from '../editor/serverVideoDecoder';
 import { glEffects } from './clipEffects';
@@ -22,7 +23,7 @@ import { glEffects } from './clipEffects';
 
 interface ClipFxProps {
   item: TimelineItem;
-  fit: AspectFit;
+  fit: ClipFrameFit;
   width: number;
   height: number;
   frameOffset?: number;
@@ -31,7 +32,7 @@ interface ClipFxProps {
 
 // contain/cover placement matching MediaFill's objectFit, so GL frames align
 // with the rest of the composition.
-function drawFit(ctx: CanvasRenderingContext2D, source: CanvasImageSource, fit: AspectFit): void {
+function drawFit(ctx: CanvasRenderingContext2D, source: CanvasImageSource, fit: ClipFrameFit): void {
   const W = ctx.canvas.width;
   const H = ctx.canvas.height;
   const dimensions = source as CanvasImageSource & {
@@ -56,6 +57,10 @@ function drawFit(ctx: CanvasRenderingContext2D, source: CanvasImageSource, fit: 
     ?? 0;
   ctx.clearRect(0, 0, W, H);
   if (!nw || !nh) return;
+  if (fit === 'fill') {
+    ctx.drawImage(source, 0, 0, W, H);
+    return;
+  }
   const scale = fit === 'cover' ? Math.max(W / nw, H / nh) : Math.min(W / nw, H / nh);
   const dw = nw * scale;
   const dh = nh * scale;

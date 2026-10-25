@@ -40,6 +40,7 @@ export type Action =
   | { type: 'setTransform'; id: string; patch: ClipTransform }
   | { type: 'setFilters'; id: string; patch: ClipFilters }
   | { type: 'setBackgroundFill'; id: string; enabled: boolean; strength?: number }
+  | { type: 'setClipFrame'; id: string; fit?: 'contain' | 'cover' | 'fill'; backgroundColor?: string | null }
   | { type: 'setZoom'; id: string; patch: Partial<ZoomEffect> | null }
   | { type: 'setEffects'; id: string; effects: ClipEffect[]; defs?: SerializableFxDef[] }
   | { type: 'setSpeed'; id: string; rate: number }
@@ -167,4 +168,4 @@ export type ProjectDispatch = (a: AnyAction | HistoryControlAction) => void;
 export const MUTATING = new Set(['add', 'updateProps', 'relinkTimelineItem', 'move', 'retime', 'slip', 'setVolume', 'setFade', 'setTransform', 'setFilters', 'setZoom', 'setEffects', 'setSpeed', 'replaceMedia', 'reframeKeyframe', 'removeReframeKeyframe', 'setKeyframe', 'removeKeyframe', 'clearKeyframes', 'addTransition', 'setTransition', 'removeTransition', 'addMarker', 'updateMarker', 'removeMarker', 'duplicate', 'remove', 'split', 'clear', 'addAsset', 'setCanvas', 'toggleTrack', 'track.create', 'track.update', 'track.delete', 'track.tighten', 'setCaptions', 'updateCaptions', 'setCaptionsHidden', 'updateWatermark', 'setItemTranscript', 'setItemVariants', 'toggleWord', 'deleteWords', 'cleanScript', 'setGapCap', 'setTranscriptPlayOrder', 'reorderTrackItems', 'clearEdits', 'fixTranscriptWord', 'renameSpeaker', 'setItemDenoise', 'setFullState',
   // project-level (tl.switch is navigation → deliberately NOT here, so it makes no history step)
   'tl.create', 'tl.duplicate', 'tl.delete', 'tl.rename', 'tl.retarget', 'tl.setFps', 'tl.setHidden', 'tl.setDoc',
-  'pool.createFolder', 'pool.renameFolder', 'pool.deleteFolder', 'pool.moveAssets', 'pool.updateAsset', 'pool.setTranscription', 'pool.relinkAsset', 'pool.canonicalizeAsset', 'pool.removeAsset', 'design.set', 'design.patch', 'brand.set', 'setBackgroundFill'])
+  'pool.createFolder', 'pool.renameFolder', 'pool.deleteFolder', 'pool.moveAssets', 'pool.updateAsset', 'pool.setTranscription', 'pool.relinkAsset', 'pool.canonicalizeAsset', 'pool.removeAsset', 'design.set', 'design.patch', 'brand.set', 'setBackgroundFill', 'setClipFrame'])
