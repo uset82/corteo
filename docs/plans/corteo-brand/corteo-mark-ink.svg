@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="corteo">
+  <title>corteo</title>
+  <!-- Ink version for light surfaces (the latte skin, a white sheet, a slide).
+       The accent half stays accent: the cut is the identity, not the colour. -->
+  <polygon fill="#ff4a1f" points="2,2 20,2 2,20"/>
+  <polygon fill="#0a0b0d" points="22,22 4,22 22,4"/>
+</svg>

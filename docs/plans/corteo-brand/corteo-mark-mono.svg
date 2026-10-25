@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="corteo">
+  <title>corteo</title>
+  <!-- One-tone version for single-colour contexts (print, embossing, a favicon
+       that must survive a monochrome tab). Same geometry as corteo-mark.svg. -->
+  <polygon fill="currentColor" points="2,2 20,2 2,20"/>
+  <polygon fill="currentColor" points="22,22 4,22 22,4"/>
+</svg>

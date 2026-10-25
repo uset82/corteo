@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="corteo">
+  <title>corteo</title>
+  <!-- A 20x20 frame split on the diagonal, the halves slid apart.
+       The union is the square (2,2)-(22,22) minus the band 22 < x+y < 26.
+       Upper half: accent. Lower half: bone. -->
+  <polygon fill="#ff4a1f" points="2,2 20,2 2,20"/>
+  <polygon fill="#f7f3ea" points="22,22 4,22 22,4"/>
+</svg>
