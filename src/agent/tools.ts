@@ -22,6 +22,10 @@ import { CAPTION_AVOIDANCE_TOOL_NAMES, CAPTION_AVOIDANCE_TOOL_SCHEMAS } from './
 import { PLACE_GRAPHICS_TOOL_NAMES, PLACE_GRAPHICS_TOOL_SCHEMAS } from './tools/placement-tools';
 import { SHADER_TOOL_NAMES, SHADER_TOOL_SCHEMAS } from './tools/schemas/shader-tools';
 import { HIGHLIGHT_TOOL_NAMES, HIGHLIGHT_TOOL_SCHEMAS } from './tools/schemas/highlight-tool';
+import { SHORTS_TOOL_NAMES, SHORTS_TOOL_SCHEMAS } from './tools/schemas/shorts-tools';
+import { MAKE_SHORTS_TOOL_NAMES, MAKE_SHORTS_TOOL_SCHEMAS } from './tools/schemas/make-shorts-tools';
+import { TIGHTEN_TOOL_NAMES, TIGHTEN_TOOL_SCHEMAS } from './tools/schemas/tighten-tools';
+import { SOCIAL_COPY_TOOL_NAMES, SOCIAL_COPY_TOOL_SCHEMAS } from './tools/schemas/social-copy-tools';
 import { REFRAME_TOOL_NAMES, REFRAME_TOOL_SCHEMAS } from './tools/schemas/reframe-tools';
 import { EXPORT_TOOL_NAMES, EXPORT_TOOL_SCHEMAS } from './tools/schemas/export-tools';
 import { EXPORT_QA_TOOL_NAMES, EXPORT_QA_TOOL_SCHEMAS } from './tools/schemas/export-qa-tools';
@@ -116,6 +120,14 @@ export const TOOL_SCHEMAS: AgentToolSchema[] = [
   ...SHADER_TOOL_SCHEMAS,
   // Smart clips: find highlights from the word-level transcript → duplicate a 9:16 timeline → trim while preserving word frames.
   ...HIGHLIGHT_TOOL_SCHEMAS,
+  // Opus parity (Plan 5): score candidates on a 0-99 rubric with reasons before anything is cut.
+  ...SHORTS_TOOL_SCHEMAS,
+  // Opus parity (Plan 5): the one-call pipeline, source in and finished clips out.
+  ...MAKE_SHORTS_TOOL_SCHEMAS,
+  // Opus parity (Plan 5): review-first speech cleanup (fillers, false starts, long pauses).
+  ...TIGHTEN_TOOL_SCHEMAS,
+  // Opus parity (Plan 5): per-platform title/description/hashtags, clamped to real limits.
+  ...SOCIAL_COPY_TOOL_SCHEMAS,
   // Auto reframe: sample frames → detect subject focus → setReframeKeyframe through the existing render path.
   ...REFRAME_TOOL_SCHEMAS,
   // Async render jobs: submit_render_job enqueues a long render and track_export polls progress/results.
@@ -240,6 +252,10 @@ const EXECUTOR_GROUPS: ReadonlyArray<readonly [ReadonlySet<string>, ToolExecutor
   [PLACE_GRAPHICS_TOOL_NAMES, async () => (await import('./tools/placement-tools')).execPlaceGraphicsTool],
   [SHADER_TOOL_NAMES, async () => (await import('./tools/shader-tools')).execShaderTool],
   [HIGHLIGHT_TOOL_NAMES, async () => (await import('./tools/highlight-tool')).execHighlightTool],
+  [SHORTS_TOOL_NAMES, async () => (await import('./tools/shorts-tools')).execShortsTool],
+  [MAKE_SHORTS_TOOL_NAMES, async () => (await import('./tools/make-shorts-tools')).execMakeShortsTool],
+  [TIGHTEN_TOOL_NAMES, async () => (await import('./tools/tighten-tools')).execTightenTool],
+  [SOCIAL_COPY_TOOL_NAMES, async () => (await import('./tools/social-copy-tools')).execSocialCopyTool],
   [REFRAME_TOOL_NAMES, async () => (await import('./tools/reframe-tools')).execReframeTool],
   [EXPORT_TOOL_NAMES, async () => (await import('./tools/export-tools')).execExportTool],
   [EXPORT_QA_TOOL_NAMES, async () => (await import('./tools/export-qa-tools')).execExportQaTool],

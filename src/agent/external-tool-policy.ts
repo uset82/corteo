@@ -8,7 +8,7 @@ const READ_ONLY_TOOL_NAMES = new Set([
   'read_script', 'view_timeline_frames', 'view_asset_frames', 'browse_library',
   'read_captions', 'read_project', 'read_transcript', 'find_transcript',
   'search_media', 'search_stock_media', 'search_fonts', 'analyze_music', 'inspect_music', 'music_edit_plan', 'music_image_plan',
-  'read_agent_artifact', 'browse_local_media',
+  'read_agent_artifact', 'browse_local_media', 'score_moments', 'calibrate_scores', 'write_social_copy',
 ]);
 
 const DRAFT_EDIT_TOOL_NAMES = new Set([
@@ -17,6 +17,10 @@ const DRAFT_EDIT_TOOL_NAMES = new Set([
   'set_aspect_ratio', 'manage_timelines', 'edit_track', 'apply_script',
   'edit_item', 'manage_effects', 'edit_captions', 'update_watermark',
   'manage_markers', 'apply_caption_avoidance', 'place_graphics_in_safe_zone', 'auto_reframe',
+  // Plan 5: one call that cuts sequences, turns captions on and may reframe — all draft edits.
+  'make_shorts',
+  // Plan 5: word-level cleanup; destructive but reversible in one undo step.
+  'tighten_speech',
   'manage_design_style',
   'import_timeline',
   'export_jianying_draft',

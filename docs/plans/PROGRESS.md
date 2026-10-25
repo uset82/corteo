@@ -1,6 +1,6 @@
 # Progress
 
-The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2), `docs/plans/03-deepseek-harness.md` (Plan 3) and `docs/plans/04-claudia-brand.md` (Plan 4). Rules and the work loop: `AGENTS.md`.
+The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2), `docs/plans/03-deepseek-harness.md` (Plan 3), `docs/plans/04-claudia-brand.md` (Plan 4) and `docs/plans/05-opus-parity.md` (Plan 5). Rules and the work loop: `AGENTS.md`.
 
 **Picking the next task:** if a task is `doing`, a previous session stopped in the middle of it: resume it first. Otherwise go down the table and take the first task whose status is `todo` and whose "Needs" are all `done`. Change its status to `doing`, finish it, set `done`, and commit this file together with the work.
 
@@ -498,3 +498,82 @@ Executed by the WorkBuddy agent on 2026-10-24 (the Qoder agent was not available
   - The editor has no phone layout upstream: at 390 px the chat is a column about 95 px wide. The plan only asks for the projects page to work at 390 px.
   - The panels the top bar and the chat open (generation tasks, export history, run inspector, settings) are still mostly English: P5-1.
 - Known remainder, deliberately out of scope: the old name still appears in `src/agent/skills/**/SKILL.md`, in `X-OpenChatCut-*` header constants, in `assets/agent/openchatcut-tool-schemas.json` and in the agent tool descriptions in `src/agent/external-tool-shape.ts`. Those are identifiers and agent-facing contract text, not product copy; renaming the headers or the schema path would break the desktop and MCP bridges.
+
+---
+
+## Opus parity track (OP)
+Plan: `docs/plans/05-opus-parity.md` (written 2026-10-25, not started). Its task cards are in that file.
+This track is deliberately **not** in the main table, so the picking rule above never returns it: take an OP task only when the user asks for Opus-parity work.
+
+| ID | Task | Status | Needs |
+|----|------|--------|-------|
+| OP-01 | `score_moments`: rubric engine | done | |
+| OP-02 | `find_highlights` ranks, snaps, dedupes | done | OP-01 |
+| OP-03 | `make_shorts`: source in, clips out | done | OP-02 |
+| OP-04 | Calibration ledger | done | OP-01 |
+| OP-05 | "Analizar episodio" panel | todo | OP-03 |
+| OP-06 | `tighten_speech` | done | |
+| OP-07 | `censor_words` | todo | |
+| OP-08 | Shorts caption presets, keywords, line breaking | todo | |
+| OP-09 | `write_clip_title` | todo | |
+| OP-10 | Brand kit | todo | |
+| OP-11 | Reframe polish: dead zone and cheap modes | todo | |
+| OP-12 | `write_social_copy` | done | |
+| OP-13 | Scheduled publish | todo | OP-12 |
+| OP-14 | `search_catalog` (semantic) | optional | |
+| OP-15 | Performance loop | optional | OP-13 |
+
+### Opus parity: decisions
+- Trend is absent from the score (`trend: null`): there is no local trend feed, and a fabricated dimension would be worse than a missing one.
+- Chapters before candidates: segment by transcript topic shift crossed with `detect_scenes`, then score inside each chapter.
+- Forking is off the table for all sixteen reviewed projects (Python-first or non-OSI licences); nine MIT artefacts are ported instead, listed in the plan, section 5.2.
+
+**OP-01 (done 2026-10-25).** `score_moments` shipped as a read-only tool: 123 → 124 tools.
+- `src/agent/shorts/` holds the engine (`chapters`, `candidates`, `signals`, `rubric`, `score`, `types`, `transcript-item`); `src/agent/tools/shorts-tools.ts` is the tool. Verifies: `src/agent/shorts/rubric.verify.ts` and `src/agent/tools/shorts-tools.verify.ts`, both in `test:serial`.
+- The score is 0-99 over Hook / Flow / Value / Sound. `sound` replaces Opus's Trend: there is no trend feed, and the model never scores delivery because it cannot hear it. Measured signals are 60 %, the model 40 %, and with no provider the measured score still ranks.
+- The candidate contract is word indices, not timestamps: a verdict that does not match a candidate's own indices is dropped, so a drifting model cannot move a cut.
+- `genre` replaces ClipAnything's visual profile. There is no local vision model at runtime, and pretending to multimodal analysis would be dishonest; scene alignment stays for a later task.
+- Chapters merge below 8 s, so a short source is one chapter and the candidates are then split by `maxSeconds`.
+- UI lands in OP-05: OP-01 is agent-only on purpose, and the plan says so.
+
+**OP-02 (done 2026-10-25).** `find_highlights` ranks and filters with the same score, inline.
+- `src/agent/shorts/score-ranges.ts` scores already-chosen word ranges (same 60/40 blend, **no gates**: the caller chose the spans, so a gate must not silently shrink the batch). Verify: `src/agent/shorts/score-ranges.verify.ts`.
+- New args: `minScore` (0-99, default 0, so existing callers are unchanged), `score` (default true; false skips the model for a fast cut) and `genre`. Every short now carries `score`, `subscores`, `reason` and `risks`; dropped moments come back in `rejected[]` with `por debajo de minScore N`, and `scoreModel` says whether the model was used.
+- Selection still decides the spans; scoring only ranks and filters. `highlight-tool.verify.ts` keeps its original assertions and adds score/sub-score checks plus a `minScore: 99` case that produces zero sequences and two reported rejections.
+- Cost: one extra model call per `find_highlights` when scoring is on (`score:false` opts out).
+
+**OP-03 (done 2026-10-25).** `make_shorts`: one call from a transcribed source to finished clips. 124 → 125 tools.
+- The analysis was extracted to `src/agent/shorts/analyze.ts`, and both `score_moments` and `make_shorts` call it. That was the point of the card: the pipeline may compose, it may not re-implement.
+- Composition only: `assembleShorts` (the `find_highlights` cut path), `edit_captions` (`action=enable`, then optional `motionPreset`), `auto_reframe`, `submit_render_job`. Nothing new renders, crops or paginates captions.
+- Args: `count`, `minSeconds`/`maxSeconds`, `ratio`, `minScore` (default 55), `direction`, `topic`, `genre`, `captionsPreset`, `captionMotion`, `reframe` (default true), `render` (`none` | `previews`).
+- Returns per clip: `sequenceId`, `startFrame`/`endFrame`, `seconds`, `score`, `subscores`, `reason`, `risks`, `captions` (`applied`/`failed`/`skipped`), `reframe` (`applied`/`skipped`), and `renderId` when a preview was queued; plus `alternates`, `belowThreshold` and the rejected list.
+- **Deviation from the card, recorded:** there is no new `analysisId` job store. Each clip's render is an existing render job, polled with `track_export`; inventing a second job system would have duplicated the queue, the recovery and the UI. The clip-level work is synchronous, which is honest for 5–10 clips.
+- Degradation: no DOM → `reframe: 'skipped'` and a Spanish note; a caption failure never fails the run; `minScore` above every score returns `count: 0` with a note and creates nothing.
+- Verify: `src/agent/tools/make-shorts-tools.verify.ts` covers the happy path, reframe-without-DOM, captions on, the below-threshold path and the two error paths.
+
+**OP-04 (done 2026-10-25).** Calibration from the user's own approve/reject decisions. 125 → 126 tools.
+- `src/agent/shorts/calibration.ts`: ledger, `recordDecision` (one row per span, newest wins, capped at 500), `computeCalibration` (weights, suggested `minScore`, confidence) and `clearDecisions`. Verify: `src/agent/shorts/calibration.verify.ts`.
+- The math is deliberately small and honest: under 12 decisions, or with fewer than 5 on either side, the weights are identity and the note says so. Above that, a dimension that separates approved from rejected moments gains weight through `tanh(gap/20)`, capped 0.6–1.6, renormalised to sum 4 so the 0–99 scale means the same thing. `composite()` takes the multipliers; identity reproduces the unweighted score exactly, which the verify asserts.
+- `score_moments` and `make_shorts` accept `calibration: true` (default false) and pass the weights through `analyzeMoments` → `rankMoments`; `score_moments` reports which calibration it used.
+- New read-only tool `calibrate_scores` returns decisions, weights, suggested `minScore` and whether it is applied.
+- **Decision, recorded:** the ledger lives in the browser profile (the same place caption presets live), not in SQLite. The editor is single-user and local, and a server table for twelve numbers would be infrastructure without a reason. OP-05 is what writes real decisions into it.
+- Not done here on purpose: nothing in the UI records approvals yet, so in a fresh profile `calibrate_scores` reports 0 decisions — true, not a stub.
+
+**OP-06 (done 2026-10-25).** `tighten_speech`: review-first speech cleanup. 126 → 127 tools.
+- The card assumed there was no filler pass; there is. `clean_script` already removes fillers and compresses pauses in one undoable batch, so this is **not** a second engine: `src/agent/shorts/tighten.ts` previews with a Spanish-first matcher (fillers, two-word fillers like "o sea", false starts, pauses over the cap) and the tool delegates the actual edit to `clean_script`. That was the only honest way to keep one filler implementation in the repo.
+- Two steps always: the first call lists what would go (word, time, reason, pause length, seconds recovered) and edits nothing; `apply:true` does it after the user approves. The verify asserts the timeline is byte-identical after a preview.
+- Args: `itemId`, `apply`, `minPauseMs` (default 400, matching Opus), `extraFillers`, `cutPadMs`.
+- **Deviation, recorded:** the card's "Apretar el habla" switch in the clip panel is not built. OP-05's panel is the one UI surface for this phase, and it will host tighten's preview/apply pair; until then the operation is agent-only. Tracked in the OP-05 card.
+- Verifies: `src/agent/shorts/tighten.verify.ts` (matcher) and `src/agent/tools/tighten-tools.verify.ts` (preview → untouched, apply → `clean_script` result passed through).
+
+**OP-12 (done 2026-10-25).** `write_social_copy`: per-platform title, description and hashtags. 127 → 128 tools.
+- `src/agent/shorts/social-copy.ts` holds one limits table for the nine platforms publish already supports (YouTube 100/5000, X 280/280, Instagram and TikTok 2200, …), a word-boundary clamp, hashtag hygiene (strip `#`, drop duplicates and junk, per-platform cap) and a fallback that uses the clip's opening sentence when there is no model. Verify: `src/agent/shorts/social-copy.verify.ts`, which walks every platform with an oversized input and asserts all three limits.
+- Tool `write_social_copy` reads a word range from a transcribed clip (clamped, never fatal), defaults to tiktok/instagram/youtube, rejects unknown platforms with the valid list, and returns `modelUsed` so nobody mistakes a fallback for generated copy.
+- **Deviation, recorded:** nothing is stored on the sequence. `publish_to_social` already takes `title` and `description`, so the copy is passed straight into it; a second stored copy would drift the moment the clip changes. The publish dialog prefill is a UI follow-up, not a data model.
+- Read-only, so it never needs approval: it only writes text into the reply.
+
+
+### Opus parity: blockers
+- **Untracked leftovers from the Plan 2 session break the gates.** `src/agent/skills/escuchar-cancion/` (untracked) makes `npm run verify:agent-tools` fail at `skills-catalog.verify` ("内置技能全部在册,无多无少", actual list contains `escuchar-cancion`), and untracked `src/editor/musicReactions.ts`, `src/components/inspector/MusicReactionControls.tsx` and `src/agent/tools/music-reaction-tools.ts` make `npx tsc -b` report 28 errors (`MusicReactionRecord` is not exported, `musicReactions` is not on `TimelineItem`, `setMusicReactions` is not a command). They are not this track's files.
+  - Worked around, not fixed: `mv src/agent/skills/escuchar-cancion /tmp/leftover-escuchar-cancion`, run the gates, `mv` it back. With it moved aside, `verify:agent-tools` and `verify:mcp` both exit 0, and `npx tsc -b` reports no error in any Plan 5 file.
+  - Unblocked by committing or deleting that WIP, or by the Plan 2 session finishing it.

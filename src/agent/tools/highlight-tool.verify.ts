@@ -9,6 +9,7 @@ import type { TranscriptWord } from '../../transcript/types';
 import { docFromTimeline } from '../../persist/projectStore';
 import type { AgentContext } from '../context';
 import { execHighlightTool, validateHighlights, setHighlightSelector } from './highlight-tool';
+import { setRubricScorer } from '../shorts/rubric';
 
 // fps 30 → msToFrame(ms)=round(ms/1000*30):0→0,500→15,1000→30,1400→42,1700→51,2000→60,2600→78,3000→90,3500→105
 const words: TranscriptWord[] = [
@@ -56,12 +57,18 @@ setHighlightSelector(async () => [
   { startWordIndex: 2, endWordIndex: 6, title: '最精彩', reason: '高信息密度' },
 ]);
 
+// Plan 5 OP-02: the scoring pass is stubbed here; selection is what this contract covers.
+setRubricScorer(async () => ({ genre: 'podcast', moments: [] }));
+
 const res = await execHighlightTool('find_highlights', { count: 5, ratio: '9:16' }, ctx) as {
-  ok: boolean; count: number; shorts: { timelineId: string; title: string; startFrame: number; endFrame: number; ratio: string }[];
+  ok: boolean; count: number; shorts: { timelineId: string; title: string; startFrame: number; endFrame: number; ratio: string; score: number; subscores: { hook: number; flow: number; value: number; sound: number } }[]; rejected: { title: string; score: number; reason: string }[];
 };
 assert.strictEqual(res.ok, true, '工具成功返回');
 assert.strictEqual(res.shorts.length, 2, '3 条候选里越界的被剔除 → 2 条短视频');
 assert.strictEqual(res.count, 2);
+assert.ok(res.shorts.every((s) => Number.isInteger(s.score) && s.score >= 0 && s.score <= 99), 'every short carries a 0-99 score');
+assert.ok(res.shorts.every((s) => typeof s.subscores.hook === 'number'), 'every short carries sub-scores');
+assert.deepStrictEqual(res.rejected, [], 'nothing is rejected when minScore is 0');
 
 // 排序后:[0,1]=开场,[2,6]=最精彩
 assert.deepStrictEqual(res.shorts.map((s) => s.title), ['开场', '最精彩']);
@@ -112,5 +119,25 @@ const err = await execHighlightTool('find_highlights', { count: 3 }, bareCtx) as
 assert.ok(err.error && /转写/.test(err.error), '无转写返回清晰错误');
 assert.strictEqual(bare.getDoc().timelines.length, 1, '错误路径不新建任何序列');
 
+// ── 5) minScore filters instead of cutting: dropped moments are reported, not hidden ───
+const strictState: TimelineState = {
+  ...state,
+  items: state.items.map((it) => ({ ...it, transcript: it.transcript ? [...it.transcript] : undefined })),
+};
+const strictDraft = makeDraft(docFromTimeline(strictState));
+const strictCtx: AgentContext = {
+  commands: strictDraft.commands, getState: strictDraft.getState, getDoc: strictDraft.getDoc,
+  getCreativeMode: () => null, templates: [], audio: [],
+};
+const strict = await execHighlightTool('find_highlights', { count: 5, ratio: '9:16', minScore: 99 }, strictCtx) as {
+  ok: boolean; count: number; shorts: unknown[]; rejected: { title: string; score: number; reason: string }[];
+};
+assert.strictEqual(strict.count, 0, 'minScore 99 rejects every selection');
+assert.strictEqual(strict.shorts.length, 0, 'no sequence is built for a rejected moment');
+assert.strictEqual(strict.rejected.length, 2, 'both dropped moments are reported');
+assert.ok(/minScore/.test(strict.rejected[0].reason), 'the rejection says why');
+assert.strictEqual(strictDraft.getDoc().timelines.length, 1, 'a rejected-only run creates no sequence');
+
+setRubricScorer(null);
 setHighlightSelector(null); // 还原真 LLM 路径
 console.log('highlight-tool.check: ok');

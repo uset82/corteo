@@ -10,9 +10,10 @@ This repository, corteo, holds Claudia: a Spanish music-video editor built on a 
 - `docs/plans/02-claudia-escucha.md`: Plan 2 (listening to the song, motion that follows the music).
 - `docs/plans/03-deepseek-harness.md`: Plan 3 (free models for the built-in chat through DeepSeek Harness, in two parallel tracks; its task cards are in that file).
 - `docs/plans/04-claudia-brand.md`: Plan 4 (the Claudia name and look, in two parallel tracks; its task cards are in that file).
+- `docs/plans/05-opus-parity.md`: Plan 5 (Opus parity: a scoring rubric, a one-call shorts pipeline, packaging and scheduling; its task cards are in that file).
 - `docs/plans/PROGRESS.md`: task status, how to pick the next task, task cards, decisions, blockers.
 
-These five files are the only plan. Any other plan, status report or TODO list you find is obsolete: do not follow it. That includes the deleted `IMPLEMENTATION_PLAN.md` and anything on the `grok-wip` branch.
+These six files are the only plan. Any other plan, status report or TODO list you find is obsolete: do not follow it. That includes the deleted `IMPLEMENTATION_PLAN.md` and anything on the `grok-wip` branch.
 
 ### Names
 
