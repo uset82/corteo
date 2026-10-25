@@ -485,7 +485,7 @@ This track is deliberately **not** in the main table, so the picking rule above 
 | OP-03 | `make_shorts`: source in, clips out | done | OP-02 |
 | OP-04 | Calibration ledger | done | OP-01 |
 | OP-05 | "Analizar episodio" panel | todo | OP-03 |
-| OP-06 | `tighten_speech` | todo | |
+| OP-06 | `tighten_speech` | done | |
 | OP-07 | `censor_words` | todo | |
 | OP-08 | Shorts caption presets, keywords, line breaking | todo | |
 | OP-09 | `write_clip_title` | todo | |
@@ -531,6 +531,13 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - New read-only tool `calibrate_scores` returns decisions, weights, suggested `minScore` and whether it is applied.
 - **Decision, recorded:** the ledger lives in the browser profile (the same place caption presets live), not in SQLite. The editor is single-user and local, and a server table for twelve numbers would be infrastructure without a reason. OP-05 is what writes real decisions into it.
 - Not done here on purpose: nothing in the UI records approvals yet, so in a fresh profile `calibrate_scores` reports 0 decisions — true, not a stub.
+
+**OP-06 (done 2026-10-25).** `tighten_speech`: review-first speech cleanup. 126 → 127 tools.
+- The card assumed there was no filler pass; there is. `clean_script` already removes fillers and compresses pauses in one undoable batch, so this is **not** a second engine: `src/agent/shorts/tighten.ts` previews with a Spanish-first matcher (fillers, two-word fillers like "o sea", false starts, pauses over the cap) and the tool delegates the actual edit to `clean_script`. That was the only honest way to keep one filler implementation in the repo.
+- Two steps always: the first call lists what would go (word, time, reason, pause length, seconds recovered) and edits nothing; `apply:true` does it after the user approves. The verify asserts the timeline is byte-identical after a preview.
+- Args: `itemId`, `apply`, `minPauseMs` (default 400, matching Opus), `extraFillers`, `cutPadMs`.
+- **Deviation, recorded:** the card's "Apretar el habla" switch in the clip panel is not built. OP-05's panel is the one UI surface for this phase, and it will host tighten's preview/apply pair; until then the operation is agent-only. Tracked in the OP-05 card.
+- Verifies: `src/agent/shorts/tighten.verify.ts` (matcher) and `src/agent/tools/tighten-tools.verify.ts` (preview → untouched, apply → `clean_script` result passed through).
 
 
 ### Opus parity: blockers

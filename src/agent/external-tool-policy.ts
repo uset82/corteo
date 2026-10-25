@@ -19,6 +19,8 @@ const DRAFT_EDIT_TOOL_NAMES = new Set([
   'manage_markers', 'apply_caption_avoidance', 'place_graphics_in_safe_zone', 'auto_reframe',
   // Plan 5: one call that cuts sequences, turns captions on and may reframe — all draft edits.
   'make_shorts',
+  // Plan 5: word-level cleanup; destructive but reversible in one undo step.
+  'tighten_speech',
   'manage_design_style',
   'import_timeline',
   'export_jianying_draft',
