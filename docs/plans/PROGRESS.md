@@ -580,6 +580,12 @@ This table is the current status; nothing here is open except OP-14, which the p
 | OP-14 | `search_catalog` (semantic) | optional |
 | OP-15 | Performance loop (`score_performance`) | done |
 
-`main` at `26d36ec`: full gate 215/215, exit 0. The tool count went 123 to 136.
+`main` at `35b127c` (this section) and green: full gate 215/215, exit 0 at `26d36ec`. The tool count went 123 to 136.
+
+**OP-14 needs a decision, not code.** The existing `src/media/semantic-search/` embeds
+*frames* with a vision model for duplicate detection; there is no text-embedding model and
+`search_content` is FTS5. Making it semantic means either a new local text-embedding
+dependency (rule 2 needs the card to name it) or switching the feature to image-similarity
+search over the vision model that already exists. See the card note in `06-opus-parity.md`.
 Known gap: the per-word emphasis rule and its channel are unit-tested, but **no exported frame
 has been compared in pixels**; a render on a machine with Chromium closes it.

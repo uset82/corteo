@@ -412,6 +412,36 @@ and the verify is registered in `test:serial`.
 - Import a CSV of published views/retention, join it to the calibration ledger, report score
   bands against real performance, and offer recalibrated weights. No platform API, no scraping.
 
+### OP-14: why it is still `optional`, checked 2026-10-25
+
+Its summary says "extend `search_content` to visual descriptions and embeddings", which sounds
+like wiring. It is not, and the check is worth recording:
+
+- `src/media/semantic-search/` exists, but it is a **vision** pipeline for duplicate detection:
+  frame sampling (`mediaFrames.ts`), a native worker (`nativeSemanticWorkerAdapter.ts`) and a
+  `SEMANTIC_MODEL_ID` that embeds *frames*, not text. There is no text-embedding model in the
+  repo, and no query entry point that takes a sentence.
+- `search_content` is FTS5 over chats, captions and transcripts across projects. Keyword search
+  already works; "where did I explain the chorus" finds the word, not the scene.
+- So OP-14 needs one of two decisions, and both are the user's:
+  1. **A text-embedding model** (local, ONNX or WASM) to index transcripts and descriptions.
+     That is a new dependency, which `AGENTS.md` rule 2 forbids unless a card names it. Naming
+     it is the decision.
+  2. **Image-similarity search instead** — reuse the vision model that already exists and let
+     the user pick a frame to find similar scenes. No new dependency, a different product.
+- Until one is chosen, OP-14 stays `optional`. Writing it either way today would mean guessing
+  which one, and the guess would be wrong for one of the two.
+
+### The one visual gap
+
+`keywordEmphasis` is proven at the rule level (`captionWordColour`) and at the channel level
+(`applyWordOverrides` → `word.emphasis` → the layer), and preview and export share
+`CaptionsLayer`. What is **not** proven is pixels: no exported frame has been compared. Closing
+it needs a render verify on top of `remotion/serve-bundle.mjs` + `renderStill` (the existing
+`video-decoder-render.verify.mjs` is the model to copy), two stills of the same cue — one with
+emphasis, one without — and a pixel compare at the word. That webpack bundle is ~150 MB and the
+run takes minutes per still, which is why it was not attempted at the end of a long session.
+
 ## 7. Rules this plan respects
 
 1. **No paid API.** Scoring uses the free DeepSeek Harness gateway or a local Ollama/LM Studio;
