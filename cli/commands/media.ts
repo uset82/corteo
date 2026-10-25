@@ -1,13 +1,14 @@
-// `occ media ...` — the project's media pool. Read-only for now: import paths are
-// deliberately not wired here yet. A headless import needs the upload receipt +
-// normalize-media chain the browser owns (see src/agent/tools/upload-finalize.ts),
-// and half-wiring it would create a second ingest path.
-import { rejectUnknownFlags, type CommandLine } from '../args.ts';
+// `occ media ...` — the project's media pool. `import` uses the same headless
+// import_asset path the offline MCP session uses (server/local-path-import.ts).
+import { isAbsolute } from 'node:path';
+import { flagBoolean, rejectUnknownFlags, type CommandLine } from '../args.ts';
+import { UsageError } from '../errors.ts';
 import { printJson, renderTable, writeStdout } from '../output.ts';
 import { readProjectDoc, resolveProject } from '../store.ts';
-import { GLOBAL_FLAGS, projectReference, subLine } from './common.ts';
+import { GLOBAL_FLAGS, projectReference, requirePositional, subLine } from './common.ts';
+import { runToolOps } from './run-op.ts';
 
-const FLAGS = [...GLOBAL_FLAGS, 'kind'] as const;
+const FLAGS = [...GLOBAL_FLAGS, 'kind', 'apply'] as const;
 
 export async function runMediaCommand(
   positionals: readonly string[],
@@ -21,20 +22,29 @@ export async function runMediaCommand(
     case 'ls':
     case 'list':
       return listCommand(line, json);
+    case 'import':
+      return importCommand(line, commandLine, json);
     case undefined:
-      throw new Error('media needs a subcommand: ls');
+      throw new UsageError('media needs a subcommand: ls | import');
     default:
-      return importHint(subcommand);
+      throw new UsageError(`unknown media subcommand "${subcommand}"`);
   }
 }
 
-/** Import lives in the app (upload UI) or the desktop agent tools; say so plainly. */
-function importHint(subcommand: string): Promise<void> {
-  return Promise.reject(new Error(
-    `media ${subcommand} is not available yet: headless import needs the upload receipt and `
-    + 'normalize-media chain the browser owns. Use the app\'s media pool, or the desktop agent '
-    + 'tools import_asset / import_folder.',
-  ));
+async function importCommand(line: CommandLine, commandLine: CommandLine, json: boolean): Promise<void> {
+  const filePath = requirePositional(line, 0, 'an absolute media path');
+  if (!isAbsolute(filePath)) {
+    throw new UsageError(`media import needs an absolute path, got "${filePath}"`);
+  }
+  const project = await resolveProject(projectReference(line, 1));
+  await runToolOps({
+    projectId: project.id,
+    projectName: project.name,
+    ops: [{ tool: 'import_asset', args: { path: filePath } }],
+    apply: flagBoolean(commandLine, 'apply'),
+    json,
+    label: 'media import',
+  });
 }
 
 async function listCommand(line: CommandLine, json: boolean): Promise<void> {
@@ -56,7 +66,7 @@ async function listCommand(line: CommandLine, json: boolean): Promise<void> {
     return;
   }
   if (assets.length === 0) {
-    writeStdout(`No media in ${project.name}. Import files in the app's media pool.`);
+    writeStdout(`No media in ${project.name}. Import a file: occ media import /absolute/path.mp4 --apply`);
     return;
   }
   writeStdout(renderTable(

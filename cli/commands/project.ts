@@ -1,4 +1,5 @@
 // `occ project ...` — the project library commands.
+import { writeFile } from 'node:fs/promises';
 import { flagBoolean, flagText, rejectUnknownFlags, type CommandLine } from '../args.ts';
 import { UsageError } from '../errors.ts';
 import { formatTimestamp, printJson, renderTable, writeStdout } from '../output.ts';
@@ -17,6 +18,7 @@ const FLAGS = [
   ...GLOBAL_FLAGS,
   'all',
   'doc',
+  'out',
   'description',
   'fps',
   'width',
@@ -72,6 +74,13 @@ async function showCommand(line: CommandLine, commandLine: CommandLine, json: bo
   const project = await resolveProject(projectReference(line));
   const doc = await readProjectDoc(project.id);
   const timelines = timelineRows(doc);
+  const outPath = flagText(commandLine, 'out');
+  if (outPath) {
+    await writeFile(outPath, `${JSON.stringify(doc, null, 2)}\n`);
+    if (!json && !flagBoolean(commandLine, 'doc')) {
+      writeStdout(outPath);
+    }
+  }
   if (json) {
     printJson({ project, timelines, ...(flagBoolean(commandLine, 'doc') ? { doc } : {}) });
     return;

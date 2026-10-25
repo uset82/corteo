@@ -164,9 +164,33 @@ Imprime la URL (normalmente `http://127.0.0.1:18899/v1`) y la clave. Sin `--show
 - Dirección: `http://localhost:5199/api/external-mcp/mcp`, con el encabezado `Authorization: Bearer <token>`.
 - Token: en la página de proyectos, el botón de arriba a la derecha «Agentes externos (MCP)» (el nombre aparece al pasar el ratón), o el archivo `mcp-token` de la carpeta de tu perfil.
 
-Hoy eso sirve para clientes en el mismo PC. Para Claudia, que no corre en tu PC, la dirección es la de abajo.
+Hoy eso sirve para un cliente en la misma máquina. Claudia usa su propia máquina: [Claudia en su propia máquina](#claudia-en-su-propia-máquina). El túnel de más abajo es opcional.
 
-### Publicar el editor
+### Claudia en su propia máquina
+
+Claudia no corre en el PC de Carlos. Tiene una máquina Linux propia. Ahí clona este repo y arranca el editor en local. No hace falta el túnel ni que el PC de Carlos esté encendido.
+
+Node 24 (`nvm use`), luego `npm install`. En una terminal:
+
+```bash
+npm run claudia:local
+```
+
+Eso escucha solo en `http://127.0.0.1:5199`. El MCP está en `http://127.0.0.1:5199/api/external-mcp/mcp`. Los proveedores de pago quedan apagados. En otra terminal, el shell (sin navegador):
+
+```bash
+npm run corteo -- project new "Prueba" --json
+npm run corteo -- media import /ruta/absoluta/clip.mp4 --apply --json
+npm run corteo -- tools call edit_item --args '{"adds":[{"type":"video","assetId":"ID","fromFrame":0}]}' --apply
+npm run corteo -- project show Prueba --doc --out proyecto.json
+CC_RENDER_GL=swangle npm run corteo -- render --out /ruta/salida.mp4
+```
+
+`proyecto.json` es el documento del proyecto para leerlo. El archivo no es la biblioteca: para cambiar el corte se usa el shell. Sin GPU, `CC_RENDER_GL=swangle`.
+
+### Publicar el editor (opcional)
+
+Esto es solo para abrir el mismo editor en un navegador fuera de la máquina. Claudia no lo necesita.
 
 https://corteo.uset82.workers.dev/ deja de ser una copia estática y pasa a ser el editor que corre en tu PC. Quien abre esa dirección ve tus proyectos y usa los modelos gratis. Claudia llama a `https://corteo.uset82.workers.dev/api/external-mcp/mcp` con el token. Es un solo editor compartido: el chat gasta la cuota gratis de tu PC, y la clave de reenvío no sale de tu PC.
 

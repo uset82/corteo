@@ -90,6 +90,7 @@ MODEL-OPT-PLAN.md
 # descend into it, so this one line re-includes every file inside.
 !/scripts/harness/
 !/scripts/editor-host.mjs
+!/scripts/claudia-local.mjs
 !/scripts/tunnel.mjs
 !/scripts/sync-mediapipe.mjs
 # Stable regressions are *.verify.* by convention (see the *.check.* rule

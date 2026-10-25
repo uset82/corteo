@@ -5,6 +5,22 @@ Instructions for any coding agent working in this repo (Cursor, Qoder, WorkBuddy
 ## What this is
 This repository, corteo, holds Claudia: a Spanish music-video editor built on a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut) (AGPL v3), a local video editor in the browser (React 19 + TypeScript + Remotion 4), served by a Vite dev server whose plugins are the backend. The editor is named after Claudia, the user's Grok bot and the AI pop star of claudia.gallery, who drives it over MCP. In the plans, "Claudia" on its own means her; the product is "the editor". The user is a Spanish-speaking musician.
 
+## Where Claudia runs
+
+Claudia has her own Linux VM, separate from Carlos's PC. She clones this repo there and runs corteo on that machine. She does not need Carlos's PC to be on, a Cloudflare tunnel, or https://corteo.uset82.workers.dev/. Those publish the same editor for a browser and stay optional.
+
+On her VM, Node 24 (`nvm use`), then:
+
+- `npm run claudia:local` starts the editor and the MCP server on `http://127.0.0.1:5199` with paid providers off (`OPENCHATCUT_PROVIDERS=off` unless the environment already set it). The MCP path is `http://127.0.0.1:5199/api/external-mcp/mcp`. The token is `OPENCHATCUT_MCP_TOKEN` or the `mcp-token` file in the dev profile. Do not print the token into a chat.
+- `npm run corteo -- ...` is the shell (`occ`). It talks to the project library directly, with no browser:
+  - `project new "Nombre" --json` and `project list --json`
+  - `media import /absolute/path.mp4 --apply --json`
+  - `tools call edit_item --args '{"adds":[{"type":"video","assetId":"<id>","fromFrame":0}]}' --apply` places a pool clip. `type:"audio"` and `type:"text"` place audio and a title. `item split <clip> --at 2s --apply` cuts.
+  - `project show <project> --doc --out project.json` writes the project document as JSON. The live library is still the profile store; editing that JSON file does not change the project. Use the shell for edits.
+  - `render --out /absolute/path.mp4` renders with Remotion through headless Chrome. No GPU: `CC_RENDER_GL=swangle`.
+
+`npm run start:claudia`, `npm run tunnel`, `npm run editor-host` and `npx wrangler deploy` are the optional browser path for Carlos.
+
 ## Where the plan is
 - `docs/plans/01-editor-claudia.md`: Plan 1 (editor features, Claudia's connection, Spanish UI, end-to-end proof).
 - `docs/plans/02-claudia-escucha.md`: Plan 2 (listening to the song, motion that follows the music).

@@ -142,6 +142,18 @@ try {
   // 3. the new project renders as an empty 16:9 timeline
   assert.deepEqual(activeTimelineSize(created.id), { width: 1920, height: 1080, fps: 30 });
 
+  // 3b. a disk file imports into the pool, and the document can be written as JSON
+  const tonePath = join(HOME, 'tone.wav');
+  writeFileSync(tonePath, toneWav());
+  const importedWav = occJson<CallJson>(['media', 'import', tonePath, '--project', created.id, '--apply', '--json']);
+  assert.equal(importedWav.applied, true);
+  const pool = occJson<{ assets: readonly { id: string }[] }>(['media', 'ls', created.id, '--json']);
+  assert.equal(pool.assets.length, 1, 'the imported wav is in the media pool');
+  const docPath = join(HOME, 'project.json');
+  occOk(['project', 'show', created.id, '--out', docPath]);
+  const dumped = JSON.parse(readFileSync(docPath, 'utf8')) as { assets: unknown[] };
+  assert.equal(dumped.assets.length, 1, 'project show --out writes the document as JSON');
+
   // 4. the tool list tells the truth about what is headless
   const headless = occJson<ToolJson[]>(['tools', 'ls', '--json']);
   assert.ok(headless.some((tool) => tool.name === 'read_project'), 'read_project must be headless');

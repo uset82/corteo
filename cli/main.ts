@@ -10,11 +10,12 @@ const USAGE = `occ — OpenChatCut command line
 
 Usage
   occ project list [--all] [--json]
-  occ project show [<project>] [--doc] [--json]
+  occ project show [<project>] [--doc] [--out <file.json>] [--json]
   occ project new <name> [--size 1920x1080] [--fps 30] [--json]
   occ timeline show [<project>] [--json]
   occ timeline items [<project>] [--track <track id>] [--timeline <id>] [--json]
   occ media ls [<project>] [--json]
+  occ media import <absolute-path> [--apply] [--json]
   occ render [<project>] --out <file> [--resolution 1080p] [--fps 30] [--codec h264] [--from <frame|4s>] [--to <frame|4s>] [--dry-run] [--quiet]
   occ export jianying [<project>] [--draft-name <name>] [--out-dir <dir>] [--json]
   occ item move <clip> [--track <track>] [--start <frame|4s>] [--apply]
