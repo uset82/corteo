@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom';
 import { theme } from '../../theme';
 import { Icon } from '../icons';
-import { ClaudiaMark, ClaudiaWordmark } from '../../brand/ClaudiaMarks';
+import { CorteoMark, CorteoWordmark } from '../../brand/CorteoMarks';
 import { AgentChangeLogMenu } from './AgentChangeLogMenu';
 import { AgentRunInspector } from './AgentRunInspector';
 import { ChatComposer } from './ChatComposer';
@@ -43,8 +43,8 @@ function CollapsedPanel({ controller }: { controller: ChatPanelController }) {
         style={{ background: 'none', border: 'none', color: theme.textDim, cursor: 'pointer', fontSize: 14 }}>
         <span style={{ transform: 'rotate(-90deg)', display: 'inline-flex' }}><Icon name="chevronDown" size={14} /></span>
       </button>
-      <ClaudiaMark size={14} />
-      <div className="cc-chat-collapsed-brand">Claudia</div>
+      <CorteoMark size={14} />
+      <div className="cc-chat-collapsed-brand">corteo</div>
     </aside>
   </>;
 }
@@ -54,7 +54,7 @@ function ChatHeader({ controller }: { controller: ChatPanelController }) {
   return <div className="cc-chat-header">
     <div className="cc-chat-brand">
       <span className="cc-chat-brand-copy">
-        <ClaudiaWordmark size={13} />
+        <CorteoWordmark size={13} />
         <small>{t('编辑助手')}</small>
       </span>
     </div>

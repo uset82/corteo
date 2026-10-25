@@ -42,7 +42,7 @@ const CONTENT_COLOR_SELECTORS = new Set([
 ]);
 
 const CHROME_FILES = [
-  'src/brand/ClaudiaMarks.tsx',
+  'src/brand/CorteoMarks.tsx',
   'src/components/ExportHistory.tsx',
   'src/components/TopBar.tsx',
   'src/components/chat/ChatPanelView.tsx',

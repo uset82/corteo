@@ -63,33 +63,23 @@
   font-style: normal;
   font-display: swap;
 }
-/* Claudia brand faces (docs/plans/04-claudia-brand.md, BD-1). Each is used in
- * exactly one place:
- * - 'Heros' = TeX Gyre Heros Bold (GUST Font License, see
- *   public/fonts/claudia/GUST-FONT-LICENSE.txt). A Helvetica look-alike, for the
- *   wordmark only, through --cc-font-brand.
- * - 'DINish Condensed' Black (OFL-1.1, see
- *   public/fonts/claudia/OFL-DINish.txt). Display type only — the projects page
- *   title and the title cards of projects without a thumbnail — through
+/* corteo's one brand face (docs/plans/05-corteo.md, C-02).
+ * - 'DINish Condensed' Black (OFL-1.1, see public/fonts/corteo/OFL-DINish.txt).
+ *   The wordmark, through --cc-font-brand, and display type - the projects page
+ *   title and the title cards of projects without a thumbnail - through
  *   --cc-font-display.
- * Both are self-hosted because the gallery relies on the system's Helvetica and
- * DIN Condensed, and Windows ships neither. */
-@font-face {
-  font-family: 'Heros';
-  src: url('/fonts/claudia/texgyreheros-bold.otf') format('opentype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
+ * One face, not two: the old wordmark's Helvetica look-alike went with the old
+ * wordmark, and 135 KB of font with it. Self-hosted because the gallery relied on
+ * the system's DIN Condensed and Windows ships none. */
 @font-face {
   font-family: 'DINish Condensed';
-  src: url('/fonts/claudia/DINishCondensed-Black.woff2') format('woff2');
+  src: url('/fonts/corteo/DINishCondensed-Black.woff2') format('woff2');
   font-weight: 900;
   font-style: normal;
   font-display: swap;
 }
 :root {
-  --cc-font-brand: 'Heros', 'Helvetica Neue', Arial, sans-serif;
+  --cc-font-brand: 'DINish Condensed', 'Arial Narrow', sans-serif;
   --cc-font-display: 'DINish Condensed', 'Arial Narrow', sans-serif;
 }
 :root { color-scheme: dark; }   /* tell the browser we're already dark → skip force-dark-mode */
@@ -186,27 +176,20 @@ button, input, select { font: inherit; }
 .cc-header-btn { transition: color 0.12s, background 0.12s; }
 .cc-header-btn:hover { color: var(--cc-text) !important; background: rgba(var(--cc-ink-rgb), 0.06); }
 
-/* Claudia's marks (docs/plans/04-claudia-brand.md, BD-3). Token-only: the streak
- * takes the accent and the letters take textStrong, so every skin repaints them. */
+/* corteo's marks (docs/plans/05-corteo.md, C-02). Token-only: the mark's two
+ * halves take the accent and textStrong, the wordmark takes textStrong, so every
+ * skin repaints them. The wordmark is lowercase at every size, like the command,
+ * so there is no uppercase transform and no tracking to cancel. */
 .cc-wordmark {
   display: inline-flex;
   align-items: center;
-  gap: 0.78em;
-  margin-right: -0.2em;            /* cancels the trailing letter-space of the 0.2em tracking */
   font-family: var(--cc-font-brand);
-  font-weight: 700;
-  letter-spacing: 0.2em;
+  font-weight: 900;
+  letter-spacing: 0.02em;
   line-height: 1;
-  text-transform: uppercase;
   color: var(--cc-text-strong);
   white-space: nowrap;
   user-select: none;
-}
-.cc-wordmark-streak {
-  flex: none;
-  width: 3px;
-  height: 1.15em;
-  background: var(--cc-accent);
 }
 
 /* Projects page (docs/plans/04-claudia-brand.md, BD-4). Frameless cards: the
@@ -430,7 +413,7 @@ button, input, select { font: inherit; }
 .cc-chat-brand { min-width:0; flex:1; display:flex; align-items:center; gap:8px; }
 .cc-chat-brand-copy { min-width:0; display:flex; flex-direction:column; color:var(--cc-text); line-height:1.15; }
 .cc-chat-brand-copy small { margin-top:2px; color:var(--cc-text-dim); font-size:9.5px; }
-.cc-chat-collapsed-brand { writing-mode:vertical-rl; color:var(--cc-text-dim); font-family:var(--cc-font-brand); font-size:10px; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; }
+.cc-chat-collapsed-brand { writing-mode:vertical-rl; color:var(--cc-text-dim); font-family:var(--cc-font-brand); font-size:10px; font-weight:900; letter-spacing:0.14em; }
 @container chat-panel (max-width:220px) {
   .cc-chat-header { gap:4px; padding-inline:8px; }
   .cc-chat-brand { gap:4px; }

@@ -1,9 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="7" fill="#0a0b0d" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="corteo">
+  <title>corteo</title>
+  <!-- Favicon: the mark on the editor's void, 4px of clear space on every side. -->
+  <rect width="32" height="32" rx="7" fill="#0a0b0d"/>
   <g transform="translate(4 4)">
-    <polygon
-      fill="#d97757"
-      points="12,1 13.76,7.75 19.78,4.22 16.25,10.24 23,12 16.25,13.76 19.78,19.78 13.76,16.25 12,23 10.24,16.25 4.22,19.78 7.75,13.76 1,12 7.75,10.24 4.22,4.22 10.24,7.75"
-    />
+    <polygon fill="#ff4a1f" points="2,2 20,2 2,20"/>
+    <polygon fill="#f7f3ea" points="22,22 4,22 22,4"/>
   </g>
 </svg>

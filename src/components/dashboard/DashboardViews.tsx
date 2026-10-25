@@ -2,7 +2,7 @@ import { Suspense, useEffect } from 'react';
 import type { ProjectMeta } from '../../persist/projectStoreCoordinators';
 import { theme } from '../../theme';
 import { useT } from '../../i18n/locale';
-import { ClaudiaWordmark } from '../../brand/ClaudiaMarks';
+import { CorteoWordmark } from '../../brand/CorteoMarks';
 import { DashboardHeaderLinks } from '../DashboardHeaderLinks';
 import { Icon } from '../icons';
 import { bindAction } from '../../shortcuts/actionRegistry';
@@ -58,7 +58,7 @@ export function DashboardTitlebarContent({ model }: { model: DashboardModel }) {
   const t = useT();
   return (
     <>
-      <ClaudiaWordmark size={13} />
+      <CorteoWordmark size={13} />
       <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
         <DashboardHeaderLinks />
         <button onClick={() => model.setDialog('mcp', true)} data-tip={t('外部 Agent 接入 (MCP)')} aria-label={t('外部 Agent 接入 (MCP)')} className="cc-header-btn cc-tip cc-tip-r" style={settingsBtn}><Icon name="plug" size={16} /></button>
