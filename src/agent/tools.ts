@@ -26,6 +26,7 @@ import { SHORTS_TOOL_NAMES, SHORTS_TOOL_SCHEMAS } from './tools/schemas/shorts-t
 import { MAKE_SHORTS_TOOL_NAMES, MAKE_SHORTS_TOOL_SCHEMAS } from './tools/schemas/make-shorts-tools';
 import { TIGHTEN_TOOL_NAMES, TIGHTEN_TOOL_SCHEMAS } from './tools/schemas/tighten-tools';
 import { SOCIAL_COPY_TOOL_NAMES, SOCIAL_COPY_TOOL_SCHEMAS } from './tools/schemas/social-copy-tools';
+import { CENSOR_TOOL_NAMES, CENSOR_TOOL_SCHEMAS } from './tools/schemas/censor-tools';
 import { REFRAME_TOOL_NAMES, REFRAME_TOOL_SCHEMAS } from './tools/schemas/reframe-tools';
 import { EXPORT_TOOL_NAMES, EXPORT_TOOL_SCHEMAS } from './tools/schemas/export-tools';
 import { EXPORT_QA_TOOL_NAMES, EXPORT_QA_TOOL_SCHEMAS } from './tools/schemas/export-qa-tools';
@@ -128,6 +129,8 @@ export const TOOL_SCHEMAS: AgentToolSchema[] = [
   ...TIGHTEN_TOOL_SCHEMAS,
   // Opus parity (Plan 5): per-platform title/description/hashtags, clamped to real limits.
   ...SOCIAL_COPY_TOOL_SCHEMAS,
+  // Opus parity (Plan 5): review-first profanity mute through a volume-keyframe envelope.
+  ...CENSOR_TOOL_SCHEMAS,
   // Auto reframe: sample frames → detect subject focus → setReframeKeyframe through the existing render path.
   ...REFRAME_TOOL_SCHEMAS,
   // Async render jobs: submit_render_job enqueues a long render and track_export polls progress/results.
@@ -256,6 +259,7 @@ const EXECUTOR_GROUPS: ReadonlyArray<readonly [ReadonlySet<string>, ToolExecutor
   [MAKE_SHORTS_TOOL_NAMES, async () => (await import('./tools/make-shorts-tools')).execMakeShortsTool],
   [TIGHTEN_TOOL_NAMES, async () => (await import('./tools/tighten-tools')).execTightenTool],
   [SOCIAL_COPY_TOOL_NAMES, async () => (await import('./tools/social-copy-tools')).execSocialCopyTool],
+  [CENSOR_TOOL_NAMES, async () => (await import('./tools/censor-tools')).execCensorTool],
   [REFRAME_TOOL_NAMES, async () => (await import('./tools/reframe-tools')).execReframeTool],
   [EXPORT_TOOL_NAMES, async () => (await import('./tools/export-tools')).execExportTool],
   [EXPORT_QA_TOOL_NAMES, async () => (await import('./tools/export-qa-tools')).execExportQaTool],

@@ -513,7 +513,7 @@ This track is deliberately **not** in the main table, so the picking rule above 
 | OP-04 | Calibration ledger | done | OP-01 |
 | OP-05 | "Analizar episodio" panel | done | OP-03 |
 | OP-06 | `tighten_speech` | done | |
-| OP-07 | `censor_words` | todo | |
+| OP-07 | `censor_words` | done | |
 | OP-08 | Shorts caption presets, keywords, line breaking | todo | |
 | OP-09 | `write_clip_title` | todo | |
 | OP-10 | Brand kit | todo | |
@@ -580,6 +580,12 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - i18n: new `src/i18n/dict/en/shorts.ts` (an object-literal `export default`, because `check-i18n.mjs` ignores identifier exports — that cost one round) and 20 Spanish entries at the end of `es/index.ts`. `npm run verify:i18n` passes.
 - **Deviation, recorded:** no three-frame strip per row. A contact sheet needs the asset's `src` sampled into a canvas per candidate; the row already carries the score, the reason and the risks, and the cut is one click away. The card's "three-frame strip" stays unbuilt until someone asks for it.
 - Verify: `src/components/shorts/shortsPanel.verify.ts` is a static contract check (every `t()` key has an English entry, the two executors are used, `ranges` is passed, the ledger is fed, no direct store calls). Gates: `verify:components`, `verify:editor`, `verify:agent-tools`, `verify:mcp`, `verify:i18n` all exit 0.
+
+**OP-07 (done 2026-10-25).** `censor_words`: review-first profanity mute. 128 → 129 tools.
+- `src/agent/shorts/censor.ts` holds a Spanish-first dictionary (plus common Latin-American and English terms) matched on normalized tokens with an accent-free alias per entry, so "cabrón" and "Cabron." both hit and "cabronada" does not. Verify: `src/agent/shorts/censor.verify.ts`.
+- **The mute is a volume-keyframe envelope, not a cut**: `setKeyframe(volume, 0)` on the word and back to the clip's own volume after it, both in one `ctx.commands.batch`. The clip keeps its duration, so every other track stays frame-aligned — which matters in this editor far more than in Opus's per-clip projects. The verify asserts the envelope, the ordering and that `durationInFrames` did not change.
+- Tool `censor_words`: preview lists word/time/mute length and edits nothing; `apply:true` writes it; `extraWords` per speaker; `padMs` for a clipped consonant.
+- **Deviation, recorded:** only the mute mode exists. A bleep tone needs a generated audio asset and burned `****` needs a caption word override; neither is built, and the schema says so instead of pretending the enum has three modes.
 
 
 ### Opus parity: blockers

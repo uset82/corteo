@@ -21,6 +21,8 @@ const DRAFT_EDIT_TOOL_NAMES = new Set([
   'make_shorts',
   // Plan 5: word-level cleanup; destructive but reversible in one undo step.
   'tighten_speech',
+  // Plan 5: writes volume keyframes over the offending words, as one batch.
+  'censor_words',
   'manage_design_style',
   'import_timeline',
   'export_jianying_draft',
