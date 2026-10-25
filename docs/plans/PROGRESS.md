@@ -36,7 +36,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P1-3 | Allowed hosts from env | done | P0-3 |
 | P1-4 | "Conectar Claudia" card | done | P1-3 |
 | P1-5 | `npm run editor-host` (headless editor tab) | done | P0-3 |
-| P1-6 | `videoclip-musical` skill | todo | P1-2 |
+| P1-6 | `videoclip-musical` skill | done | P1-2 |
 | P1-7 | Webhooks with HMAC | optional | P4-3 |
 | L-01 | Server-side Beat This + CLAP runner | todo | |
 | L-02 | Listening DSP in `src/audio/listen/` | todo | |
@@ -173,7 +173,9 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Done when: with no normal browser open, `openchatcut_status` over MCP reports a connected editor and `tools/list` returns the full editor tool set (not the 44 offline tools).
 - Verify: MCP smoke test before and after starting it.
 
-### P1-6 · `videoclip-musical` skill
+### P1-6 · `videoclip-musical` skill — done
+- Done 2026-10-25: `src/agent/skills/videoclip-musical/SKILL.md` (66 lines, `user-invocable`) walks the six steps with tools that exist today. `load_skill {"name":"videoclip-musical"}` over MCP against the dev server returned 13,902 bytes with the full file. The skill count moved to 31 in `skill-loading.verify.ts`, and the bundled-skills list in `assets/agent/openchatcut-tool-schemas.json` was regenerated.
+- Also fixed here: the merged P1-2 code read `process.env` at module scope in `src/agent/external-tool-schemas.ts`, which reaches the browser through the editor bridge and crashed the editor page with "process is not defined". It now uses the existing `PROVIDERS_OFF` define in the browser and reads the env only when `process` exists (tsx/server).
 - Plan: Plan 1 › Phase 1 (skill).
 - Files: new `src/agent/skills/videoclip-musical/SKILL.md` (copy the frontmatter shape of `src/agent/skills/music-intelligence/SKILL.md`).
 - Do: Claudia's end-to-end workflow from the plan. Name only tools that exist today; each later task that adds a tool updates this skill.
@@ -358,6 +360,7 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-25 · H-9 · The repair for free lanes' bare-index tool-call deltas lives in corteo's `/llm` proxy, for `dsh` only, not in the gateway. Reason: the gateway is upstream's plugin at a pinned tag and must not be patched, and every server agent run already goes through `/llm`.
 - 2026-10-25 · H-9 · The `dsh` default model is `nvidia/nemotron-3-ultra-550b-a55b:free`, from HW-3 and HW-4, not the plugin's `combo:recommended-free` group and not the two faster lanes. Reason: the group was not among the lanes that returned a correct `split_item`, liquid hit a 429 on the real edit, and the nano reasoning model never called the timeline. Ultra did.
 - 2026-10-24 · B-9 · The Spanish pass covers the screens Plan 4 owns, read literally: the projects page with its tooltips, the top bar's button labels, the chat's first view (header, onboarding, starters, composer, workflow and model pickers, capability banner) and the phone upload page. The panels those buttons open stay for P5-1. Reason: the plan's scope line, and P5-1 is the full dictionary.
+- 2026-10-25 · P1-6 · The skill ends with a "Gaps to state honestly" list (`listen_to_song`, `apply_ken_burns`, subtitle import, variant previews, HEVC, batch comparison) instead of staying silent about them. Reason: a model that finds a hole in a scripted workflow invents a plausible tool name and burns a turn on the rejection; naming the gap makes it say so and continue with what exists.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.
