@@ -3405,6 +3405,42 @@
       }
     },
     {
+      "name": "apply_ken_burns",
+      "description": "Give a photo motion: a slow zoom in, a zoom out, a pan in one of four directions, or a seeded random move, written as scale/x/y keyframes over the whole clip. Preview and export both sample those keyframes, so no render step is needed. One call is one undo step. It replaces earlier x, y and scale keyframes on that clip and leaves the static transform alone. Use it on stills (images); for video push-ins use edit_item with explicit keyframes. Defaults to the selected clip and a 12% push in.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Image clip to animate. Defaults to the selected clip."
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "in",
+              "out",
+              "left",
+              "right",
+              "up",
+              "down",
+              "random"
+            ],
+            "description": "in, out, left, right, up, down, or random (a stable pick from the clip id unless seed is given). Default in."
+          },
+          "strength": {
+            "type": "number",
+            "minimum": 0.02,
+            "maximum": 0.5,
+            "description": "Zoom travel as a fraction: 0.12 means 100% to 112%. Pans keep that scale and travel 40% of it. Default 0.12."
+          },
+          "seed": {
+            "type": "integer",
+            "description": "Only for direction random: the same seed always picks the same move."
+          }
+        }
+      }
+    },
+    {
       "name": "auto_reframe",
       "description": "Auto-reframe a video clip: sample its frames, detect the subject/focal point per interval, and write reframe keyframes (builtin:zoom __openchatcutReframeCurve) so the crop window follows the subject when the canvas aspect differs (e.g. 16:9→9:16). Clears the clip's existing reframe keyframes first, then re-detects. Browser-only (needs the actual video pixels); returns an error if run headless or if the target isn't a video with a source.",
       "input_schema": {

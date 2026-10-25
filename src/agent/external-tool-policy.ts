@@ -30,6 +30,8 @@ const DRAFT_EDIT_TOOL_NAMES = new Set([
   'write_clip_title',
   // Plan 5: caption style per sequence, and optionally the project kit (both draft edits).
   'apply_brand_kit',
+  // Plan 1 Phase 2: writes scale/x/y keyframes for a still in one batch (one undo step).
+  'apply_ken_burns',
   'manage_design_style',
   'import_timeline',
   'export_jianying_draft',

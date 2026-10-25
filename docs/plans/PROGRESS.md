@@ -46,7 +46,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | L-06 | `listen_to_song` MCP tool | todo | L-01, L-03, L-05 |
 | L-07 | Real-ear relay (off by default) | todo | L-06 |
 | L-08 | Keyframable filters + binary-search sampling | todo | |
-| P2-1 | Ken Burns | todo | |
+| P2-1 | Ken Burns | done | |
 | L-09 | Music reactions + tools | todo | L-06, L-08, P2-1 |
 | L-10 | Caption motion `latido` | todo | L-06 |
 | L-11 | Music UI: inspector section, timeline map, song dialog | todo | L-09 |
@@ -239,7 +239,11 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Done when: a brightness keyframe pair changes the preview and the export identically, and `sampleKeyframes` gives the same results as before on the existing tests.
 - Verify: `npx tsx src/editor/keyframes.verify.ts`, `npm run verify:editor`, `npm run verify:export-gl`.
 
-### P2-1 · Ken Burns
+### P2-1 · Ken Burns — done
+- Done 2026-10-25: `src/editor/kenBurns.ts` writes the move as ordinary `scale`/`x`/`y` keyframes at item frames 0 and `durationInFrames - 1` (strength 0.02–0.5, default 0.12; pans keep the scale and travel 40% of it; `random` is a mulberry32 pick seeded by the clip id). The inspector's "Efecto Ken Burns" grid (`AnimationTab`, stills only) and the clip context menu share `KEN_BURNS_MENU_ORDER` and both commit `kenBurnsActions` through one `commands.batch(..., 'Ken Burns')`. `apply_ken_burns` (agent tool + MCP, 145 tools with a tab open) resolves the selected or explicit clip, refuses non-images, locked tracks and clips under 2 frames in Spanish, and commits the same batch.
+- Live proof (fresh project `1cc4033f`, a 150-frame still): the inspector's "Acercar" wrote `scale [{frame:0,value:1},{frame:149,value:1.12}]`, and one UI Undo cleared every keyframe (read_timeline returned `keyframes: null`). Over MCP, `apply_ken_burns {direction:"out", strength:0.2}` returned `1.2 → 1, 2 keyframes`, `review_edit_session` reported `status: applied`, and a fresh session read the persisted `scale [{frame:0,value:1.2,easing:"easeInOut"},{frame:149,value:1}]`.
+- Export proof: Remotion rendered frames 0 and 89 of a 90-frame test still through the real timeline composition; 18,745 vs 25,340 bytes, PSNR average 18.09 dB (y 16.84), so the two exported frames differ visibly.
+- Gates: `npx tsc -b` clean; `npm run lint` 203 warnings, 0 errors; `verify:editor` (ends `kenBurns.verify: ok`), `verify:agent-tools` (ends `ken-burns-tools.verify: ok`) and `inspector-controls.verify` pass; the server tool catalog was regenerated and `verify:server-tool-catalog` reports it current.
 - Plan: Plan 1 › Phase 2 (Ken Burns).
 - Files: new `src/editor/kenBurns.ts` + verify; `AnimationTab` in `src/components/inspector/InspectorContent.tsx`; the timeline clip context menu; new tool `apply_ken_burns`.
 - Done when: in the editor, a photo gets "Ken Burns" from the inspector or the context menu in one undo step; over MCP `apply_ken_burns` does the same; two exported frames of the photo differ.
@@ -361,6 +365,7 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-25 · H-9 · The `dsh` default model is `nvidia/nemotron-3-ultra-550b-a55b:free`, from HW-3 and HW-4, not the plugin's `combo:recommended-free` group and not the two faster lanes. Reason: the group was not among the lanes that returned a correct `split_item`, liquid hit a 429 on the real edit, and the nano reasoning model never called the timeline. Ultra did.
 - 2026-10-24 · B-9 · The Spanish pass covers the screens Plan 4 owns, read literally: the projects page with its tooltips, the top bar's button labels, the chat's first view (header, onboarding, starters, composer, workflow and model pickers, capability banner) and the phone upload page. The panels those buttons open stay for P5-1. Reason: the plan's scope line, and P5-1 is the full dictionary.
 - 2026-10-25 · P1-6 · The skill ends with a "Gaps to state honestly" list (`listen_to_song`, `apply_ken_burns`, subtitle import, variant previews, HEVC, batch comparison) instead of staying silent about them. Reason: a model that finds a hole in a scripted workflow invents a plausible tool name and burns a turn on the rejection; naming the gap makes it say so and continue with what exists.
+- 2026-10-25 · P2-1 · Ken Burns writes ordinary `scale`/`x`/`y` keyframes instead of a new effect or shader, and both entry points commit them as one batch. Reason: preview and export already sample the same keyframe ramp, so the move renders identically in both paths and the whole animation stays a single undo step; a parallel effect would need a second implementation in export.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.

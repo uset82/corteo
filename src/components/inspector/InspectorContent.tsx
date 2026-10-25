@@ -1,6 +1,7 @@
 import { useEffect, useId, type KeyboardEvent } from 'react';
 import type { PropSpec } from '../../types';
 import type { TimelineItem } from '../../editor/types';
+import { KEN_BURNS_LABEL_KEYS, KEN_BURNS_MENU_ORDER } from '../kenBurnsMenu';
 import { backgroundFillStrengthOf } from '../../editor/backgroundFill';
 import { KEYFRAME_PROPS, getKeyframePropertyDefinition } from '../../editor/keyframeRegistry';
 import { inspectorMixedValue } from '../../editor/inspectorBatch';
@@ -215,6 +216,7 @@ function AudioTab({ panel, item, playheadLocal }: InspectorContentProps) {
 function AnimationTab({ panel, item }: InspectorContentProps) {
   const t = useT();
   const visual = panel.selectedItems.every((entry) => entry.kind !== 'audio');
+  const stillsOnly = panel.selectedItems.length > 0 && panel.selectedItems.every((entry) => entry.kind === 'image');
   return (
     <>
       {(item.kind === 'video' || item.kind === 'audio' || item.kind === 'sequence') && panel.onItemSpeedChange && <><SectionLabel>{t('变速')}</SectionLabel><SpeedControl item={item} mixed={isMixed(panel, (entry) => entry.playbackRate ?? 1)} onChange={panel.onItemSpeedChange} /></>}
@@ -224,6 +226,7 @@ function AnimationTab({ panel, item }: InspectorContentProps) {
         focalPointX: isMixed(panel, (entry) => entry.zoom?.focalPointX ?? 0.5),
         focalPointY: isMixed(panel, (entry) => entry.zoom?.focalPointY ?? 0.5),
       }} onChange={panel.onItemZoomChange} getLocalFrame={() => Math.max(0, Math.min(item.durationInFrames - 1, panel.getPlayhead() - item.startFrame))} fps={panel.fps} onSetKeyframe={panel.onSetReframeKeyframe} onRemoveKeyframe={panel.onRemoveReframeKeyframe} /></>}
+      {stillsOnly && panel.onApplyKenBurns && <><SectionLabel>{t('Ken Burns 效果')}</SectionLabel><div className="cc-insp-kb-grid">{KEN_BURNS_MENU_ORDER.map((direction) => <button key={direction} type="button" className="cc-insp-kb-btn" onClick={() => panel.onApplyKenBurns?.(direction)}>{t(KEN_BURNS_LABEL_KEYS[direction])}</button>)}</div></>}
       {visual && panel.selectedItems.length === 1 && <><SectionLabel>{t('转场')}</SectionLabel><TransitionControl transition={panel.transition} fps={panel.fps} onAdd={panel.onAddTransition} onSet={panel.onSetTransition} onRemove={panel.onRemoveTransition} audioMode={false} previewStatus={panel.selectedPreviewStatuses?.find((status) => status.kind === 'transition' && status.targetId === panel.transition?.id)} /></>}
       {item.kind === 'audio' && panel.selectedItems.length === 1 && <><SectionLabel>{t('音频转场')}</SectionLabel><TransitionControl transition={panel.transition} fps={panel.fps} onAdd={panel.onAddTransition} onSet={panel.onSetTransition} onRemove={panel.onRemoveTransition} audioMode /></>}
       <SectionLabel onReset={() => panel.onItemFadeChange({ fadeInFrames: 0, fadeOutFrames: 0 })} resetDisabled={(item.fadeInFrames ?? 0) === 0 && (item.fadeOutFrames ?? 0) === 0 && !isMixed(panel, (entry) => [entry.fadeInFrames ?? 0, entry.fadeOutFrames ?? 0])}>{t('淡入淡出')}</SectionLabel>

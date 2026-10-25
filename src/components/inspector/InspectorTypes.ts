@@ -15,6 +15,7 @@ import type {
   ZoomEffect,
 } from '../../editor/types';
 import type { FlexCropEdge } from '../../editor/flexCrop';
+import type { KenBurnsDirection } from '../../editor/kenBurns';
 import type { SelectedCaptionInspector } from '../../captions/captionSelection';
 import type { CaptionsData } from '../../captions/types';
 
@@ -61,6 +62,8 @@ export interface InspectorPanelProps {
   onApplyBackgroundFillToAll?: (strength: number) => void;
   autoGrade?: AutoGradeControlProps;
   onItemZoomChange: (patch: Partial<ZoomEffect> | null) => void;
+  /** Stills only: write a timed move (scale/x/y keyframes) in one undo step. */
+  onApplyKenBurns?: (direction: KenBurnsDirection) => void;
   onItemEffectsChange: (effects: ClipEffect[]) => void;
   selectedPreviewStatuses?: readonly SelectedPreviewStatus[];
   onItemSpeedChange?: (rate: number) => void;

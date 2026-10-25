@@ -113,6 +113,13 @@ export default {
   '开始缩放': 'Escala Inicial',
   '结束缩放': 'Escala Final',
   '缓动': 'Suavizado',
+  '自动': 'Automático',
+  '推近': 'Acercar',
+  '拉远': 'Alejar',
+  '左移': 'Mover a la izquierda',
+  '右移': 'Mover a la derecha',
+  '上移': 'Mover arriba',
+  '下移': 'Mover abajo',
   
   // Karaoke
   '卡拉OK': 'Karaoke',

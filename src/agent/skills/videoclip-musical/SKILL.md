@@ -38,6 +38,7 @@ This skill is the order of operations, not a second engine: every step calls an 
 - `search_media` searches the current pool. `search_stock_media` is hidden when providers are off.
 - `set_aspect_ratio` before framing. `auto_reframe` a moving clip when the canvas ratio differs, so the subject survives the crop. Stills land with their own duration and are trimmed with `set_item_timing` or `split_item`.
 - Titles and line cards: `add_motion_graphic` for a template, `create_motion_graphic_from_code` for a custom one. Keep them on a track above the visuals and `place_graphics_in_safe_zone` so they clear faces.
+- Stills that would sit frozen get `apply_ken_burns`: a slow push in or out, a pan in one of four directions, or `random` for variety across a photo set. One call is one undo step and it replaces earlier scale/x/y keyframes on that clip.
 
 ## 4. Karaoke captions
 
@@ -62,5 +63,4 @@ This skill is the order of operations, not a second engine: every step calls an 
 ## Gaps to state honestly
 
 - Listening to the song (`listen_to_song`), mood maps and the song map arrive with Plan 2. Today the beat work is `detect_beats` plus `analyze_music`.
-- Ken Burns has no tool yet. Use `auto_reframe` for moving shots, and `edit_item` keyframes only when the user asks for a specific move.
 - Caption motion `latido`, subtitle import, variant previews and HEVC export are later tasks; say they are not built instead of improvising a substitute.
