@@ -1,6 +1,6 @@
 // checks: skin registry integrity + contrast gate (impeccable colorize discipline curing).
 // To change the color of any skin, you must go here: text/panel ≥ 7, textDim/panel ≥ 4.5,
-// textMuted/panel ≥ 4.5, onAccent/accent ≥ 4.5 (WCAG AA).
+// textMuted/panel ≥ 4.5, danger/panel ≥ 4.5, onAccent/accent ≥ 3 (WCAG AA, component level).
 // `npx tsx src/skins.verify.ts`
 import assert from 'node:assert/strict';
 import { DEFAULT_SKIN, SKINS, buildSkinsCss, initSkins } from './skins';
@@ -60,6 +60,10 @@ for (const s of SKINS) {
   // onAccent by WCAG component/large font level (≥3): graphite white font pressure coral=3.27.
   // (Identity reserved); Use dark characters for pastel skin (Mocha/Arctic/Tokyo Night/Latte), actual ≥4.5.
   gate('onAccent/accent', contrast(t.onAccent, t.accent), 3);
+  // danger is the one semantic colour that can be read as the primary button, and the corteo
+  // accent moved that button next to it in hue. Every skin clears 4.5 today; corteo is the
+  // tightest at 4.75, so this gate has almost no headroom on purpose.
+  gate('danger/panel', contrast(t.danger, t.panel), 4.5);
   gate('textStrong/hover', contrast(t.textStrong, t.hover), 4.5);
   gate('audioFxBadge/panelGold10', contrast(t.text, mixHex(t.gold, t.panel, 0.1)), 4.5);
 }
@@ -75,24 +79,35 @@ assert.ok(css.includes('--cc-on-accent:'), 'on-accent 变量输出');
 assert.ok(css.includes('--cc-shadow-rgb:'), 'shadow-rgb 变量输出');
 assert.ok(css.includes('body { background: var(--cc-bg)'), 'body 跟随皮肤');
 
-// ── Claudia is first, is the default, and carries the brief's tokens (BD-2) ──
-assert.equal(SKINS[0].id, 'claudia', 'claudia 排在第一位');
-assert.equal(DEFAULT_SKIN, 'claudia', 'claudia 是默认皮肤');
-const CLAUDIA_BRIEF: Partial<Record<keyof SkinTokens, string>> = {
+// ── corteo is first, is the default, and carries the plan's tokens (Plan 5, C-01) ──
+assert.equal(SKINS[0].id, 'corteo', 'corteo 排在第一位');
+assert.equal(DEFAULT_SKIN, 'corteo', 'corteo 是默认皮肤');
+assert.ok(!SKINS.some((s) => s.id === 'claudia'), '旧的 claudia 皮肤 id 已不存在');
+const CORTEO_BRIEF: Partial<Record<keyof SkinTokens, string>> = {
   bg: '#0a0b0d', inset: '#0e0f11', panel: '#111317', panelAlt: '#181b20', hover: '#20242a',
   border: '#2a2e35', borderLight: '#3b4048',
-  text: '#ece9e2', textMuted: '#a9adb3', textDim: '#7a7f86', textStrong: '#fffaf0',
-  accent: '#d97757', accentDeep: '#c2603f', accentRgb: '217,119,87', onAccent: '#0a0b0d',
+  text: '#ece9e2', textMuted: '#a9adb3', textDim: '#7a7f86', textStrong: '#f7f3ea',
+  accent: '#ff4a1f', accentDeep: '#d63a12', accentRgb: '255,74,31', onAccent: '#0a0b0d',
+  danger: '#e5484d',
   inkRgb: '236,233,226', shadowRgb: '0,0,0', colorScheme: 'dark',
   tlTrack: '#1a1d23', tlSidePanel: '#15181d',
 };
-for (const [name, value] of Object.entries(CLAUDIA_BRIEF)) {
-  assert.equal(SKINS[0].tokens[name as keyof SkinTokens], value, `claudia.${name} 与设计稿一致`);
+for (const [name, value] of Object.entries(CORTEO_BRIEF)) {
+  assert.equal(SKINS[0].tokens[name as keyof SkinTokens], value, `corteo.${name} 与设计稿一致`);
 }
+// The two tokens deliberately not inherited from Graphite. If either falls back to the
+// inherited value the skin still validates — the error state just reads as the primary
+// button, and the mark loses its bone — so pin the difference here.
+const graphite = SKINS.find((s) => s.id === 'graphite');
+assert.ok(graphite, 'graphite 还在');
+assert.notEqual(SKINS[0].tokens.danger, graphite.tokens.danger, 'corteo.danger 不是继承来的');
+assert.notEqual(SKINS[0].tokens.textStrong, graphite.tokens.textStrong, 'corteo.textStrong 不是继承来的');
 
-// ── The one-time Graphite → Claudia migration ──
-// applySkin() saves the skin on every boot, so an install that existed before Claudia
-// has 'graphite' stored. It must move to claudia once, and only once.
+// ── The one-time migration to corteo ──
+// applySkin() saves the skin on every boot, so an install that existed before this rename has
+// 'graphite' (pre-skins) or 'claudia' (the previous name) stored. Both must move to corteo
+// once, and only once. The marker key changed with the name, so a profile that already ran
+// the Graphite → Claudia migration runs this one too.
 interface TestProfile { store: Map<string, string>; boot: () => void }
 
 function profile(saved: string | null): TestProfile {
@@ -118,12 +133,21 @@ function profile(saved: string | null): TestProfile {
 
 const fresh = profile(null);
 fresh.boot();
-assert.equal(fresh.store.get('cc.skin'), 'claudia', '空配置直接落在 claudia');
+assert.equal(fresh.store.get('cc.skin'), 'corteo', '空配置直接落在 corteo');
 
 const legacy = profile('graphite');
 legacy.boot();
-assert.equal(legacy.store.get('cc.skin'), 'claudia', '旧的 graphite 迁到 claudia');
-assert.equal(legacy.store.get('cc.skin.claudia'), '1', '迁移标记写下了');
+assert.equal(legacy.store.get('cc.skin'), 'corteo', '旧的 graphite 迁到 corteo');
+assert.equal(legacy.store.get('cc.skin.corteo'), '1', '迁移标记写下了');
+
+// The profile that already ran the previous rename: 'claudia' saved, and the old marker set.
+// This is the case every existing install hits, so it is asserted explicitly.
+const previous = profile('claudia');
+previous.store.set('cc.skin.claudia', '1');
+previous.boot();
+assert.equal(previous.store.get('cc.skin'), 'corteo', '旧的 claudia 迁到 corteo');
+assert.equal(previous.store.get('cc.skin.claudia'), undefined, '旧标记被清掉');
+assert.equal(previous.store.get('cc.skin.corteo'), '1', '新标记写下了');
 
 // The user picks Graphite again after the migration: that choice sticks.
 legacy.store.set('cc.skin', 'graphite');
@@ -134,4 +158,10 @@ const other = profile('mocha');
 other.boot();
 assert.equal(other.store.get('cc.skin'), 'mocha', '别的皮肤原样保留');
 
-process.stdout.write(`skins.verify: ok (${SKINS.length} skins, 对比度门全过)\n`);
+// A saved id that no longer exists falls back to the default instead of sticking.
+const stale = profile('claudia');
+stale.store.set('cc.skin.corteo', '1');
+stale.boot();
+assert.equal(stale.store.get('cc.skin'), 'corteo', '已迁移过的配置里 claudia 回落到 corteo');
+
+process.stdout.write(`skins.verify: ok (${SKINS.length} skins, 对比度门全过, corteo 默认)\n`);

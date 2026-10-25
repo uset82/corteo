@@ -50,7 +50,8 @@ export interface SkinDef {
   tokens: SkinTokens;
 }
 
-// Graphite = default skin (consistent with the look and feel before the skin-changing system was implemented).
+// Graphite = the palette the editor had before the skin system existed. Kept as a choice;
+// it is no longer the default (that is corteo, below).
 const GRAPHITE: SkinTokens = {
   bg: '#101010', inset: '#141414', panel: '#181818', panelAlt: '#212121', hover: '#2c2c2c',
   border: '#363636', borderLight: '#4a4a4a',
@@ -63,20 +64,27 @@ const GRAPHITE: SkinTokens = {
   clipVideo: '#2d7fb5', clipAudio: '#2f9e5a', clipMg: '#c14d86', clipText: '#c8912f',
 };
 
-// Claudia = the default skin. It is claudia.gallery's own palette, not a generic dark theme:
-// near-black surfaces and clay. Measured against the gates in skins.verify.ts:
-// text/panel 15.34, textMuted/panel 8.25, textDim/panel 4.61, textStrong/hover 14.98,
-// text on a 10% gold badge 13.05. The gallery's own textDim (#6f747b) fails at 3.95,
-// so it is darkened to #7a7f86. White on clay is only 3.12:1, so text on clay is
-// near-black (6.31:1) instead of white. The semantic colors (gold, select, success,
-// danger, tracks, clips) are inherited from Graphite on purpose: they carry meaning
-// — warning, selection, status, track type — not identity.
-const CLAUDIA: SkinTokens = {
+// corteo = the default skin, and the product's own palette rather than a borrowed one:
+// near-black surfaces, warm text, and the cut's orange. Every number below is measured by
+// skins.verify.ts: text/panel 15.34, text/panelAlt 14.24, textMuted/panel 8.25,
+// textDim/panel 4.61, textStrong/hover 14.08, onAccent/accent 5.86, danger/panel 4.75,
+// accent/panel 5.54, text on a 10% gold badge 13.05.
+//
+// Two tokens are deliberately NOT inherited from Graphite through the spread below:
+//   - `danger` (#e5484d, was the salmon #e06c60) so an error can never be mistaken for the
+//     primary button, which is the accent and now sits close to it in hue.
+//   - `textStrong` (#f7f3ea, the bone of the mark's lower half). The mark paints one of its
+//     two halves with this token, so it has to stay a token: that is how the light skins
+//     invert the mark to ink without a second asset.
+// The rest of the semantic colors (gold, select, success, tracks, clips) are inherited on
+// purpose: they carry meaning — warning, selection, status, track type — not identity.
+const CORTEO: SkinTokens = {
   ...GRAPHITE,
   bg: '#0a0b0d', inset: '#0e0f11', panel: '#111317', panelAlt: '#181b20', hover: '#20242a',
   border: '#2a2e35', borderLight: '#3b4048',
-  text: '#ece9e2', textMuted: '#a9adb3', textDim: '#7a7f86', textStrong: '#fffaf0',
-  accent: '#d97757', accentDeep: '#c2603f', accentRgb: '217,119,87', onAccent: '#0a0b0d',
+  text: '#ece9e2', textMuted: '#a9adb3', textDim: '#7a7f86', textStrong: '#f7f3ea',
+  accent: '#ff4a1f', accentDeep: '#d63a12', accentRgb: '255,74,31', onAccent: '#0a0b0d',
+  danger: '#e5484d',
   inkRgb: '236,233,226', colorScheme: 'dark',
   tlTrack: '#1a1d23', tlSidePanel: '#15181d',
 };
@@ -89,7 +97,7 @@ const CLAUDIA: SkinTokens = {
 // textDim/panel ≥ 4.5, onAccent/accent ≥ 4.5 (script skin-by-skin assertion, individual official grayscale
 // Fine-tune L to meet the standard). Pastel accent skin (Mocha/Arctic/Tokyo Night/Latte) onAccent uses dark fonts.
 export const SKINS: readonly SkinDef[] = [
-  { id: 'claudia', nameZh: 'Claudia', tokens: CLAUDIA },
+  { id: 'corteo', nameZh: 'corteo', tokens: CORTEO },
   { id: 'graphite', nameZh: '石墨', tokens: GRAPHITE },
   {
     id: 'midnight', nameZh: '墨黑',
@@ -158,9 +166,11 @@ export const SKINS: readonly SkinDef[] = [
 ];
 
 const STORAGE_KEY = 'cc.skin';
-/** One-shot marker: the Graphite → Claudia migration already ran on this profile. */
-const CLAUDIA_MIGRATION_KEY = 'cc.skin.claudia';
-export const DEFAULT_SKIN = 'claudia';
+/** One-shot marker: the rename to corteo already rewrote this profile's saved skin. */
+const CORTEO_MIGRATION_KEY = 'cc.skin.corteo';
+/** Marker left behind by the previous rename (Graphite → Claudia). Cleared once, below. */
+const LEGACY_CLAUDIA_MIGRATION_KEY = 'cc.skin.claudia';
+export const DEFAULT_SKIN = 'corteo';
 
 const kebab = (name: string): string => name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 
@@ -196,16 +206,21 @@ export function applySkin(id: string): void {
   try { localStorage.setItem(STORAGE_KEY, skin); } catch { /* neglect*/ }
 }
 
-/** One-time migration to the Claudia default.
- * applySkin() saves the skin on every boot, so every install that existed before
- * Claudia has 'graphite' stored and would otherwise never see the new default.
- * Runs once per profile: a Graphite the user picks again afterwards stays. Any other
- * saved skin (mocha, nord, tokyo, latte, midnight) is kept as it is. */
-function migrateToClaudia(): void {
+/** One-time migration to the corteo default.
+ * applySkin() saves the skin on every boot, so an install that existed before this rename
+ * has either 'graphite' (pre-skins) or 'claudia' (the previous name) stored, and would
+ * otherwise never see the new default. Runs once per profile: a skin the user picks again
+ * afterwards stays. Any other saved skin (mocha, nord, tokyo, midnight, latte) is kept.
+ * The marker key is new on purpose — that is what lets a profile that already ran the
+ * Graphite → Claudia migration run this one too. The old marker is cleared so a future
+ * rename does not have to guess which generation it is looking at. */
+function migrateToCorteo(): void {
   try {
-    if (localStorage.getItem(CLAUDIA_MIGRATION_KEY)) return;
-    if (localStorage.getItem(STORAGE_KEY) === 'graphite') localStorage.setItem(STORAGE_KEY, 'claudia');
-    localStorage.setItem(CLAUDIA_MIGRATION_KEY, '1');
+    if (localStorage.getItem(CORTEO_MIGRATION_KEY)) return;
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved === 'graphite' || saved === 'claudia') localStorage.setItem(STORAGE_KEY, 'corteo');
+    localStorage.removeItem(LEGACY_CLAUDIA_MIGRATION_KEY);
+    localStorage.setItem(CORTEO_MIGRATION_KEY, '1');
   } catch { /* If storage is not available, the default skin applies anyway */ }
 }
 
@@ -217,6 +232,6 @@ export function initSkins(): void {
     style.textContent = buildSkinsCss();
     document.head.appendChild(style);
   }
-  migrateToClaudia();
+  migrateToCorteo();
   applySkin(getSkin());
 }
