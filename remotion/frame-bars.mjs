@@ -2,6 +2,37 @@
 // blur: those rows are blurred picture. black: those rows are black, not the
 // preview checkerboard (rgb 36,36,36 / 28,28,28).
 import { execFileSync } from 'node:child_process';
+import { createRequire } from 'node:module';
+import { existsSync } from 'node:fs';
+import { sep } from 'node:path';
+
+// Same resolution as server/media-binaries.ts. This file stays plain JavaScript
+// so the Node 20 acceptance shell can run it without tsx.
+const require = createRequire(import.meta.url);
+
+function unpackedPath(path) {
+  const marker = `${sep}app.asar${sep}`;
+  const index = path.indexOf(marker);
+  if (index < 0) return path;
+  const twin = `${path.slice(0, index)}${sep}app.asar.unpacked${sep}${path.slice(index + marker.length)}`;
+  return existsSync(twin) ? twin : path;
+}
+
+function ffmpegBin() {
+  const bundled = require('ffmpeg-static');
+  return process.env.OPENCHATCUT_FFMPEG
+    ?? process.env.FFMPEG_PATH
+    ?? (typeof bundled === 'string' ? unpackedPath(bundled) : null)
+    ?? 'ffmpeg';
+}
+
+function ffprobeBin() {
+  const installed = require('@ffprobe-installer/ffprobe');
+  return process.env.OPENCHATCUT_FFPROBE
+    ?? process.env.FFPROBE_PATH
+    ?? (installed?.path ? unpackedPath(installed.path) : null)
+    ?? 'ffprobe';
+}
 
 const file = process.argv[2];
 const mode = process.argv[3];
@@ -10,7 +41,7 @@ if (!file || !['cover', 'blur', 'black'].includes(mode)) {
   process.exit(2);
 }
 
-const size = execFileSync('ffprobe', [
+const size = execFileSync(ffprobeBin(), [
   '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', file,
 ], { encoding: 'utf8' }).trim().replace(/,+$/, '');
 const [width, height] = size.split(',').map((part) => Number(part));
@@ -18,7 +49,7 @@ if (!width || !height) {
   process.stderr.write(`bad size ${size}\n`);
   process.exit(1);
 }
-const buf = execFileSync('ffmpeg', [
+const buf = execFileSync(ffmpegBin(), [
   '-v', 'error', '-i', file, '-frames:v', '1', '-f', 'rawvideo', '-pix_fmt', 'rgb24', 'pipe:1',
 ], { maxBuffer: 32 * 1024 * 1024 });
 if (buf.length < width * height * 3) {
