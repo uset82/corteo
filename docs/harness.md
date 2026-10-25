@@ -82,7 +82,7 @@ Al final imprime lo que se pega en Claudia:
 
 ```
 URL base: http://127.0.0.1:18899/v1
-Clave:    …arcM
+Clave:    …9f3c
 ```
 
 La clave sale enmascarada; con `--show-key` se ve entera. Acepta `--home`,
