@@ -166,7 +166,7 @@ applyAgentModelStatus({}, {});
 assert.equal(dshChoices().length, 0, 'an unconfigured harness adds no entries');
 
 applyAgentModelStatus({ LLM_DSH_API_KEY: { configured: true } }, {});
-assert.deepEqual(dshChoices().map((choice) => choice.id), ['dsh:nvidia/nemotron-3.5-lightning:free'],
+assert.deepEqual(dshChoices().map((choice) => choice.id), ['dsh:nvidia/nemotron-3-ultra-550b-a55b:free'],
   'a configured harness lists its default model before discovery runs');
 
 applyDshModels(['combo:recommended-free', 'deepseek-v3', 'qwen3-free'], false);
