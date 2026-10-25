@@ -1,9 +1,9 @@
 // BD-3 gate: Claudia's two marks, the tab title and the favicon.
-// `npx tsx --tsconfig tsconfig.app.json src/brand/ClaudiaMarks.verify.tsx`
+// `npx tsx --tsconfig tsconfig.app.json src/brand/CorteoMarks.verify.tsx`
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { ClaudiaMark, ClaudiaWordmark } from './ClaudiaMarks';
+import { ClaudiaMark, ClaudiaWordmark } from './CorteoMarks';
 
 const wordmark = renderToStaticMarkup(<ClaudiaWordmark size={14} />);
 assert.match(wordmark, />Claudia</, '字标必须是真的 "Claudia" 文字（大写交给 CSS），读屏才读得出一个词');
