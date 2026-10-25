@@ -1,0 +1,25 @@
+// Plan 5 (Opus parity) UI copy: the "Analyze long video" panel.
+// Keyed by the Chinese original like every other module, so the i18n gate stays the same.
+// It must be an object literal default export: scripts/check-i18n.mjs only reads those.
+export default {
+  '分析长视频': 'Analyze long video',
+  '从长视频里挑出值得发布的片段': 'Find the moments worth posting',
+  '分析': 'Analyze',
+  '分析中…': 'Analyzing…',
+  '潜力': 'Potential',
+  '钩子': 'Hook',
+  '流畅': 'Flow',
+  '价值': 'Value',
+  '声音': 'Sound',
+  '创建所选片段': 'Create selected clips',
+  '批准': 'Approve',
+  '丢弃': 'Reject',
+  '关闭': 'Close',
+  '选择片段': 'Select clip',
+  '没有找到合适的片段。': 'No moment cleared the bar.',
+  '还没有分析结果。': 'No analysis yet.',
+  '已创建 {n} 个片段': 'Created {n} clips',
+  '已批准，评分会记住这个选择': 'Approved — the score will remember this',
+  '已丢弃，评分会避开这一类': 'Rejected — the score will avoid this kind',
+  '评分是参考，不是预测': 'The score is a rubric, not a prediction',
+} as Record<string, string>;

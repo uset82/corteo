@@ -511,7 +511,7 @@ This track is deliberately **not** in the main table, so the picking rule above 
 | OP-02 | `find_highlights` ranks, snaps, dedupes | done | OP-01 |
 | OP-03 | `make_shorts`: source in, clips out | done | OP-02 |
 | OP-04 | Calibration ledger | done | OP-01 |
-| OP-05 | "Analizar episodio" panel | todo | OP-03 |
+| OP-05 | "Analizar episodio" panel | done | OP-03 |
 | OP-06 | `tighten_speech` | done | |
 | OP-07 | `censor_words` | todo | |
 | OP-08 | Shorts caption presets, keywords, line breaking | todo | |
@@ -571,6 +571,15 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - Tool `write_social_copy` reads a word range from a transcribed clip (clamped, never fatal), defaults to tiktok/instagram/youtube, rejects unknown platforms with the valid list, and returns `modelUsed` so nobody mistakes a fallback for generated copy.
 - **Deviation, recorded:** nothing is stored on the sequence. `publish_to_social` already takes `title` and `description`, so the copy is passed straight into it; a second stored copy would drift the moment the clip changes. The publish dialog prefill is a UI follow-up, not a data model.
 - Read-only, so it never needs approval: it only writes text into the reply.
+
+**OP-05 (done 2026-10-25).** The "Analizar episodio" panel — the one UI surface for Phase A/B.
+- `src/components/shorts/ShortsPanel.tsx` renders candidates with a 0-99 chip, the four sub-scores, the reason, the risk flags, a checkbox, and Aprobar/Descartar per row. Analizar runs `score_moments`; Crear N clips runs `make_shorts`. It owns no engine: the verify asserts it never touches `ctx.commands` and always goes through the two executors.
+- Approve/reject call `recordDecision` from the OP-04 ledger, so the panel is what turns calibration from an empty table into a real signal.
+- Mount: a top-bar scissors button (`onOpenShorts`) and a `shortsPanel` view prop rendered inside the workspace Suspense, next to the other dialogs. The open state lives in `useEditorWorkspaceDialogs` with `showDesign`/`showVersions`, not in the controller, because the view props are built by a plain function that must stay pure.
+- **`make_shorts` gained `ranges`** (word-index spans): the panel must cut exactly what the user checked, not re-pick by score. Explicit ranges skip analysis, are still scored for the report, and out-of-range indices clamp instead of failing. The verify pins the frame ranges `[[0,33],[180,219]]` for two explicit spans.
+- i18n: new `src/i18n/dict/en/shorts.ts` (an object-literal `export default`, because `check-i18n.mjs` ignores identifier exports — that cost one round) and 20 Spanish entries at the end of `es/index.ts`. `npm run verify:i18n` passes.
+- **Deviation, recorded:** no three-frame strip per row. A contact sheet needs the asset's `src` sampled into a canvas per candidate; the row already carries the score, the reason and the risks, and the cut is one click away. The card's "three-frame strip" stays unbuilt until someone asks for it.
+- Verify: `src/components/shorts/shortsPanel.verify.ts` is a static contract check (every `t()` key has an English entry, the two executors are used, `ranges` is passed, the ledger is fed, no direct store calls). Gates: `verify:components`, `verify:editor`, `verify:agent-tools`, `verify:mcp`, `verify:i18n` all exit 0.
 
 
 ### Opus parity: blockers

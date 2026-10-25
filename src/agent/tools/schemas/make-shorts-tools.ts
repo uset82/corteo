@@ -21,6 +21,20 @@ export const MAKE_SHORTS_TOOL_SCHEMAS: AgentToolSchema[] = [
         minSeconds: { type: 'number', description: 'Shortest clip. Default 12.' },
         maxSeconds: { type: 'number', description: 'Longest clip. Default 90.' },
         ratio: { type: 'string', enum: ['9:16', '16:9', '1:1', '4:3', '3:4'], description: 'Target canvas. Default 9:16.' },
+        ranges: {
+          type: 'array',
+          description: 'Exact moments to cut, as returned by score_moments (word indices). When given, analysis is '
+            + 'skipped and exactly these spans are cut, still scored for the report. Use this when the user picked '
+            + 'specific moments or a panel passed a selection.',
+          items: {
+            type: 'object',
+            properties: {
+              startWord: { type: 'integer', minimum: 0 },
+              endWord: { type: 'integer', minimum: 0 },
+            },
+            required: ['startWord', 'endWord'],
+          },
+        },
         minScore: { type: 'number', description: 'Only cut moments at or above this score (0-99). Default 55, the publishable line.' },
         direction: {
           type: 'string',

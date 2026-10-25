@@ -4,7 +4,8 @@ import { ASPECT_PRESETS } from '../../editor/types';
 import { analyzeMoments } from '../shorts/analyze';
 import { computeCalibration } from '../shorts/calibration';
 import { PUBLISH_THRESHOLD } from '../shorts/score';
-import { readGenre } from '../shorts/score-ranges';
+import { readGenre, scoreRanges } from '../shorts/score-ranges';
+import type { Dimensions, Genre, ScoredMoment } from '../shorts/types';
 import { pickTranscribedItem } from '../shorts/transcript-item';
 import { execCaptionsTool } from './captions-tools';
 import { execExportTool } from './export-tools';
@@ -44,6 +45,63 @@ const clampScore = (value: unknown, fallback: number): number => {
   if (!Number.isFinite(n)) return fallback;
   return Math.max(0, Math.min(99, n));
 };
+
+interface ChosenMoment {
+  startWord: number;
+  endWord: number;
+  startMs: number;
+  endMs: number;
+  score: number;
+  subscores: Dimensions;
+  model: { title: string; reason: string; risks: string[] } | null;
+}
+
+/**
+ * Exact spans chosen by the caller, typically the panel's checkboxes or a score_moments
+ * ranking. Out-of-range indices are clamped rather than rejected: the transcript may have
+ * been retranscribed between the ranking and the cut.
+ */
+function readExplicitRanges(raw: unknown, wordCount: number): { startWord: number; endWord: number }[] {
+  if (!Array.isArray(raw) || !wordCount) return [];
+  const last = wordCount - 1;
+  const out: { startWord: number; endWord: number }[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') continue;
+    const record = entry as Record<string, unknown>;
+    const start = Math.trunc(Number(record.startWord));
+    const end = Math.trunc(Number(record.endWord));
+    if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
+    const startWord = Math.max(0, Math.min(last, start));
+    const endWord = Math.max(startWord, Math.min(last, end));
+    if (!out.some((range) => range.startWord === startWord && range.endWord === endWord)) {
+      out.push({ startWord, endWord });
+    }
+  }
+  return out;
+}
+
+async function scoreChosenRanges(
+  words: readonly { text: string; start: number; end: number }[],
+  ranges: readonly { startWord: number; endWord: number }[],
+  genre: Genre,
+  direction: unknown,
+  topic: unknown,
+): Promise<ChosenMoment[]> {
+  const { scores } = await scoreRanges(words, ranges, {
+    genre,
+    direction: typeof direction === 'string' ? direction : undefined,
+    topic: typeof topic === 'string' ? topic : undefined,
+  });
+  return scores.map((score) => ({
+    startWord: score.startWord,
+    endWord: score.endWord,
+    startMs: score.startMs,
+    endMs: score.endMs,
+    score: score.score,
+    subscores: score.subscores,
+    model: { title: score.title, reason: score.reason, risks: score.risks },
+  }));
+}
 
 interface ClipOut {
   sequenceId: string;
@@ -108,7 +166,8 @@ export async function execMakeShortsTool(name: string, args: Args, ctx: AgentCon
 
   const words = item.transcript.map((w) => ({ text: w.text, start: w.start, end: w.end }));
   const calibration = args.calibration === true ? computeCalibration() : null;
-  const analysis = await analyzeMoments(words, {
+  const explicit = readExplicitRanges(args.ranges, words.length);
+  const analysis = explicit.length ? null : await analyzeMoments(words, {
     minMs,
     maxMs,
     count: Math.min(MAX_COUNT * ANALYSIS_SPREAD, count * ANALYSIS_SPREAD),
@@ -118,15 +177,24 @@ export async function execMakeShortsTool(name: string, args: Args, ctx: AgentCon
     ...(calibration?.confident ? { weights: calibration.weights } : {}),
   });
 
-  if (!analysis.candidates) {
+  if (analysis && !analysis.candidates) {
     return {
       error: 'La transcripción es demasiado corta para sacar clips con esa duración: baja minSeconds '
         + `o usa un clip más largo (hay ${words.length} palabras).`,
     };
   }
 
-  const chosen = analysis.moments.filter((m) => m.score >= minScore).slice(0, count);
-  const belowThreshold = analysis.moments.filter((m) => m.score < minScore).length;
+  const chosen: ChosenMoment[] = explicit.length
+    ? await scoreChosenRanges(words, explicit, readGenre(args.genre), args.direction, args.topic)
+    : analysis!.moments.filter((m) => m.score >= minScore).slice(0, count);
+  const belowThreshold = analysis ? analysis.moments.filter((m) => m.score < minScore).length : 0;
+  const info: {
+    modelUsed: boolean; detectedGenre: Genre | null; chapters: number;
+    candidates: number; passing: number; rejected: ScoredMoment[];
+  } = analysis ?? {
+    modelUsed: true, detectedGenre: null, chapters: 0,
+    candidates: explicit.length, passing: chosen.length, rejected: [],
+  };
   if (!chosen.length) {
     return {
       ok: true,
@@ -134,7 +202,7 @@ export async function execMakeShortsTool(name: string, args: Args, ctx: AgentCon
       clips: [],
       analysisId: `${Date.now().toString(36)}-${item.id}`,
       threshold: minScore,
-      rejected: analysis.rejected.map((m) => ({
+      rejected: (analysis?.rejected ?? []).map((m) => ({
         score: m.score,
         title: m.model?.title ?? `Momento ${m.startWord + 1}`,
         reasons: m.gateReasons,
@@ -207,15 +275,15 @@ export async function execMakeShortsTool(name: string, args: Args, ctx: AgentCon
     sourceName: item.name ?? item.id,
     ratio,
     threshold: minScore,
-    modelUsed: analysis.modelUsed,
-    genre: analysis.detectedGenre ?? readGenre(args.genre),
-    chapters: analysis.chapters,
-    candidates: analysis.candidates,
+    modelUsed: info.modelUsed,
+    genre: info.detectedGenre ?? readGenre(args.genre),
+    chapters: info.chapters,
+    candidates: info.candidates,
     count: clips.length,
     clips,
-    alternates: analysis.passing - clips.length,
+    alternates: info.passing - clips.length,
     belowThreshold,
-    rejected: analysis.rejected.map((m) => ({
+    rejected: info.rejected.map((m) => ({
       score: m.score,
       title: m.model?.title ?? `Momento ${m.startWord + 1}`,
       reasons: m.gateReasons,

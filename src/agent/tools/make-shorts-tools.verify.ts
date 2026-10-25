@@ -145,5 +145,36 @@ setRubricScorer(async (candidates) => ({
   assert.ok(unknown.error, 'unknown tool name errors');
 }
 
+// ── 6) Explicit ranges: exactly these spans are cut, and analysis is skipped ───────────
+{
+  const { draft, ctx } = freshContext();
+  const res = await execMakeShortsTool('make_shorts', {
+    count: 2,
+    ranges: [{ startWord: 0, endWord: 2 }, { startWord: 7, endWord: 10 }],
+    minScore: 0,
+    reframe: false,
+  }, ctx) as Result;
+  assert.strictEqual(res.ok, true, 'explicit ranges are accepted');
+  assert.strictEqual(res.count, 2, 'two ranges → two clips');
+  assert.strictEqual(res.chapters, 0, 'analysis is skipped when the caller already chose');
+  assert.deepStrictEqual(
+    res.clips.map((clip) => [clip.startFrame, clip.endFrame]),
+    [[0, 33], [180, 219]],
+    'each clip is the frame range of the word span that was asked for',
+  );
+  assert.strictEqual(draft.getDoc().timelines.length, 3, 'still one ordinary sequence per clip');
+}
+
+// ── 7) Out-of-range explicit spans are clamped, not fatal ─────────────────────────────
+{
+  const { ctx } = freshContext();
+  const res = await execMakeShortsTool('make_shorts', {
+    count: 1, ranges: [{ startWord: -4, endWord: 999 }], minScore: 0, reframe: false,
+  }, ctx) as Result;
+  assert.strictEqual(res.ok, true);
+  assert.strictEqual(res.count, 1, 'a clamped range still produces a clip');
+  assert.strictEqual(res.clips[0].startFrame, 0, 'the clamp starts at the first word');
+}
+
 setRubricScorer(null);
 console.log('make-shorts-tools.verify: ok');
