@@ -253,8 +253,9 @@ if (JSON.stringify(items).includes("文字") || JSON.stringify(items).includes("
 node -e '
 const items = require(process.argv[1]).items;
 const clipB = items.find((item) => item.id === process.argv[2]);
-if (!clipB || clipB.startFrame + clipB.durationInFrames !== 180) {
-  console.error(clipB && (clipB.startFrame + clipB.durationInFrames));
+const end = clipB && clipB.startFrame + (clipB.durationFrames ?? clipB.durationInFrames);
+if (end !== 180) {
+  console.error(JSON.stringify(clipB && { startFrame: clipB.startFrame, durationFrames: clipB.durationFrames }));
   process.exit(7);
 }
 ' "$WORK/items.json" "$CLIP_B"
