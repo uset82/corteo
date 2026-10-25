@@ -65,11 +65,9 @@ ensure_repo() {
   mkdir -p "$(dirname "$DIR")"
   if [[ -d "$DIR/.git" ]]; then
     say "updating $DIR"
-    git -C "$DIR" fetch --tags origin "$REF" 2>/dev/null || git -C "$DIR" fetch origin || true
-    if git -C "$DIR" rev-parse --verify "origin/$REF" >/dev/null 2>&1; then
-      git -C "$DIR" checkout "$REF" 2>/dev/null || git -C "$DIR" checkout -B "$REF" "origin/$REF"
-      git -C "$DIR" pull --ff-only origin "$REF" || true
-    fi
+    # Stay on the branch that was cloned. Forcing main would replace a
+    # working install when the remote's main is a different line.
+    git -C "$DIR" pull --ff-only || true
   elif [[ -d "$DIR" && -n "$(ls -A "$DIR" 2>/dev/null || true)" ]]; then
     die "$DIR exists and is not a git checkout"
   else
