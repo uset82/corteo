@@ -325,31 +325,56 @@ and the verify is registered in `test:serial`.
   or burn `****`. Volume keyframes or caption-run overrides through `ctx.commands`, so one call
   is one undo. Panel lists hits with jumps.
 
-**OP-08 · Shorts caption presets, keyword emphasis, line breaking** · effort M
-- 4–6 presets in `src/captions/styles.ts` (bold karaoke, boxed white, yellow word pop,
-  outline-only) using the motion `captionMotion.ts` already supports.
-- `keywordHighlight.ts`: per-word colour/scale runs for numbers, proper nouns and emphasised
-  words, rendered by `renderStyles.ts` and the Remotion caption component so preview and export
-  agree. Optional emoji suggestion from the free LLM, off by default.
-- Typography: max characters per line and characters-per-second caps from SubtitleEdit's rules,
-  and ASS `\k` emission from word timestamps in `src/captions/exportCaptions.ts`.
+**OP-08 · Keyword emphasis (reshaped 2026-10-25: no new presets)** · effort M
+- **Dropped: the four new presets.** The repo already ships 22 caption templates, and
+  `tiktok`, `story`, `bold-outline` and `bili` cover bold karaoke, yellow highlight, heavy
+  outline and boxed white. Four near-duplicates buy a longer menu, not a better short. If one
+  specific look is genuinely missing, name it and add *one* style.
+- **Also already shipped:** line breaking (`CAPTION_MAX_CHARS_PER_LINE`,
+  `CAPTION_MAX_VISUAL_LINES`, `paginate`) and ASS emission from word timestamps in
+  `src/captions/exportCaptions.ts`. Do not rebuild either.
+- **The real gap is per-word emphasis.** `CaptionStyle.highlightColor` colours the *active*
+  word by time, and `CaptionWordOverride` carries only `hidden` / `text` / `forceBreak` /
+  `timingOffsetMs`; `src/captions/resolve.ts` is the single place overrides are honoured. So:
+  - add `emphasis?: boolean` to `CaptionWordOverride` and to the caption action that writes it;
+  - carry it through resolve → runs → layer (`resolve.ts`, `captionWordRuns.ts`,
+    `CaptionsLayer.tsx`) **and** the Remotion caption component, or preview and export disagree;
+  - `keywordCandidates(words)` (pure): numbers, proper nouns, ALL-CAPS words, with a cap.
+- Done when: an emphasised word renders in the preview **and** in an exported frame, the flag
+  survives save/load, and a cue with no emphasis renders byte-identically to today.
+- Verify: `src/captions/keywordEmphasis.verify.ts` (selection + override application) plus one
+  exported frame compared against a fixture, because this one is visual.
 
 **OP-09 · `write_clip_title`** · effort S
 - Quotable line, not a summary; ≤ 6 words; written as a headline in the caption safe zone via
   `place_graphics_in_safe_zone`. Applied to the top N clips only — Opus caps at ten for cost
   reasons; we cap at the batch size and say why.
 
-**OP-10 · Brand kit** · effort L
-- `BrandKit` on the project document: logo asset, fonts, palette, caption preset, safe margins,
-  intro/outro, watermark position, default transitions — the equivalent of `renderPref`.
-- `apply_brand_kit` to a batch; Settings gains a "Marca" page. Reuses `update_watermark`,
-  `manage_design_style`, `search_fonts`; no new renderer.
+**OP-10 · Brand kit** · effort L · the document change is the cost
+- `BrandKit` on `ProjectDoc`: logo asset, fonts, palette, caption preset, safe margins,
+  intro/outro, watermark position, default transitions — the `renderPref` equivalent.
+- Order that keeps it honest:
+  1. type + `normalizeBrandKit` with defaults, and a reader that returns defaults for projects
+     saved before the field existed. Do **not** write a migration that rewrites every project:
+     the store already tolerates an absent field, and a rewrite is risk without benefit.
+  2. `apply_brand_kit` over a batch of sequences, through existing commands only
+     (`update_watermark`, `manage_design_style`, caption `template`, `search_fonts`).
+  3. the "Marca" Settings page.
+  4. `make_shorts` already documents a `brandKitId`; wire it to this instead of leaving it a
+     promise in a description.
+- Done when: a kit saved on one project applies to another project's clips in one call, and a
+  project saved before the field opens unchanged and looks the same.
+- Verify: `src/brand/brandKit.verify.ts` (defaults, round trip, apply plan) plus
+  `verify:components` for the Settings page.
 
-**OP-11 · Reframe polish** · effort S
-- Port clipmint's crop math into `src/reframe/`: dead zone 12 %, ease 0.45 s, switch margin
-  1.15×, minimum shot 2 s, so the crop stops twitching on speaker changes.
-- Add yt-short-clipper's cheap modes to `auto_reframe`: `centred-black-bars` and
-  `centred-blurred-fill` for sources with no face, which skip per-frame detection entirely.
+**OP-11 · Reframe stabilization** · effort S · done 2026-10-25 (one half deferred)
+- Shipped: `src/reframe/stabilize.ts`, wired into `auto_reframe` after both detection paths —
+  dead zone 12 %, ease 0.45 s, minimum shot 2 s (clipmint's crop math, MIT).
+- Deferred, with the reason: the cheap modes `centred-black-bars` / `centred-blurred-fill`.
+  `AspectFit` is `contain | cover` only and is a **sequence-level** property, while
+  `auto_reframe` is clip-level: setting it from the clip tool would silently re-frame every
+  other clip in the sequence. Doing it honestly needs a sequence-level mode or a per-clip
+  background fill.
 
 ### Phase C — the publishing tail
 
@@ -360,14 +385,20 @@ and the verify is registered in `test:serial`.
 - No invented trend hashtags: if the model has no basis, it returns fewer hashtags.
 
 **OP-13 · Scheduled publish** · effort L · needs OP-12
-- `server/publish-scheduler.ts`: durable queue (`scheduledFor`, per-platform rows, attempts, last
-  error) in SQLite, a 30 s tick while the dev server runs, idempotent resume after a restart, and
-  a declared missed-slot rule (publish late, mark it in the ledger).
-- MCP `schedule_publish`, `list_scheduled_publishes`, `cancel_scheduled_publish`;
-  `publish_to_social` gains `when`. The preview/confirm gate stays: scheduling is not permission
-  to skip the human.
-- UI: a week calendar ("Programar") with platform chips and drag-to-reschedule. Borrow postiz's
-  provider matrix and mixpost's constraint table for the per-platform rules, not their code.
+- `server/publish/schedule.ts` (pure queue maths) + `server/plugins/publish-schedule.ts`: a
+  durable queue in the profile's SQLite (`scheduledFor` ISO, per-platform rows, attempts, last
+  error), a 30 s tick while the dev server runs, idempotent resume after a restart, and a
+  declared missed-slot rule (publish late, record it).
+- MCP: `schedule_publish`, `list_scheduled_publishes`, `cancel_scheduled_publish`;
+  `publish_to_social` gains `when`.
+- UI: a week calendar ("Programar") with platform chips and drag-to-reschedule.
+- **Do not weaken the publish gate.** A scheduled post still needs the preview/confirm pair at
+  scheduling time; the tick may only execute what a human approved, and it must refuse an entry
+  whose preview no longer matches the render (`preview_mismatch` already exists for this).
+- Done when: a post scheduled two minutes out publishes with no tab open, a restart mid-wait
+  does not double-post, and cancelling before the slot leaves nothing behind.
+- Verify: `server/publish/schedule.verify.ts` (queue + due maths) and
+  `server/plugins/publish-schedule.verify.ts` (route + tick against a stubbed uploader).
 
 ### Phase D — optional
 
