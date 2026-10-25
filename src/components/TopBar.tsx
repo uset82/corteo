@@ -48,9 +48,10 @@ interface TopBarProps {
   onHome?: () => void;
   onRename?: (name: string) => void;
   onOpenShorts?: () => void;
+  onOpenPublishCalendar?: () => void;
 }
 
-export function TopBar({ projectId, projectName, canUndo, canRedo, exporting, exportJobCount = 0, onHome, onRename, onResumeGeneration, onOpenShorts }: TopBarProps) {
+export function TopBar({ projectId, projectName, canUndo, canRedo, exporting, exportJobCount = 0, onHome, onRename, onResumeGeneration, onOpenShorts, onOpenPublishCalendar }: TopBarProps) {
   const t = useT();
   const isMacDesktop = window.openChatCutDesktop?.platform === 'darwin';
   const [editing, setEditing] = useState(false);
@@ -94,6 +95,7 @@ export function TopBar({ projectId, projectName, canUndo, canRedo, exporting, ex
       <TopBarIconButton icon="plug" label={t('外部 Agent 接入 (MCP)')} onClick={() => setMcpOpen(true)} />
       <span id="cc-agent-change-log-slot" style={{ display: 'contents' }} />
       <TopBarIconButton icon="scissors" label={t('分析长视频')} onClick={() => onOpenShorts?.()} />
+      <TopBarIconButton icon="clock" label={t('Programar publicaciones')} onClick={() => onOpenPublishCalendar?.()} />
       <TopBarIconButton icon="palette" label={t('设计风格(品牌)')} onClick={() => invokeAction('open-design', undefined, 'toolbar')} />
       <SkinPicker />
       <GenerationActivity projectId={projectId} onResume={onResumeGeneration} />

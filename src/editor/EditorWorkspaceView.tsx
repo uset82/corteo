@@ -3,6 +3,7 @@ import { theme } from '../theme';
 import { TopBar } from '../components/TopBar';
 import { ChatPanel } from '../components/chat/ChatPanel';
 import { ShortsPanel } from '../components/shorts/ShortsPanel';
+import { PublishCalendar } from '../components/publish/PublishCalendar';
 import { LibraryPanel } from '../library/LibraryPanel';
 import { PreviewPanel } from '../components/PreviewPanel';
 import { InspectorPanel } from '../components/InspectorPanel';
@@ -24,6 +25,7 @@ export interface EditorWorkspaceViewProps {
   designStylePanel: ComponentProps<typeof DesignStylePanel> | null;
   versionHistory: ComponentProps<typeof VersionHistory> | null;
   shortsPanel: ComponentProps<typeof ShortsPanel> | null;
+  publishCalendar: ComponentProps<typeof PublishCalendar> | null;
   shortcutsDialog: ComponentProps<typeof ShortcutsDialog> | null;
   settingsDialog: ComponentProps<typeof SettingsDialog> | null;
   chatPanel: ComponentProps<typeof ChatPanel>;
@@ -90,6 +92,7 @@ export function EditorWorkspaceView(props: EditorWorkspaceViewProps) {
         {props.designStylePanel && <DesignStylePanel {...props.designStylePanel} />}
         {props.versionHistory && <VersionHistory {...props.versionHistory} />}
         {props.shortsPanel && <ShortsPanel {...props.shortsPanel} />}
+        {props.publishCalendar && <PublishCalendar {...props.publishCalendar} />}
         {props.shortcutsDialog && <ShortcutsDialog {...props.shortcutsDialog} />}
       </Suspense>
       <ChatPanel {...props.chatPanel} />

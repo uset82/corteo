@@ -183,4 +183,17 @@ export default {
   '保存品牌': 'Guardar marca',
   '已保存': 'Guardado',
   'Claudia puede aplicar esta marca a todos los clips': 'Claudia puede aplicar esta marca a todos los clips',
+
+  // Plan 5 · calendario «Programar»
+  'Programar publicaciones': 'Programar publicaciones',
+  'Nada programado': 'Nada programado',
+  'Actualizar': 'Actualizar',
+  'Actualizando…': 'Actualizando…',
+  'Cancelar': 'Cancelar',
+  'No se pudo leer la cola de publicaciones.': 'No se pudo leer la cola de publicaciones.',
+  'Alguna publicación falló: revisa el estado antes de volver a programarla.': 'Alguna publicación falló: revisa el estado antes de volver a programarla.',
+  'planned': 'programada',
+  'running': 'publicando',
+  'published': 'publicada',
+  'failed': 'falló',
 } as Record<string, string>;
