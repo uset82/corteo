@@ -610,7 +610,14 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - **OP-13 · scheduled publish — server-level, medium.** Durable queue in SQLite, a 30 s tick while the dev server runs, idempotent resume, `schedule_publish` / `list_scheduled_publishes` / `cancel_scheduled_publish`, `when` on `publish_to_social`, and a week calendar. It must not weaken the existing preview/confirm gate.
 - **OP-13, the pure half done (2026-10-25).** `shared/publish-schedule.ts` holds the queue decisions that the tool, the tick and the calendar must agree on: `validateSlot` (a past slot is refused, not fired at once), `dueEntries` (planned + past, oldest first), `isMissed` (12 h grace, so "late" is not the same as "lost"), `canAttempt` (backoff × attempts, parked at the cap, `running` locked), `advance` (publish once; retry twice; then park with the error), and `summarize` for the calendar header. Verify: `shared/publish-schedule.verify.ts`.
 - It lives in `shared/` on purpose: the browser (the tool and the calendar) and the Vite server (the tick) import the same file, so there is one definition of "due" — the bug this prevents is a UI that says "late" while the tick says "not yet".
-- **Still to come for OP-13:** the SQLite-backed store + `server/plugins/publish-schedule.ts` with the 30 s tick and idempotent resume; the three MCP tools (`schedule_publish`, `list_scheduled_publishes`, `cancel_scheduled_publish`) and `when` on `publish_to_social`; the week calendar UI. The tick must only execute entries that carry an approved `previewId`, and must reuse the existing `preview_mismatch` refusal.
+- **OP-13, the tick done (2026-10-25).** `server/publish/tick.ts` runs one pass of the queue without owning a timer: it takes the queue, the clock and a publish function, and returns the next queue. Eight assertions in `server/publish/tick.verify.ts` (a fake clock and a fake uploader) pin the behaviour that matters:
+  - an entry is marked `running` **before** the upload starts, so a crash mid-upload leaves evidence for `recoverInterrupted` rather than a quiet retry;
+  - a failure returns the entry to `planned` with the error and the attempt count, and after the cap it is parked and never fires again;
+  - a thrown uploader is a failure, not a crashed tick;
+  - two due entries fire oldest-slot-first, and one failure does not abort the other;
+  - a late slot still publishes and is reported in `late[]` — the declared "publish late, record it" rule;
+  - a future, `running` or `cancelled` entry is left untouched.
+- Still to come: the SQLite glue (`server/publish/schedule-store.ts` over the repo's `sqliteReadEntry`/`sqliteWriteEntry` KV pattern), the 30 s interval that calls `runTick`, the three MCP tools, `when` on `publish_to_social`, and the week calendar.
 - **Gate note:** this touched `shared/`, so `AGENTS.md` requires `npm test` before OP-13 can be called done — not just `verify:affected`.
 - OP-14 (semantic catalog) and OP-15 (performance loop) stay `optional`.
 
