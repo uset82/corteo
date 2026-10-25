@@ -601,6 +601,17 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - **Deviation, recorded:** placement is the text track's default (centred). Moving the headline into the caption safe zone needs the geometry pass that `place_graphics_in_safe_zone` owns, and doing it here would have meant either a second command (two undo steps) or a duplicated safe-zone calculation. The card's "place it in the caption safe zone" is therefore not built; the headline sits above the source and below nothing.
 - Gates: catalog regenerated, lint 0 errors, `verify:agent-tools` and `verify:mcp` exit 0.
 
+### Opus parity: where the next session starts (end of round 5, 2026-10-25)
+
+10 of 15 done (OP-01, 02, 03, 04, 05, 06, 07, 09, 11, 12). Three cards remain, and two of them are not what their one-line summary suggests. Read this before picking one:
+
+- **OP-08 · caption presets and keyword emphasis — its first bullet is already done by other styles.** The repo ships 22 caption templates; the four "shorts presets" the card asks for would be near-duplicates of `tiktok`, `story`, `bold-outline` and `bili`, and `CaptionStyleMenu` would gain four more items nobody can tell apart. The genuine gap is the second bullet: **keyword emphasis**. `CaptionStyle` carries one `highlightColor` for the *active* word, and word overrides only carry `display_text`, so per-word colour or scale runs for numbers and proper nouns need a new style field, `renderStyles.ts`, and the Remotion caption component to agree — a real change, not a data addition. Either reshape the card (drop the presets, keep keywords) or accept that presets-only is checkbox work.
+- **OP-10 · brand kit — document-level, the biggest of the three.** `BrandKit` on `ProjectDoc` means a persistence round trip and a decision about projects that predate the field; then `apply_brand_kit` over sequences and a "Marca" Settings page. It reuses `update_watermark`, `manage_design_style` and `search_fonts`, but the document change is the cost.
+- **OP-13 · scheduled publish — server-level, medium.** Durable queue in SQLite, a 30 s tick while the dev server runs, idempotent resume, `schedule_publish` / `list_scheduled_publishes` / `cancel_scheduled_publish`, `when` on `publish_to_social`, and a week calendar. It must not weaken the existing preview/confirm gate.
+- OP-14 (semantic catalog) and OP-15 (performance loop) stay `optional`.
+
+State at this point: every Plan 5 verify passes, `verify:agent-tools`, `verify:mcp`, `verify:components`, `verify:editor`, `verify:i18n`, `verify:server-tool-catalog` and `npm run lint` are green on the merged tree, and the only full-gate failure is the `verify-gate-coverage` blocker above (the Plan 2 session's five untracked verifies).
+
 
 ### Opus parity: blockers
 - **2026-10-25, full gate on the merged tree: 209/210 segments passed, 1 failed** (`CC_RENDER_GL=swangle npm test`, 178 s). The failure is `scripts/verify-gate-coverage.verify.mjs`, and it is not Plan 5 code: five **untracked** verifies from the Plan 2 session (`server/music-listen/music-listen.verify.ts`, `server/music-listen/reactions-tool.verify.ts`, `server/music-listen/tool.verify.ts`, `src/audio/listen/listen.verify.ts`, `src/editor/musicReactions.verify.ts`) exist in the tree but are not in `test:serial`, so the coverage gate reports them as unregistered. Registering them is not this track's call: they are not tracked, and the harness `tsc` errors they carry are the Plan 2 session's to fix.
