@@ -48,11 +48,11 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P-CL-10 | Vite warmup path | done | |
 | P-CL-11 | SKILL.md recipes, copy-paste tested | done | P-CL-2, P-CL-5, P-CL-6, P-CL-7, P-CL-8 |
 | P-CL-12 | claudia-acceptance.sh on Node 20 with the prefix set | done | P-CL-1 to P-CL-11 |
-| P-CL-13 | Acceptance script uses its own port and project store | doing | P-CL-12 |
-| P-CL-14 | 9:16 cover / contain+blur, no checkerboard in the render | doing | |
-| P-CL-15 | Short music recipe, trim --to, render --to-audio | doing | P-CL-11 |
-| P-CL-16 | claudia:local starts without Vite warnings | doing | P-CL-10 |
-| P-CL-17 | Installer self-test leaves no files in the repo | doing | P-CL-3 |
+| P-CL-13 | Acceptance script uses its own port and project store | done | P-CL-12 |
+| P-CL-14 | 9:16 cover / contain+blur, no checkerboard in the render | done | |
+| P-CL-15 | Short music recipe, trim --to, render --to-audio | done | P-CL-11 |
+| P-CL-16 | claudia:local starts without Vite warnings | done | P-CL-10 |
+| P-CL-17 | Installer self-test leaves no files in the repo | done | P-CL-3 |
 | P1-6 | `videoclip-musical` skill | todo | P1-2 |
 | P1-7 | Webhooks with HMAC | optional | P4-3 |
 | L-01 | Server-side Beat This + CLAP runner | done | |
@@ -87,7 +87,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P6-1 | Claudia end-to-end proof + screenshots | todo | every task above is `done` or `blocked` |
 | P7-1 | EffectCraft titles sidecar | optional | P6-1 |
 
-### P-CL-13 to P-CL-17 · Claudia polish — doing
+### P-CL-13 to P-CL-17 · Claudia polish — done
 - Plan: `docs/plans/06-claudia-polish.md`.
 - P-CL-13: `CORTEO_PORT` and `CORTEO_STORE_DIR`. Acceptance never binds 5199 unless that port was requested and is free.
 - P-CL-14: item `fit` and `background`, black render backdrop, `scripts/vertical-fit.verify.mjs`.
