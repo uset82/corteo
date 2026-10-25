@@ -38,7 +38,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P1-5 | `npm run editor-host` (headless editor tab) | done | P0-3 |
 | P1-6 | `videoclip-musical` skill | todo | P1-2 |
 | P1-7 | Webhooks with HMAC | optional | P4-3 |
-| L-01 | Server-side Beat This + CLAP runner | todo | |
+| L-01 | Server-side Beat This + CLAP runner | done | |
 | L-02 | Listening DSP in `src/audio/listen/` | todo | |
 | L-03 | Mood per section + Latin labels | todo | L-01 |
 | L-04 | Lyric lines, chorus candidates, SongMap + cache | todo | L-02 |
@@ -46,7 +46,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | L-06 | `listen_to_song` MCP tool | todo | L-01, L-03, L-05 |
 | L-07 | Real-ear relay (off by default) | todo | L-06 |
 | L-08 | Keyframable filters + binary-search sampling | todo | |
-| P2-1 | Ken Burns | todo | |
+| P2-1 | Ken Burns | done | |
 | L-09 | Music reactions + tools | todo | L-06, L-08, P2-1 |
 | L-10 | Caption motion `latido` | todo | L-06 |
 | L-11 | Music UI: inspector section, timeline map, song dialog | todo | L-09 |
@@ -185,7 +185,10 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Do: `OPENCHATCUT_WEBHOOK_URL` + `OPENCHATCUT_WEBHOOK_SECRET`; POST JSON for `export.completed`, `export.failed`, `import.completed`, `variant.chosen` with an `X-Corteo-Signature: sha256=<hex>` HMAC of the body; retries with backoff; never blocks the export.
 - Verify: a verify with a local HTTP receiver checking the signature.
 
-### L-01 · Server-side Beat This + CLAP runner
+### L-01 · Server-side Beat This + CLAP runner — done
+- Done 2026-10-25: the inference cores moved to `shared/music-inference/` (`RhythmInference`, `ClapInference`) and both the desktop workers and a forked server worker use them; ffmpeg decodes to 22.05 kHz mono with a 15-minute cap, the analysis lands under the same `musicAnalysisCacheKey` plus analyzer fingerprint, and `analyze_music` / `inspect_music` are server-direct and in the offline catalog.
+- Proof over the real MCP handler with the packs installed and no editor tab: `analyze_music` took 35,301 ms and returned BPM 120, meter 1, confidence 0.991, 416 beats, 379 downbeats, 3 sections, 4 tags; `inspect_music` answered from the cache in 269 ms with the same numbers; `review_edit_session` committed the imported song. The media card badge then read `120 BPM · Unknown` (`data-state="ready"`, aria-label `Music analysis: song-328.wav, 120 BPM · Unknown`) from that same project-store record. The CLAP profile labels this clip "unknown" in every category, which is its conservative answer, not a missing tag.
+- Gates: `npx tsc -b`, `npm run lint` (0 errors), `npm run verify:music-intelligence`, `npm run verify:agent-tools`, `npm run verify:mcp`, `npm run verify:desktop-inference`, `npx tsx desktop/update-packaging.verify.ts`, `npm run desktop:build:main`, `npm run build:cli`.
 - Plan: Plan 2 › Part A (server runner).
 - Files: `desktop/native-rhythm-worker.ts`, `desktop/native-clap-worker.ts` (move the inference cores to shared modules), new `server/music-listen/`, `src/audio/intelligence/store.ts` (cache key), `src/agent/external-tool-policy.ts`, `server/external-agent/offline-tools.ts`, `server/external-agent/offline-executor.ts`.
 - Do: run the cores in a `worker_threads` worker with ffmpeg decoding to 22.05 kHz mono; same cache key; make `analyze_music` and `inspect_music` server-direct and add them to the offline catalog.
@@ -237,7 +240,9 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Done when: a brightness keyframe pair changes the preview and the export identically, and `sampleKeyframes` gives the same results as before on the existing tests.
 - Verify: `npx tsx src/editor/keyframes.verify.ts`, `npm run verify:editor`, `npm run verify:export-gl`.
 
-### P2-1 · Ken Burns
+### P2-1 · Ken Burns — done
+- Done 2026-10-25: the inspector's Animation tab and the clip context menu write one batch of scale/x/y keyframes through the existing keyframe channel, so preview and export sample the same ramp and it is one undo step; `apply_ken_burns` does the same over MCP and refuses non-stills, locked tracks and clips under two frames in Spanish. Committed as `36bb9e2`.
+- Re-run 2026-10-25: `npx tsx src/editor/kenBurns.verify.ts` and `npx tsx src/components/inspector/inspector-controls.verify.ts` both pass.
 - Plan: Plan 1 › Phase 2 (Ken Burns).
 - Files: new `src/editor/kenBurns.ts` + verify; `AnimationTab` in `src/components/inspector/InspectorContent.tsx`; the timeline clip context menu; new tool `apply_ken_burns`.
 - Done when: in the editor, a photo gets "Ken Burns" from the inspector or the context menu in one undo step; over MCP `apply_ken_burns` does the same; two exported frames of the photo differ.
@@ -361,6 +366,8 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-25 · Claudia bots · `scripts/claudia-install.sh` is the one-shot install for any Claudia bot's Linux VM, and `skills/corteo/SKILL.md` is the agent guide. The free-model harness stays optional. Reason: every Claudia bot has its own VM, so corteo has to install there without a tunnel and without secrets.
 - 2026-10-25 · Claudia's VM · She runs corteo on her own Linux box. `npm run claudia:local` binds 127.0.0.1 with paid providers off, and `npm run corteo` is the existing `occ` shell, now able to `media import` a disk path. The Worker and named tunnel stay optional for a browser. Reason: she can clone, install and render on that VM, so the public URL is not the limb.
 - 2026-10-24 · B-9 · The Spanish pass covers the screens Plan 4 owns, read literally: the projects page with its tooltips, the top bar's button labels, the chat's first view (header, onboarding, starters, composer, workflow and model pickers, capability banner) and the phone upload page. The panels those buttons open stay for P5-1. Reason: the plan's scope line, and P5-1 is the full dictionary.
+
+- 2026-10-25 · L-01 · `analyze_music` and `inspect_music` run their cores in a forked child process per core (`child_process.fork`), not the `worker_threads` the card names. Reason: the rhythm core uses the top-level `onnxruntime-node@1.22.0-rev` and the CLAP core nests `onnxruntime-node@1.24.3` inside `@huggingface/transformers`; both ship `libonnxruntime.so.1`, so loading them in one process makes the second load shadow the first and the native session fails. One child per core keeps each soname in its own address space; inside Electron the children start with `ELECTRON_RUN_AS_NODE=1`.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.
