@@ -22,6 +22,8 @@ const DRAFT_EDIT_TOOL_NAMES = new Set([
   'make_shorts',
   // Plan 5: word-level cleanup; destructive but reversible in one undo step.
   'tighten_speech',
+  // Plan 5: writes caption emphasis overrides (one updateCaptions call).
+  'emphasize_keywords',
   // Plan 5: writes volume keyframes over the offending words, as one batch.
   'censor_words',
   // Plan 5: adds a title clip (one command, one undo step).
