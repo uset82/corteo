@@ -39,7 +39,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P1-6 | `videoclip-musical` skill | todo | P1-2 |
 | P1-7 | Webhooks with HMAC | optional | P4-3 |
 | L-01 | Server-side Beat This + CLAP runner | done | |
-| L-02 | Listening DSP in `src/audio/listen/` | todo | |
+| L-02 | Listening DSP in `src/audio/listen/` | done | |
 | L-03 | Mood per section + Latin labels | todo | L-01 |
 | L-04 | Lyric lines, chorus candidates, SongMap + cache | todo | L-02 |
 | L-05 | Pictures: map PNG + spectrogram | todo | L-04 |
@@ -196,7 +196,11 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Done when: with the packs installed and no editor tab open, `analyze_music` over MCP returns BPM and sections for an uploaded song, and the media card badge shows the result.
 - Verify: `npm run verify:music-intelligence`, `npm run verify:agent-tools`, `npm run verify:mcp`.
 
-### L-02 · Listening DSP in `src/audio/listen/`
+### L-02 · Listening DSP in `src/audio/listen/` — done
+- Done 2026-10-25: `src/audio/listen/` measures a decoded mono clip with pure functions — 50 ms RMS plus bass/mid/brightness bands and a power centroid, onsets and accents, drop/break/build/stop/vocals-in/out moments, a Krumhansl–Kessler key, and an ffmpeg `ebur128` args builder + stderr parser; `measureSong()` composes them. `src/audio/beats.ts` now exports `fftInPlace`, so the spectrum pass and the beat tracker share one FFT, and onsets reuse the existing `onsetEnvelope`.
+- Proof: `listen.verify.ts` synthesizes every signal (no fixtures in git): seven 120 BPM clicks land on the 500 ms grid within 10 ms with no off-grid onsets; a 60 Hz burst puts bass above 3× mid and brightness with a centroid under 200 Hz; one second of silence reads as a stop at 1550 ms; an A4/C5/E5 triad reads A minor; a quiet→loud step reads as a drop at 2500 ms; a 3 s clip yields 59 whole 50 ms frames. The ebur128 fixture parses I −23.0 LUFS, LRA 5.0 LU, true peak −9.3 dBFS and the `S:` curve, and the builder keeps `-hide_banner -nostats` and never `-v`.
+- Traps recorded in code: flux credits an attack to the first 1024-sample window that contains it, so onsets are refined over ±2 hops or they read up to 46 ms early; the 6-frame energy smoothing dates a stop about 250 ms late, so its boundary is re-anchored on raw RMS.
+- Gates: `npx tsc -b`, `npm run lint` (0 errors), `npx tsx src/audio/listen/listen.verify.ts`, `npx tsx src/audio/beats.verify.ts`; registered in `test:serial` (verify-registration counted 687 tracked verifies). The same day's `CC_RENDER_GL=swangle npm test` ran 214/215, the only failure being the concurrent session's then-uncommitted `caption-emphasis-render` registration, which passes now that it is committed.
 - Plan: Plan 2 › Part A (new measurements) and Verification (synthetic tests).
 - Files: new `src/audio/listen/*.ts` (pure functions, no DOM, no Node-only APIs) + verifies; `src/audio/beats.ts` (extract the onset envelope so both share it).
 - Do: 50 ms energy, bass/mid/brightness bands, onsets and accents, moments (drop, break, build, stop, vocals in/out), key and mode, and an ffmpeg `ebur128` parser (`-hide_banner -nostats`, never `-v error`).

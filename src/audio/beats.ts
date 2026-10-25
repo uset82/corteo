@@ -21,8 +21,8 @@ const MAX_BPM = 180;
 /** No beat will be generated if the reliability is lower than this (voice/ambient sound gatekeeping) */
 const MIN_CONFIDENCE = 1.2;
 
-/** Iterate over in-place radix-2 FFT (internal use only, length must be a power of 2). */
-function fft(re: Float64Array, im: Float64Array): void {
+/** Iterate over in-place radix-2 FFT (length must be a power of 2). Shared with `listen/spectrum.ts`. */
+export function fftInPlace(re: Float64Array, im: Float64Array): void {
   const n = re.length;
   for (let i = 1, j = 0; i < n; i++) {
     let bit = n >> 1;
@@ -75,7 +75,7 @@ export function onsetEnvelope(samples: Float32Array, sampleRate: number): { env:
       re[i] = samples[at + i]! * hann[i]!;
       im[i] = 0;
     }
-    fft(re, im);
+    fftInPlace(re, im);
     let sum = 0;
     for (let k = 0; k < bins; k++) {
       const mag = Math.hypot(re[k]!, im[k]!);
