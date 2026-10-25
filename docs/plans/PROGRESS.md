@@ -516,7 +516,7 @@ This track is deliberately **not** in the main table, so the picking rule above 
 | OP-07 | `censor_words` | done | |
 | OP-08 | Shorts caption presets, keywords, line breaking | todo | |
 | OP-09 | `write_clip_title` | done | |
-| OP-10 | Brand kit | todo | |
+| OP-10 | Brand kit | doing | |
 | OP-11 | Reframe polish: dead zone and cheap modes | done | |
 | OP-12 | `write_social_copy` | done | |
 | OP-13 | Scheduled publish | todo | OP-12 |
@@ -609,6 +609,12 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - **OP-10 · brand kit — document-level, the biggest of the three.** `BrandKit` on `ProjectDoc` means a persistence round trip and a decision about projects that predate the field; then `apply_brand_kit` over sequences and a "Marca" Settings page. It reuses `update_watermark`, `manage_design_style` and `search_fonts`, but the document change is the cost.
 - **OP-13 · scheduled publish — server-level, medium.** Durable queue in SQLite, a 30 s tick while the dev server runs, idempotent resume, `schedule_publish` / `list_scheduled_publishes` / `cancel_scheduled_publish`, `when` on `publish_to_social`, and a week calendar. It must not weaken the existing preview/confirm gate.
 - OP-14 (semantic catalog) and OP-15 (performance loop) stay `optional`.
+
+**OP-10 (in progress, step 1 of 4, 2026-10-25).** The brand-kit data layer is in `src/brand/kit.ts`:
+- `BrandKit`, `DEFAULT_BRAND_KIT`, `normalizeBrandKit` and `brandKitIssues`. The normalizer coerces untrusted input field by field (hex-only palette, `n:n` ratios, clamped margins/scale/opacity, watermark dropped when its corner is unknown) so a half-written kit applies its good half instead of failing whole. Optional keys are **omitted rather than set to `undefined`**, which is what makes `normalizeBrandKit(null)` deep-equal `DEFAULT_BRAND_KIT` — the verify caught that on the first run.
+- `brandKitIssues` reports what the normalizer repaired, in Spanish, so the UI can say "ese color no es hexadecimal" instead of silently dropping it.
+- Verify: `src/brand/kit.verify.ts` (defaults, coercion, watermark clamping, validator fields, idempotence). Registered in `test:serial`.
+- **Remaining steps of this card, in order:** (2) persist on `ProjectDoc` with a reader that returns defaults for projects saved before the field — and no migration that rewrites projects; (3) `apply_brand_kit` over a batch through existing commands, plus wiring the `brandKitId` that `make_shorts` already documents; (4) the "Marca" Settings page. The card is `doing` until step 3 lands.
 
 State at this point: every Plan 5 verify passes, `verify:agent-tools`, `verify:mcp`, `verify:components`, `verify:editor`, `verify:i18n`, `verify:server-tool-catalog` and `npm run lint` are green on the merged tree, and the only full-gate failure is the `verify-gate-coverage` blocker above (the Plan 2 session's five untracked verifies).
 
