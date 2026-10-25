@@ -12,10 +12,20 @@ import { planSlip } from './slip';
 import { sourceFramesToTimelineFrames } from './sourceLimit';
 import type { EditorCommands } from './storeCommands';
 import {
+  DEFAULT_OVERLAY_TRACK_NAME,
+  DEFAULT_SOLID_NAME,
+  DEFAULT_TEXT_BODY,
+  DEFAULT_TEXT_ITEM_NAME,
+  sequenceCopyName,
+  sequenceName,
+} from './defaultNames';
+import {
   activeEditorState,
   activeTimeline,
   defaultTrackId,
   resolveTrackId,
+  timelineTrackIds,
+  trackKind,
 } from './types';
 import type {
   Marker,
@@ -63,10 +73,19 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
     const existing = resolveTrackId(state, ref, kind) ?? defaultTrackId(state, kind);
     if (existing) return existing;
     const id = uid('track');
-    // Staged, not dispatched: the enclosing command commits it with its own
-    // action. Any command that does not use dispatchWithTracks/placeItem still
-    // gets it flushed as part of its next batch.
+    // Staged until the enclosing command commits it in the same batch.
     pendingTrackCreates.push({ type: 'track.create', track: { id, kind } });
+    return id;
+  };
+  const pickOverlayVideoTrack = (): TrackId => {
+    const state = activeTimeline(getDoc());
+    const videos = timelineTrackIds(state).filter((id) => trackKind(state, id) === 'video');
+    if (videos.length >= 2) return videos[0]!;
+    const id = uid('track');
+    pendingTrackCreates.push({
+      type: 'track.create',
+      track: { id, kind: 'video', name: DEFAULT_OVERLAY_TRACK_NAME },
+    });
     return id;
   };
   const placeItem = (
@@ -111,7 +130,7 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
           fit: opts?.fit ?? base.fit,
           items: [], selectedId: null, trackOrder,
           tracks: { [trackOrder[0]]: { kind: 'video' } },
-          id: uid('tl'), name: opts?.name ?? `序列 ${d.timelines.length + 1}`, order: maxOrder(d) + 1,
+          id: uid('tl'), name: opts?.name ?? sequenceName(d.timelines.length + 1), order: maxOrder(d) + 1,
         };
         dispatch({ type: 'tl.create', timeline: t, activate: opts?.activate });
         return t.id;
@@ -120,7 +139,7 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
       duplicateTimeline: (id, opts) => {
         const src = getDoc().timelines.find((t) => t.id === id);
         const newId = uid('tl');
-        dispatch({ type: 'tl.duplicate', id, newId, name: opts?.name ?? `${src?.name ?? '序列'} 副本`, retarget: opts?.retarget, activate: opts?.activate });
+        dispatch({ type: 'tl.duplicate', id, newId, name: opts?.name ?? sequenceCopyName(src?.name), retarget: opts?.retarget, activate: opts?.activate });
         return newId;
       },
       deleteTimeline: (id) => dispatch({ type: 'tl.delete', id }),
@@ -181,7 +200,7 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
             track: pickTrack(at?.track, 'video'),
             durationInFrames: at?.durationInFrames ?? Math.round(5 * 30),
             kind: 'solid',
-            name: at?.name ?? '纯色',
+            name: at?.name ?? DEFAULT_SOLID_NAME,
             width: 1920,
             height: 1080,
             props: { color: at?.color ?? '#1a1a1a' },
@@ -245,18 +264,19 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
           ripple: at?.ripple,
           item: {
             id,
-            track: pickTrack(at?.track ?? 'V2', 'video'), // titles default to the top video track
+            track: at?.track ? pickTrack(at.track, 'video') : pickOverlayVideoTrack(),
             durationInFrames: at?.durationInFrames ?? 90,
             kind: 'text',
-            name: at?.name?.trim() || '文字',
+            name: at?.name?.trim() || DEFAULT_TEXT_ITEM_NAME,
             width: 1920,
             height: 1080,
             props: {
-              text: at?.text?.trim() || '双击编辑文字',
+              text: at?.text?.trim() || DEFAULT_TEXT_BODY,
               fontSize: typeof at?.fontSize === 'number' && Number.isFinite(at.fontSize) ? at.fontSize : 96,
               color: at?.color?.trim() || '#ffffff',
               fontWeight: typeof at?.fontWeight === 'number' && Number.isFinite(at.fontWeight) ? at.fontWeight : 700,
               align,
+              ...(at?.position ? { position: at.position } : {}),
             },
           },
         }, 'Add title');
@@ -399,7 +419,11 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
       duplicateItem: (id) => dispatch({ type: 'duplicate', id, newId: uid('item') }),
       removeItem: (id) => dispatch({ type: 'remove', id }),
       rippleDeleteItem: (id) => dispatch({ type: 'remove', id, ripple: true }),
-      splitItem: (id, atFrame) => dispatch({ type: 'split', id, atFrame, newId: uid('item') }),
+      splitItem: (id, atFrame) => {
+        const newId = uid('item');
+        dispatch({ type: 'split', id, atFrame, newId });
+        return newId;
+      },
       clearTimeline: () => dispatch({ type: 'clear' }),
       setAspect: (width, height, fit) => dispatch({ type: 'setCanvas', width, height, fit }),
       toggleTrackFlag: (track, flag) => dispatch({ type: 'toggleTrack', track, flag }),

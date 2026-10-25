@@ -96,6 +96,7 @@ export interface EditorCommands {
     color?: string;
     fontWeight?: number;
     align?: 'left' | 'center' | 'right';
+    position?: 'top' | 'center' | 'bottom';
   }) => string;
   updateItemProps: (id: string, patch: Record<string, unknown>) => void;
   moveItem: (id: string, to: { track?: TrackId; startFrame?: number }) => void;
@@ -131,7 +132,7 @@ export interface EditorCommands {
   removeItem: (id: string) => void;
   /** ripple delete: remove a clip AND close the gap (shift later same-track clips left) */
   rippleDeleteItem: (id: string) => void;
-  splitItem: (id: string, atFrame: number) => void;
+  splitItem: (id: string, atFrame: number) => string;
   clearTimeline: () => void;
   setAspect: (width: number, height: number, fit?: AspectFit) => void;
   toggleTrackFlag: (track: TrackId, flag: 'hidden' | 'muted' | 'collapsed' | 'locked') => void;

@@ -106,5 +106,12 @@ export async function executeOfflineTool(
   if (name === 'read_transcript') return execReadTranscript(args, ctx);
   if (name === 'find_transcript') return execFindTranscript(args, ctx);
   if (name === 'import_timeline') return execTimelineImportTool(name, args, ctx);
+  if (name === 'detect_beats') {
+    const [{ runBeatTool }, { analyzeLocalBeats }] = await Promise.all([
+      import('../../src/agent/tools/beat-tools.js'),
+      import('./offline-beats.js'),
+    ]);
+    return runBeatTool(name, args, ctx, analyzeLocalBeats);
+  }
   return { error: `offline tool ${name} is not implemented` };
 }

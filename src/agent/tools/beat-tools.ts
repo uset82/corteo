@@ -49,7 +49,16 @@ function markerActions(
 
 const listed = (times: readonly number[]): number[] => times.slice(0, MAX_LISTED);
 
-export async function execBeatTool(name: string, args: Args, ctx: AgentContext): Promise<unknown> {
+export function execBeatTool(name: string, args: Args, ctx: AgentContext): Promise<unknown> {
+  return runBeatTool(name, args, ctx, analyzeAssetBeats);
+}
+
+export async function runBeatTool(
+  name: string,
+  args: Args,
+  ctx: AgentContext,
+  load: (src: string) => Promise<BeatAnalysis>,
+): Promise<unknown> {
   if (name !== 'detect_beats') return { error: `unknown tool ${name}` };
   try {
     const state = ctx.getState();
@@ -70,13 +79,13 @@ export async function execBeatTool(name: string, args: Args, ctx: AgentContext):
       return { error: 'pass assetId (media pool) or itemId (timeline clip)' };
     }
 
-    const analysis: BeatAnalysis = await analyzeAssetBeats(src);
+    const analysis: BeatAnalysis = await load(src);
     if (analysis.bpm === 0) {
       return {
         bpm: 0,
         confidence: analysis.confidence,
         beats: [],
-        note: '未检出稳定节拍(低可信度守门):素材可能是语音/环境声,或节奏不稳。',
+        note: 'No stable tempo (low confidence): the file may be speech, ambience, or an unsteady rhythm.',
       };
     }
 
@@ -87,7 +96,7 @@ export async function execBeatTool(name: string, args: Args, ctx: AgentContext):
       downbeatCount: analysis.downbeats.length,
       beats: listed(analysis.beats),
       downbeats: listed(analysis.downbeats),
-      ...(analysis.beats.length > MAX_LISTED ? { note: `beats 只列前 ${MAX_LISTED} 个,总数见 beatCount` } : {}),
+      ...(analysis.beats.length > MAX_LISTED ? { note: `only the first ${MAX_LISTED} beats are listed; beatCount is the total` } : {}),
     };
     if (!item) return base;
 
@@ -99,7 +108,7 @@ export async function execBeatTool(name: string, args: Args, ctx: AgentContext):
       const cap = typeof args.markerLimit === 'number' ? Math.max(1, Math.min(500, Math.round(args.markerLimit))) : DEFAULT_MARKER_CAP;
       const frames = args.markers === 'downbeats' ? downbeatFrames : beatFrames;
       const actions = markerActions(item, frames, args.markers === 'downbeats' ? 'downbeat' : 'beat', cap);
-      if (actions.length) ctx.commands.batch(actions, '节拍标记');
+      if (actions.length) ctx.commands.batch(actions, 'Beat markers');
       markersCreated = actions.length;
     }
     return {

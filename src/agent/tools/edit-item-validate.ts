@@ -268,15 +268,16 @@ function validateAudioAdd(ctx: AgentContext, entry: Entry): OpResult {
   const sound = SOUND_EFFECTS.find((entry) => entry.id === match[1]);
   if (!sound) return { error: `unknown sound ${match[1]}` };
   const state = ctx.getState();
-  const requestedTrack = entry.track ?? entry.trackId ?? 'A1';
-  const resolvedTrack = resolveTrackId(state, requestedTrack, 'audio');
-  if ((entry.track != null || entry.trackId != null) && !resolvedTrack) {
+  const explicitTrack = entry.track ?? entry.trackId;
+  const resolvedTrack = explicitTrack == null
+    ? defaultTrackId(state, 'audio')
+    : resolveTrackId(state, explicitTrack, 'audio');
+  if (explicitTrack != null && !resolvedTrack) {
     return {
-      error: `audio track "${String(requestedTrack)}" does not exist yet. Create it first with edit_track action=create json={"trackType":"audio","name":"${String(requestedTrack)}"} (or omit track to place on the default audio track).`,
+      error: `audio track "${String(explicitTrack)}" does not exist yet. Create it first with edit_track action=create json={"trackType":"audio","name":"${String(explicitTrack)}"} (or omit track to place on the default audio track).`,
     };
   }
-  const track = resolvedTrack ?? defaultTrackId(state, 'audio');
-  if (!track) return { error: 'no audio track exists; create one with edit_track action=create json={"trackType":"audio"}' };
+  const track = resolvedTrack ?? undefined;
   const startFrame = typeof entry.fromFrame === 'number'
     ? entry.fromFrame
     : typeof entry.startFrame === 'number' ? entry.startFrame : undefined;

@@ -45,20 +45,21 @@ export function execAudioAssetTool(name: string, args: Args, ctx: AgentContext):
     ?? choices.find((candidate) => candidate.name.toLowerCase().includes(q));
   if (!asset) return { error: `no audio matching "${args.audioName}"`, available: choices.map((a) => a.name) };
   const state = ctx.getState();
-  const requestedTrack = args.track ?? 'A1';
-  const resolvedTrack = resolveTrackId(state, requestedTrack, 'audio');
-  if (args.track != null && !resolvedTrack) {
+  const explicitTrack = args.track;
+  const resolvedTrack = explicitTrack == null
+    ? defaultTrackId(state, 'audio')
+    : resolveTrackId(state, explicitTrack, 'audio');
+  if (explicitTrack != null && !resolvedTrack) {
     return {
-      error: `audio track "${String(args.track)}" does not exist yet. Create it first with edit_track action=create json={"trackType":"audio","name":"${String(args.track)}"} (or omit track to place on the default audio track).`,
+      error: `audio track "${String(explicitTrack)}" does not exist yet. Create it first with edit_track action=create json={"trackType":"audio","name":"${String(explicitTrack)}"} (or omit track to place on the default audio track).`,
     };
   }
-  const track = resolvedTrack ?? defaultTrackId(state, 'audio');
-  if (!track) return { error: 'no audio track exists; create one with edit_track action=create json={"trackType":"audio"}' };
   const placed = ctx.commands.addAudio(commandAudio(asset), {
-    track,
+    track: resolvedTrack ?? undefined,
     startFrame: typeof args.startFrame === 'number' ? args.startFrame : undefined,
     ripple: args.ripple === true,
   });
+  const trackId = ctx.getState().items.find((item) => item.id === placed.itemId)?.track;
   return {
     ok: true,
     added: asset.name,
@@ -66,7 +67,7 @@ export function execAudioAssetTool(name: string, args: Args, ctx: AgentContext):
     itemId: placed.itemId,
     sourceAssetId: placed.sourceAssetId,
     source: asset.source,
-    trackId: track,
-    track: trackAlias(ctx.getState(), track),
+    trackId,
+    track: trackId ? trackAlias(ctx.getState(), trackId) : null,
   };
 }

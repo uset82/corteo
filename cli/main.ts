@@ -16,6 +16,7 @@ Usage
   occ timeline items [<project>] [--track <track id>] [--timeline <id>] [--json]
   occ media ls [<project>] [--json]
   occ media import <absolute-path> [--apply] [--json]
+  occ mcp token [--show] [--json]
   occ render [<project>] --out <file> [--resolution 1080p] [--fps 30] [--codec h264] [--from <frame|4s>] [--to <frame|4s>] [--dry-run] [--quiet]
   occ export jianying [<project>] [--draft-name <name>] [--out-dir <dir>] [--json]
   occ item move <clip> [--track <track>] [--start <frame|4s>] [--apply]

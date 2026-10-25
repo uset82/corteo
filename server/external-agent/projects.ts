@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { readStore, setStoredEntry } from '../plugins/project-store.ts';
+import { DEFAULT_SEQUENCE_NAME } from '../../src/editor/defaultNames.ts';
 import { CURRENT_PROJECT_VERSION } from '../../shared/project-version.ts';
 
 interface ProjectMeta {
@@ -31,7 +32,7 @@ function emptyProject(args: Record<string, unknown>): unknown {
   const timelineId = `tl_${randomUUID()}`;
   const timeline = {
     id: timelineId,
-    name: '序列 1',
+    name: DEFAULT_SEQUENCE_NAME,
     order: 0,
     fps: positiveNumber(args.fps, 30),
     width: positiveNumber(args.compositionWidth, 1920),

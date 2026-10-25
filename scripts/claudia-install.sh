@@ -6,8 +6,13 @@
 # Installs nvm and Node 24 if needed, clones or updates ~/corteo, installs
 # dependencies, turns paid providers off, and renders a 2 second test MP4.
 # No API keys. The free-model harness is optional and is not installed here.
+#
+# Shells on a Grok Bot VM export NPM_CONFIG_PREFIX. nvm refuses to start while
+# that variable is set, so it is cleared here and nowhere else. The user's rc
+# files are left to nvm's own installer.
 set -euo pipefail
 umask 022
+unset NPM_CONFIG_PREFIX npm_config_prefix
 
 REPO_URL_DEFAULT="https://github.com/uset82/corteo.git"
 REF_DEFAULT="main"
@@ -44,13 +49,19 @@ else
 fi
 
 ensure_node() {
+  # nvm aborts if this is set, including the lowercase form npm writes.
+  unset NPM_CONFIG_PREFIX npm_config_prefix
   export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
   if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
     say "installing nvm $NVM_VERSION"
     curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash
   fi
+  local nounset=0
+  case $- in *u*) nounset=1 ;; esac
+  set +u
   # shellcheck disable=SC1091
   . "$NVM_DIR/nvm.sh"
+  if (( nounset )); then set -u; fi
   if ! command -v node >/dev/null 2>&1 || [[ "$(node -p 'process.versions.node.split(".")[0]')" != "$NODE_MAJOR" ]]; then
     say "installing Node $NODE_MAJOR"
     nvm install "$NODE_MAJOR"
@@ -58,6 +69,11 @@ ensure_node() {
   nvm alias default "$NODE_MAJOR" >/dev/null
   nvm use "$NODE_MAJOR" >/dev/null
   hash -r
+  local major
+  major="$(node -p 'Number(process.versions.node.split(".")[0])')"
+  if [[ "$major" -lt 24 ]]; then
+    die "corteo needs Node 24 (got $(node -v)). nvm did not switch. Unset NPM_CONFIG_PREFIX and run this installer again."
+  fi
   say "node $(node -v)"
 }
 
@@ -80,6 +96,30 @@ ensure_repo() {
   fi
 }
 
+system_chrome() {
+  local candidate
+  for candidate in google-chrome google-chrome-stable chromium chromium-browser; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+      command -v "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+ensure_browser() {
+  local chrome=""
+  chrome="$(system_chrome || true)"
+  if [[ -n "$chrome" ]]; then
+    export CC_BROWSER_EXECUTABLE="$chrome"
+    say "using system Chrome for renders: $chrome"
+    say "skipping the Remotion headless-shell download"
+    return 0
+  fi
+  say "no system Chrome; downloading Remotion's headless shell now so the first render does not"
+  node --input-type=module -e 'import { ensureBrowser } from "@remotion/renderer"; await ensureBrowser({ chromeMode: "headless-shell" });'
+}
+
 ensure_deps() {
   cd "$DIR"
   if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
@@ -88,18 +128,11 @@ ensure_deps() {
   say "ffmpeg $(ffmpeg -version | head -n 1)"
   if ! command -v nvidia-smi >/dev/null 2>&1; then
     export ONNXRUNTIME_NODE_INSTALL=skip
+    export CC_RENDER_GL="${CC_RENDER_GL:-swangle}"
   fi
   say "npm install"
   npm install
-  if ! command -v google-chrome >/dev/null 2>&1 \
-    && ! command -v google-chrome-stable >/dev/null 2>&1 \
-    && ! command -v chromium >/dev/null 2>&1 \
-    && ! command -v chromium-browser >/dev/null 2>&1; then
-    say "no system Chrome; installing Playwright Chromium"
-    npx --yes playwright install chromium
-  else
-    say "Chrome is already installed; skipping Playwright browser download"
-  fi
+  ensure_browser
 }
 
 write_env() {
@@ -115,15 +148,23 @@ EOF
   elif ! grep -q '^OPENCHATCUT_PROVIDERS=' "$env_file"; then
     printf '\nOPENCHATCUT_PROVIDERS=off\n' >>"$env_file"
   fi
+  if [[ -n "${CC_BROWSER_EXECUTABLE:-}" ]] && ! grep -q '^CC_BROWSER_EXECUTABLE=' "$env_file"; then
+    printf 'CC_BROWSER_EXECUTABLE=%s\n' "$CC_BROWSER_EXECUTABLE" >>"$env_file"
+  fi
+  if [[ -n "${CC_RENDER_GL:-}" ]] && ! grep -q '^CC_RENDER_GL=' "$env_file"; then
+    printf 'CC_RENDER_GL=%s\n' "$CC_RENDER_GL" >>"$env_file"
+  fi
 }
 
 self_test() {
-  local work="$DIR/.claudia-self-test"
-  local clip="$work/clip.mp4"
-  local out="$DIR/claudia-self-test.mp4"
+  local step="setup" work="$DIR/.claudia-self-test" clip out asset duration
+  trap 'printf "[corteo] self-test step failed: %s\n" "$step" >&2' ERR
+  clip="$work/clip.mp4"
+  out="$DIR/claudia-self-test.mp4"
   rm -rf "$work"
   mkdir -p "$work"
   rm -f "$out"
+  step="ffmpeg clip"
   say "generating a 2 second test clip"
   ffmpeg -y -hide_banner -loglevel error \
     -f lavfi -i "color=c=0x1a1a1a:s=640x360:d=2:r=30" \
@@ -135,10 +176,12 @@ self_test() {
   export CC_RENDER_GL=swangle
   unset OPENCHATCUT_DEV_PROFILE_ID || true
   cd "$DIR"
+  step="project new"
   say "creating a project and importing the clip"
   npm run --silent corteo -- project new "Claudia self-test" --fps 30 --size 640x360 --json >/dev/null
+  step="media import"
   npm run --silent corteo -- media import "$clip" --apply --json >/dev/null
-  local asset
+  step="media ls"
   asset="$(npm run --silent corteo -- media ls --json | node -e '
     let raw = "";
     process.stdin.on("data", (chunk) => { raw += chunk; });
@@ -149,12 +192,14 @@ self_test() {
       process.stdout.write(asset.id);
     });
   ')"
+  step="place clip"
   say "placing the clip and rendering"
   npm run --silent corteo -- tools call edit_item \
     --args "{\"adds\":[{\"type\":\"video\",\"assetId\":\"${asset}\",\"fromFrame\":0}]}" \
     --apply --json >/dev/null
+  step="render"
   npm run --silent corteo -- render --out "$out" --to 2s --resolution 480p --quiet
-  local duration
+  step="ffprobe duration"
   duration="$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$out")"
   node -e '
     const duration = Number(process.argv[1]);
@@ -163,6 +208,7 @@ self_test() {
       process.exit(1);
     }
   ' "$duration"
+  trap - ERR
   say "self-test video: $out (${duration}s)"
 }
 
@@ -170,7 +216,14 @@ ensure_node
 ensure_repo
 ensure_deps
 write_env
-if ! self_test; then
+# A conditional call would disable set -e inside self_test. A subshell keeps it
+# on, and the ERR trap names the step that failed.
+self_test_status=0
+(
+  set -euo pipefail
+  self_test
+) || self_test_status=$?
+if (( self_test_status != 0 )); then
   die "self-test failed"
 fi
 printf 'CORTEO_SELF_TEST=PASS\n'

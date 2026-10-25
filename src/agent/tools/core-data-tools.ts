@@ -106,7 +106,12 @@ function mutateItem(name: string, args: Args, ctx: AgentContext): unknown {
   if (name === 'duplicate_item') ctx.commands.duplicateItem(item.id);
   else if (name === 'remove_item' && args.ripple === true) ctx.commands.rippleDeleteItem(item.id);
   else if (name === 'remove_item') ctx.commands.removeItem(item.id);
-  else if (name === 'split_item') ctx.commands.splitItem(item.id, Number(args.atFrame));
+  else if (name === 'split_item') {
+    const newItemId = ctx.commands.splitItem(item.id, Number(args.atFrame));
+    const created = ctx.getState().items.some((entry) => entry.id === newItemId);
+    if (!created) return { error: `split did not apply at frame ${String(args.atFrame)}`, itemId: item.id };
+    return { ok: true, itemId: item.id, newItemId, newItemIds: [newItemId] };
+  }
   if (name === 'duplicate_item') return { ok: true, duplicated: item.name };
   if (name === 'remove_item') return { ok: true, removed: item.name, ripple: args.ripple === true };
   return { ok: true, itemId: item.id };

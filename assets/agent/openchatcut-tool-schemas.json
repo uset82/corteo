@@ -868,7 +868,7 @@
     },
     {
       "name": "edit_track",
-      "description": "Manage tracks. Actions: list | create | update | delete | tighten | reorder_items. Tracks have stable ids plus C1/C2/V1/A1 aliases that may renumber after insertion. create accepts json with trackType video/audio/caption, optional count/order/name/role/audioRouting. Each caption track owns independent caption data. update changes order/hidden/muted/locked/name/role/audioRouting — locked freezes the lane. delete removes empty tracks only. tighten closes gaps between media clips. reorder_items packs clips on one track in the given item id order (json.itemIds or json.orderedIds array), starting at the earliest startFrame of that set.",
+      "description": "Manage tracks. Actions: list | create | update | delete | tighten | reorder_items. Tracks have stable ids plus C1/C2/V1/A1 aliases that may renumber after insertion. create accepts json as an object or a JSON string, with trackType video/audio/caption and optional count/order/name/role/audioRouting. Each caption track owns independent caption data. update changes order/hidden/muted/locked/name/role/audioRouting — locked freezes the lane. delete removes empty tracks only. tighten closes gaps between media clips. reorder_items packs clips on one track in the given item id order (json.itemIds or json.orderedIds array), starting at the earliest startFrame of that set.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -884,8 +884,15 @@
             ]
           },
           "json": {
-            "type": "string",
-            "description": "JSON for create/update, or for reorder_items: {\"itemIds\":[\"id1\",\"id2\",…]} (aliases orderedIds)."
+            "description": "Object or JSON string for create/update, or for reorder_items: {\"itemIds\":[\"id1\",\"id2\"]} (aliases orderedIds).",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              }
+            ]
           },
           "trackId": {
             "type": "string",
@@ -2344,7 +2351,7 @@
         "properties": {
           "adds": {
             "type": "array",
-            "description": "effect: {type,targetItemId,assetId,propertyOverrides?}. transition: {type,assetId,incomingItemId,outgoingItemId?,durationInFrames?}. motion-graphic: {type,assetId:library:motion-graphic:*,track?,fromFrame|startFrame?}. audio SFX: {type:\"audio\",assetId:library:sound:*,fromFrame?}. POOL media B-roll (video/image/gif/svg/audio): {type,assetId,track|trackId?,fromFrame|startFrame?,durationInFrames?} — no name/props on pool adds (then update_item_props). Source-window add accepts exact frames {sourceStartFrame?,sourceDurationInFrames?} or time bounds {sourceStartMs?,sourceEndMs?,sourceStartSeconds?,sourceEndSeconds?}; use one representation and do not combine it with durationInFrames/srcInFrame. Authored text: {type:\"text\",text,name?,track?,fromFrame?,durationInFrames?,fontSize?,color?,fontWeight?,align?}. Authored solid: {type:\"solid\",color?,name?,track?,fromFrame?,durationInFrames?}.",
+            "description": "effect: {type,targetItemId,assetId,propertyOverrides?}. transition: {type,assetId,incomingItemId,outgoingItemId?,durationInFrames?}. motion-graphic: {type,assetId:library:motion-graphic:*,track?,fromFrame|startFrame?}. audio SFX: {type:\"audio\",assetId:library:sound:*,fromFrame?}. POOL media B-roll (video/image/gif/svg/audio): {type,assetId,track|trackId?,fromFrame|startFrame?,durationInFrames?} — no name/props on pool adds (then update_item_props). Source-window add accepts exact frames {sourceStartFrame?,sourceDurationInFrames?} or time bounds {sourceStartMs?,sourceEndMs?,sourceStartSeconds?,sourceEndSeconds?}; use one representation and do not combine it with durationInFrames/srcInFrame. Authored text with no track lands on an overlay above the clips (created if needed) and keeps fromFrame: {type:\"text\",text,name?,track?,fromFrame?,durationInFrames?,fontSize?,color?,fontWeight?,align?,position?:top|center|bottom}. Pool audio with no trackId creates an audio track. Authored solid: {type:\"solid\",color?,name?,track?,fromFrame?,durationInFrames?}.",
             "items": {
               "type": "object"
             }

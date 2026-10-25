@@ -1,6 +1,6 @@
 # Progress
 
-The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2), `docs/plans/03-deepseek-harness.md` (Plan 3) and `docs/plans/04-claudia-brand.md` (Plan 4). Rules and the work loop: `AGENTS.md`.
+The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2), `docs/plans/03-deepseek-harness.md` (Plan 3), `docs/plans/04-claudia-brand.md` (Plan 4) and `docs/plans/05-claudia-portable.md` (Plan 5). Rules and the work loop: `AGENTS.md`.
 
 **Picking the next task:** if a task is `doing`, a previous session stopped in the middle of it: resume it first. Otherwise go down the table and take the first task whose status is `todo` and whose "Needs" are all `done`. Change its status to `doing`, finish it, set `done`, and commit this file together with the work.
 
@@ -36,6 +36,18 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P1-3 | Allowed hosts from env | done | P0-3 |
 | P1-4 | "Conectar Claudia" card | done | P1-3 |
 | P1-5 | `npm run editor-host` (headless editor tab) | done | P0-3 |
+| P-CL-1 | Installer unsets NPM_CONFIG_PREFIX before nvm | doing | |
+| P-CL-2 | corteo-env.sh and a wrapper that selects Node 24 | doing | P-CL-1 |
+| P-CL-3 | Self-test reports the step that failed | doing | P-CL-1 |
+| P-CL-4 | No Remotion browser download at render time | doing | |
+| P-CL-5 | Audio with no trackId creates an audio track | doing | |
+| P-CL-6 | Text keeps fromFrame on an overlay track | doing | |
+| P-CL-7 | split JSON returns the new item id | doing | |
+| P-CL-8 | Headless `corteo mcp token` | doing | |
+| P-CL-9 | Spanish defaults in CLI JSON | doing | |
+| P-CL-10 | Vite warmup path | doing | |
+| P-CL-11 | SKILL.md recipes, copy-paste tested | doing | P-CL-2, P-CL-5, P-CL-6, P-CL-7, P-CL-8 |
+| P-CL-12 | claudia-acceptance.sh on Node 20 with the prefix set | doing | P-CL-1 to P-CL-11 |
 | P1-6 | `videoclip-musical` skill | todo | P1-2 |
 | P1-7 | Webhooks with HMAC | optional | P4-3 |
 | L-01 | Server-side Beat This + CLAP runner | todo | |

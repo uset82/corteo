@@ -259,7 +259,11 @@ try {
   occOk(['item', 'dup', 'clip-fixture', '--apply']);
   assert.equal(items().length, 2, 'duplicate_item appends a copy under a new id');
 
-  occOk(['item', 'split', 'clip-fixture', '--at', '45', '--apply']);
+  const split = occJson<CallJson>(['item', 'split', 'clip-fixture', '--at', '45', '--apply', '--json']);
+  const splitResult = split.ops[0]?.result as { newItemId?: string; newItemIds?: string[] } | undefined;
+  assert.equal(typeof splitResult?.newItemId, 'string', 'split JSON returns the new item id');
+  assert.deepEqual(splitResult?.newItemIds, [splitResult?.newItemId]);
+  assert.ok(items().some((item) => item.id === splitResult?.newItemId), 'the new id is on the timeline');
   assert.equal(items().length, 3, 'split_item replaces one clip with two');
 
   occOk(['item', 'rm', 'clip-fixture', '--apply']);
@@ -531,6 +535,17 @@ try {
     : undefined;
   assert.equal(draftPath, stubDraftPath, 'export jianying must drive the exporter and report its draft');
   assert.equal(draft.applied, false, 'a draft export stages nothing in the project');
+
+  const profileId = '11111111-1111-4111-8111-111111111111';
+  const tokenEnv = { OPENCHATCUT_DEV_PROFILE_ID: profileId, OPENCHATCUT_MCP_TOKEN: '' };
+  const tokenPath = occOk(['mcp', 'token'], tokenEnv).trim();
+  assert.match(tokenPath, new RegExp(`dev-profiles/${profileId}/mcp-token$`));
+  const shown = occOk(['mcp', 'token', '--show'], tokenEnv).trim();
+  assert.match(shown, /^[A-Za-z0-9_-]{43}$/);
+  assert.equal(tokenPath.includes(shown), false, 'the path command must not print the token');
+  const hidden = occOk(['mcp', 'token'], { ...tokenEnv, OPENCHATCUT_MCP_TOKEN: 'not-a-file-token' }).trim();
+  assert.equal(hidden, 'env:OPENCHATCUT_MCP_TOKEN');
+  assert.equal(occOk(['mcp', 'token', '--show'], { ...tokenEnv, OPENCHATCUT_MCP_TOKEN: 'not-a-file-token' }).trim(), 'not-a-file-token');
 
   process.stdout.write('occ cli verify: ok\n');
 } finally {

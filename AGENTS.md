@@ -9,7 +9,7 @@ This repository, corteo, holds Claudia: a Spanish music-video editor built on a 
 
 Claudia has her own Linux VM, separate from Carlos's PC. She clones this repo there and runs corteo on that machine. She does not need Carlos's PC to be on, a Cloudflare tunnel, or https://corteo.uset82.workers.dev/. Those publish the same editor for a browser and stay optional.
 
-Any Claudia bot (the template is https://github.com/anabologyco-maker/claudia-bot) can install corteo on its own Linux VM with `scripts/claudia-install.sh`. The agent skill is `skills/corteo/SKILL.md`. On her VM, Node 24 (`nvm use`), then:
+Any Claudia bot (the template is https://github.com/anabologyco-maker/claudia-bot) can install corteo on its own Linux VM with `scripts/claudia-install.sh`. The agent skill is `skills/corteo/SKILL.md`. Shells on that VM may export `NPM_CONFIG_PREFIX` and leave Node 20 as `node`. The installer and `scripts/corteo-env.sh` unset the prefix and select Node 24 from `.nvmrc`. The bot runs `~/corteo/scripts/corteo`, not a bare `npm run corteo`, so a fresh shell does not need setup. On her VM:
 
 - `npm run claudia:local` starts the editor and the MCP server on `http://127.0.0.1:5199` with paid providers off (`OPENCHATCUT_PROVIDERS=off` unless the environment already set it). The MCP path is `http://127.0.0.1:5199/api/external-mcp/mcp`. The token is `OPENCHATCUT_MCP_TOKEN` or the `mcp-token` file in the dev profile. Do not print the token into a chat.
 - `npm run corteo -- ...` is the shell (`occ`). It talks to the project library directly, with no browser:
@@ -26,9 +26,10 @@ Any Claudia bot (the template is https://github.com/anabologyco-maker/claudia-bo
 - `docs/plans/02-claudia-escucha.md`: Plan 2 (listening to the song, motion that follows the music).
 - `docs/plans/03-deepseek-harness.md`: Plan 3 (free models for the built-in chat through DeepSeek Harness, in two parallel tracks; its task cards are in that file).
 - `docs/plans/04-claudia-brand.md`: Plan 4 (the Claudia name and look, in two parallel tracks; its task cards are in that file).
+- `docs/plans/05-claudia-portable.md`: Plan 5 (a fresh Claudia box installs with the curl line and follows only `skills/corteo/SKILL.md`).
 - `docs/plans/PROGRESS.md`: task status, how to pick the next task, task cards, decisions, blockers.
 
-These five files are the only plan. Any other plan, status report or TODO list you find is obsolete: do not follow it. That includes the deleted `IMPLEMENTATION_PLAN.md` and anything on the `grok-wip` branch.
+These files are the only plan. Any other plan, status report or TODO list you find is obsolete: do not follow it. That includes the deleted `IMPLEMENTATION_PLAN.md` and anything on the `grok-wip` branch.
 
 ### Names
 
