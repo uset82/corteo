@@ -189,8 +189,7 @@ const audio = execFileSync("ffprobe", ["-v","error","-select_streams","a","-show
 if (!(duration > 5.9 && duration < 6.1)) { console.error("duration " + duration); process.exit(1); }
 if (size !== "1920,1080") { console.error("size " + size); process.exit(1); }
 if (!audio.includes("audio")) { console.error("audio " + audio); process.exit(1); }
-'
-"$WORK/musical.mp4"
+' "$WORK/musical.mp4"
 OPENCHATCUT_RENDER_CONCURRENCY=1 CC_RENDER_GL=swangle "$CORTEO" render --out "$WORK/musical-4k.mp4" --from 0 --to 1s --resolution 4k --quiet
 node -e '
 const { execFileSync } = require("child_process");
