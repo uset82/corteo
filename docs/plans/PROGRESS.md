@@ -359,7 +359,7 @@ Only the WorkBuddy agent edits this section, in `~/corteo-workbuddy` on branch `
 | HW-2 | `npm run harness` and `npm run harness:doctor` | done | HW-1 |
 | HW-3 | Which free models can edit | done | HW-2 |
 | HW-4 | DeepSeek Harness edits corteo over MCP | done | HW-2 |
-| HW-5 | Guide for Carlos | todo | HW-2, HW-3, HW-4 |
+| HW-5 | Guide for Carlos | done | HW-2, HW-3, HW-4 |
 
 ### WorkBuddy: decisions
 - 2026-10-25 · HW-1 · `config/harness.json` holds the pins once; `scripts/harness/lib.mjs` reads them, so no script repeats `0.2.1-rc.2`, `v2.5.9` or the commit. The installer refuses the settings rewrite only when a write is needed: a re-run that already finds `distribution: managed` is a no-op even with the harness running. Reason: the harness stays up for hours and must not force a stop just to confirm the pins.
@@ -373,6 +373,7 @@ Only the WorkBuddy agent edits this section, in `~/corteo-workbuddy` on branch `
 - 2026-10-25 · HW-4 · The MCP client uses full tool exposure, not `?toolExposure=progressive`. Progressive's boot set leaves out `list_edit_sessions` and `recover_edit_session`, and ToolSearch cannot activate them, so any session orphaned by a `target_project` rebind or an editor reload wedges the chat on "An edit session is already active" with no way out. Reproduced live; with full exposure the client loaded 103 tools and `list_edit_sessions` answered directly.
 - 2026-10-25 · HW-4 · The chat applies edits with `approvalMode: "auto"` and `review_edit_session`; manual mode only publishes a proposal and waits for a click in the editor. The edit session id returned by `begin_edit_session` must be reused for every later call — a `target_project` in between orphans it, so the guide tells the model to bind once and then stay put.
 - 2026-10-25 · HW-4 · Real run on 2026-10-25: `npm run harness` bound project `97e6d98d` at `http://localhost:5201`; the dsh chat read the timeline, opened an auto session and applied `split_item` at frame 60; the editor showed V1 as 00:02 + 00:01 (Video2 unchanged at 00:03) and the store recorded proposal `cad8879c` as `applied` with 1 operation.
+- 2026-10-25 · HW-5 · The walkthrough in `docs/harness.md` was followed once from a clean `--home /tmp/corteo-harness-clean`: `harness:install` finished and a second run printed "Nada que hacer"; `npm run harness -- --home … --web-port 3081` left the plugin forwarding on 18900 because 18899 was taken by the main instance; `harness:doctor -- --home … --web-port 3081` passed 5/5 and printed `http://127.0.0.1:18900/v1` (34 models). The install has no `--web-port` (it always probes 3080), so the guide says to run it with no harness up.
 
 ### WorkBuddy: blockers
 None yet. Same format as "Blockers".
