@@ -42,9 +42,11 @@ const NOW = Date.parse('2026-10-25T18:00:00Z');
   assert.strictEqual(calls[0].method, 'POST');
   assert.strictEqual(calls[0].url, '/api/publish-schedule');
   assert.deepStrictEqual(calls[0].body, {
-    source: '/media/uploads/a.mp4',
-    platforms: ['tiktok', 'youtube'],
-    title: 'Clip',
+    request: {
+      source: '/media/uploads/a.mp4',
+      platforms: ['tiktok', 'youtube'],
+      title: 'Clip',
+    },
     scheduledFor: '2026-10-26T18:30:00Z',
     previewId: 'req_1',
   });

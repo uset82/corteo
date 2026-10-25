@@ -58,15 +58,19 @@ export async function execScheduleTool(name: string, args: Args, _ctx: AgentCont
   if (name === 'schedule_publish') {
     // Optional keys are omitted, not set to undefined: the request body must be exactly what
     // the route validates, and JSON.stringify would silently drop an undefined anyway.
-    const payload: Record<string, unknown> = {
+    const request: Record<string, unknown> = {
       source: args.source,
       platforms: args.platforms,
       title: args.title,
+    };
+    if (typeof args.description === "string") request.description = args.description;
+    if (typeof args.youtubePrivacy === "string") request.youtubePrivacy = args.youtubePrivacy;
+    if (typeof args.aiGenerated === "boolean") request.aiGenerated = args.aiGenerated;
+    const result = await callQueue('POST', {
+      request,
       scheduledFor: args.when,
       previewId: args.previewId,
-    };
-    if (typeof args.description === "string") payload.description = args.description;
-    const result = await callQueue('POST', payload);
+    });
     if (!result.ok) return failure(result);
     const entry = asRecord(result.body.entry);
     return {

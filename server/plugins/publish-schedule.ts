@@ -1,23 +1,25 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin } from 'vite';
 import { sendJson } from './export-http.ts';
-import {
-  validateSlot,
-  type ScheduledPublish,
-} from '../../shared/publish-schedule.ts';
+import { validateSlot, type ScheduledPublish } from '../../shared/publish-schedule.ts';
+import { previewMatches } from '../publish/preview-gate.ts';
 import {
   addScheduled,
   loadSchedule,
   removeScheduled,
 } from '../publish/schedule-store.ts';
+import type { PublishRequest } from './upload-post.ts';
 
 /**
  * HTTP surface for the scheduled-publish queue (Plan 5, OP-13).
  *
- * The commands are exported separately from the route plumbing so they can be tested with an
- * in-memory store: a route test would otherwise need SQLite, a profile directory and a server.
- * The rules themselves (a slot in the future, a preview id that exists) are enforced here,
- * before anything reaches the queue.
+ * The confirm gate is enforced here, by **derivation**, not by the presence of a string:
+ * `previewMatches` recomputes the preview id from the request and the resolved source, using
+ * the same function the publish route uses. A caller cannot schedule a post nobody approved,
+ * because the id it must supply is a hash of the post it is asking for.
+ *
+ * The commands are exported apart from the route plumbing and take an injected store and
+ * checker, so they are tested without SQLite, without an API key and without a file on disk.
  */
 
 export interface ScheduleStoreAdapter {
@@ -26,15 +28,18 @@ export interface ScheduleStoreAdapter {
   load: (now: number) => Promise<ScheduledPublish[]>;
 }
 
-export const defaultScheduleStore: ScheduleStoreAdapter = {
-  add: addScheduled,
-  remove: removeScheduled,
-  load: loadSchedule,
-};
+export interface PreviewChecker {
+  matches: boolean;
+  ok: boolean;
+  derived: string;
+  error?: string;
+}
 
 export interface CommandOptions {
   now?: number;
   store?: ScheduleStoreAdapter;
+  /** Defaults to the real derivation; tests inject a stub. */
+  checkPreview?: (request: PublishRequest, previewId: string) => Promise<PreviewChecker>;
 }
 
 export interface CommandResult {
@@ -42,8 +47,17 @@ export interface CommandResult {
   body: unknown;
 }
 
+export const defaultScheduleStore: ScheduleStoreAdapter = {
+  add: addScheduled,
+  remove: removeScheduled,
+  load: loadSchedule,
+};
+
 const asRecord = (value: unknown): Record<string, unknown> =>
-  (value && typeof value === 'object' ? value as Record<string, unknown> : {});
+  (value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {});
+
+const defaultCheckPreview = async (request: PublishRequest, previewId: string): Promise<PreviewChecker> =>
+  previewMatches(request, previewId);
 
 export async function listScheduled(opts: CommandOptions = {}): Promise<CommandResult> {
   const store = opts.store ?? defaultScheduleStore;
@@ -55,23 +69,41 @@ export async function listScheduled(opts: CommandOptions = {}): Promise<CommandR
 export async function scheduleOne(input: unknown, opts: CommandOptions = {}): Promise<CommandResult> {
   const store = opts.store ?? defaultScheduleStore;
   const now = opts.now ?? Date.now();
+  const check = opts.checkPreview ?? defaultCheckPreview;
   const o = asRecord(input);
 
   const slot = validateSlot(typeof o.scheduledFor === 'string' ? o.scheduledFor : '', now);
   if (!slot.ok) return { status: 400, body: { error: slot.reason } };
 
-  const source = typeof o.source === 'string' ? o.source.trim() : '';
-  if (!source) return { status: 400, body: { error: 'Falta el vídeo a publicar (source).' } };
   const previewId = typeof o.previewId === 'string' ? o.previewId.trim() : '';
   if (!previewId) {
     return { status: 400, body: { error: 'Falta la vista previa aprobada (previewId): nada se programa sin aprobación.' } };
   }
-  const title = typeof o.title === 'string' ? o.title.trim() : '';
+
+  const request = asRecord(o.request);
+  if (!request.source || !Array.isArray(request.platforms) || !request.platforms.length) {
+    return {
+      status: 400,
+      body: {
+        error: 'Falta la petición de publicación completa (request): el id de la vista previa se deriva de ella.',
+      },
+    };
+  }
+
+  const source = typeof request.source === 'string' ? request.source.trim() : '';
+  if (!source) return { status: 400, body: { error: 'Falta el vídeo a publicar (source).' } };
+
+  const verdict = await check(request as unknown as PublishRequest, previewId);
+  if (!verdict.ok) {
+    return {
+      status: 400,
+      body: { error: verdict.error ?? 'La vista previa no corresponde a esta publicación.', derived: verdict.derived },
+    };
+  }
+
+  const title = typeof request.title === 'string' ? request.title.trim() : '';
   if (!title) return { status: 400, body: { error: 'Falta el título de la publicación.' } };
-  const platforms = Array.isArray(o.platforms)
-    ? o.platforms.filter((p): p is string => typeof p === 'string' && p.trim().length > 0)
-    : [];
-  if (!platforms.length) return { status: 400, body: { error: 'Falta al menos una plataforma.' } };
+  const platforms = request.platforms.filter((p): p is string => typeof p === 'string' && p.trim().length > 0);
 
   const entry: ScheduledPublish = {
     id: typeof o.id === 'string' && o.id.trim() ? o.id.trim() : `pub_${now.toString(36)}_${Math.random().toString(36).slice(2, 7)}`,
@@ -80,9 +112,10 @@ export async function scheduleOne(input: unknown, opts: CommandOptions = {}): Pr
     platforms,
     title: title.slice(0, 200),
     previewId,
+    request: { ...request },
     state: 'planned',
     attempts: 0,
-    ...(typeof o.description === 'string' ? { description: o.description.slice(0, 5000) } : {}),
+    ...(typeof request.description === 'string' ? { description: request.description.slice(0, 5000) } : {}),
   };
   await store.add(entry);
   return { status: 201, body: { ok: true, entry } };
