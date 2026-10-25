@@ -589,6 +589,34 @@ This table is the current status; nothing here is open except OP-14, which the p
 
 `main` at `35b127c` (this section) and green: full gate 215/215, exit 0 at `26d36ec`. The tool count went 123 to 136.
 
+### Blocker: the emphasis frame proof (attempted 2026-10-25, 3 attempts)
+
+Attempted `remotion/caption-emphasis-render.verify.mjs`: build a materialised state with one
+video item, render the same frame twice with `renderTimelineStills` — once with
+`wordOverrides = { 1: { emphasis: true } }` and once without — and compare the base64 JPEGs, with
+a control pair rendered from identical input.
+
+**What it showed:** the two stills are byte-identical, and the control pair also matches, so the
+harness itself works. The conclusion is not "emphasis does nothing" but "the caption overlay is
+not on the frame at all": the JPEG is a near-uniform 320x180 image of the clip's solid colour.
+
+**Tried:**
+1. `captions: { enabled, template: 'tiktok', pacing: 'word' }` + item transcript — identical stills.
+2. Added `sourceMode: 'timeline'`, since `mergedSourceItems` in `src/captions/resolve.ts` only
+   collects transcript-bearing items in that mode — identical stills.
+3. Re-ran to confirm the failing assertion was still the emphasis diff, not the control — yes.
+
+**What is not yet known:** whether the still composition mounts `CaptionsLayer` at all. The
+Player does; `renderTimelineStills` goes through the server composition, and nothing in
+`remotion/` was checked for a captions mount. That is the next thing to read, not another
+tweak to the fixture.
+
+**Unblocked by:** reading `remotion/Root.tsx` (and the timeline composition it selects) for where
+`state.captions` is consumed, and confirming the composition receives it. Then the same test
+should be written again — the fixture shape is sound, the render path is the unknown.
+
+The file was removed rather than committed failing; it is unchanged in this note.
+
 **OP-14 needs a decision, not code.** The existing `src/media/semantic-search/` embeds
 *frames* with a vision model for duplicate detection; there is no text-embedding model and
 `search_content` is FTS5. Making it semantic means either a new local text-embedding
