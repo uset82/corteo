@@ -9,6 +9,38 @@ Use this workflow when one long source video carries the output. Supporting clip
 
 This is a OpenChatCut-native workflow. Use the current project, assets, transcript, timeline, and OpenChatCut editing tools. Do not depend on external download, transcription, ffmpeg, or auto-crop pipelines unless the user explicitly asks for an external source that is not already in the project.
 
+## Tools for this pipeline (Plan 5)
+
+Loading this skill reveals these tools. They are the Opus-style pipeline, and they compose:
+`make_shorts` calls the same engine as `score_moments`, so a score you saw once is the score
+that gets cut.
+
+1. `transcribe_track` — nothing below works without a word-level transcript.
+2. `score_moments` — rank candidates 0-99 before cutting anything. It is a rubric, not a
+   prediction: read `subscores`, `reason` and `risks`, and pass the user's own words in
+   `direction`. `calibration: true` uses the project's learned weights.
+3. `make_shorts` — the one call: score → cut → captions → reframe → optional 480p previews.
+   Pass `minScore` from the ranking, `ranges` when the user already picked moments, and
+   `applyBrandKit: true` to inherit the project's brand kit.
+4. `find_highlights` — a single clip, or a fast cut with `score: false`.
+5. `tighten_speech` — fillers, false starts and long pauses. Review list first; `apply: true`
+   after the user approves.
+6. `censor_words` — the same two-step review, applied as a volume envelope (the clip is not cut).
+7. `write_clip_title` — one undoable title clip; `apply: false` to propose the wording.
+8. `emphasize_keywords` — numbers, names and shouted words take the caption highlight colour.
+9. `write_social_copy` — per-platform title, description and hashtags within each limit; pass
+   the chosen ones straight into `publish_to_social`.
+10. `publish_to_social` — preview without `confirm`, show it, then confirm with the `previewId`.
+    For later, `schedule_publish` with `when` (ISO with offset) and that same `previewId`;
+    `list_scheduled_publishes` and `cancel_scheduled_publish` manage the queue.
+11. `score_performance` — after publishing, paste the platform CSV to see whether the score
+    agreed with the audience; `calibrate_scores` reports the weights it has learned.
+12. `apply_brand_kit` — propagate the kit to every sequence.
+
+Read-only: `score_moments`, `calibrate_scores`, `write_social_copy`, `emphasize_keywords` (with
+`apply: false`), `list_scheduled_publishes`, `score_performance`. Everything that edits is one
+undo step. Reframe and preview renders need an editor tab; the rest runs headless.
+
 ## Workflow
 
 1. Read the project state before editing. Identify the primary long video, duration, language, speakers, current timeline, transcript readiness, visual descriptions, and aspect ratio.
