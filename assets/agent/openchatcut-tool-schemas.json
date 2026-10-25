@@ -3117,6 +3117,56 @@
       }
     },
     {
+      "name": "write_social_copy",
+      "description": "Write the copy a finished clip needs to be posted: a title, a short description and a few hashtags, per platform, each clamped to that platform’s real limits. Read-only: it never edits the timeline and never publishes. Use after the clip exists and before publish_to_social, then pass the chosen title and description straight into publish_to_social. Prefer the clip’s own word range so the copy is about that moment and not the whole source. Without a model it still returns the clip’s opening sentence as the title, with modelUsed:false, so a publish is never blocked by copy generation.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Transcribed clip the copy is about. Defaults to the clip with the most transcript words."
+          },
+          "startWord": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "First word of the moment (inclusive). Omit for the whole clip."
+          },
+          "endWord": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Last word of the moment (inclusive). Omit for the whole clip."
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "tiktok",
+                "instagram",
+                "youtube",
+                "linkedin",
+                "facebook",
+                "x",
+                "threads",
+                "pinterest",
+                "bluesky"
+              ]
+            },
+            "minItems": 1,
+            "description": "Platforms to write for. Defaults to tiktok, instagram and youtube."
+          },
+          "direction": {
+            "type": "string",
+            "description": "Tone and call to action in the user’s words (for example \"tono cercano, invita a comentar\")."
+          },
+          "language": {
+            "type": "string",
+            "description": "Language for the copy. Default: the language of the transcript."
+          }
+        }
+      }
+    },
+    {
       "name": "auto_reframe",
       "description": "Auto-reframe a video clip: sample its frames, detect the subject/focal point per interval, and write reframe keyframes (builtin:zoom __openchatcutReframeCurve) so the crop window follows the subject when the canvas aspect differs (e.g. 16:9→9:16). Clears the clip's existing reframe keyframes first, then re-detects. Browser-only (needs the actual video pixels); returns an error if run headless or if the target isn't a video with a source.",
       "input_schema": {
@@ -6222,6 +6272,56 @@
       "input_schema": {
         "type": "object",
         "properties": {}
+      }
+    },
+    {
+      "name": "write_social_copy",
+      "description": "Write the copy a finished clip needs to be posted: a title, a short description and a few hashtags, per platform, each clamped to that platform’s real limits. Read-only: it never edits the timeline and never publishes. Use after the clip exists and before publish_to_social, then pass the chosen title and description straight into publish_to_social. Prefer the clip’s own word range so the copy is about that moment and not the whole source. Without a model it still returns the clip’s opening sentence as the title, with modelUsed:false, so a publish is never blocked by copy generation.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Transcribed clip the copy is about. Defaults to the clip with the most transcript words."
+          },
+          "startWord": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "First word of the moment (inclusive). Omit for the whole clip."
+          },
+          "endWord": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Last word of the moment (inclusive). Omit for the whole clip."
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "tiktok",
+                "instagram",
+                "youtube",
+                "linkedin",
+                "facebook",
+                "x",
+                "threads",
+                "pinterest",
+                "bluesky"
+              ]
+            },
+            "minItems": 1,
+            "description": "Platforms to write for. Defaults to tiktok, instagram and youtube."
+          },
+          "direction": {
+            "type": "string",
+            "description": "Tone and call to action in the user’s words (for example \"tono cercano, invita a comentar\")."
+          },
+          "language": {
+            "type": "string",
+            "description": "Language for the copy. Default: the language of the transcript."
+          }
+        }
       }
     },
     {

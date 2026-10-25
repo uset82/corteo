@@ -491,7 +491,7 @@ This track is deliberately **not** in the main table, so the picking rule above 
 | OP-09 | `write_clip_title` | todo | |
 | OP-10 | Brand kit | todo | |
 | OP-11 | Reframe polish: dead zone and cheap modes | todo | |
-| OP-12 | `write_social_copy` | todo | |
+| OP-12 | `write_social_copy` | done | |
 | OP-13 | Scheduled publish | todo | OP-12 |
 | OP-14 | `search_catalog` (semantic) | optional | |
 | OP-15 | Performance loop | optional | OP-13 |
@@ -538,6 +538,12 @@ This track is deliberately **not** in the main table, so the picking rule above 
 - Args: `itemId`, `apply`, `minPauseMs` (default 400, matching Opus), `extraFillers`, `cutPadMs`.
 - **Deviation, recorded:** the card's "Apretar el habla" switch in the clip panel is not built. OP-05's panel is the one UI surface for this phase, and it will host tighten's preview/apply pair; until then the operation is agent-only. Tracked in the OP-05 card.
 - Verifies: `src/agent/shorts/tighten.verify.ts` (matcher) and `src/agent/tools/tighten-tools.verify.ts` (preview → untouched, apply → `clean_script` result passed through).
+
+**OP-12 (done 2026-10-25).** `write_social_copy`: per-platform title, description and hashtags. 127 → 128 tools.
+- `src/agent/shorts/social-copy.ts` holds one limits table for the nine platforms publish already supports (YouTube 100/5000, X 280/280, Instagram and TikTok 2200, …), a word-boundary clamp, hashtag hygiene (strip `#`, drop duplicates and junk, per-platform cap) and a fallback that uses the clip's opening sentence when there is no model. Verify: `src/agent/shorts/social-copy.verify.ts`, which walks every platform with an oversized input and asserts all three limits.
+- Tool `write_social_copy` reads a word range from a transcribed clip (clamped, never fatal), defaults to tiktok/instagram/youtube, rejects unknown platforms with the valid list, and returns `modelUsed` so nobody mistakes a fallback for generated copy.
+- **Deviation, recorded:** nothing is stored on the sequence. `publish_to_social` already takes `title` and `description`, so the copy is passed straight into it; a second stored copy would drift the moment the clip changes. The publish dialog prefill is a UI follow-up, not a data model.
+- Read-only, so it never needs approval: it only writes text into the reply.
 
 
 ### Opus parity: blockers
