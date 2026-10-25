@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { applyAuthoritativeLocalProvider, providersOffFromEnv } from './vite.config.ts';
+import { allowedHostsFromEnv, applyAuthoritativeLocalProvider, providersOffFromEnv } from './vite.config.ts';
 
 const inherited = { LLM_PROVIDER: 'openai' };
 applyAuthoritativeLocalProvider(
@@ -32,5 +32,12 @@ assert.equal(providersOffFromEnv({}), false, 'the local-only switch stays off by
 assert.equal(providersOffFromEnv({ OPENCHATCUT_PROVIDERS: 'on' }), false);
 assert.equal(providersOffFromEnv({ OPENCHATCUT_PROVIDERS: 'off' }), true,
   'the browser define follows the same exact-match process env value as the server gate');
+
+assert.deepEqual(allowedHostsFromEnv({}), ['.cursorvm.com', 'localhost']);
+assert.deepEqual(
+  allowedHostsFromEnv({ OPENCHATCUT_ALLOWED_HOSTS: ' editor.example.com, ,corteo.uset82.workers.dev ' }),
+  ['.cursorvm.com', 'localhost', 'editor.example.com', 'corteo.uset82.workers.dev'],
+  'comma-separated hosts are trimmed and empty entries are dropped',
+);
 
 console.log('Vite dotenv provider precedence verification passed');

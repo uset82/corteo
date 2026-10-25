@@ -1,3 +1,4 @@
+import { providersOffEnv } from '../../shared/providers-off.ts';
 import { TOOL_SCHEMAS } from './tools.js';
 import { validateAgentToolInvocation } from './execution-policy.js';
 import { ExternalEditSessionOutcomeError } from './external-edit-session.js';
@@ -24,14 +25,28 @@ function withoutEditSessionId(schema: AgentToolSchema): AgentToolSchema {
   };
 }
 
+/** Paid generation and stock search. Hidden from MCP when providers are off. */
+export const PROVIDERS_OFF_HIDDEN_TOOLS = new Set([
+  'submit_image', 'submit_voice', 'submit_sound', 'submit_music', 'submit_video',
+  'generate_image', 'generate_video', 'generate_music', 'generate_voice', 'generate_sound',
+  'submit_image_generation', 'submit_video_generation', 'submit_music_generation',
+  'submit_sound_generation', 'submit_voice_generation',
+  'rerun_generation',
+  'search_stock_media',
+]);
+
 /** MCP-facing catalog: stateless reads, lifecycle controls, then session-bound editor tools. */
 export function externalToolSchemas(): ExternalRegisteredTool[] {
-  const globalReadTools = externalGlobalReadSchemas(TOOL_SCHEMAS);
+  const visible = providersOffEnv(process.env)
+    ? TOOL_SCHEMAS.filter((tool) => !PROVIDERS_OFF_HIDDEN_TOOLS.has(tool.name))
+    : TOOL_SCHEMAS;
+  const globalReadTools = externalGlobalReadSchemas(visible);
   const editorTools = externalDraftSchemas(
-    TOOL_SCHEMAS.filter((tool) => isExternalDraftTool(tool.name)),
+    visible.filter((tool) => isExternalDraftTool(tool.name)),
   );
-  const realTools = externalRealSchemas(TOOL_SCHEMAS);
-  return [...globalReadTools, ...EXTERNAL_SESSION_TOOLS, ...editorTools, ...realTools];
+  const realTools = externalRealSchemas(visible);
+  const sessionTools = EXTERNAL_SESSION_TOOLS.filter((tool) => !PROVIDERS_OFF_HIDDEN_TOOLS.has(tool.name));
+  return [...globalReadTools, ...sessionTools, ...editorTools, ...realTools];
 }
 
 const EXTERNAL_ACTIVE_CATALOG = externalToolSchemas().map(withoutEditSessionId);

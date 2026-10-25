@@ -1,0 +1,21 @@
+# Named tunnel from this PC to the live editor. Quick tunnels buffer
+# text/event-stream, so MCP and the chat need a named tunnel.
+#
+# 1. cloudflared tunnel login
+# 2. cloudflared tunnel create corteo
+# 3. Put the credentials file path below (that file stays out of git).
+# 4. Point editor.uset82.com, a hostname on a zone you control, at the tunnel:
+#    cloudflared tunnel route dns corteo editor.uset82.com
+# 5. npm run tunnel
+#
+# httpHostHeader is the host Vite must accept (OPENCHATCUT_ALLOWED_HOSTS).
+# The public address people open stays https://corteo.uset82.workers.dev/
+tunnel: corteo
+# credentials-file: /home/carlos/.cloudflared/<TUNNEL-UUID>.json
+
+ingress:
+  - hostname: editor.uset82.com
+    service: http://127.0.0.1:5199
+    originRequest:
+      httpHostHeader: corteo.uset82.workers.dev
+  - service: http_status:404

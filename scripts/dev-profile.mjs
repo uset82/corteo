@@ -266,9 +266,27 @@ async function runProfileCommand(profile, command, args) {
   });
 }
 
+/** Node argument that gives the Vite process its heap. Default 6144 MB. */
+export function devHeapNodeArg(env = process.env) {
+  const raw = String(env.OPENCHATCUT_DEV_HEAP_MB ?? '6144').trim();
+  if (!/^[1-9]\d*$/.test(raw)) {
+    throw new Error(`OPENCHATCUT_DEV_HEAP_MB must be a whole number of megabytes (got ${raw})`);
+  }
+  const mb = Number(raw);
+  if (mb < 512 || mb > 65536) {
+    throw new Error(`OPENCHATCUT_DEV_HEAP_MB must be between 512 and 65536 (got ${mb})`);
+  }
+  return `--max-old-space-size=${mb}`;
+}
+
+/** argv after the node binary: heap flag, Vite CLI, config, then the caller's args. */
+export function viteProcessArgs(viteCli, userArgs = [], env = process.env) {
+  return [devHeapNodeArg(env), viteCli, '--config', 'config/vite.config.ts', ...userArgs];
+}
+
 async function runVite(profile, args) {
   const viteCli = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url));
-  return runProfileCommand(profile, process.execPath, [viteCli, '--config', 'config/vite.config.ts', ...args]);
+  return runProfileCommand(profile, process.execPath, viteProcessArgs(viteCli, args));
 }
 
 async function main() {

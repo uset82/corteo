@@ -1,0 +1,11 @@
+{
+  // Replaces the static asset worker. `npx wrangler deploy` from this repo
+  // publishes the proxy to https://corteo.uset82.workers.dev/
+  "name": "corteo",
+  "main": "cloudflare/proxy-worker.mjs",
+  "compatibility_date": "2026-10-25",
+  "workers_dev": true,
+  "vars": {
+    "TUNNEL_ORIGIN": "https://editor.uset82.com"
+  }
+}

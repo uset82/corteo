@@ -34,11 +34,12 @@ import {
   runUpstreamUpdateCommand,
 } from '../../ui/upstreamUpdateAction';
 import {
-  SETTINGS_CATEGORIES, buildPatch, categoryGroupStats, findGroup, groupConfigured,
+  buildPatch, categoryGroupStats, groupConfigured,
   modelValue, omitKey, savedMessage, vendorConfigured,
   type KeyStatusResponse, type SettingsCategory, type SettingsField, type SettingsGroup,
   type SettingsVendorPage, type StagedValues as Values,
 } from './settingsSchema';
+import { findVisibleGroup, visibleSettingsCategories } from './settingsVisibility';
 import {
   bodyRow, btnGhost, btnPrimary, catRow, chevronBox, code, dot, foot, footMsg,
   head, iconBtn, licenseLink, navLabel, navRowStyle, overlay, panel, revealLabel,
@@ -175,10 +176,10 @@ function useTreeSelection(initialVendor?: string): {
   const seeded = seedSelection(initialVendor);
   const [groupKey, setGroupKey] = useState<string>(seeded.group.key);
   const [vendorKey, setVendorKey] = useState<string>(seeded.vendor.key);
-  const group = findGroup(groupKey);
+  const group = findVisibleGroup(groupKey);
   const page = group.vendors.find((v) => v.key === vendorKey) ?? group.vendors[0];
   const selectGroup = (key: string): void => {
-    const nextGroup = findGroup(key);
+    const nextGroup = findVisibleGroup(key);
     setGroupKey(key);
     setVendorKey(nextGroup.vendors[0].key);
   };
@@ -193,13 +194,13 @@ function useTreeSelection(initialVendor?: string): {
 
 /** Open on a specific vendor page when the caller routed here (e.g. the chat's missing-model-pack button). */
 function seedSelection(initialVendor?: string): { group: SettingsGroup; vendor: SettingsVendorPage } {
-  for (const category of SETTINGS_CATEGORIES) {
+  for (const category of visibleSettingsCategories()) {
     for (const group of category.groups) {
       const vendor = group.vendors.find((v) => v.key === initialVendor);
       if (vendor) return { group, vendor };
     }
   }
-  const first = SETTINGS_CATEGORIES[0].groups[0];
+  const first = visibleSettingsCategories()[0].groups[0];
   return { group: first, vendor: first.vendors[0] };
 }
 
@@ -364,7 +365,7 @@ function CapabilityTree({
   return (
     <nav style={sidebar}>
       <div style={treeScroll}>
-        {SETTINGS_CATEGORIES.map((cat) => (
+        {visibleSettingsCategories().map((cat) => (
           <TreeCategory key={cat.key} category={cat} status={status} codexStatus={codexStatus}
             copilotStatus={copilotStatus} claudeCodeStatus={claudeCodeStatus}
             open={!collapsed.has(cat.key)} activeGroup={activeGroup}

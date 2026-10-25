@@ -43,6 +43,7 @@ test-results/
 .env
 .env.*
 !.env.example
+!.env.claudia.example
 
 # user-imported / AI-generated media (dev upload endpoint) — product static lives in assets/
 public/media/uploads/*
@@ -88,6 +89,8 @@ MODEL-OPT-PLAN.md
 # DeepSeek Harness scripts get their own tracked folder; `*` above does not
 # descend into it, so this one line re-includes every file inside.
 !/scripts/harness/
+!/scripts/editor-host.mjs
+!/scripts/tunnel.mjs
 !/scripts/sync-mediapipe.mjs
 # Stable regressions are *.verify.* by convention (see the *.check.* rule
 # above), so they are never local-only.

@@ -153,4 +153,7 @@ export default {
   '请先在设置中配置一个模型厂商。': '1. Inicia el harness: npm run harness\n2. Obtén la URL y la clave del gateway: npm run harness:doctor\n3. Pégalas en Ajustes › DeepSeek Harness.',
   '刷新模型列表': 'Actualizar lista de modelos',
   'DeepSeek Harness 无响应。用 npm run harness 启动它。': 'DeepSeek Harness no responde. Arráncalo con npm run harness.',
+  '连接 Claudia': 'Conectar Claudia',
+  '把下面的配置交给 Claudia。她从这台电脑以外编辑这个工程。编辑器的域名必须写进 hosting.egressDomains。':
+    'Dale a Claudia la configuración de abajo para que edite este proyecto desde fuera de este PC. El dominio del editor tiene que estar en hosting.egressDomains.',
 } as Record<string, string>;

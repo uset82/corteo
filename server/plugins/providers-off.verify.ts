@@ -17,7 +17,12 @@ seedKeystore({
 assert.deepEqual([...PROVIDERS_OFF_ALLOWED], ['dsh', 'ollama', 'lmstudio']);
 assert.deepEqual(
   [...PROVIDERS_OFF_BLOCKED_PREFIXES],
-  ['/api/codex', '/api/copilot', '/api/claude-code', '/api/xai-oauth'],
+  [
+    '/api/codex', '/api/copilot', '/api/claude-code', '/api/xai-oauth',
+    '/generate/image', '/generate/video', '/generate/voice', '/generate/music', '/generate/sound',
+    '/api/stock-search', '/api/firecrawl', '/api/web-browser',
+    '/assemblyai', '/api/assemblyai-upload', '/e2b', '/api/upload-post', '/api/transcribe',
+  ],
 );
 assert.equal(providersOff({}), false, 'absent switch keeps every provider');
 assert.equal(providersOff({ OPENCHATCUT_PROVIDERS: 'on' }), false);
@@ -85,6 +90,9 @@ try {
   assert.equal(boundary.status, 200, 'only the whole mount is blocked, not a longer sibling path');
   const unrelated = await request('/api/keys');
   assert.equal(unrelated.status, 200, 'unrelated API mounts keep working');
+  for (const localPath of ['/generate/progress', '/generate/subtitles', '/api/isolate-voice', '/api/auto-grade', '/api/hf-proxy']) {
+    assert.equal((await request(localPath)).status, 200, `${localPath} stays local under the switch`);
+  }
 
   // The saved default is resolved exactly like the proxy does.
   seedKeystore({ LLM_PROVIDER: 'dsh' });

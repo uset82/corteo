@@ -529,6 +529,9 @@ export default {
     'The MCP endpoint always requires a bearer token. The token is generated on first launch and kept on this machine, so it stays the same across restarts: registering once keeps working; the OPENCHATCUT_MCP_TOKEN environment variable overrides it. The token is shown only in the current trusted editor session and is never written to the project, chat, or browser storage.',
   '设置 → 连接器 → 添加自定义连接器,粘贴上面的端点地址即可。':
     'Settings → Connectors → Add custom connector, then paste the endpoint above.',
+  '连接 Claudia': 'Connect Claudia',
+  '把下面的配置交给 Claudia。她从这台电脑以外编辑这个工程。编辑器的域名必须写进 hosting.egressDomains。':
+    'Give Claudia the config below so she can edit this project from outside this PC. The editor domain must be listed in hosting.egressDomains.',
   '端点默认仅监听本机;对外暴露时请配置 OPENCHATCUT_MCP_TOKEN 鉴权。桌面端 5199 端口被占用时会回退随机端口,以启动日志与本页地址为准。':
     'The endpoint listens on localhost only by default; configure OPENCHATCUT_MCP_TOKEN before exposing it. If port 5199 is taken, the desktop app falls back to a random port — trust the startup log and the address shown here.',
   // Local ASR model management (Settings → 本地模型 → 本地转写)
