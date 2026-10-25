@@ -123,11 +123,12 @@ this README and `PROGRESS.md` disagree, `PROGRESS.md` wins.
 - Export up to 4K in H.264 and VP8, plus ProRes from the server.
 - Multiple sequences per project, transitions, effects, LUTs, animated templates and multiple audio tracks.
 - A token-protected MCP server with more than 120 editing tools, usable by MCP clients on the same machine (Codex, Claude Code, Qoder and others).
+- Free models in the built-in chat through [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) and the [Our Free Model](https://github.com/Ebony-Vinyl/dsh-our-free-model) plugin. `npm run harness:install`, `npm run harness` and `npm run harness:doctor` install it, start it and print the URL and key; the Spanish steps are in [`README.es.md`](README.es.md#modelos-gratis-con-deepseek-harness) and the long guide is [`docs/harness.md`](docs/harness.md). The default model is `nvidia/nemotron-3-ultra-550b-a55b:free`, the lane that completed a real cut. `OPENCHATCUT_PROVIDERS=off` limits the editor to DeepSeek Harness, Ollama and LM Studio. The harness chat can also edit the timeline over MCP.
 
 **Not there yet:**
 
 - The interface opens in Spanish, but only part of it is translated: untranslated strings show in English. English is complete and Chinese is the source language; Italian and Russian are also partial.
-- The built-in chat needs a model provider. Free models through [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) and the [Our Free Model](https://github.com/Ebony-Vinyl/dsh-our-free-model) plugin work today (default `nvidia/nemotron-3.5-lightning:free`, the one free model that completed edits in testing), but the harness is installed and started by hand; the steps are in [`README.es.md`](README.es.md#modelos-gratis-con-deepseek-harness). `OPENCHATCUT_PROVIDERS=off` limits the editor to DeepSeek Harness, Ollama and LM Studio. Generation tools — images, voice, video, music — need their own paid API keys and stay off until configured.
+- Generation tools — images, voice, video, music — need their own paid API keys and stay off until configured.
 - Claudia is a single-machine tool. Browser and MCP clients on another host need a tunnel and an HTTPS setup.
 - Ken Burns, duplicate detection and countdown live on a separate development branch and are not in `main` yet.
 
