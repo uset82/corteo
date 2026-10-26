@@ -49,6 +49,7 @@ const PATH_IMPORT_TOOL_NAMES: Record<string, true> = {
 const MUSIC_ANALYSIS_TOOL_NAMES: Record<string, true> = {
   analyze_music: true,
   inspect_music: true,
+  listen_to_song: true,
 };
 
 /**

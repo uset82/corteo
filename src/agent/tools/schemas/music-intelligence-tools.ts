@@ -115,6 +115,23 @@ export const MUSIC_INTELLIGENCE_TOOL_SCHEMAS: AgentToolSchema[] = [
     },
   },
   {
+    name: 'listen_to_song',
+    description: [
+      'Listen to a song and report what it sounds like: a Spanish summary plus compact JSON with tempo, key, sections and moods, drops/breaks/accents, energy and bass curves, lyric lines and chorus candidates.',
+      'Returns a saved songMapRef and, when the server runtime can draw them, the song-map PNG and a spectrogram as images. Text and pictures still answer without the model packs, using DSP beats and energy sections.',
+      'Reuses a cached Beat This + CLAP analysis and never edits the timeline. Use it before choosing music-driven cuts, reactions or looks.',
+    ].join(' '),
+    input_schema: {
+      type: 'object',
+      properties: {
+        ...TARGET_PROPERTIES,
+        fromMs: { type: 'number', minimum: 0, description: 'Optional source-millisecond range start; the whole song by default.' },
+        toMs: { type: 'number', minimum: 1, description: 'Optional exclusive source-millisecond range end.' },
+        pictures: { type: 'boolean', description: 'Include the song-map and spectrogram images. Defaults to true; text data is still returned when a picture cannot be drawn.' },
+      },
+    },
+  },
+  {
     name: 'music_edit_plan',
     description: [
       'Build a deterministic, read-only cut plan from cached music analysis, the BGM clip trim/speed mapping, and overlapping video clips.',

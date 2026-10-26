@@ -1,6 +1,7 @@
 // The two pictures a seeing model reads: a drawn song map and an ffmpeg
 // spectrogram. The SVG is built separately from the rasterization so the
 // verifies can inspect labels without decoding pixels.
+/// <reference path="./sharp.d.ts" />
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -8,7 +9,7 @@ import sharp from 'sharp';
 import { displayMusicLabel } from '../../src/audio/intelligence/clapProfile.ts';
 import type { MusicAnalysis, MusicSection } from '../../src/audio/intelligence/types.ts';
 import type { Moment, SongMeasurements } from '../../src/audio/listen/types.ts';
-import type { SongMap, SongMapSection } from '../../src/audio/listen/songMap.ts';
+import { displaySectionRole, type SongMap, type SongMapSection } from '../../src/audio/listen/songMap.ts';
 import { spawnMediaProcess } from '../media-process.ts';
 import { ffmpegBin } from '../media-binaries.ts';
 
@@ -22,15 +23,6 @@ const RIGHT = 24;
 const PLOT = MAP_WIDTH - LEFT - RIGHT;
 const MAX_LYRIC_LINES = 14;
 const MAX_LYRIC_CHARS = 96;
-
-const ROLE_ES: Record<MusicSection['role'], string> = {
-  'intro-like': 'intro',
-  build: 'subida',
-  peak: 'clímax',
-  break: 'pausa',
-  steady: 'estable',
-  'outro-like': 'salida',
-};
 
 const ROLE_COLOR: Record<MusicSection['role'], string> = {
   'intro-like': '#3b6ea8',
@@ -156,8 +148,8 @@ export function buildSongMapSvg(input: SongPictureInput): string {
     const color = ROLE_COLOR[section.role];
     pieces.push(`<rect x="${x.toFixed(1)}" y="${bandTop}" width="${width.toFixed(1)}" height="${bandHeight}" fill="${color}" fill-opacity="0.35" stroke="${color}" stroke-width="1.5"/>`);
     const label = section.mood
-      ? `${ROLE_ES[section.role]} · ${displayMusicLabel(section.mood.label)}`
-      : ROLE_ES[section.role];
+      ? `${displaySectionRole(section.role)} · ${displayMusicLabel(section.mood.label)}`
+      : displaySectionRole(section.role);
     pieces.push(`<text x="${(x + 6).toFixed(1)}" y="${bandTop + 20}" fill="#e8edf5" font-family="Helvetica, Arial, sans-serif" font-size="12">${escapeXml(label)}</text>`);
     pieces.push(`<text x="${(x + 6).toFixed(1)}" y="${bandTop + 37}" fill="#c8d2e0" font-family="Helvetica, Arial, sans-serif" font-size="11">${Math.round(section.energy * 100)}%</text>`);
   }

@@ -7,7 +7,8 @@ const READ_ONLY_TOOL_NAMES = new Set([
   'read_timeline', 'list_templates', 'search_templates', 'list_audio',
   'read_script', 'view_timeline_frames', 'view_asset_frames', 'browse_library',
   'read_captions', 'read_project', 'read_transcript', 'find_transcript',
-  'search_media', 'search_stock_media', 'search_fonts', 'analyze_music', 'inspect_music', 'music_edit_plan', 'music_image_plan',
+  'search_media', 'search_stock_media', 'search_fonts',
+  'analyze_music', 'inspect_music', 'listen_to_song', 'music_edit_plan', 'music_image_plan',
   'search_catalog',
   'read_agent_artifact', 'browse_local_media', 'score_moments', 'calibrate_scores', 'write_social_copy',
   'list_scheduled_publishes', 'score_performance',
@@ -67,6 +68,9 @@ const SERVER_DIRECT_READ_TOOL_NAMES: Record<string, true> = {
   // missing-model-packs action rather than failing.
   analyze_music: true,
   inspect_music: true,
+  // One call that measures, falls back to DSP beats, draws the map and the
+  // spectrogram and caches the song map. No editor tab and no timeline edits.
+  listen_to_song: true,
 };
 
 const SERVER_DIRECT_EDIT_TOOL_NAMES: Record<string, true> = {

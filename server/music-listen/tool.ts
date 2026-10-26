@@ -4,13 +4,14 @@
 import type { AgentContext } from '../../src/agent/context.ts';
 import { inspectMusicAnalysis } from '../../src/audio/intelligence/inspect.ts';
 import type { MusicAnalysis } from '../../src/audio/intelligence/types.ts';
-import { resolveMusicTarget, type Args } from '../../src/agent/tools/music-target.ts';
+import { lyricWordsForMusic, resolveMusicTarget, type Args } from '../../src/agent/tools/music-target.ts';
 import { sourceRevisionOf } from '../../src/editor/mediaSourceRevision.ts';
 import type { MediaAsset } from '../../src/editor/types.ts';
 import { musicAnalysisRef } from '../../shared/music-inference/analysis-record.ts';
 import { modelPackInstallGuidance } from '../../shared/model-packs/index.ts';
 import { loadStoredMusicAnalysis } from './cache.ts';
 import { inspectMusicPacks, MUSIC_PACK_IDS } from './packs.ts';
+import { listenToSong } from './listen.ts';
 import { analyzeServerMusicAsset, MissingMusicPacksError } from './runner.ts';
 
 const MISSING_MODEL_PACKS_ACTION = 'missing-model-packs';
@@ -89,10 +90,32 @@ async function inspectMusic(args: Args, ctx: AgentContext): Promise<unknown> {
   });
 }
 
+function finiteNumber(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+async function listenSong(args: Args, ctx: AgentContext): Promise<unknown> {
+  const target = resolveMusicTarget(args, ctx);
+  const result = await listenToSong(target.asset, {
+    fromMs: finiteNumber(args.fromMs),
+    toMs: finiteNumber(args.toMs),
+    pictures: args.pictures !== false,
+    transcriptWords: lyricWordsForMusic(target, ctx),
+    onProgress: ctx.onToolProgress
+      ? (phase, progress) => {
+        const percent = Math.round(Math.max(0, Math.min(1, progress)) * 100);
+        ctx.onToolProgress!(`escuchando: ${phase} ${percent}%`);
+      }
+      : undefined,
+  });
+  return target.item ? { itemId: target.item.id, ...result } : result;
+}
+
 export async function execServerMusicTool(name: string, args: Args, ctx: AgentContext): Promise<unknown> {
   try {
     if (name === 'analyze_music') return await analyzeMusic(args, ctx);
     if (name === 'inspect_music') return await inspectMusic(args, ctx);
+    if (name === 'listen_to_song') return await listenSong(args, ctx);
     return { error: `unknown tool ${name}` };
   } catch (error) {
     return { error: error instanceof Error ? error.message : String(error) };

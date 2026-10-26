@@ -11,6 +11,8 @@ export { FRAME_MS, spectrumFrames } from './spectrum.ts';
 export { detectOnsets, pickAccents } from './onsets.ts';
 export { deriveMoments } from './moments.ts';
 export { estimateKey } from './key.ts';
+export { fallbackListening } from './fallback.ts';
+export type { ListeningFallback } from './fallback.ts';
 export { buildEbur128Args, parseEbur128 } from './ebur128.ts';
 export type { LoudnessPoint, LoudnessReport } from './ebur128.ts';
 export {
@@ -18,6 +20,7 @@ export {
   SONG_MAP_SCHEMA_VERSION,
   attachLinesToSections,
   buildSongMap,
+  displaySectionRole,
   groupWordsIntoLines,
   markChorusLines,
   normalizedLineText,

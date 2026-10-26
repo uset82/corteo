@@ -1,5 +1,7 @@
 import type { AgentContext } from '../context';
 import type { MediaAsset, TimelineItem } from '../../editor/types';
+import { hasOperationalTranscript } from '../../transcript/types';
+import type { SongLyricWord } from '../../audio/listen/songMap';
 
 export type Args = Record<string, unknown>;
 
@@ -54,4 +56,22 @@ export function resolveMusicTarget(args: Args, ctx: AgentContext): ResolvedMusic
     return { asset };
   }
   throw new Error('pass assetId (media pool) or itemId (timeline clip)');
+}
+
+/** Song lyrics come from the clip that carries the transcript; times are source ms. */
+export function lyricWordsForMusic(
+  target: ResolvedMusicTarget,
+  ctx: AgentContext,
+): SongLyricWord[] {
+  const item = target.item ?? ctx.getState().items.find((candidate) => (
+    (candidate.kind === 'audio' || candidate.kind === 'video')
+    && candidate.sourceAssetId === target.asset.id
+    && hasOperationalTranscript(candidate)
+  ));
+  if (!item || !hasOperationalTranscript(item)) return [];
+  return item.transcript.map((word) => ({
+    text: word.text,
+    startMs: word.start,
+    endMs: word.end,
+  }));
 }

@@ -8,6 +8,20 @@ export const SONG_MAP_SCHEMA_VERSION = 1;
 /** Separate from the analysis fingerprint so grouping changes drop only maps. */
 export const SONG_MAP_ANALYZER_FINGERPRINT = `${MUSIC_ANALYZER_FINGERPRINT}+song-map-v1`;
 
+const SECTION_ROLE_ES: Record<MusicSection['role'], string> = {
+  'intro-like': 'intro',
+  build: 'subida',
+  peak: 'clímax',
+  break: 'pausa',
+  steady: 'estable',
+  'outro-like': 'salida',
+};
+
+/** User-facing role name; the pictures and the listen summary must agree. */
+export function displaySectionRole(role: MusicSection['role']): string {
+  return SECTION_ROLE_ES[role] ?? role;
+}
+
 export interface SongLyricWord {
   readonly text: string;
   readonly startMs: number;

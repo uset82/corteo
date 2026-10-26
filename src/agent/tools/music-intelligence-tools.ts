@@ -8,6 +8,12 @@ import type { AtomicAction } from '../../editor/reduce';
 import type { MediaAsset, TimelineItem, TimelineState } from '../../editor/types';
 import type { MusicEditPlan } from '../../audio/intelligence/types';
 import { loadMusicAnalysisForAsset, musicAnalysisRef } from '../../audio/intelligence/store';
+import { buildSongMap } from '../../audio/listen/songMap';
+import {
+  buildListenSnapshot,
+  normalizeListenRange,
+} from '../../../shared/music-inference/listen-snapshot';
+import { lyricWordsForMusic } from './music-target';
 import {
   MAX_MUSIC_IMAGE_PLACEMENTS,
   MAX_MUSIC_PLAN_TARGETS,
@@ -280,10 +286,43 @@ async function syncImages(args: Args, ctx: AgentContext): Promise<unknown> {
   };
 }
 
+/** Browser degrade: cached analysis only, text only; the pictures need the server runtime. */
+async function listenInBrowser(args: Args, ctx: AgentContext): Promise<unknown> {
+  const target = resolveMusicTarget(args, ctx);
+  const analysis = await loadMusicAnalysisForAsset(target.asset);
+  if (!analysis) return await unavailableAnalysis(target.asset);
+  const songMap = buildSongMap({ analysis, transcriptWords: lyricWordsForMusic(target, ctx) });
+  const range = normalizeListenRange(args.fromMs, args.toMs, analysis.durationMs);
+  const snapshot = buildListenSnapshot({
+    assetName: target.asset.name,
+    durationMs: analysis.durationMs,
+    range,
+    analysisSource: 'model',
+    analysisNote: 'En el navegador solo hay texto: el mapa y el espectrograma se dibujan en el servidor (MCP).',
+    bpm: analysis.bpm,
+    meter: analysis.meter,
+    beatConfidence: analysis.beatConfidence,
+    sections: analysis.sections,
+    beatsMs: analysis.beatsMs,
+    downbeatsMs: analysis.downbeatsMs,
+    measurements: null,
+    songMap,
+    songMapRef: null,
+    pictures: { map: false, spectrogram: false },
+  });
+  return {
+    ok: true,
+    summary: snapshot.summaryEs,
+    ...snapshot.data,
+    ...(target.item ? { itemId: target.item.id } : {}),
+  };
+}
+
 export async function execMusicIntelligenceTool(name: string, args: Args, ctx: AgentContext): Promise<unknown> {
   try {
     if (name === 'analyze_music') return await analyzeMusic(args, ctx);
     if (name === 'inspect_music') return await inspectMusic(args, ctx);
+    if (name === 'listen_to_song') return await listenInBrowser(args, ctx);
     if (name === 'music_edit_plan') {
       const built = await currentPlan(args, ctx);
       return isBuiltPlan(built) ? planResponse(built) : built;
