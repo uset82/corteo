@@ -65,7 +65,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | L-08 | Keyframable filters + binary-search sampling | done | |
 | P2-1 | Ken Burns | done | |
 | L-09 | Music reactions + tools | done | L-06, L-08, P2-1 |
-| L-10 | Caption motion `latido` | todo | L-06 |
+| L-10 | Caption motion `latido` | done | L-06 |
 | L-11 | Music UI: inspector section, timeline map, song dialog | todo | L-09 |
 | L-12 | `escuchar-cancion` skill + MCP prompt | todo | L-09, P1-6 |
 | L-13 | Listening end-to-end proof | todo | L-11, L-12 |
@@ -309,9 +309,15 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Done when: the generator tests in Plan 2 › Verification pass and the three tools work over MCP with no tab.
 - Verify: the new verifies, `npm run verify:agent-tools`, `npm run verify:mcp`, `npm run verify:server-tool-catalog`.
 
-### L-10 · Caption motion `latido`
+### L-10 · Caption motion `latido` — done
+- Done 2026-10-26: `latido` is the sixth caption motion preset (`none`, `fade-up`, `pop`, `word-pop`, `karaoke-pulse`, `latido`). The pulse stays a pure function of absolute timeline ms: `latidoScale` binary-searches the last beat at or before the current time and returns `1 + 0.07·(1 − age/160)²`, returning to 1 after 160 ms. `captionPageMotionStyle` applies it as `scale(...)` with `transform-origin: center`, so the Player preview and the Remotion export run the same function of the same frames.
+- Beat grid: `resolveLatidoBeats` uses the captions source item when it carries sound (otherwise the first audio clip), loads the cached analysis through `sourceAssetId`, maps source beats through the clip's trim and speed with `localFrameForSourceMs`, and dedupes/sorts the absolute timeline ms. It answers `{ beatsMs, bpm, itemId }` or one of three Spanish errors (no song in the timeline, no cached analysis, no pulses inside the clip). The grid is captured once into `CaptionsData.motionBeatsMs`, so the render reads no cache; choosing any other preset clears it.
+- UI: `CaptionMotionControls` awaits the resolver with a busy state, shows the error inline (`role="alert"`), and reports the pulse count ("节拍脉动 · {n} 拍" → "Latido · {n} pulsos"). `LibraryPanel` → `CaptionsPanel` → `CaptionsControls` thread `assets` down; both page-motion call sites in `CaptionsLayer` pass `motionBeatsMs`.
+- Tool: `edit_captions` `animation` accepts `latido`; an explicit `json.beatsMs` wins (finite, non-negative, rounded, deduped, sorted), otherwise it resolves from the project's items/assets/fps and answers `{ ok, motionPreset, beats, bpm, itemId, beatsSource }`. Because saved looks are project-agnostic, `preset_apply` re-resolves the grid for a latido look and degrades to a static look with a `motionNote` when no analysis exists.
+- Proof: `captionMotion.verify.ts` asserts no grid → scale 1 and `{}`, a full 1.07 bump on the beat, 1.0175 at half decay (80 ms), 1 at 160 ms and just before the next beat, and the exact `scale(1.07)` style at 1500 ms with beats [1000, 1500, 1900]. `latidoBeats.verify.ts` maps `[1000, 4000, 6000, 22000]` through a clip starting at frame 100, srcIn 60, 2× and 300 frames to `[4333, 5333]` at 30 fps (`[3167]` at 60 fps), covers the injected loader and all three error paths. `caption-animation.verify.ts` checks the six-entry enum, filters `[500, NaN, −5, 1000, 500, 1500]` down to 3 beats with `beatsSource: 'argument'`, rejects latido with no song, clears the grid when switching presets, and end-to-end saves an analysis (bpm 120, beats [1000, 2000, 9000]) so the real tool writes `[1000, 2000, 9000]`; `preset_save` then `preset_apply` re-resolves the grid after a detour through `none`.
+- Gates: `npx tsc -b` clean, `npm run verify:caption-motion` (3 verifies) passed, `npm run lint` 0 errors / 204 warnings, `node scripts/verify-gate-coverage.verify.mjs` passed (700 verify files), `npm run verify:agent-tools` passed, `npm run verify:server-tool-catalog` passed after `npm run generate:server-tool-catalog`. `npm run verify:i18n`'s `check-i18n` and `locale.verify` passed, but its Italian settings coverage step fails on 10 keys introduced by the concurrent connect-a-bot work (MCP 地址, 连接一个 bot, …); none are latido keys, so the fix belongs to that agent.
 - Plan: Plan 2 › Part C (captions `latido`).
-- Files: `src/captions/captionMotion.ts`, `src/captions/CaptionMotionControls.tsx`.
+- Files: new `src/captions/latidoBeats.ts` + verify; `src/captions/captionMotion.ts`, `src/captions/types.ts`, `src/captions/CaptionMotionControls.tsx`, `src/captions/CaptionsControls.tsx`, `src/captions/CaptionsPanel.tsx`, `src/captions/CaptionsLayer.tsx`, `src/library/LibraryPanel.tsx`, `src/agent/tools/captions-actions.ts`, `src/agent/tools/schemas/captions-tools.ts`, `src/agent/tools/caption-animation.verify.ts`, `src/captions/captionMotion.verify.ts`, `src/i18n/dict/en/captions.ts`, `src/i18n/dict/es/index.ts`, `package.json`, `assets/agent/openchatcut-tool-schemas.json`.
 - Verify: `npm run verify:caption-motion`.
 
 ### L-11 · Music UI

@@ -81,6 +81,10 @@ export default {
   '弹性入场': 'Pop in',
   '逐词弹出': 'Word pop',
   '卡拉 OK 脉冲': 'Karaoke pulse',
+  '音乐脉动': 'Beat pulse',
+  '正在读取节拍…': 'Reading the beat grid…',
+  '节拍脉动 · {n} 拍': 'Beat pulse · {n} beats',
+  '音乐脉动需要先分析歌曲。': 'Beat pulse needs the song analysis first.',
   '动效按时间线帧计算，预览与导出保持一致。': 'Motion is timeline-frame driven, so preview and export stay aligned.',
   // ManualCaptionEditor
   '手动字幕': 'Manual captions',

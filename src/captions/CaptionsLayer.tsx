@@ -41,7 +41,7 @@ function SingleStreamCaptions({ captions, items, ms, width, height, fps }: { cap
   return (
     <AbsoluteFill style={CAPTION_OVERLAY_STYLE}>
       <div style={containerStyle(preset, captions.template, width, height, captions.layout)}>
-        <div style={captionPageMotionStyle(captions.motionPreset, page, ms)}>
+        <div style={captionPageMotionStyle(captions.motionPreset, page, ms, captions.motionBeatsMs)}>
           {preset.wholeLine ? (
             <WholeLineCaption
               page={page}
@@ -181,6 +181,7 @@ function MultiLaneCaptions({ captions, items, ms, width, height }: { captions: C
                 basePreset={basePreset}
                 height={height}
                 motionPreset={captions.motionPreset}
+                motionBeatsMs={captions.motionBeatsMs}
                 ms={ms}
               />
             ))}
@@ -196,12 +197,14 @@ function LaneCaption({
   basePreset,
   height,
   motionPreset,
+  motionBeatsMs,
   ms,
 }: {
   lane: LanePage;
   basePreset: CaptionStyle;
   height: number;
   motionPreset: CaptionsData['motionPreset'];
+  motionBeatsMs?: readonly number[];
   ms: number;
 }) {
   const preset: CaptionStyle = lane.entry.style ? { ...basePreset, ...lane.entry.style } : basePreset;
@@ -223,5 +226,5 @@ function LaneCaption({
       ms={ms}
     />
   );
-  return <div style={captionPageMotionStyle(motionPreset, lane.page, ms)}>{content}</div>;
+  return <div style={captionPageMotionStyle(motionPreset, lane.page, ms, motionBeatsMs)}>{content}</div>;
 }

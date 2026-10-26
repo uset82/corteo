@@ -201,6 +201,12 @@ export default {
   '已保存': 'Guardado',
   'corteo puede aplicar esta marca a todos los clips': 'corteo puede aplicar esta marca a todos los clips',
 
+  // Plan 2 · L-10, latido de subtítulos sobre los pulsos de la canción
+  '音乐脉动': 'Latido musical',
+  '正在读取节拍…': 'Leyendo los pulsos…',
+  '节拍脉动 · {n} 拍': 'Latido · {n} pulsos',
+  '音乐脉动需要先分析歌曲。': 'El latido necesita el análisis de la canción.',
+
   // Plan 5 · calendario «Programar»
   'Programar publicaciones': 'Programar publicaciones',
   'Nada programado': 'Nada programado',

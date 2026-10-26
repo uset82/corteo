@@ -32,7 +32,7 @@ export type CaptionTemplate = 'plain' | 'black-bar' | 'persona' | 'off-the-wall'
 export type CaptionPacing = 'word' | 'phrase';
 
 /** Deterministic burn-in animation shared by Player preview and Remotion export. */
-export type CaptionMotionPreset = 'none' | 'fade-up' | 'pop' | 'word-pop' | 'karaoke-pulse';
+export type CaptionMotionPreset = 'none' | 'fade-up' | 'pop' | 'word-pop' | 'karaoke-pulse' | 'latido';
 
 /** One translated caption phrase, timed on the (edited) timeline in ms. */
 export interface TranslatedCue {
@@ -47,6 +47,9 @@ export interface CaptionsData {
   pacing: CaptionPacing;
   /** Optional frame-derived motion. Missing and `none` both preserve the static legacy render. */
   motionPreset?: CaptionMotionPreset;
+  /** `latido` only: beat grid in absolute timeline ms, captured when the preset was
+   * applied so the preview and the export pulse on the same beats. Absent on other presets. */
+  motionBeatsMs?: number[];
   /** audio item whose (edited) transcript drives the captions */
   sourceItemId?: string | null;
   /** MULTI-source merge — Captions can summarize all transcribed tracks: item ids whose (edited) transcripts

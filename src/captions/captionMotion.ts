@@ -7,6 +7,7 @@ export const CAPTION_MOTION_OPTIONS = [
   { id: 'pop', label: '弹性入场' },
   { id: 'word-pop', label: '逐词弹出' },
   { id: 'karaoke-pulse', label: '卡拉 OK 脉冲' },
+  { id: 'latido', label: '音乐脉动' },
 ] as const satisfies ReadonlyArray<{ id: CaptionMotionPreset; label: string }>;
 
 const PRESETS = new Set<CaptionMotionPreset>(CAPTION_MOTION_OPTIONS.map((option) => option.id));
@@ -14,6 +15,10 @@ const EMPTY_STYLE: CSSProperties = Object.freeze({});
 const PAGE_ENTER_MS = 180;
 const PAGE_EXIT_MS = 120;
 const WORD_ENTER_MS = 140;
+
+/** Beat pulse (Plan 2 › L-10): full bump on the beat, eased back over this window. */
+export const LATIDO_DECAY_MS = 160;
+export const LATIDO_SCALE = 0.07;
 
 export function isCaptionMotionPreset(value: unknown): value is CaptionMotionPreset {
   return typeof value === 'string' && PRESETS.has(value as CaptionMotionPreset);
@@ -40,14 +45,48 @@ function pageOpacity(page: CaptionPage, timelineMs: number): number {
   return Math.min(enter, exit);
 }
 
+/** Index of the last beat at or before `timelineMs`, or -1. Beats are sorted timeline ms. */
+function lastBeatAtOrBefore(beatsMs: readonly number[], timelineMs: number): number {
+  let low = 0;
+  let high = beatsMs.length - 1;
+  let found = -1;
+  while (low <= high) {
+    const mid = (low + high) >> 1;
+    if (beatsMs[mid]! <= timelineMs) {
+      found = mid;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+  return found;
+}
+
+/** `latido` scale for one timeline instant: 1 + 0.07 on a beat, easing back to 1. */
+export function latidoScale(beatsMs: readonly number[] | undefined, timelineMs: number): number {
+  if (!beatsMs?.length || !Number.isFinite(timelineMs)) return 1;
+  const index = lastBeatAtOrBefore(beatsMs, timelineMs);
+  if (index < 0) return 1;
+  const age = timelineMs - beatsMs[index]!;
+  if (age < 0 || age >= LATIDO_DECAY_MS) return 1;
+  const remaining = 1 - age / LATIDO_DECAY_MS;
+  return 1 + LATIDO_SCALE * remaining * remaining;
+}
+
 /** Page-level motion. Nest this below the placement container so layout transforms remain intact. */
 export function captionPageMotionStyle(
   preset: CaptionMotionPreset | undefined,
   page: CaptionPage,
   timelineMs: number,
+  beatsMs?: readonly number[],
 ): CSSProperties {
   if (!preset || preset === 'none' || preset === 'word-pop' || preset === 'karaoke-pulse') {
     return EMPTY_STYLE;
+  }
+  if (preset === 'latido') {
+    const scale = latidoScale(beatsMs, timelineMs);
+    if (scale === 1) return EMPTY_STYLE;
+    return { opacity: pageOpacity(page, timelineMs), transform: `scale(${Number(scale.toFixed(4))})`, transformOrigin: 'center' };
   }
   const enter = easeOutCubic((timelineMs - page.start) / PAGE_ENTER_MS);
   const opacity = pageOpacity(page, timelineMs);

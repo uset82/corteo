@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { CaptionsData, CaptionPacing, CaptionTemplate } from './types';
-import type { TimelineItem, TrackId } from '../editor/types';
+import type { MediaAsset, TimelineItem, TrackId } from '../editor/types';
 import type { TranscriptVariant } from '../transcript/types';
 import { CaptionCueEditor } from './CaptionCueEditor';
 import { CAPTION_STYLES, captionStyleFor } from './styles';
@@ -11,6 +11,7 @@ import { ManualCaptionEditor } from './ManualCaptionEditor';
 import { beginCaptionStylePointerDrag } from './captionStyleDrag';
 import { captionTemplatePatch } from './captionTemplatePatch';
 import { CaptionMotionControls } from './CaptionMotionControls';
+import { resolveLatidoBeats } from './latidoBeats';
 
 interface CaptionsControlsProps {
   captionTrackId?: TrackId;
@@ -20,6 +21,8 @@ interface CaptionsControlsProps {
   /** The sentence-by-sentence editing list needs to recalculate the same paging as the rendering layer, which requires timeline items + fps */
   items: TimelineItem[];
   fps: number;
+  /** media-pool assets, so `latido` can read the song analysis by asset id */
+  assets?: MediaAsset[];
   /** Sentence-by-sentence editing: click-to-sentence preview (timeline ms) */
   onSeekMs?: (ms: number) => void;
   onCreateManual: () => void;
@@ -48,7 +51,7 @@ const TRANSLATE_TO: { id: string; label: string }[] = [
 
 // Independent caption workspace: style, rhythm, manual captions and translation are all edited here.
 export function CaptionsControls({
-  captionTrackId, captions, sourceVariants = [], items, fps, onSeekMs, onCreateManual, getPlayheadMs, onUpdate, onRemove, onTranslate, translating, translateError,
+  captionTrackId, captions, sourceVariants = [], items, fps, assets = [], onSeekMs, onCreateManual, getPlayheadMs, onUpdate, onRemove, onTranslate, translating, translateError,
 }: CaptionsControlsProps) {
   const t = useT();
   const [bilingualOpen, setBilingualOpen] = useState(!!captions?.bilingual || !!captions?.translation);
@@ -176,7 +179,11 @@ export function CaptionsControls({
 
           <CaptionMotionControls
             value={captions.motionPreset}
-            onChange={(motionPreset) => onUpdate({ motionPreset })}
+            beatsMs={captions.motionBeatsMs}
+            onChange={(patch) => onUpdate(patch)}
+            resolveBeats={() => resolveLatidoBeats({
+              items, assets, fps, sourceItemId: captions.sourceItemId,
+            })}
           />
 
           <ManualCaptionEditor captions={captions} items={items} onUpdate={onUpdate} getPlayheadMs={getPlayheadMs} onSeekMs={onSeekMs} />

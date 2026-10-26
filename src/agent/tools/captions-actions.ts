@@ -9,6 +9,7 @@ import { captionsOnTrack, defaultTrackId, resolveTrackId, timelineTrackIds, trac
 import { hasOperationalTranscript } from '../../transcript/types';
 import { applyDisplayTextEntries } from './captions-word-overrides';
 import { isCaptionMotionPreset } from '../../captions/captionMotion';
+import { resolveLatidoBeats } from '../../captions/latidoBeats';
 
 // edit_captions uses one tool with a multi-action dispatcher. Most action data
 // arrives as a JSON string in `json`. Backed by OpenChatCut's captions overlay
@@ -35,6 +36,16 @@ function parseJson(args: Args): Record<string, unknown> {
     try { const o = JSON.parse(j); return o && typeof o === 'object' ? o : {}; } catch { return {}; }
   }
   return {};
+}
+
+/** json.beatsMs → sorted unique non-negative timeline milliseconds, or undefined. */
+function latidoBeatsFromArgs(json: Record<string, unknown>): number[] | undefined {
+  if (!Array.isArray(json.beatsMs)) return undefined;
+  const beats = json.beatsMs.filter(
+    (value): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0,
+  );
+  if (!beats.length) return undefined;
+  return [...new Set(beats.map((value) => Math.round(value)))].sort((left, right) => left - right);
 }
 
 const isTemplate = (id: string): id is CaptionTemplate => id in CAPTION_STYLE_BY_ID;
@@ -176,11 +187,27 @@ export async function editCaptions(args: Args, ctx: AgentContext): Promise<Resul
     const requestedPreset = str(args.motionPreset) || str(json.preset);
     if (!isCaptionMotionPreset(requestedPreset)) {
       return {
-        error: 'animation needs motionPreset: none|fade-up|pop|word-pop|karaoke-pulse',
+        error: 'animation needs motionPreset: none|fade-up|pop|word-pop|karaoke-pulse|latido',
       };
     }
     const motionPreset: CaptionMotionPreset = requestedPreset;
-    ctx.commands.updateCaptions({ motionPreset });
+    if (motionPreset === 'latido') {
+      const beatsMs = latidoBeatsFromArgs(json);
+      if (beatsMs) {
+        ctx.commands.updateCaptions({ motionPreset, motionBeatsMs: beatsMs });
+        return { ok: true, motionPreset, beats: beatsMs.length, beatsSource: 'argument' };
+      }
+      const resolved = await resolveLatidoBeats({
+        items: s.items, assets: s.assets ?? [], fps: s.fps, sourceItemId: c.sourceItemId,
+      });
+      if ('error' in resolved) return { error: resolved.error };
+      ctx.commands.updateCaptions({ motionPreset, motionBeatsMs: [...resolved.beatsMs] });
+      return {
+        ok: true, motionPreset, beats: resolved.beatsMs.length,
+        bpm: resolved.bpm, itemId: resolved.itemId, beatsSource: 'analysis',
+      };
+    }
+    ctx.commands.updateCaptions({ motionPreset, motionBeatsMs: undefined });
     return { ok: true, motionPreset };
   }
   if (action === 'layout') {
@@ -254,13 +281,33 @@ export async function editCaptions(args: Args, ctx: AgentContext): Promise<Resul
   if (action === 'preset_apply') {
     const preset = await findPreset(args, json);
     if (!preset) return { error: 'preset_apply needs presetId or presetName of a saved preset (see preset_list)' };
+    // Saved looks carry the preset id, not the beat grid: `latido` re-reads the
+    // current song, and falls back to a static look when there is no analysis.
+    let motionPatch: Partial<CaptionsData> = {};
+    let motionNote: string | undefined;
+    if (preset.motionPreset === 'latido') {
+      const resolved = await resolveLatidoBeats({
+        items: s.items, assets: s.assets ?? [], fps: s.fps, sourceItemId: c.sourceItemId,
+      });
+      if ('error' in resolved) {
+        motionPatch = { motionPreset: 'none', motionBeatsMs: undefined };
+        motionNote = resolved.error;
+      } else {
+        motionPatch = { motionPreset: 'latido', motionBeatsMs: [...resolved.beatsMs] };
+      }
+    } else if (preset.motionPreset) {
+      motionPatch = { motionPreset: preset.motionPreset, motionBeatsMs: undefined };
+    }
     ctx.commands.updateCaptions({
       template: preset.template ?? c.template,
       styleOverride: preset.styleOverride ?? {},
       ...(preset.pacing ? { pacing: preset.pacing } : {}),
-      ...(preset.motionPreset ? { motionPreset: preset.motionPreset } : {}),
+      ...motionPatch,
     });
-    return { ok: true, applied: preset.name, presetId: preset.id, template: preset.template };
+    return {
+      ok: true, applied: preset.name, presetId: preset.id, template: preset.template,
+      ...(motionNote ? { motionNote } : {}),
+    };
   }
   if (action === 'preset_rename') {
     const preset = await findPreset(args, json);

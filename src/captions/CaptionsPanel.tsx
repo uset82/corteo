@@ -1,6 +1,6 @@
 import { useEffect, useState, type RefObject } from 'react';
 import type { PlayerRef } from '@remotion/player';
-import type { TimelineItem, TrackId } from '../editor/types';
+import type { MediaAsset, TimelineItem, TrackId } from '../editor/types';
 import { useT } from '../i18n/locale';
 import { trackTitle, type TranscriptTrackOption } from '../transcript/trackOptions';
 import { msToFrame } from '../transcript/types';
@@ -13,13 +13,15 @@ interface Props {
   playerRef: RefObject<PlayerRef | null>;
   fps: number;
   items: TimelineItem[];
+  /** media-pool assets, for `latido`'s song analysis lookup */
+  assets?: MediaAsset[];
   captionTracks: Array<TranscriptTrackOption & { captions: CaptionsData | null }>;
   onSetCaptions: (captions: CaptionsData | null, track?: TrackId) => void;
   onUpdateCaptions: (patch: Partial<CaptionsData>, track?: TrackId) => void;
 }
 
 export function CaptionsPanel(props: Props) {
-  const { playerRef, fps, items, captionTracks, onSetCaptions, onUpdateCaptions } = props;
+  const { playerRef, fps, items, assets = [], captionTracks, onSetCaptions, onUpdateCaptions } = props;
   const [captionTrack, setCaptionTrack] = useState<TrackId | null>(captionTracks[0]?.id ?? null);
   const captions = captionTracks.find((option) => option.id === captionTrack)?.captions ?? null;
   useEffect(() => {
@@ -33,7 +35,7 @@ export function CaptionsPanel(props: Props) {
       <div className="cc-captions-context">
         <CaptionTrackBar options={captionTracks} track={captionTrack} onChange={setCaptionTrack} />
       </div>
-      <CaptionsControls captionTrackId={captionTrack ?? undefined} captions={captions} sourceVariants={(captions?.sourceItemId ? items.find((item) => item.id === captions.sourceItemId)?.variants : undefined) ?? []} items={items} fps={fps} onSeekMs={(ms) => playerRef.current?.seekTo(msToFrame(ms, fps))} onCreateManual={() => set(newManualCaptions())} getPlayheadMs={() => ((playerRef.current?.getCurrentFrame() ?? 0) / fps) * 1000} onUpdate={update} onRemove={() => set(null)} onTranslate={translation.run} translating={translation.running} translateError={translation.error} />
+      <CaptionsControls captionTrackId={captionTrack ?? undefined} captions={captions} assets={assets} sourceVariants={(captions?.sourceItemId ? items.find((item) => item.id === captions.sourceItemId)?.variants : undefined) ?? []} items={items} fps={fps} onSeekMs={(ms) => playerRef.current?.seekTo(msToFrame(ms, fps))} onCreateManual={() => set(newManualCaptions())} getPlayheadMs={() => ((playerRef.current?.getCurrentFrame() ?? 0) / fps) * 1000} onUpdate={update} onRemove={() => set(null)} onTranslate={translation.run} translating={translation.running} translateError={translation.error} />
     </div>
   );
 }
