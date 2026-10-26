@@ -1,17 +1,16 @@
 <p align="center">
-  <img src="public/openchatcut-icon.png" width="96" alt="Claudia" />
+  <img src="public/corteo-mark.svg" width="96" alt="corteo" />
 </p>
 
-<h1 align="center">Claudia</h1>
+<h1 align="center">corteo</h1>
 
 <p align="center">
-  <strong>The local-first video editor that Claudia, the Grok bot, uses to make real videos and animations.</strong>
+  <strong>The local-first video editor a bot drives over MCP to make real videos and animations.</strong>
 </p>
 
 <p align="center">
   <a href="README.es.md">Español</a> ·
   <a href="https://github.com/uset82/corteo">Repository</a> ·
-  <a href="https://claudia.gallery">claudia.gallery</a> ·
   <a href="https://github.com/0xsline/OpenChatCut">Upstream OpenChatCut</a>
 </p>
 
@@ -23,60 +22,63 @@
 </p>
 
 <p align="center">
-  <img src="assets/readme-pic/01-editor-overview.png" alt="Claudia editor: agent workspace, media pool, preview and multitrack timeline" />
+  <img src="assets/readme-pic/01-editor-overview.png" alt="corteo editor: agent workspace, media pool, preview and multitrack timeline" />
 </p>
 
 ---
 
-## What Claudia is
+## What corteo is
 
-Claudia is an open AI pop star from [claudia.gallery](https://claudia.gallery)
-who runs with Grok bot. This is her video editor — also called Claudia — and
-the source repository is still named [`corteo`](https://github.com/uset82/corteo).
+corteo is a local-first, agent-native video editor. A bot drives it over MCP —
+a Grok Bot, Claude Code, Codex — and the editor is its hands.
 
-She decides what the clip should be: which image belongs to each verse,
-where the chorus lands, how every shot moves. The editor is her hands. It
-imports media, cuts and animates on a real multitrack timeline, writes captions,
-applies effects and exports the result — and every change stays editable by
-hand.
+The bot decides what the clip should be: which image belongs to each verse,
+where the chorus lands, how every shot moves. corteo imports media, cuts and
+animates on a real multitrack timeline, writes captions, applies effects and
+exports the result — and every change stays editable by hand.
 
-Claudia is a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut),
+corteo is a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut),
 an open-source, agent-native video editor. It is not a video generator that
 hands you a finished file you can no longer change. Every edit is written to
 tracks, clips, transitions, keyframes and captions inside a project you can
 reopen, undo, version and keep working on.
 
-## One-click install for Claudia's VM
+## One-click install for a bot's VM
 
-If Claudia runs as an agent in a Linux VM, give her this prompt:
+If the bot runs as an agent in a Linux VM, give it this prompt:
 
 ```text
-Claudia, install your video editor in this VM:
+Install the corteo video editor in this VM:
 
     curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/install.sh | bash
 
-Then connect over MCP using the CLAUDIA_MCP_URL and CLAUDIA_MCP_TOKEN it prints.
-The full procedure is in documentation/CLAUDIA_INSTALL.md inside the installed app.
+Then connect over MCP using the CORTEO_MCP_URL and CORTEO_MCP_TOKEN it prints.
+The full procedure is in documentation/CORTEO_INSTALL.md inside the installed app.
 ```
 
 The script is non-interactive and safe to re-run. It:
 
 1. checks the machine and installs Node.js 24 privately if the system Node is not 24;
-2. clones or updates the app in `~/claudia/app`;
+2. clones or updates the app in `~/corteo/app`;
 3. installs dependencies without the CUDA and Electron binaries a headless VM does not need;
 4. builds the `occ` command line;
 5. starts the editor as a `systemd --user` service, or with `nohup` when systemd is unavailable;
 6. waits until `http://127.0.0.1:5199` and the MCP endpoint answer, then prints the connection values.
 
+An install from before the rename (`~/claudia` with `claudia.service`) is stopped
+and moved to `~/corteo` by the installer, so there is one install on one port.
+`~/claudia` is never deleted; when both roots exist, only the old service is
+stopped.
+
 Pass options after `--`, for example:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/install.sh | bash -s -- --dir ~/claudia --port 5199
+curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/install.sh | bash -s -- --dir ~/corteo --port 5199
 ```
 
 | Flag | Meaning |
 |---|---|
-| `--dir <path>` | Install root (default `~/claudia`) |
+| `--dir <path>` | Install root (default `~/corteo`) |
 | `--host <addr>` | Bind address (default `127.0.0.1`) |
 | `--port <port>` | Editor port (default `5199`) |
 | `--ref <branch\|tag>` | Git ref to install (default `main`) |
@@ -91,18 +93,18 @@ curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/install.sh | bas
 The final output is written to be read by an agent:
 
 ```text
-CLAUDIA_STATUS=ok
-CLAUDIA_URL=http://127.0.0.1:5199
-CLAUDIA_MCP_URL=http://127.0.0.1:5199/api/external-mcp/mcp
-CLAUDIA_MCP_TOKEN=<token>
-CLAUDIA_OCC=/home/you/claudia/bin/occ
-CLAUDIA_DATA_DIR=/home/you/.openchatcut/dev-profiles/<id>
-CLAUDIA_GUIDE=/home/you/claudia/app/documentation/CLAUDIA_INSTALL.md
-CLAUDIA_LOG=/home/you/claudia/logs/claudia.log
-CLAUDIA_MANAGER=systemd
+CORTEO_STATUS=ok
+CORTEO_URL=http://127.0.0.1:5199
+CORTEO_MCP_URL=http://127.0.0.1:5199/api/external-mcp/mcp
+CORTEO_MCP_TOKEN=<token>
+CORTEO_OCC=/home/you/corteo/bin/occ
+CORTEO_DATA_DIR=/home/you/.openchatcut/dev-profiles/<id>
+CORTEO_GUIDE=/home/you/corteo/app/documentation/CORTEO_INSTALL.md
+CORTEO_LOG=/home/you/corteo/logs/corteo.log
+CORTEO_MANAGER=systemd
 ```
 
-Both Claudia and the editor run on the same machine, so MCP over `localhost`
+The bot and the editor run on the same machine, so MCP over `localhost`
 needs no tunnel. If you want to open the editor from your own computer, forward
 the port (`ssh -L 5199:127.0.0.1:5199 you@vm`) and open
 `http://localhost:5199`; browsers only enable the video APIs the editor needs in
@@ -110,7 +112,7 @@ a secure context, which means `localhost` or HTTPS — not a plain-HTTP LAN IP.
 
 ## Status
 
-Claudia tracks OpenChatCut's work in progress. The task list in
+corteo tracks OpenChatCut's work in progress. The task list in
 [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md) is the source of truth; if
 this README and `PROGRESS.md` disagree, `PROGRESS.md` wins.
 
@@ -129,7 +131,7 @@ this README and `PROGRESS.md` disagree, `PROGRESS.md` wins.
 
 - The interface opens in Spanish, but only part of it is translated: untranslated strings show in English. English is complete and Chinese is the source language; Italian and Russian are also partial.
 - Generation tools — images, voice, video, music — need their own paid API keys and stay off until configured.
-- Any Claudia bot installs corteo on its own Linux VM with `curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/scripts/claudia-install.sh | bash`, then `npm run claudia:local` and `npm run corteo -- ...`. The skill is [`skills/corteo/SKILL.md`](skills/corteo/SKILL.md). The Cloudflare tunnel is optional.
+- Any bot installs corteo on its own Linux VM with `curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/scripts/corteo-install.sh | bash`, then `npm run corteo:local` and `npm run corteo -- ...`. The skill is [`skills/corteo/SKILL.md`](skills/corteo/SKILL.md). The Cloudflare tunnel is optional.
 - Ken Burns, duplicate detection and countdown live on a separate development branch and are not in `main` yet.
 
 ## Requirements
@@ -188,20 +190,20 @@ server with Ctrl+C.
 Optional shell shortcut:
 
 ```bash
-echo 'alias claudia="cd ~/corteo && NODE_OPTIONS=--max-old-space-size=6144 npm run dev"' >> ~/.bashrc
+echo 'alias corteo="cd ~/corteo && NODE_OPTIONS=--max-old-space-size=6144 npm run dev"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-## Connect Claudia over MCP
+## Connect a bot over MCP
 
-Claudia exposes a Streamable HTTP MCP endpoint:
+corteo exposes a Streamable HTTP MCP endpoint:
 
 ```text
 http://127.0.0.1:5199/api/external-mcp/mcp
 ```
 
 Every request needs a Bearer token. The installer generates one and stores it
-in `~/claudia/secrets.env`; a manual install finds the automatically minted
+in `~/corteo/secrets.env`; a manual install finds the automatically minted
 token in the profile directory:
 
 ```text
@@ -214,7 +216,7 @@ A ready-to-paste client entry looks like this:
 ```json
 {
   "mcpServers": {
-    "claudia": {
+    "corteo": {
       "type": "http",
       "url": "http://127.0.0.1:5199/api/external-mcp/mcp",
       "headers": { "Authorization": "Bearer <token>" }
@@ -250,7 +252,7 @@ Without a project reference, `occ` uses the first project in the library; pass
 Timeline-changing calls (`occ edit`, `occ item`, `occ tools call`) write only
 with `--apply`. A write is committed atomically, checks the project revision
 and snapshots a pre-edit version, so it can be undone from the app's version
-history. The installer creates a wrapper at `~/claudia/bin/occ` that points
+history. The installer creates a wrapper at `~/corteo/bin/occ` that points
 `occ` at the same profile as the running app.
 From a checkout, either set `OPENCHATCUT_DEV_PROFILE_ID` to the id printed at
 startup or pass `--data-dir ~/.openchatcut/dev-profiles/<id>`.
@@ -296,14 +298,13 @@ generation API. Unconfigured services stay off and do not affect local editing.
 
 ## Credits and license
 
-- Claudia is a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut), created by OpenChatCut Contributors. OpenChatCut builds on [Remotion](https://www.remotion.dev/), the [Model Context Protocol](https://modelcontextprotocol.io/), the [Vercel AI SDK](https://ai-sdk.dev/) and the skills of [ChatCut-Inc/agent-plugin](https://github.com/ChatCut-Inc/agent-plugin); see [`src/agent/skills/NOTICE.md`](src/agent/skills/NOTICE.md).
-- Claudia is an open character from [claudia.gallery](https://claudia.gallery).
+- corteo is a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut), created by OpenChatCut Contributors. OpenChatCut builds on [Remotion](https://www.remotion.dev/), the [Model Context Protocol](https://modelcontextprotocol.io/), the [Vercel AI SDK](https://ai-sdk.dev/) and the skills of [ChatCut-Inc/agent-plugin](https://github.com/ChatCut-Inc/agent-plugin); see [`src/agent/skills/NOTICE.md`](src/agent/skills/NOTICE.md).
 - [`README_ZH.md`](README_ZH.md) is OpenChatCut's original Chinese README.
 
 OpenChatCut is released under the [GNU Affero General Public License v3.0 or
 later](LICENSE), and this fork is too. In short:
 
-- You may use, study, change and share Claudia.
+- You may use, study, change and share corteo.
 - If you share it, with or without changes, or let other people use a modified
   version over a network, you must offer them the source under the same license.
 - It comes with no warranty.

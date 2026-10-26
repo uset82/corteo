@@ -1,17 +1,17 @@
-# AGENTS.md: Claudia (repository corteo)
+# AGENTS.md: corteo
 
 Instructions for any coding agent working in this repo (Cursor, Qoder, WorkBuddy, DeepSeek, Claude, Codex, Grok). Read all of it before the first change.
 
 ## What this is
-This repository, corteo, holds Claudia: a Spanish music-video editor built on a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut) (AGPL v3), a local video editor in the browser (React 19 + TypeScript + Remotion 4), served by a Vite dev server whose plugins are the backend. The editor is named after Claudia, the user's Grok bot and the AI pop star of claudia.gallery, who drives it over MCP. In the plans, "Claudia" on its own means her; the product is "the editor". The user is a Spanish-speaking musician.
+This repository holds corteo: a Spanish music-video editor built on a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut) (AGPL v3), a local video editor in the browser (React 19 + TypeScript + Remotion 4), served by a Vite dev server whose plugins are the backend. A bot drives it over MCP — a Grok Bot, Claude Code, Codex — and the built-in assistant is the editor's own, not one of them. The user is a Spanish-speaking musician.
 
-## Where Claudia runs
+## Where corteo runs
 
-Claudia has her own Linux VM, separate from Carlos's PC. She clones this repo there and runs corteo on that machine. She does not need Carlos's PC to be on, a Cloudflare tunnel, or https://corteo.uset82.workers.dev/. Those publish the same editor for a browser and stay optional.
+corteo runs on its own Linux VM, separate from Carlos's PC. The bot clones this repo there and runs the editor on that machine. It does not need Carlos's PC to be on, a Cloudflare tunnel, or https://corteo.uset82.workers.dev/. Those publish the same editor for a browser and stay optional.
 
-Any Claudia bot (the template is https://github.com/anabologyco-maker/claudia-bot) can install corteo on its own Linux VM with `scripts/claudia-install.sh`. The agent skill is `skills/corteo/SKILL.md`. Shells on that VM may export `NPM_CONFIG_PREFIX` and leave Node 20 as `node`. The installer and `scripts/corteo-env.sh` unset the prefix and select Node 24 from `.nvmrc`. The bot runs `~/corteo/scripts/corteo`, not a bare `npm run corteo`, so a fresh shell does not need setup. On her VM:
+Any bot (the template is https://github.com/anabologyco-maker/claudia-bot) can install corteo on its own Linux VM with `scripts/corteo-install.sh`. The agent skill is `skills/corteo/SKILL.md`. Shells on that VM may export `NPM_CONFIG_PREFIX` and leave Node 20 as `node`. The installer and `scripts/corteo-env.sh` unset the prefix and select Node 24 from `.nvmrc`. The bot runs `~/corteo/scripts/corteo`, not a bare `npm run corteo`, so a fresh shell does not need setup. On that VM:
 
-- `npm run claudia:local` starts the editor and the MCP server on `http://127.0.0.1:5199` with paid providers off (`OPENCHATCUT_PROVIDERS=off` unless the environment already set it). The MCP path is `http://127.0.0.1:5199/api/external-mcp/mcp`. The token is `OPENCHATCUT_MCP_TOKEN` or the `mcp-token` file in the dev profile. Do not print the token into a chat.
+- `npm run corteo:local` starts the editor and the MCP server on `http://127.0.0.1:5199` with paid providers off (`OPENCHATCUT_PROVIDERS=off` unless the environment already set it). The MCP path is `http://127.0.0.1:5199/api/external-mcp/mcp`. The token is `OPENCHATCUT_MCP_TOKEN` or the `mcp-token` file in the dev profile. Do not print the token into a chat.
 - `npm run corteo -- ...` is the shell (`occ`). It talks to the project library directly, with no browser:
   - `project new "Nombre" --json` and `project list --json`
   - `media import /absolute/path.mp4 --apply --json`
@@ -19,14 +19,14 @@ Any Claudia bot (the template is https://github.com/anabologyco-maker/claudia-bo
   - `project show <project> --doc --out project.json` writes the project document as JSON. The live library is still the profile store; editing that JSON file does not change the project. Use the shell for edits.
   - `render --out /absolute/path.mp4` renders with Remotion through headless Chrome. No GPU: `CC_RENDER_GL=swangle`.
 
-`npm run start:claudia`, `npm run tunnel`, `npm run editor-host` and `npx wrangler deploy` are the optional browser path for Carlos.
+`npm run start:corteo`, `npm run tunnel`, `npm run editor-host` and `npx wrangler deploy` are the optional browser path for Carlos.
 
 ## Where the plan is
-- `docs/plans/01-editor-claudia.md`: Plan 1 (editor features, Claudia's connection, Spanish UI, end-to-end proof).
+- `docs/plans/01-editor-claudia.md`: Plan 1 (editor features, the bot's connection, Spanish UI, end-to-end proof).
 - `docs/plans/02-claudia-escucha.md`: Plan 2 (listening to the song, motion that follows the music).
 - `docs/plans/03-deepseek-harness.md`: Plan 3 (free models for the built-in chat through DeepSeek Harness, in two parallel tracks; its task cards are in that file).
-- `docs/plans/04-claudia-brand.md`: Plan 4 (the Claudia name and look, in two parallel tracks; its task cards are in that file).
-- `docs/plans/05-claudia-portable.md`: the portable install (P-CL-1 to P-CL-12). A fresh Claudia box runs the curl line and follows only `skills/corteo/SKILL.md`.
+- `docs/plans/04-claudia-brand.md`: Plan 4 (the name and the look, in two parallel tracks; its task cards are in that file).
+- `docs/plans/05-claudia-portable.md`: the portable install (P-CL-1 to P-CL-12). A fresh box runs the curl line and follows only `skills/corteo/SKILL.md`.
 - `docs/plans/05-opus-parity.md`: the first Opus-parity writeup. Plan 6 (`06-opus-parity.md`) is the executed copy; `05-corteo.md` is named there but is not in this tree.
 - `docs/plans/06-opus-parity.md`: Plan 6 (Opus parity: the scoring rubric, the one-call shorts pipeline, packaging, scheduled publishing, keyword emphasis; executed 2026-10-25, only OP-14 optional remains). Its task cards are in that file.
 - `docs/plans/PROGRESS.md`: task status, how to pick the next task, task cards, decisions, blockers.
@@ -35,14 +35,14 @@ These files are the only plan. Any other plan, status report or TODO list you fi
 
 ### Names
 
-The product is **Claudia**; the repository and the command are **corteo**.
+The product, the repository, the folders and the command are all **corteo**.
 
-- Claudia is what a person reads: the UI, the tab title, the assistant's self-introduction, the MCP instructions the models read, exported file names and the README prose.
+- corteo is what a person reads: the UI, the tab title, the assistant's self-introduction, the MCP instructions the models read, exported file names and the README prose.
 - corteo is the repository, the `~/corteo*` folders and the `corteo` alias. Renaming the GitHub repository is Carlos's call; GitHub redirects the old URL.
 - OpenChatCut stays where it is a credit or an identifier something depends on: the README credits, `LICENSE`, the `package.json` author, the `openchatcut_*` MCP tools, the `openchatcut` server key, `occ`, the `OPENCHATCUT_*` variables, `~/.openchatcut`, `.ccproj` and its MIME type, the `X-OpenChatCut-*` headers, the `com.openchatcut.*` FCPXML keys, `window.openChatCutDesktop`, the npm package name, `skills/openchatcut/`, the desktop app and its icon, and the five desktop-updater messages that name upstream's release.
 
 ## Rules
-1. No paid APIs inside the editor. The built-in chat may use free models only through the local DeepSeek Harness gateway (Plan 3) or a local Ollama/LM Studio. Claudia (Grok) generates media; the editor imports, edits, analyzes locally and renders. The only paid exception is the opt-in listening relay (task L-07).
+1. No paid APIs inside the editor. The built-in chat may use free models only through the local DeepSeek Harness gateway (Plan 3) or a local Ollama/LM Studio. The bot generates media; the editor imports, edits, analyzes locally and renders. The only paid exception is the opt-in listening relay (task L-07).
 2. Build on what exists. No Python, WhisperX, demucs, torch, Docker, Zustand, i18next, Redux, new UI framework or new component library. Before writing something new, search for the existing system with `rg`.
 3. Every feature ships as UI + MCP tool + a `*.verify.ts` test, unless its task card says otherwise.
 4. The UI is in Spanish, through the existing i18n (see "UI text"). Code, comments and commit messages are in English.
@@ -51,7 +51,7 @@ The product is **Claudia**; the repository and the command are **corteo**.
 7. Every new `*.verify.*` file must be added to the `test:serial` chain in `package.json`. Two test gates enforce it.
 8. New files in `scripts/` are ignored by the `/scripts/*` rule in `.gitignore`. Add a `!/scripts/<file>` line for each one (files ending in `.verify.mjs` are already allowed), or they silently never get committed.
 9. Never edit `assets/agent/openchatcut-tool-schemas.json` by hand: run `npm run generate:server-tool-catalog`.
-10. Never commit secrets (`.env.claudia`, tokens, API keys), media files, or `test-results/`.
+10. Never commit secrets (`.env.corteo`, tokens, API keys), media files, or `test-results/`.
 11. Keep upstream tests passing. Don't weaken or delete a test to make it pass: fix the code or record a blocker.
 12. Don't stop to ask the user questions mid-task. If the plan leaves a choice open, pick what fits the plan best, note it under "Decisions made" in `PROGRESS.md`, and continue.
 
@@ -65,7 +65,7 @@ The product is **Claudia**; the repository and the command are **corteo**.
 - Every command (git, npm, node, npx, dsh) runs inside WSL, in the Linux checkout. An IDE that runs on Windows wraps each one: `wsl.exe -e bash -lc 'source ~/.nvm/nvm.sh && cd ~/corteo && <command>'` (Ubuntu's `.bashrc` stops early in non-interactive shells, before the nvm lines). Never run git or npm from Windows on a `\\wsl$\…` path: Windows git drops the executable bit of `cli/occ.mjs` and `dev-with-mcp.sh` (fix with `chmod +x cli/occ.mjs dev-with-mcp.sh` inside WSL), and a worktree created that way records a Windows path Linux git can't read (remove it and create it again from WSL).
 - `npm install` once.
 - `npm run dev` serves the editor and the API on http://localhost:5199 (fixed port). It runs in an isolated dev profile under `~/.openchatcut/dev-profiles/<id>/`; the startup line `[OpenChatCut] isolated profile <id>` names it. A second checkout (a git worktree) gets its own profile, with its own data, settings and MCP token, and serves on another port: `npm run dev -- --port <N>`.
-- `npm run dev` and `npm run start:claudia` start Vite with `--max-old-space-size` from `OPENCHATCUT_DEV_HEAP_MB` (default 6144). `start:claudia` also loads `.env.claudia`.
+- `npm run dev` and `npm run start:corteo` start Vite with `--max-old-space-size` from `OPENCHATCUT_DEV_HEAP_MB` (default 6144). `start:corteo` also loads `.env.corteo`.
 - `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` hides the long, harmless list of "import without file extension" warnings at startup.
 - Run long-lived processes (dev server, editor host) in their own terminal or tmux session, never in the shell you work in.
 - A session that has to run on Windows over the `\\wsl.localhost` share cannot write to an existing file: `cp`, `dd`, `mv` onto it and a shell `>` all fail with `Permission denied`, with or without the sandbox, and the editor's own edit tool fails on its backup step. New files, `>>` and renames inside a directory do work, so the way through is `mv <file> node_modules/<folder>/` for the old copy and then write the new one. Inside WSL there is no such limit; `git add` and `git commit` work either way.
@@ -87,7 +87,7 @@ The product is **Claudia**; the repository and the command are **corteo**.
 | `npm run occ -- tools call <tool> --args '<json>'` | call an editor tool against the local project library with no browser (`npm run occ -- --help`) |
 
 `verify:affected` picks the `*.verify.*` files next to each changed source file, or in the nearest folder that has some. It ignores docs (`docs/`, `README*`, `AGENTS.md`). Always call it through `npm run`: plain `node` can't find `tsx`. It exits with code 2 and asks for the full gate when the change includes files it can't map:
-- non-code files you edited on purpose (`.gitignore`, `.env.claudia.example`): run it again with the explicit list of changed code files;
+- non-code files you edited on purpose (`.gitignore`, `.env.corteo.example`): run it again with the explicit list of changed code files;
 - `package.json`, `config/`, `shared/`, `assets/` or `public/`: run `npm test` before marking the task done.
 
 ## The work loop
@@ -114,12 +114,12 @@ Upstream keys every UI string by its Chinese original, with one dictionary per l
 - Placeholders such as `{n}` must appear unchanged in every language.
 - Use the Spanish terms of Premiere Pro's Spanish UI: Línea de tiempo, Secuencia, Fotograma clave, Cuchilla, Controles de efectos.
 - Undo labels (`ctx.commands.batch(actions, label)`) are stored and shown as written: write new ones in Spanish.
-- Text for the model (tool descriptions, skills, MCP prompts) does not go through i18n. Write tool descriptions in English like the existing ones; phrases Claudia should say to the user can be quoted in Spanish.
+- Text for the model (tool descriptions, skills, MCP prompts) does not go through i18n. Write tool descriptions in English like the existing ones; phrases the assistant should say to the user can be quoted in Spanish.
 
 ## Adding an MCP tool
 1. Schema: add it to the matching group in `src/agent/tools/schemas/` (for example `music-intelligence-tools.ts`), with an English description that says when to use it and a tight `input_schema` with limits.
 2. Executor: implement it in `src/agent/tools/` and wire both into `TOOL_SCHEMAS` and `EXECUTOR_GROUPS` in `src/agent/tools.ts`.
-3. Policy: classify it in `src/agent/external-tool-policy.ts` (read-only, draft edit, or real effect). If it must work with no editor tab open (Claudia's headless calls such as `listen_to_song` or `apply_music_reaction`), make it server-direct there and add it to `server/external-agent/offline-tools.ts` and `server/external-agent/offline-executor.ts`.
+3. Policy: classify it in `src/agent/external-tool-policy.ts` (read-only, draft edit, or real effect). If it must work with no editor tab open (the bot's headless calls such as `listen_to_song` or `apply_music_reaction`), make it server-direct there and add it to `server/external-agent/offline-tools.ts` and `server/external-agent/offline-executor.ts`.
 4. Edits go through `ctx.commands.batch(actions, label)`, so one tool call is one undo step. Skip locked tracks.
 5. Optional: `PARALLEL_TOOL_NAMES` in `src/agent/tools/execution-modes.ts` for safe read-only tools; routing keywords in `src/agent/tool-routing.ts`.
 6. Images for the model go back as `__images: [{ base64, mimeType }]` (see `src/agent/tools/frames-tool.ts`). Text results stay under 16,000 characters.
@@ -129,7 +129,7 @@ Upstream keys every UI string by its Chinese original, with one dictionary per l
 10. Call it over MCP with the smoke test.
 
 ## MCP smoke test
-Talk to the editor the way Claudia does. The token is `OPENCHATCUT_MCP_TOKEN` from `.env.claudia` (after P0-3), otherwise the file `mcp-token` in the dev profile folder, created by the first MCP request.
+Talk to the editor the way the bot does. The token is `OPENCHATCUT_MCP_TOKEN` from `.env.corteo` (after P0-3), otherwise the file `mcp-token` in the dev profile folder, created by the first MCP request.
 
 ```bash
 TOKEN=$(cat ~/.openchatcut/dev-profiles/<profile-id>/mcp-token)

@@ -25,7 +25,7 @@ Do not call `npm run corteo` from a Node 20 shell. That crashes with `ERR_UNKNOW
 On a fresh Debian or Ubuntu box, once. It installs Node 24 if needed, clones the repo to `~/corteo`, and renders a 2 second test MP4. Safe to run again. ffmpeg must already be installed (`apt-get install -y ffmpeg`).
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/scripts/claudia-install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/scripts/corteo-install.sh | bash
 ```
 
 PASS looks like `CORTEO_SELF_TEST=PASS`. FAIL looks like `CORTEO_SELF_TEST=FAIL` plus a line `self-test step failed: <step>`. The free-model chat harness is optional and is not part of this install.
@@ -36,7 +36,7 @@ Leave this running when you also want the editor page or MCP. The shell below do
 
 ```bash
 cd ~/corteo
-npm run claudia:local
+npm run corteo:local
 ```
 
 It listens only on `http://127.0.0.1:5199`. MCP is `http://127.0.0.1:5199/api/external-mcp/mcp`. Paid providers stay off. Stop it with Ctrl+C.
@@ -275,7 +275,7 @@ CC_RENDER_GL=swangle "$CORTEO" render --out "$WORK/titulo.mp4" --to 2s --resolut
 - Render fails with WebGL or a blank file. `CC_RENDER_GL=swangle`. This machine has no GPU.
 - Render fails with a missing `.so`. `cd ~/corteo && npx playwright install-deps chromium`. Do not put `sudo` in front of `npx`.
 - The first render starts downloading a headless Chrome. The installer should have pointed Remotion at system Chrome (`CC_BROWSER_EXECUTABLE`) or downloaded the shell already. Run the installer again. Do not wait for a surprise download in the middle of a video.
-- Port 5199 is in use. Another `npm run claudia:local` is still running. Stop that process and start again. The shell works without that server.
+- Port 5199 is in use. Another `npm run corteo:local` is still running. Stop that process and start again. The shell works without that server.
 - Render is killed or the machine swaps hard. `OPENCHATCUT_RENDER_CONCURRENCY=1` and a shorter `--to`.
 - `media import` rejects a relative path. Use an absolute path.
 - A command prints a draft and says nothing was committed. Add `--apply`.

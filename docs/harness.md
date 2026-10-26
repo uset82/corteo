@@ -1,6 +1,6 @@
-# DeepSeek Harness: modelos gratis para Claudia
+# DeepSeek Harness: modelos gratis para corteo
 
-Guía de la parte de la máquina: instalar y arrancar el harness, conectar Claudia
+Guía de la parte de la máquina: instalar y arrancar el harness, conectar corteo
 (corteo) a su puerto de modelos y usar el chat propio del harness para editar la
 línea de tiempo por MCP. Todo queda en loopback; no hay cuentas ni claves de pago.
 
@@ -10,7 +10,7 @@ línea de tiempo por MCP. Todo queda en loopback; no hay cuentas ni claves de pa
 |-------|-------|----------|
 | `dsh` (DeepSeek Harness) | `http://127.0.0.1:3080` | Chat propio del harness y cliente MCP hacia corteo |
 | plugin Our Free Model | `http://127.0.0.1:18899–18909/v1` | Puerta OpenAI-compatible con las lanes gratis, protegida por clave |
-| Claudia (corteo) | `http://localhost:5199` (o el puerto de tu `npm run dev`) | Consume esa puerta como proveedor `openai-compatible` |
+| corteo | `http://localhost:5199` (o el puerto de tu `npm run dev`) | Consume esa puerta como proveedor `openai-compatible` |
 | parche MCP | `config/harness/corteo-mcp.cordis.yml` | Mete las herramientas de corteo en el chat del harness |
 
 El home del harness es `~/.corteo-harness` (se puede cambiar con `--home` o
@@ -78,7 +78,7 @@ Comprueba cinco cosas y se detiene en la primera que falla, diciendo el arreglo:
    clave y 200 con ella (esto también prueba que el plugin cargó).
 5. Cuenta los modelos del reenvío.
 
-Al final imprime lo que se pega en Claudia:
+Al final imprime lo que se pega en corteo:
 
 ```
 URL base: http://127.0.0.1:18899/v1
@@ -88,7 +88,7 @@ Clave:    …9f3c
 La clave sale enmascarada; con `--show-key` se ve entera. Acepta `--home`,
 `--web-port` y `--forward-port` para apuntar a otra instancia.
 
-## Conectar Claudia (corteo)
+## Conectar corteo
 
 En Ajustes › modelos del agente › DeepSeek Harness (esa pantalla la añade la
 parte de Qoder, HQ-1; llega a `main` en la integración H-9):
@@ -98,7 +98,7 @@ parte de Qoder, HQ-1; llega a `main` en la integración H-9):
 - **Clave**: la del doctor.
 - Usa el botón de probar/leer modelos: debe listar unos 34.
 
-El menú de modelos de Claudia muestra luego esas mismas lanes.
+El menú de modelos de corteo muestra luego esas mismas lanes.
 
 ## Elegir modelo
 

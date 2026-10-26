@@ -27,14 +27,14 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 |----|------|--------|-------|
 | P0-1 | Remove first-attempt leftovers and orphan components | done | |
 | P0-2 | Raise the dev server heap | done | |
-| P0-3 | `npm run start:claudia` and `.env.claudia.example` | done | P0-2 |
+| P0-3 | `npm run start:corteo` and `.env.corteo.example` | done | P0-2 |
 | P0-4 | Spanish README | done | P0-3 |
 | H-9 | Merge the harness tracks (Cursor agent only) | done | HQ-1 to HQ-5 and HW-1 to HW-5 `done` or `blocked` on their own branches |
 | B-9 | Merge the brand tracks (Cursor agent only) | done | BD-1 to BD-4 and BQ-1 to BQ-4 |
 | P1-1 | Providers off: server block | done | P0-3, H-9 |
 | P1-2 | Providers off: hide UI, filter MCP tools | done | P1-1 |
 | P1-3 | Allowed hosts from env | done | P0-3 |
-| P1-4 | "Conectar Claudia" card | done | P1-3 |
+| P1-4 | "Conectar corteo" card | done | P1-3 |
 | P1-5 | `npm run editor-host` (headless editor tab) | done | P0-3 |
 | P-CL-1 | Installer unsets NPM_CONFIG_PREFIX before nvm | done | |
 | P-CL-2 | corteo-env.sh and a wrapper that selects Node 24 | done | P-CL-1 |
@@ -47,7 +47,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P-CL-9 | Spanish defaults in CLI JSON | done | |
 | P-CL-10 | Vite warmup path | done | |
 | P-CL-11 | SKILL.md recipes, copy-paste tested | done | P-CL-2, P-CL-5, P-CL-6, P-CL-7, P-CL-8 |
-| P-CL-12 | claudia-acceptance.sh on Node 20 with the prefix set | done | P-CL-1 to P-CL-11 |
+| P-CL-12 | corteo-acceptance.sh on Node 20 with the prefix set | done | P-CL-1 to P-CL-11 |
 | P1-6 | `videoclip-musical` skill | todo | P1-2 |
 | P1-7 | Webhooks with HMAC | optional | P4-3 |
 | L-01 | Server-side Beat This + CLAP runner | done | |
@@ -79,7 +79,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P5-1 | Full Spanish dictionary | todo | |
 | P5-2 | i18n coverage + placeholder gate | todo | P5-1 |
 | P5-3 | Untranslated-text scan | todo | P5-2 |
-| P6-1 | Claudia end-to-end proof + screenshots | todo | every task above is `done` or `blocked` |
+| P6-1 | Bot end-to-end proof + screenshots | todo | every task above is `done` or `blocked` |
 | P7-1 | EffectCraft titles sidecar | optional | P6-1 |
 
 ## Task cards
@@ -121,25 +121,25 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Done when: after `npm run dev`, `ps -eo args | grep vite.js` shows `--max-old-space-size=6144`; with `OPENCHATCUT_DEV_HEAP_MB=4096` it shows 4096; the verify asserts both.
 - Verify: `npm run verify:runtime-profile`.
 
-### P0-3 · `npm run start:claudia` and `.env.claudia.example` — done
-- Done 2026-10-25: `npm run start:claudia` loads `.env.claudia` when it exists. `.env.claudia.example` is tracked; `.env.claudia` stays gitignored.
+### P0-3 · `npm run start:corteo` and `.env.corteo.example` — done
+- Done 2026-10-25: `npm run start:corteo` loads `.env.corteo` when it exists. `.env.corteo.example` is tracked; `.env.corteo` stays gitignored.
 - Plan: Plan 1 › Phase 0.
-- Files: `package.json` (scripts), new `.env.claudia.example`, `.gitignore`.
+- Files: `package.json` (scripts), new `.env.corteo.example`, `.gitignore`.
 - Do:
-  - Script: `"start:claudia": "node --env-file-if-exists=.env.claudia scripts/dev-profile.mjs"`.
-  - `.env.claudia.example` lists `OPENCHATCUT_MCP_TOKEN=` (43 base64url characters, e.g. `openssl rand -base64 32 | tr '+/' '-_' | tr -d '='`), `OPENCHATCUT_PROVIDERS=off`, `OPENCHATCUT_ALLOWED_HOSTS=`, `PREFERRED_TRANSCRIPTION_PROVIDER=local`, `OPENCHATCUT_DEV_HEAP_MB=6144`, and a commented-out `# CC_RENDER_GL=swangle` for PCs without GPU WebGL (see `AGENTS.md` › Environment), each with a one-line Spanish comment.
-  - `.gitignore` ignores `.env.*`: add `!.env.claudia.example` next to `!.env.example`.
+  - Script: `"start:corteo": "node --env-file-if-exists=.env.corteo scripts/dev-profile.mjs"`.
+  - `.env.corteo.example` lists `OPENCHATCUT_MCP_TOKEN=` (43 base64url characters, e.g. `openssl rand -base64 32 | tr '+/' '-_' | tr -d '='`), `OPENCHATCUT_PROVIDERS=off`, `OPENCHATCUT_ALLOWED_HOSTS=`, `PREFERRED_TRANSCRIPTION_PROVIDER=local`, `OPENCHATCUT_DEV_HEAP_MB=6144`, and a commented-out `# CC_RENDER_GL=swangle` for PCs without GPU WebGL (see `AGENTS.md` › Environment), each with a one-line Spanish comment.
+  - `.gitignore` ignores `.env.*`: add `!.env.corteo.example` next to `!.env.example`.
 - Pitfall: in a dev profile the server's environment is `{...process.env, ...profile settings}` (`profileChildEnvironment` in `scripts/dev-profile.mjs`), and Vite stops reading `.env*` files once the profile has saved settings (`config/vite.config.ts`, around line 90). That is why the variables must arrive through the process environment. `PREFERRED_TRANSCRIPTION_PROVIDER` is a settings key, so a value saved in Settings wins over the env file.
-- Done when: with `.env.claudia` holding token T, the MCP smoke test in `AGENTS.md` works with T and gets 403 with any other token; without `.env.claudia` the script still starts.
+- Done when: with `.env.corteo` holding token T, the MCP smoke test in `AGENTS.md` works with T and gets 403 with any other token; without `.env.corteo` the script still starts.
 - Verify: `npm run verify:runtime-profile`, MCP smoke test.
 
 ### P0-4 · Spanish README — done
-- Done 2026-10-25: the run steps for `start:claudia`, the tunnel and Claudia's MCP URL are in `README.es.md` › "Publicar el editor". `README.md` stays the English overview.
+- Done 2026-10-25: the run steps for `start:corteo`, the tunnel and Claudia's MCP URL are in `README.es.md` › "Publicar el editor". `README.md` stays the English overview.
 - Plan: Plan 1 › Phase 0.
 - State: `README.md` was rewritten in Spanish on 2026-10-24, before P0-3 (what the editor is, status, requirements, install, the `corteo` alias, data and token locations, syncing Cursor's branch to GitHub, credits and AGPL). B-9 then renamed its prose: the product is Claudia, corteo is the repository and the command, and the brand fonts' licences are in the credits. Don't replace it: extend it, with the same naming.
 - Files: `README.md` (leave `README_ZH.md` alone).
-- Do: in Spanish: what the editor is (Claudia, a fork of OpenChatCut for music videos, driven by Claudia over MCP; the repository is corteo), requirements (WSL/Linux, Node 24, ffmpeg comes with npm), `npm install`, `npm run dev`, `npm run start:claudia`, how to connect Claudia (URL, token, `.env.claudia`), where data lives (`~/.openchatcut`), AGPL v3 note with a link to upstream OpenChatCut (https://github.com/0xsline/OpenChatCut).
-- Remaining: once P0-3 and P1-4 are done, add `npm run start:claudia`, `.env.claudia` and the steps to connect Claudia, and update its "Estado" section.
+- Do: in Spanish: what the editor is (Claudia, a fork of OpenChatCut for music videos, driven by Claudia over MCP; the repository is corteo), requirements (WSL/Linux, Node 24, ffmpeg comes with npm), `npm install`, `npm run dev`, `npm run start:corteo`, how to connect Claudia (URL, token, `.env.corteo`), where data lives (`~/.openchatcut`), AGPL v3 note with a link to upstream OpenChatCut (https://github.com/0xsline/OpenChatCut).
+- Remaining: once P0-3 and P1-4 are done, add `npm run start:corteo`, `.env.corteo` and the steps to connect Claudia, and update its "Estado" section.
 - B-9 rewrites the README and AGENTS prose for the new name: the product is Claudia, corteo stays the repository and the command, and the two font licences join the credits. Don't pre-empt it here.
 - Done when: a new user can go from clone to the running editor and a connected Claudia with only the README.
 
@@ -158,7 +158,7 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Plan: Plan 1 › Phase 1, narrowed by Plan 3: the chat stays, on DeepSeek Harness.
 - Files: the client flag HQ-3 added in `config/vite.config.ts` (its own define, not `__CONFIGURED_CAPS__`), the Settings panes for generation, stock and cloud transcription vendors (`src/components/settings/`), the generation menus, `src/agent/external-tool-schemas.ts`.
 - Do: reuse HQ-3's flag. Keep the chat panel and the dashboard model-setup card: with the switch on they lead to DeepSeek Harness (HQ-2, HQ-3 already hid the other agent vendors). Hide the generation menus and the generation, stock and cloud-transcription panes, and make `externalToolSchemas()` drop generation and stock tools when the switch is on.
-- Done when: with `.env.claudia` (switch on) the editor has no generation menus, Settings shows no generation, stock or cloud-transcription vendors, `tools/list` over MCP has no generation or stock tools, and the chat still works through DeepSeek Harness; with the switch off nothing changes.
+- Done when: with `.env.corteo` (switch on) the editor has no generation menus, Settings shows no generation, stock or cloud-transcription vendors, `tools/list` over MCP has no generation or stock tools, and the chat still works through DeepSeek Harness; with the switch off nothing changes.
 - Verify: `npm run verify:agent-tools`, `npm run verify:mcp`, `npm run verify:components`, a new verify for the schema filter.
 
 ### P1-3 · Allowed hosts from env — done
@@ -169,7 +169,7 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Done when: `curl -H 'Host: editor.example.com' http://localhost:5199/` is refused without the variable and served with `OPENCHATCUT_ALLOWED_HOSTS=editor.example.com`.
 - Verify: `npx tsx config/vite.config.verify.ts`. `config/` changes need the full gate (`npm test`).
 
-### P1-4 · "Conectar Claudia" card — done
+### P1-4 · "Conectar corteo" card — done
 - Done 2026-10-25: the MCP guide shows `https://corteo.uset82.workers.dev/api/external-mcp/mcp` and a `defineConnection` snippet. The token is the one the guide already reveals.
 - Plan: Plan 1 › Phase 1 (connection kit).
 - Files: `src/components/settings/McpGuide.tsx` (it already shows the token in trusted sessions), i18n dictionaries.
@@ -361,7 +361,7 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 ### P5-3 · Untranslated-text scan
 - Plan: Plan 1 › Phase 5. Playwright scan of the listed screens for Chinese and untranslated English.
 
-### P6-1 · Claudia end-to-end proof + screenshots
+### P6-1 · Bot end-to-end proof + screenshots
 - Plan: Plan 1 › Phase 6.
 - Needs the user's media in `CLAUDIA_E2E_MEDIA_DIR`. Report pass or fail per item, with output paths, in this file.
 
@@ -379,12 +379,12 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-25 · H-9 · The repair for free lanes' bare-index tool-call deltas lives in corteo's `/llm` proxy, for `dsh` only, not in the gateway. Reason: the gateway is upstream's plugin at a pinned tag and must not be patched, and every server agent run already goes through `/llm`.
 - 2026-10-25 · H-9 · The `dsh` default model is `nvidia/nemotron-3-ultra-550b-a55b:free`, from HW-3 and HW-4, not the plugin's `combo:recommended-free` group and not the two faster lanes. Reason: the group was not among the lanes that returned a correct `split_item`, liquid hit a 429 on the real edit, and the nano reasoning model never called the timeline. Ultra did.
 - 2026-10-25 · GitHub main · Merged `3790a69` (HQ-6, plus HQ-7 and HQ-8) into this branch. `package.json` keeps both sides: the Claudia scripts and verifies, and `dsh-sse-repair.verify.ts`. The settings hide now follows `providersOff()` so HQ-7's runtime switch still hides paid panes. Reason: GitHub main had moved, and the publish has to be a fast-forward.
-- 2026-10-25 · Claudia bots · `scripts/claudia-install.sh` is the one-shot install for any Claudia bot's Linux VM, and `skills/corteo/SKILL.md` is the agent guide. The free-model harness stays optional. Reason: every Claudia bot has its own VM, so corteo has to install there without a tunnel and without secrets.
+- 2026-10-25 · Claudia bots · `scripts/corteo-install.sh` is the one-shot install for any Claudia bot's Linux VM, and `skills/corteo/SKILL.md` is the agent guide. The free-model harness stays optional. Reason: every Claudia bot has its own VM, so corteo has to install there without a tunnel and without secrets.
 - 2026-10-25 · P-CL · Names the CLI prints (`Texto`, `Secuencia 1`, `Color`, `Títulos`) are Spanish, not the UI locale. A headless shell has no locale, and the product language is Spanish. i18n keys stay Chinese.
 - 2026-10-25 · P-CL-4 · When `google-chrome` (or Chromium) runs, renders set `CC_BROWSER_EXECUTABLE` and skip Remotion's headless shell. If there is no system Chrome, the installer downloads that shell and says so.
 - 2026-10-25 · P-CL-8 · `corteo mcp token` prints the path. `--show` prints the token only on stdout. The endpoint stays localhost-only. Nothing in git is a token.
-- 2026-10-25 · P-CL-12 · `scripts/claudia-acceptance.sh` on this VM, with `node` at v20.20.2 and `NPM_CONFIG_PREFIX=/home/ubuntu/.local`, printed `ACCEPTANCE=PASS`. The installer self-test was `CORTEO_SELF_TEST=PASS` and used `/usr/local/bin/google-chrome` (no headless-shell download). The 6s render was 1920x1080 with an audio stream. There is no CI workflow in the repo, so the script is syntax-checked from `test:serial` and the full run is manual. This VM's ffmpeg is 6.1.1, not the reference 7.1.
-- 2026-10-25 · Claudia's VM · She runs corteo on her own Linux box. `npm run claudia:local` binds 127.0.0.1 with paid providers off, and `npm run corteo` is the existing `occ` shell, now able to `media import` a disk path. The Worker and named tunnel stay optional for a browser. Reason: she can clone, install and render on that VM, so the public URL is not the limb.
+- 2026-10-25 · P-CL-12 · `scripts/corteo-acceptance.sh` on this VM, with `node` at v20.20.2 and `NPM_CONFIG_PREFIX=/home/ubuntu/.local`, printed `ACCEPTANCE=PASS`. The installer self-test was `CORTEO_SELF_TEST=PASS` and used `/usr/local/bin/google-chrome` (no headless-shell download). The 6s render was 1920x1080 with an audio stream. There is no CI workflow in the repo, so the script is syntax-checked from `test:serial` and the full run is manual. This VM's ffmpeg is 6.1.1, not the reference 7.1.
+- 2026-10-25 · Claudia's VM · She runs corteo on her own Linux box. `npm run corteo:local` binds 127.0.0.1 with paid providers off, and `npm run corteo` is the existing `occ` shell, now able to `media import` a disk path. The Worker and named tunnel stay optional for a browser. Reason: she can clone, install and render on that VM, so the public URL is not the limb.
 - 2026-10-24 · B-9 · The Spanish pass covers the screens Plan 4 owns, read literally: the projects page with its tooltips, the top bar's button labels, the chat's first view (header, onboarding, starters, composer, workflow and model pickers, capability banner) and the phone upload page. The panels those buttons open stay for P5-1. Reason: the plan's scope line, and P5-1 is the full dictionary.
 
 - 2026-10-25 · L-01 · `analyze_music` and `inspect_music` run their cores in a forked child process per core (`child_process.fork`), not the `worker_threads` the card names. Reason: the rhythm core uses the top-level `onnxruntime-node@1.22.0-rev` and the CLAP core nests `onnxruntime-node@1.24.3` inside `@huggingface/transformers`; both ship `libonnxruntime.so.1`, so loading them in one process makes the second load shadow the first and the native session fails. One child per core keeps each soname in its own address space; inside Electron the children start with `ELECTRON_RUN_AS_NODE=1`.
@@ -565,7 +565,7 @@ Approved 2026-10-25. Task cards: `docs/plans/05-corteo.md`. Its own table, same 
 | C-05 | The rename sweep and its gate | done | |
 | C-06 | Identifiers: scripts, env files, directories, service names | done | |
 | C-07 | Copy outside the dictionaries, the assistant, the exports | done | C-05 |
-| C-08 | The repo's own prose (README, AGENTS, CHANGELOG, install guide) | todo | C-06, C-07 |
+| C-08 | The repo's own prose (README, AGENTS, CHANGELOG, install guide) | done | C-06, C-07 |
 | C-09 | One installer, one contract (`CORTEO_*`, `--json`, `--self-test`) | todo | C-06 |
 | C-10 | Non-blocking renders (`render --detach`, `job status/wait`) | todo | |
 | C-11 | The bot template: profile, four skills, build gate | todo | C-09, C-10 |

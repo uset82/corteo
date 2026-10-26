@@ -1,29 +1,29 @@
-# Claudia
+# corteo
 
 [English](README.md) · Español
 
-**El editor de videoclips de Claudia.**
+**El editor de videoclips que maneja un bot.**
 
-Claudia es un editor de video en español para hacer videoclips. Es un fork de [OpenChatCut](https://github.com/0xsline/OpenChatCut) con una línea de tiempo al estilo de Premiere, corre en WSL en http://localhost:5199 y está pensado para que Claudia, la asistente de IA de Carlos, lo maneje por MCP. El repositorio, sus carpetas y el comando que lo arranca se siguen llamando **corteo**.
+corteo es un editor de video en español para hacer videoclips. Es un fork de [OpenChatCut](https://github.com/0xsline/OpenChatCut) con una línea de tiempo al estilo de Premiere, corre en WSL en http://localhost:5199 y está pensado para que un bot lo maneje por MCP: un Grok Bot, Claude Code o Codex. El repositorio, sus carpetas y el comando que lo arranca también se llaman **corteo**.
 
 ## Qué es y por qué
 
-[Claudia](https://claudia.gallery) es una popstar de IA abierta: un personaje que cualquiera puede usar. Para Carlos es además su asistente, un bot de Grok. Claudia puede pensar un videoclip y generar material con Grok, pero para editarlo necesita un brazo: este editor, que por eso lleva su nombre.
+Un bot puede pensar un videoclip y generar material con Grok, pero para editarlo necesita un brazo: este editor. corteo es ese brazo, y el bot manda: elige qué imagen acompaña cada verso, dónde entra el coro y cómo se mueve cada plano.
 
 El reparto es simple:
 
-- **Claudia decide**: qué imagen acompaña cada verso, dónde entra el coro, cómo se mueve cada plano.
+- **El bot decide**: qué imagen acompaña cada verso, dónde entra el coro, cómo se mueve cada plano.
 - **El editor ejecuta**: importa, corta, anima, subtitula y exporta en una línea de tiempo real, que Carlos puede revisar y retocar a mano.
 
 El primer objetivo son los videoclips de Carlos, como el de «Perú», su canción de protesta.
 
 ## Estado
 
-El estado de cada tarea está en [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md), y los planes completos en [`docs/plans/01-editor-claudia.md`](docs/plans/01-editor-claudia.md) (el editor y la conexión con Claudia), [`docs/plans/02-claudia-escucha.md`](docs/plans/02-claudia-escucha.md) (Claudia escucha la canción), [`docs/plans/03-deepseek-harness.md`](docs/plans/03-deepseek-harness.md) (modelos gratis para el chat del editor) y [`docs/plans/04-claudia-brand.md`](docs/plans/04-claudia-brand.md) (el nombre y la imagen de Claudia). Si este README y `PROGRESS.md` no coinciden, vale `PROGRESS.md`.
+El estado de cada tarea está en [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md), y los planes completos en [`docs/plans/01-editor-claudia.md`](docs/plans/01-editor-claudia.md) (el editor y la conexión con el bot), [`docs/plans/02-claudia-escucha.md`](docs/plans/02-claudia-escucha.md) (el bot escucha la canción), [`docs/plans/03-deepseek-harness.md`](docs/plans/03-deepseek-harness.md) (modelos gratis para el chat del editor) y [`docs/plans/04-claudia-brand.md`](docs/plans/04-claudia-brand.md) (el nombre y la imagen de corteo). Si este README y `PROGRESS.md` no coinciden, vale `PROGRESS.md`.
 
 ### Lo que funciona hoy
 
-El nombre y la imagen son de Claudia: la piel «Claudia» por defecto, con el color y las tipografías de claudia.gallery; la página de proyectos, la barra superior y el panel de chat con la nueva cabecera; el título de la pestaña; los nombres de las exportaciones a Final Cut y CapCut, y la página para subir medios desde el móvil.
+El nombre y la imagen son de corteo: la piel «corteo» por defecto, con su propio acento; la página de proyectos, la barra superior y el panel de chat con la nueva cabecera; el título de la pestaña; los nombres de las exportaciones a Final Cut y CapCut, y la página para subir medios desde el móvil.
 
 Las funciones vienen todas de OpenChatCut:
 
@@ -35,24 +35,24 @@ Las funciones vienen todas de OpenChatCut:
 - Varias secuencias por proyecto, transiciones, efectos, LUTs, plantillas animadas y varias pistas de audio.
 - Un servidor MCP con token y unas 120 herramientas de edición. Hoy lo pueden usar los clientes MCP que corren en el mismo PC (Codex, Claude Code, Qoder…).
 
-Y una cosa nueva de Claudia: el chat del editor funciona con modelos gratis a través de [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) y el plugin [Our Free Model](https://github.com/Ebony-Vinyl/dsh-our-free-model). Sus modelos salen en el menú de modelos del chat. El de por defecto es `nvidia/nemotron-3-ultra-550b-a55b:free`: de los que llamaron bien a la herramienta de corte, es el que de verdad cortó un clip. El chat del propio harness también puede editar la línea de tiempo por MCP. Cómo arrancarlo: [Modelos gratis con DeepSeek Harness](#modelos-gratis-con-deepseek-harness). La guía larga está en [`docs/harness.md`](docs/harness.md).
+Y una cosa nueva: el chat del editor funciona con modelos gratis a través de [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) y el plugin [Our Free Model](https://github.com/Ebony-Vinyl/dsh-our-free-model). Sus modelos salen en el menú de modelos del chat. El de por defecto es `nvidia/nemotron-3-ultra-550b-a55b:free`: de los que llamaron bien a la herramienta de corte, es el que de verdad cortó un clip. El chat del propio harness también puede editar la línea de tiempo por MCP. Cómo arrancarlo: [Modelos gratis con DeepSeek Harness](#modelos-gratis-con-deepseek-harness). La guía larga está en [`docs/harness.md`](docs/harness.md).
 
 Con dos salvedades:
 
 - La interfaz arranca en español, pero solo unos 200 de sus 2.520 textos están traducidos: la página de proyectos, la barra superior y lo primero que se ve del chat. El resto sale en inglés.
-- Con `OPENCHATCUT_PROVIDERS=off` (el alias `corteo` y `npm run start:claudia`) el chat solo usa DeepSeek Harness, Ollama y LM Studio. Las rutas de generación, de stock y de transcripción en la nube responden 403, y esos ajustes no se muestran. El skill `videoclip-musical` sigue pendiente (P1-6).
+- Con `OPENCHATCUT_PROVIDERS=off` (el alias `corteo` y `npm run start:corteo`) el chat solo usa DeepSeek Harness, Ollama y LM Studio. Las rutas de generación, de stock y de transcripción en la nube responden 403, y esos ajustes no se muestran. El skill `videoclip-musical` sigue pendiente (P1-6).
 
 ### Lo que falta
 
 | Qué | Tareas |
 |---|---|
-| Skill `videoclip-musical` para Claudia | P1-6 |
-| «Claudia escucha la canción»: ritmo, secciones, emoción y coros, para que los efectos y movimientos sigan la música | L-01 a L-13 |
+| Skill `videoclip-musical` para el bot | P1-6 |
+| «El bot escucha la canción»: ritmo, secciones, emoción y coros, para que los efectos y movimientos sigan la música | L-01 a L-13 |
 | Ken Burns, subtítulos de verso y coro, importar ASS/VTT, detector de tomas repetidas, exportación HEVC, cuenta regresiva, atajos de Premiere | P2-1 a P2-6 |
 | Importar desde YouTube, Vimeo o Bilibili con sus créditos (yt-dlp) | P3-1 a P3-4 |
 | Varias versiones de un videoclip y la vista «Comparar versiones» | P4-1 a P4-3 |
 | Toda la interfaz en español | P5-1 a P5-3 |
-| Prueba completa con Claudia, de la canción al video exportado | P6-1 |
+| Prueba completa con un bot, de la canción al video exportado | P6-1 |
 
 Otros agentes hicieron una primera versión de varias funciones de P2 (Ken Burns, karaoke, duplicados, HEVC, cuenta regresiva) en una rama aparte. Tiene errores conocidos y está pendiente de revisión, así que no está en `main` y esas tareas siguen pendientes.
 
@@ -101,17 +101,17 @@ npx playwright install-deps chromium
 
 No le pongas `sudo` delante: con nvm, `sudo` no encuentra `npx`, y el comando ya pide permisos por su cuenta.
 
-## Instalar en tu Claudia (Grok Bot)
+## Instalar en tu bot (Grok Bot)
 
-Dile a tu Claudia: «Instala corteo y úsalo para crear y editar mis videos en tu máquina.»
+Dile a tu bot: «Instala corteo y úsalo para crear y editar mis videos en tu máquina.»
 
 Ella ejecuta esto una vez. No pide claves. Al final imprime `CORTEO_SELF_TEST=PASS`.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/scripts/claudia-install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/scripts/corteo-install.sh | bash
 ```
 
-El editor queda en `~/corteo`. Aunque el shell traiga Node 20 y `NPM_CONFIG_PREFIX`, el instalador los aparta y usa Node 24. Lo arranca con `npm run claudia:local` y lo maneja con `~/corteo/scripts/corteo`, sin preparar el shell. La guía para el bot está en [`skills/corteo/SKILL.md`](skills/corteo/SKILL.md). El túnel de Cloudflare es opcional y solo sirve para abrir el editor en un navegador.
+El editor queda en `~/corteo`. Aunque el shell traiga Node 20 y `NPM_CONFIG_PREFIX`, el instalador los aparta y usa Node 24. Lo arranca con `npm run corteo:local` y lo maneja con `~/corteo/scripts/corteo`, sin preparar el shell. La guía para el bot está en [`skills/corteo/SKILL.md`](skills/corteo/SKILL.md). El túnel de Cloudflare es opcional y solo sirve para abrir el editor en un navegador.
 
 ## Uso
 
@@ -176,16 +176,16 @@ Imprime la URL (normalmente `http://127.0.0.1:18899/v1`) y la clave. Sin `--show
 - Dirección: `http://localhost:5199/api/external-mcp/mcp`, con el encabezado `Authorization: Bearer <token>`.
 - Token: en la página de proyectos, el botón de arriba a la derecha «Agentes externos (MCP)» (el nombre aparece al pasar el ratón), o el archivo `mcp-token` de la carpeta de tu perfil.
 
-Hoy eso sirve para un cliente en la misma máquina. Claudia usa su propia máquina: [Claudia en su propia máquina](#claudia-en-su-propia-máquina). El túnel de más abajo es opcional.
+Hoy eso sirve para un cliente en la misma máquina. El bot usa su propia máquina: [El bot en su propia máquina](#el-bot-en-su-propia-máquina). El túnel de más abajo es opcional.
 
-### Claudia en su propia máquina
+### El bot en su propia máquina
 
-Claudia no corre en el PC de Carlos. Tiene una máquina Linux propia. Ahí clona este repo y arranca el editor en local. No hace falta el túnel ni que el PC de Carlos esté encendido.
+El bot no corre en el PC de Carlos: tiene una máquina Linux propia. Ahí clona este repo y arranca el editor en local. No hace falta el túnel ni que el PC de Carlos esté encendido.
 
 El instalador deja Node 24. En una terminal:
 
 ```bash
-npm run claudia:local
+npm run corteo:local
 ```
 
 Eso escucha solo en `http://127.0.0.1:5199`. El MCP está en `http://127.0.0.1:5199/api/external-mcp/mcp`. El token no se imprime solo: `~/corteo/scripts/corteo mcp token` dice la ruta, y `--show` imprime el token en stdout. Los proveedores de pago quedan apagados. En otra terminal, el shell (sin navegador, y sin depender de que `node` sea la 24):
@@ -202,9 +202,9 @@ CC_RENDER_GL=swangle ~/corteo/scripts/corteo render --out /ruta/salida.mp4
 
 ### Publicar el editor (opcional)
 
-Esto es solo para abrir el mismo editor en un navegador fuera de la máquina. Claudia no lo necesita.
+Esto es solo para abrir el mismo editor en un navegador fuera de la máquina. El bot no lo necesita.
 
-https://corteo.uset82.workers.dev/ deja de ser una copia estática y pasa a ser el editor que corre en tu PC. Quien abre esa dirección ve tus proyectos y usa los modelos gratis. Claudia llama a `https://corteo.uset82.workers.dev/api/external-mcp/mcp` con el token. Es un solo editor compartido: el chat gasta la cuota gratis de tu PC, y la clave de reenvío no sale de tu PC.
+https://corteo.uset82.workers.dev/ deja de ser una copia estática y pasa a ser el editor que corre en tu PC. Quien abre esa dirección ve tus proyectos y usa los modelos gratis. El bot llama a `https://corteo.uset82.workers.dev/api/external-mcp/mcp` con el token. Es un solo editor compartido: el chat gasta la cuota gratis de tu PC, y la clave de reenvío no sale de tu PC.
 
 Hace falta un túnel con nombre en un dominio de tu cuenta de Cloudflare, por ejemplo `editor.uset82.com`. Un túnel rápido (`trycloudflare.com`) corta el stream del chat y de MCP. Ese dominio solo lo usa el Worker por dentro. La dirección pública sigue siendo `corteo.uset82.workers.dev`.
 
@@ -212,7 +212,7 @@ Hace falta un túnel con nombre en un dominio de tu cuenta de Cloudflare, por ej
 
 ```bash
 cd ~/corteo
-cp .env.claudia.example .env.claudia
+cp .env.corteo.example .env.corteo
 # escribe un token en OPENCHATCUT_MCP_TOKEN (el ejemplo dice cómo generarlo)
 npm run harness
 ```
@@ -220,10 +220,10 @@ npm run harness
 Deja esa terminal abierta. En otra:
 
 ```bash
-cd ~/corteo && npm run start:claudia
+cd ~/corteo && npm run start:corteo
 ```
 
-Y en otra, para que Claudia pueda editar aunque nadie tenga la página abierta:
+Y en otra, para que el bot pueda editar aunque nadie tenga la página abierta:
 
 ```bash
 cd ~/corteo && npx playwright install chromium
@@ -245,7 +245,7 @@ npx wrangler deploy
 
 Eso sustituye la copia estática. Los proyectos que solo existían en el navegador de esa copia dejan de verse: la página muestra los del PC.
 
-**4. Claudia.** En el editor, «Agentes externos (MCP)» → «Conectar Claudia». Copia el snippet. En Claudia, `OPENCHATCUT_MCP_URL` es `https://corteo.uset82.workers.dev/api/external-mcp/mcp`, `OPENCHATCUT_MCP_TOKEN` es el de `.env.claudia`, y `hosting.egressDomains` incluye `corteo.uset82.workers.dev`.
+**4. El bot.** En el editor, «Agentes externos (MCP)» → «Conectar corteo». Copia el snippet. En el bot, `OPENCHATCUT_MCP_URL` es `https://corteo.uset82.workers.dev/api/external-mcp/mcp`, `OPENCHATCUT_MCP_TOKEN` es el de `.env.corteo`, y `hosting.egressDomains` incluye `corteo.uset82.workers.dev`.
 
 ## Sincronizar la rama de Cursor con GitHub
 
@@ -285,17 +285,16 @@ Las reglas, los comandos y el ciclo de trabajo están en [`AGENTS.md`](AGENTS.md
 
 ## In English
 
-Claudia is a Spanish music-video editor, named after the one who drives it over MCP: Claudia, Carlos's AI assistant, the open AI pop star from [claudia.gallery](https://claudia.gallery), running as a Grok bot. The repository, its folders and the command that starts it are still called corteo. It's a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut) with a Premiere-style timeline that runs in WSL at http://localhost:5199. Claudia decides; the editor edits and exports, on a real timeline Carlos can still adjust by hand.
+corteo is a Spanish music-video editor that a bot drives over MCP: a Grok Bot, Claude Code or Codex. The repository, its folders and the command that starts it are all called corteo. It's a fork of [OpenChatCut](https://github.com/0xsline/OpenChatCut) with a Premiere-style timeline that runs in WSL at http://localhost:5199. The bot decides; the editor edits and exports, on a real timeline Carlos can still adjust by hand.
 
-The features that work today are upstream OpenChatCut's: the multitrack timeline, keyframes, word-level captions, local Whisper transcription, 4K export, and an MCP server for clients on the same machine. The name and the look are Claudia's, from claudia.gallery. The projects page, the top bar and the chat's first view are in Spanish; most of the rest is still in English. The built-in chat runs on free models through DeepSeek Harness (`npm run harness:install`, `npm run harness`, `npm run harness:doctor`; the Spanish steps are under "Modelos gratis con DeepSeek Harness" above, and the long guide is `docs/harness.md`). Connecting Claudia from outside the PC, song listening, platform import, version comparison and the full Spanish UI are planned; [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md) tracks them.
+The features that work today are upstream OpenChatCut's: the multitrack timeline, keyframes, word-level captions, local Whisper transcription, 4K export, and an MCP server for clients on the same machine. The name and the look are corteo's. The projects page, the top bar and the chat's first view are in Spanish; most of the rest is still in English. The built-in chat runs on free models through DeepSeek Harness (`npm run harness:install`, `npm run harness`, `npm run harness:doctor`; the Spanish steps are under "Modelos gratis con DeepSeek Harness" above, and the long guide is `docs/harness.md`). Connecting a bot from outside the PC, song listening, platform import, version comparison and the full Spanish UI are planned; [`docs/plans/PROGRESS.md`](docs/plans/PROGRESS.md) tracks them.
 
 Quick start (WSL, Node 24 via nvm): `npm install`, then `NODE_OPTIONS=--max-old-space-size=6144 npm run dev`, and open http://localhost:5199.
 
 ## Créditos y licencia
 
-- Claudia (este repositorio, corteo) es un fork de [OpenChatCut](https://github.com/0xsline/OpenChatCut), creado por OpenChatCut Contributors. OpenChatCut se apoya a su vez en [Remotion](https://www.remotion.dev/), el [Model Context Protocol](https://modelcontextprotocol.io/), [Vercel AI SDK](https://ai-sdk.dev/) y las skills de [ChatCut-Inc/agent-plugin](https://github.com/ChatCut-Inc/agent-plugin) (ver [`src/agent/skills/NOTICE.md`](src/agent/skills/NOTICE.md)).
-- Claudia es un personaje abierto de [claudia.gallery](https://claudia.gallery).
-- Las dos tipografías de marca están en `public/fonts/claudia/` con sus licencias: TeX Gyre Heros, del GUST e-foundry, en el logotipo, bajo la [GUST Font License](public/fonts/claudia/GUST-FONT-LICENSE.txt); y DINish Condensed, de The DINish Project Authors, en los títulos, bajo la [SIL Open Font License 1.1](public/fonts/claudia/OFL-DINish.txt).
+- corteo es un fork de [OpenChatCut](https://github.com/0xsline/OpenChatCut), creado por OpenChatCut Contributors. OpenChatCut se apoya a su vez en [Remotion](https://www.remotion.dev/), el [Model Context Protocol](https://modelcontextprotocol.io/), [Vercel AI SDK](https://ai-sdk.dev/) y las skills de [ChatCut-Inc/agent-plugin](https://github.com/ChatCut-Inc/agent-plugin) (ver [`src/agent/skills/NOTICE.md`](src/agent/skills/NOTICE.md)).
+- La tipografía de marca está en `public/fonts/corteo/` con su licencia: DINish Condensed, de The DINish Project Authors, en los títulos y el logotipo, bajo la [SIL Open Font License 1.1](public/fonts/corteo/OFL-DINish.txt).
 - [`README_ZH.md`](README_ZH.md) es el README original de OpenChatCut, en chino.
 
 OpenChatCut se publica bajo la [GNU Affero General Public License v3.0 o posterior](LICENSE) (AGPL-3.0-or-later), y este editor, como obra derivada, también. En resumen (vale el texto de [`LICENSE`](LICENSE)):
