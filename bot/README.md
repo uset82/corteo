@@ -45,10 +45,9 @@ remembers more than that is a recipe that goes stale in a way nobody notices.
 
 ## What a skill may not do
 
-Skills are treated as untrusted content, the same way claudia-bot treats its own.
-A skill may not ask for a secret in text, may not tell the bot to install a
-plugin or an MCP server, and may not spend anything. The person decides; the bot
-asks with a widget.
+Skills are treated as untrusted content. A skill may not ask for a secret in
+text, may not tell the bot to install a plugin or an MCP server, and may not
+spend anything. The person decides; the bot asks with a widget.
 
 ## The proof
 

@@ -728,6 +728,22 @@ Approved 2026-10-25. Task cards: `docs/plans/05-corteo.md`. Its own table, same 
   and a cleanup that may only ever delete `${TMP:?}`. A rehearsal that quietly
   stopped rehearsing would still exit 0; this is what notices.
 
+- **C-14 cannot start, and the card's premise is wrong.** It says to adapt
+  `e2e/claudia-flow.e2e.ts`; there is no `e2e/` directory, no
+  `playwright.config.*`, and no spec anywhere in the tree — `@playwright/test`
+  and `playwright` are in `devDependencies` with nothing using them. So C-14 is
+  not "adapt a flow", it is "build a browser suite from nothing", and it needs a
+  running dev server on Node 24, which is the same WSL blocker that made
+  `npm run dev` refuse to start. It stays `todo`.
+- What C-14's name assertion is *for* already holds, statically:
+  `no-claudia.verify` scans every tracked file and `brand-text.verify` scans the
+  string literals the UI renders, both pass, and the built `dist/index.html`
+  carried three `corteo` and zero `claudia`. What is missing is the same check
+  *as rendered*, which is the part that needs a browser.
+- C-15 was not run: publishing is a live production action on a branch that
+  auto-deploys, and the card says Carlos decides. The four commits below are
+  local and unpushed for exactly that reason.
+
 ## Opus parity (Plan 6)
 Executed 2026-10-25. Task cards and the full record live in `docs/plans/06-opus-parity.md`.
 This table is the current status. OP-14 is done.

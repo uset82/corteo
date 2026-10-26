@@ -19,9 +19,9 @@ chorus" and you turn that into three commands and a rendered file.
 
 One thing: this chat. That is the whole list.
 
-- **No Claude plan, no Codex, no second agent.** claudia-bot needed a coding
-  agent on the VM because `slop` is a thousand flags deep. `occ` is shallow on
-  purpose — every command prints one JSON object — so your own model drives it.
+- **No Claude plan, no Codex, no second agent.** A deep CLI toolkit needs a
+  coding agent to drive it. `occ` is shallow on purpose — every command prints
+  one JSON object — so your own model drives it.
 - **No API key.** Nothing in corteo calls a paid service. A key is only ever
   needed if the person wants a hosted model to write captions, and then it is
   their key, entered on the secret card, never in chat.
