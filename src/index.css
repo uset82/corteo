@@ -202,7 +202,7 @@ button, input, select { font: inherit; }
 }
 .cc-lockup .cc-wordmark { margin-top: -0.05em; }
 
-/* Projects page (docs/plans/04-claudia-brand.md, BD-4). Frameless cards: the
+/* Projects page (brand plan, BD-4). Frameless cards: the
  * thumbnail is the object, the chrome is a hairline. The title is the page's one
  * bold move — condensed black, uppercase — and "Nuevo proyecto" is its one clay
  * button. Motion is color and opacity only, and off under reduced motion. */

@@ -1,6 +1,6 @@
-# Installing Claudia in a VM
+# Installing corteo in a VM
 
-This guide is written for an AI agent (Claudia, or any agent acting for her) that
+This guide is written for an AI agent (corteo, or any agent acting for it) that
 has shell access to a Linux VM. It installs the editor, starts it as a service,
 and produces the MCP endpoint and token needed to edit projects.
 
@@ -25,65 +25,94 @@ Defaults:
 
 | | |
 |---|---|
-| Install root | `~/claudia` |
-| App checkout | `~/claudia/app` |
+| Install root | `~/corteo` |
+| App checkout | `~/corteo/app` |
 | Bind address | `127.0.0.1` |
 | Port | `5199` |
 | Data | `~/.openchatcut/dev-profiles/<id>/` |
-| Service | `claudia.service` (systemd user), or a `nohup` process |
-| Log | `~/claudia/logs/claudia.log` |
+| Service | `corteo.service` (systemd user), or a `nohup` process |
+| Log | `~/corteo/logs/corteo.log` |
 
 To install somewhere else:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/install.sh \
-  | bash -s -- --dir /opt/claudia --port 5199
+  | bash -s -- --dir /opt/corteo --port 5199
 ```
 
 Full option list: `install.sh --help`. Useful flags: `--no-start`,
 `--with-desktop`, `--skip-system-deps`, `--dry-run`, `--uninstall` and
 `--uninstall --purge`.
 
+## Upgrading from the old name
+
+The install used to live in `~/claudia` under `claudia.service`. Running the
+installer with no `--dir` stops and disables that service, moves the whole root
+to `~/corteo`, and renames the report, the pid file and the log inside it. The
+checkout and `secrets.env` come along, so the MCP token is unchanged and no
+client has to be reconfigured.
+
+`~/claudia` is never deleted. If `~/corteo` already exists, the old root is left
+where it is and only its service is stopped, so two installs cannot fight over
+port 5199. With an explicit `--dir`, nothing is moved at all: the dry run
+reports `CORTEO_LEGACY_ACTION=ignored` and the install goes where you asked.
+
+`--dry-run` prints the decision without taking it:
+
+| `CORTEO_LEGACY_ACTION` | meaning |
+|---|---|
+| `none` | no old install on this machine |
+| `move` | `~/claudia` is stopped and moved to `~/corteo` |
+| `kept-both` | both roots exist; only the old service is stopped |
+| `ignored` | an explicit `--dir` was given; the old root is not touched |
+
 ## Expected output
 
 The last block on stdout is machine-readable:
 
 ```text
-CLAUDIA_STATUS=ok
-CLAUDIA_URL=http://127.0.0.1:5199
-CLAUDIA_LOCAL_URL=http://127.0.0.1:5199
-CLAUDIA_MCP_URL=http://127.0.0.1:5199/api/external-mcp/mcp
-CLAUDIA_MCP_TOKEN=<43-character token>
-CLAUDIA_OCC=/home/you/claudia/bin/occ
-CLAUDIA_APP_DIR=/home/you/claudia/app
-CLAUDIA_DATA_DIR=/home/you/.openchatcut/dev-profiles/<uuid>
-CLAUDIA_GUIDE=/home/you/claudia/app/documentation/CLAUDIA_INSTALL.md
-CLAUDIA_LOG=/home/you/claudia/logs/claudia.log
-CLAUDIA_MANAGER=systemd
+CORTEO_STATUS=ok
+CORTEO_URL=http://127.0.0.1:5199
+CORTEO_LOCAL_URL=http://127.0.0.1:5199
+CORTEO_MCP_URL=http://127.0.0.1:5199/api/external-mcp/mcp
+CORTEO_MCP_TOKEN=<43-character token>
+CORTEO_OCC=/home/you/corteo/bin/occ
+CORTEO_APP_DIR=/home/you/corteo/app
+CORTEO_DATA_DIR=/home/you/.openchatcut/dev-profiles/<uuid>
+CORTEO_GUIDE=/home/you/corteo/app/documentation/CORTEO_INSTALL.md
+CORTEO_LOG=/home/you/corteo/logs/corteo.log
+CORTEO_MANAGER=systemd
+CORTEO_MIGRATED_FROM=/home/you/claudia
+CORTEO_LEGACY_SERVICE=stopped
 ```
 
-The same values are written to `~/claudia/claudia.env` with mode `0600`. The
-token is also in `~/claudia/secrets.env`; that file is what the service reads.
+`CORTEO_MIGRATED_FROM` is the path the install came from, or `none`. It is the
+only line that tells you the old tree moved; `CORTEO_APP_DIR` is already the new
+one. `CORTEO_LEGACY_SERVICE` is `stopped`, or `none` when there was no old
+service to stop.
+
+The same values are written to `~/corteo/corteo.env` with mode `0600`. The
+token is also in `~/corteo/secrets.env`; that file is what the service reads.
 
 If the run fails, stderr ends with:
 
 ```text
-CLAUDIA_STATUS=failed
-CLAUDIA_FAILED_STAGE=<stage>
+CORTEO_STATUS=failed
+CORTEO_FAILED_STAGE=<stage>
 ```
 
 and the exit code is non-zero. Do not report success unless
-`CLAUDIA_STATUS=ok` is present.
+`CORTEO_STATUS=ok` is present.
 
 ## Connect over MCP
 
 Use this JSON in the client's MCP configuration, replacing `<token>` with
-`CLAUDIA_MCP_TOKEN`:
+`CORTEO_MCP_TOKEN`:
 
 ```json
 {
   "mcpServers": {
-    "claudia": {
+    "corteo": {
       "type": "http",
       "url": "http://127.0.0.1:5199/api/external-mcp/mcp",
       "headers": { "Authorization": "Bearer <token>" }
@@ -95,19 +124,19 @@ Use this JSON in the client's MCP configuration, replacing `<token>` with
 The endpoint speaks Streamable HTTP. A minimal check:
 
 ```bash
-TOKEN="$(grep '^OPENCHATCUT_MCP_TOKEN=' "$HOME/claudia/secrets.env" | cut -d= -f2-)"
+TOKEN="$(grep '^OPENCHATCUT_MCP_TOKEN=' "$HOME/corteo/secrets.env" | cut -d= -f2-)"
 
 curl -sS -o /dev/null -w '%{http_code}\n' \
   -X POST \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
-  --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"claudia-check","version":"1"}}}' \
+  --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"corteo-check","version":"1"}}}' \
   http://127.0.0.1:5199/api/external-mcp/mcp
 ```
 
 `200` means the endpoint and token are good. `403` means the token does not
-match: read it again from `~/claudia/secrets.env`, or restart the service after
+match: read it again from `~/corteo/secrets.env`, or restart the service after
 changing it.
 
 Both the agent and the editor run in the same VM, so `127.0.0.1` is correct and
@@ -117,10 +146,10 @@ a single-user local service.
 ## Verify the CLI
 
 ```bash
-~/claudia/bin/occ where
-~/claudia/bin/occ project list
-~/claudia/bin/occ project new "Install check"
-~/claudia/bin/occ render "Install check" --out /tmp/install-check.mp4 --dry-run
+~/corteo/bin/occ where
+~/corteo/bin/occ project list
+~/corteo/bin/occ project new "Install check"
+~/corteo/bin/occ render "Install check" --out /tmp/install-check.mp4 --dry-run
 ```
 
 `occ where` prints the active profile id, library, project index, media
@@ -132,7 +161,7 @@ Timeline-changing calls (`occ edit`, `occ item`, `occ tools call`) write only
 with `--apply`:
 
 ```bash
-~/claudia/bin/occ tools call set_aspect_ratio --args '{"ratio":"9:16"}' --apply
+~/corteo/bin/occ tools call set_aspect_ratio --args '{"ratio":"9:16"}' --apply
 ```
 
 Every write is committed atomically, checks the project revision, and snapshots
@@ -158,9 +187,9 @@ editor.
 systemd user service:
 
 ```bash
-systemctl --user status claudia.service
-systemctl --user restart claudia.service
-journalctl --user -u claudia.service -n 100 --no-pager
+systemctl --user status corteo.service
+systemctl --user restart corteo.service
+journalctl --user -u corteo.service -n 100 --no-pager
 ```
 
 The installer tries to enable lingering (`loginctl enable-linger "$USER"`) so
@@ -168,24 +197,24 @@ the service survives logout. If this VM has no systemd user session, the
 installer falls back to `nohup`:
 
 ```text
-CLAUDIA_MANAGER=nohup
+CORTEO_MANAGER=nohup
 ```
 
 In that case:
 
 ```bash
-tail -f ~/claudia/logs/claudia.log
-kill "$(cat ~/claudia/claudia.pid)"
+tail -f ~/corteo/logs/corteo.log
+kill "$(cat ~/corteo/corteo.pid)"
 ```
 
 and start it again with the same command the unit would run. Use
-`~/claudia/node/bin` when the installer downloaded its own Node; if it accepted
+`~/corteo/node/bin` when the installer downloaded its own Node; if it accepted
 the system Node 24, drop the `PATH` prefix:
 
 ```bash
-cd ~/claudia/app
-set -a; . ~/claudia/secrets.env; set +a
-PATH="$HOME/claudia/node/bin:$PATH" npm run dev -- --host 127.0.0.1 --port 5199
+cd ~/corteo/app
+set -a; . ~/corteo/secrets.env; set +a
+PATH="$HOME/corteo/node/bin:$PATH" npm run dev -- --host 127.0.0.1 --port 5199
 ```
 
 Use the last line only when the installer is not managing the process; running
@@ -204,7 +233,7 @@ curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/install.sh \
 Remember to use the new port in the MCP URL too.
 
 **Node is not 24.** The installer ignores a system Node that is not major 24 and
-downloads a private copy into `~/claudia/node`. Nothing outside the install root
+downloads a private copy into `~/corteo/node`. Nothing outside the install root
 is modified. Re-run the installer if that directory is damaged.
 
 **Renders or project thumbnails fail while loading Chromium (`libnspr4.so`,
@@ -227,37 +256,37 @@ clone the repository and run the script locally:
 ```bash
 git clone https://github.com/uset82/corteo.git ~/corteo
 cd ~/corteo
-./install.sh --dir ~/claudia
+./install.sh --dir ~/corteo
 ```
 
-The installer uses the checkout it is run from, so `CLAUDIA_APP_DIR` points at
-that clone. Add `--clone` to download a fresh copy into `~/claudia/app` instead.
+The installer uses the checkout it is run from, so `CORTEO_APP_DIR` points at
+that clone. Add `--clone` to download a fresh copy into `~/corteo/app` instead.
 
-**`CLAUDIA_STATUS=failed`.** Read the last 40 lines printed by the installer,
+**`CORTEO_STATUS=failed`.** Read the last 40 lines printed by the installer,
 then the log file or journal. Common causes are a missing `git`/`curl`, a busy
 port, a network failure during `npm ci`, or a full disk. Fix the cause and run
 the same command again; the installer is idempotent.
 
-**Token missing or rotated.** The token is in `~/claudia/secrets.env`. To rotate
+**Token missing or rotated.** The token is in `~/corteo/secrets.env`. To rotate
 it, stop the service, delete that file, and re-run the installer, or set a new
 value yourself:
 
 ```bash
-systemctl --user stop claudia.service   # or kill the nohup pid
+systemctl --user stop corteo.service   # or kill the nohup pid
 printf 'OPENCHATCUT_MCP_TOKEN=%s\nNODE_OPTIONS=--max-old-space-size=6144\n' \
   "$(head -c 32 /dev/urandom | base64 | tr '+/' '-_' | tr -d '=\n')" \
-  > ~/claudia/secrets.env
-chmod 600 ~/claudia/secrets.env
-systemctl --user start claudia.service
+  > ~/corteo/secrets.env
+chmod 600 ~/corteo/secrets.env
+systemctl --user start corteo.service
 ```
 
 Update every MCP client with the new token.
 
 ## Updating
 
-Re-run the installer. It fetches `main`, resets `~/claudia/app` to that commit,
+Re-run the installer. It fetches `main`, resets `~/corteo/app` to that commit,
 reinstalls dependencies, rebuilds `occ`, reuses the existing token, and restarts
-the service. Local edits inside `~/claudia/app` are discarded; projects and media
+the service. Local edits inside `~/corteo/app` are discarded; projects and media
 are not touched.
 
 To pin a branch or tag:

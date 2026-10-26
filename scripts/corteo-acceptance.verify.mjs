@@ -5,14 +5,14 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const script = join(root, 'scripts/claudia-acceptance.sh');
+const script = join(root, 'scripts/corteo-acceptance.sh');
 const source = readFileSync(script, 'utf8');
 const skill = readFileSync(join(root, 'skills/corteo/SKILL.md'), 'utf8');
 
 execFileSync('bash', ['-n', script], { stdio: 'pipe' });
 execFileSync('bash', ['-n', join(root, 'scripts/corteo-env.sh')], { stdio: 'pipe' });
 execFileSync('bash', ['-n', join(root, 'scripts/corteo')], { stdio: 'pipe' });
-execFileSync('bash', ['-n', join(root, 'scripts/claudia-local.sh')], { stdio: 'pipe' });
+execFileSync('bash', ['-n', join(root, 'scripts/corteo-local.sh')], { stdio: 'pipe' });
 
 for (const needle of [
   'NPM_CONFIG_PREFIX',
@@ -37,4 +37,4 @@ assert.match(skill, /--resolution 4k/);
 assert.match(skill, /1080x1920/);
 assert.doesNotMatch(source, /API_KEY|BEGIN [A-Z ]*PRIVATE KEY|sk-[A-Za-z0-9]{8,}/);
 
-console.log('claudia-acceptance.verify: syntax and skill guards pass');
+console.log('corteo-acceptance.verify: syntax and skill guards pass');

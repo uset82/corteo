@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Idempotent installer for any Claudia bot's Linux VM.
+# Idempotent installer for any corteo bot's Linux VM.
 #
-#   curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/scripts/claudia-install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/scripts/corteo-install.sh | bash
 #
 # Installs nvm and Node 24 if needed, clones or updates ~/corteo, installs
 # dependencies, turns paid providers off, and renders a 2 second test MP4.
@@ -136,10 +136,10 @@ ensure_deps() {
 }
 
 write_env() {
-  local env_file="$DIR/.env.claudia"
+  local env_file="$DIR/.env.corteo"
   if [[ ! -f "$env_file" ]]; then
     cat >"$env_file" <<'EOF'
-# Written by scripts/claudia-install.sh. Paid providers stay off.
+# Written by scripts/corteo-install.sh. Paid providers stay off.
 # The free-model harness is optional and is not configured here.
 OPENCHATCUT_PROVIDERS=off
 OPENCHATCUT_DEV_HEAP_MB=6144
@@ -157,10 +157,10 @@ EOF
 }
 
 self_test() {
-  local step="setup" work="$DIR/.claudia-self-test" clip out asset duration
+  local step="setup" work="$DIR/.corteo-self-test" clip out asset duration
   trap 'printf "[corteo] self-test step failed: %s\n" "$step" >&2' ERR
   clip="$work/clip.mp4"
-  out="$DIR/claudia-self-test.mp4"
+  out="$DIR/corteo-self-test.mp4"
   rm -rf "$work"
   mkdir -p "$work"
   rm -f "$out"
@@ -178,7 +178,7 @@ self_test() {
   cd "$DIR"
   step="project new"
   say "creating a project and importing the clip"
-  npm run --silent corteo -- project new "Claudia self-test" --fps 30 --size 640x360 --json >/dev/null
+  npm run --silent corteo -- project new "corteo self-test" --fps 30 --size 640x360 --json >/dev/null
   step="media import"
   npm run --silent corteo -- media import "$clip" --apply --json >/dev/null
   step="media ls"
@@ -229,5 +229,5 @@ fi
 printf 'CORTEO_SELF_TEST=PASS\n'
 printf 'CORTEO_DIR=%s\n' "$DIR"
 printf 'CORTEO_MCP_URL=http://127.0.0.1:5199/api/external-mcp/mcp\n'
-printf 'CORTEO_START=cd %s && npm run claudia:local\n' "$DIR"
+printf 'CORTEO_START=cd %s && npm run corteo:local\n' "$DIR"
 say "PASS"

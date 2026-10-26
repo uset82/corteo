@@ -12,7 +12,7 @@ fail() {
   printf 'ACCEPTANCE=FAIL\n' >&2
   if [[ -n "$*" ]]; then printf '%s\n' "$*" >&2; fi
   if [[ -n "$LOG" && -f "$LOG" ]]; then
-    printf '--- claudia:local log ---\n' >&2
+    printf '--- corteo:local log ---\n' >&2
     tail -n 80 "$LOG" >&2 || true
   fi
   exit 1
@@ -46,11 +46,11 @@ SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ROOT="$(mktemp -d /tmp/corteo-acceptance.XXXXXX)"
 export CORTEO_DIR="$ROOT/corteo"
 INSTALL_LOG="$ROOT/install.log"
-LOG="$ROOT/claudia-local.log"
+LOG="$ROOT/corteo-local.log"
 EXPORT="$ROOT/exports"
 mkdir -p "$EXPORT"
 
-if ! bash "$SRC/scripts/claudia-install.sh" | tee "$INSTALL_LOG"; then
+if ! bash "$SRC/scripts/corteo-install.sh" | tee "$INSTALL_LOG"; then
   fail "installer failed"
 fi
 grep -q 'CORTEO_SELF_TEST=PASS' "$INSTALL_LOG" || fail "installer did not print CORTEO_SELF_TEST=PASS"
@@ -66,7 +66,7 @@ if curl -sf -o /dev/null --max-time 2 http://127.0.0.1:5199/; then
 fi
 
 pushd "$CORTEO_DIR" >/dev/null
-npm run claudia:local >"$LOG" 2>&1 &
+npm run corteo:local >"$LOG" 2>&1 &
 SERVER_PID=$!
 popd >/dev/null
 
@@ -77,11 +77,11 @@ for _ in $(seq 1 180); do
     break
   fi
   if ! kill -0 "$SERVER_PID" 2>/dev/null; then
-    fail "claudia:local exited before the port opened"
+    fail "corteo:local exited before the port opened"
   fi
   sleep 1
 done
-(( ready == 1 )) || fail "claudia:local did not open port 5199"
+(( ready == 1 )) || fail "corteo:local did not open port 5199"
 if grep -q 'Failed to load url /@fs/src/main.tsx' "$LOG"; then
   fail "vite warmup still requests /@fs/src/main.tsx"
 fi

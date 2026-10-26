@@ -61,18 +61,18 @@ if (process.platform !== 'linux') {
   process.exit(0);
 }
 
-const work = mkdtempSync(join(tmpdir(), 'claudia-install-verify-'));
+const work = mkdtempSync(join(tmpdir(), 'corteo-install-verify-'));
 try {
-  const installDir = join(work, 'claudia');
+  const installDir = join(work, 'corteo');
   const env = { ...process.env, HOME: join(work, 'home'), NO_COLOR: '1' };
   const dry = run(['--dry-run', '--dir', installDir, '--port', '5299'], { env });
-  assert.match(dry, /^CLAUDIA_STATUS=dry-run$/m);
-  assert.match(dry, /^CLAUDIA_MCP_URL=http:\/\/127\.0\.0\.1:5299\/api\/external-mcp\/mcp$/m);
-  assert.match(dry, /^CLAUDIA_START=1$/m);
+  assert.match(dry, /^CORTEO_STATUS=dry-run$/m);
+  assert.match(dry, /^CORTEO_MCP_URL=http:\/\/127\.0\.0\.1:5299\/api\/external-mcp\/mcp$/m);
+  assert.match(dry, /^CORTEO_START=1$/m);
   assert.deepEqual(readdirSync(work), [], '--dry-run must not create files');
 
   const uninstallDry = run(['--uninstall', '--dry-run', '--dir', installDir], { env });
-  assert.match(uninstallDry, /^CLAUDIA_ACTION=uninstall$/m);
+  assert.match(uninstallDry, /^CORTEO_ACTION=uninstall$/m);
   assert.deepEqual(readdirSync(work), [], '--uninstall --dry-run must not create files');
 
   console.log('install.verify: dry-run is side-effect free OK');

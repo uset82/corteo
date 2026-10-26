@@ -26,7 +26,7 @@ function devProfileId(): string {
     return metadata.profileId;
   } catch {
     throw new CliError(
-      `No dev profile at ${metadataPath}. Start the editor once (npm run claudia:local) so the MCP token file exists.`,
+      `No dev profile at ${metadataPath}. Start the editor once (npm run corteo:local) so the MCP token file exists.`,
     );
   }
 }

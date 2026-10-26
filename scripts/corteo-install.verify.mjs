@@ -5,13 +5,13 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const installer = join(root, 'scripts/claudia-install.sh');
+const installer = join(root, 'scripts/corteo-install.sh');
 const source = readFileSync(installer, 'utf8');
 
 execFileSync('bash', ['-n', installer], { stdio: 'pipe' });
 assert.match(source, /^#!\/usr\/bin\/env bash\n/);
 assert.doesNotMatch(source, /^\s*read\b/m, 'the installer must not prompt');
-assert.match(source, /curl -fsSL https:\/\/raw\.githubusercontent\.com\/uset82\/corteo\/main\/scripts\/claudia-install\.sh \| bash/);
+assert.match(source, /curl -fsSL https:\/\/raw\.githubusercontent\.com\/uset82\/corteo\/main\/scripts\/corteo-install\.sh \| bash/);
 assert.match(source, /CORTEO_SELF_TEST=PASS/);
 assert.match(source, /CC_RENDER_GL=swangle/);
 assert.match(source, /OPENCHATCUT_PROVIDERS=off/);
@@ -22,4 +22,4 @@ assert.match(source, /ensureBrowser/);
 assert.doesNotMatch(source, /if ! self_test/);
 assert.doesNotMatch(source, /API_KEY|BEGIN [A-Z ]*PRIVATE KEY|sk-[A-Za-z0-9]{8,}/);
 
-console.log('claudia-install.verify: syntax and non-interactive guards pass');
+console.log('corteo-install.verify: syntax and non-interactive guards pass');

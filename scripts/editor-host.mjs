@@ -1,4 +1,4 @@
-// Keeps one headless editor tab open so Claudia can edit when nobody has the site open.
+// Keeps one headless editor tab open so corteo can edit when nobody has the site open.
 // A tab registers with the MCP bridge only while a project is open.
 import { pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';

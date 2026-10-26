@@ -6,7 +6,7 @@ import { editorBootstrapInfo } from '../../agent/editor-credential';
 import { theme, themeAlpha } from '../../theme';
 import { useT } from '../../i18n/locale';
 import { Icon } from '../icons';
-import { CLAUDIA_MCP_URL, claudiaDefineConnection } from './claudiaConnection';
+import { CORTEO_MCP_URL, corteoDefineConnection } from './botConnection';
 import { qwenWorkConnectJson } from './mcpClientConfig';
 import claudeSvg from '../../../assets/vendor-icons/claude-color.svg?raw';
 import codexPng from '../../../assets/vendor-icons/codex-color.png';
@@ -270,7 +270,7 @@ export function McpGuideDialog({ onClose }: { onClose: () => void }) {
             {mcpToken ? (
               <div style={{ marginLeft: 'auto' }}>
                 <CopySnippetButton
-                  getSnippet={() => claudiaDefineConnection(mcpToken)}
+                  getSnippet={() => corteoDefineConnection(mcpToken)}
                   onStatus={() => {}}
                 />
               </div>
@@ -279,8 +279,8 @@ export function McpGuideDialog({ onClose }: { onClose: () => void }) {
           <div style={{ color: theme.textMuted, fontSize: 12, lineHeight: 1.55 }}>
             {t('把下面的配置交给 corteo。她从这台电脑以外编辑这个工程。编辑器的域名必须写进 hosting.egressDomains。')}
           </div>
-          <pre style={endpointStyle}>{CLAUDIA_MCP_URL}</pre>
-          {mcpToken ? <pre style={snippetStyle}>{claudiaDefineConnection(mcpToken)}</pre> : null}
+          <pre style={endpointStyle}>{CORTEO_MCP_URL}</pre>
+          {mcpToken ? <pre style={snippetStyle}>{corteoDefineConnection(mcpToken)}</pre> : null}
         </div>
 
         {mcpToken ? (

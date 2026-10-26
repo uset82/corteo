@@ -43,7 +43,7 @@ test-results/
 .env
 .env.*
 !.env.example
-!.env.claudia.example
+!.env.corteo.example
 
 # user-imported / AI-generated media (dev upload endpoint) — product static lives in assets/
 public/media/uploads/*
@@ -90,10 +90,10 @@ MODEL-OPT-PLAN.md
 # descend into it, so this one line re-includes every file inside.
 !/scripts/harness/
 !/scripts/editor-host.mjs
-!/scripts/claudia-local.mjs
-!/scripts/claudia-local.sh
-!/scripts/claudia-install.sh
-!/scripts/claudia-acceptance.sh
+!/scripts/corteo-local.mjs
+!/scripts/corteo-local.sh
+!/scripts/corteo-install.sh
+!/scripts/corteo-acceptance.sh
 !/scripts/sync-publish.sh
 !/scripts/corteo
 !/scripts/corteo-env.sh
