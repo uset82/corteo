@@ -24,6 +24,27 @@ export interface ListenPictures {
   readonly spectrogram: boolean;
 }
 
+/** What the optional relay reports about the match with local evidence. */
+export interface ListenRelayCheck {
+  readonly timestamps: number;
+  readonly matchedTimestamps: number;
+  readonly quotes: number;
+  readonly matchedQuotes: number;
+}
+
+/** The text the relay heard, with the token accounting that proves it. */
+export interface ListenRelaySnapshot {
+  readonly provider: string;
+  readonly model: string;
+  readonly status: 'verificado' | 'sin verificar';
+  readonly audioTokens: number;
+  readonly promptTokens: number;
+  readonly completionTokens: number;
+  readonly cached: boolean;
+  readonly check?: ListenRelayCheck;
+  readonly note: string;
+}
+
 export interface ListenSnapshotInput {
   readonly assetName: string;
   readonly durationMs: number;
@@ -40,6 +61,7 @@ export interface ListenSnapshotInput {
   readonly songMap?: Pick<SongMap, 'lines' | 'chorusGroups' | 'lyricsSource'> | null;
   readonly songMapRef?: string | null;
   readonly pictures?: ListenPictures;
+  readonly relay?: ListenRelaySnapshot | null;
 }
 
 export interface ListenSnapshot {
@@ -273,6 +295,21 @@ function snapshotData(input: ListenSnapshotInput, level: DetailLevel): Record<st
     lyrics,
     songMapRef: input.songMapRef ?? null,
     pictures: input.pictures ?? { map: false, spectrogram: false },
+    ...(input.relay ? { relay: relayMeta(input.relay) } : {}),
+  };
+}
+
+/** The note itself lives in the summary; JSON keeps the accounting only. */
+function relayMeta(relay: ListenRelaySnapshot): Record<string, unknown> {
+  return {
+    provider: flatText(relay.provider, 60),
+    model: flatText(relay.model, 80),
+    status: relay.status,
+    audioTokens: relay.audioTokens,
+    promptTokens: relay.promptTokens,
+    completionTokens: relay.completionTokens,
+    cached: relay.cached,
+    ...(relay.check ? { check: relay.check } : {}),
   };
 }
 
@@ -319,6 +356,18 @@ function keySummary(data: Record<string, unknown>): string | null {
   return `Tonalidad: ${key.tonic} ${key.mode === 'minor' ? 'menor' : 'mayor'} (${Math.round(key.confidence * 100)}%).`;
 }
 
+function relaySummary(relay: ListenRelaySnapshot): string {
+  const tokens = relay.audioTokens > 0
+    ? `verificado con ${relay.audioTokens} tokens de audio`
+    : 'sin verificar (0 tokens de audio)';
+  const cached = relay.cached ? ' · caché' : '';
+  const check = relay.check
+    ? ` · marcas de tiempo ${relay.check.matchedTimestamps}/${relay.check.timestamps} junto a un cambio de sección (±3 s)`
+      + ` · citas ${relay.check.matchedQuotes}/${relay.check.quotes} en la letra transcrita`
+    : '';
+  return `Oído real (${flatText(relay.provider, 40)} · ${flatText(relay.model, 60)}): ${tokens}${cached}${check}.\n${flatText(relay.note, 1_200)}`;
+}
+
 function lyricsSummary(data: Record<string, unknown>): string {
   const lyrics = data.lyrics as {
     readonly lineCount: number;
@@ -354,6 +403,7 @@ function summaryOf(input: ListenSnapshotInput, data: Record<string, unknown>): s
   if (energy) pieces.push(energy);
   pieces.push(`Pulso: ${data.beatCount} pulsos y ${data.downbeatCount} compases · ${data.accentCount} acentos.`);
   pieces.push(lyricsSummary(data));
+  if (input.relay) pieces.push(relaySummary(input.relay));
   if (typeof data.note === 'string') pieces.push(`Aviso: ${data.note}`);
   const ref = data.songMapRef;
   pieces.push(typeof ref === 'string'

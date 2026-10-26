@@ -20,6 +20,7 @@ import {
   buildListenSnapshot,
   normalizeListenRange,
   type ListenRange,
+  type ListenRelaySnapshot,
 } from '../../shared/music-inference/listen-snapshot.ts';
 import { songMapCacheKey, songMapRemoteKey } from '../../shared/music-inference/song-map-record.ts';
 import { decodeAudioFile } from './decode.ts';
@@ -30,6 +31,11 @@ import {
   renderSpectrogramPng,
   type SongPictureInput,
 } from './pictures.ts';
+import {
+  listenRelayConfig,
+  relayListenToSong,
+  type RelayListenInput,
+} from './relay.ts';
 import { analyzeServerMusicAsset, MissingMusicPacksError } from './runner.ts';
 import { saveStoredSongMap } from './song-map-cache.ts';
 
@@ -38,6 +44,8 @@ export interface ListenSongOptions {
   readonly toMs?: number;
   /** Defaults to true; text data is still returned when a picture cannot be drawn. */
   readonly pictures?: boolean;
+  /** Opt-in real ear; requires the two relay switches and never runs by itself. */
+  readonly relay?: boolean;
   readonly transcriptWords?: readonly SongLyricWord[];
   readonly onProgress?: (phase: string, progress: number) => void;
   /** Verification seams; production calls use the runner, ffmpeg and sharp. */
@@ -46,6 +54,7 @@ export interface ListenSongOptions {
   readonly mediaPath?: (src: string) => string | undefined;
   readonly renderMap?: (input: SongPictureInput) => Promise<Buffer>;
   readonly renderSpectrogram?: (file: string) => Promise<Buffer>;
+  readonly runRelay?: (input: RelayListenInput) => Promise<ListenRelaySnapshot | null>;
 }
 
 interface EmbeddedPicture {
@@ -184,7 +193,32 @@ export async function listenToSong(
     }
   }
 
-  // 6. One Spanish summary plus compact JSON, deterministically under the limit.
+  // 6. The optional real ear. Off by default, and it never runs from analysis:
+  //    only an explicit relay request can spend a cloud call.
+  let relay: ListenRelaySnapshot | null = null;
+  if (options.relay === true) {
+    if (!listenRelayConfig()) {
+      notes.push('El oído real está apagado: define OPENCHATCUT_LISTEN_RELAY=openrouter y OPENROUTER_API_KEY en .env.corteo.');
+    } else {
+      try {
+        options.onProgress?.('oído', 0.95);
+        const relayInput: RelayListenInput = {
+          audioFile: file,
+          assetId: asset.id,
+          sourceRevision,
+          sections,
+          transcriptWords: (options.transcriptWords ?? []).map((word) => word.text),
+        };
+        relay = options.runRelay
+          ? await options.runRelay(relayInput)
+          : await relayListenToSong(relayInput);
+      } catch (error) {
+        notes.push(`El oído real falló (${errorMessage(error).slice(0, 200)}).`);
+      }
+    }
+  }
+
+  // 7. One Spanish summary plus compact JSON, deterministically under the limit.
   const snapshot = buildListenSnapshot({
     assetName: asset.name,
     durationMs,
@@ -201,6 +235,7 @@ export async function listenToSong(
     songMap,
     songMapRef,
     pictures,
+    relay,
   });
   options.onProgress?.('listo', 1);
   return {

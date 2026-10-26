@@ -298,7 +298,9 @@ async function listenInBrowser(args: Args, ctx: AgentContext): Promise<unknown> 
     durationMs: analysis.durationMs,
     range,
     analysisSource: 'model',
-    analysisNote: 'En el navegador solo hay texto: el mapa y el espectrograma se dibujan en el servidor (MCP).',
+    analysisNote: args.relay === true
+      ? 'En el navegador solo hay texto: el mapa, el espectrograma y el oído real necesitan el servidor (MCP).'
+      : 'En el navegador solo hay texto: el mapa y el espectrograma se dibujan en el servidor (MCP).',
     bpm: analysis.bpm,
     meter: analysis.meter,
     beatConfidence: analysis.beatConfidence,

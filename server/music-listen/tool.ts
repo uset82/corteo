@@ -100,6 +100,7 @@ async function listenSong(args: Args, ctx: AgentContext): Promise<unknown> {
     fromMs: finiteNumber(args.fromMs),
     toMs: finiteNumber(args.toMs),
     pictures: args.pictures !== false,
+    relay: args.relay === true,
     transcriptWords: lyricWordsForMusic(target, ctx),
     onProgress: ctx.onToolProgress
       ? (phase, progress) => {

@@ -128,6 +128,7 @@ export const MUSIC_INTELLIGENCE_TOOL_SCHEMAS: AgentToolSchema[] = [
         fromMs: { type: 'number', minimum: 0, description: 'Optional source-millisecond range start; the whole song by default.' },
         toMs: { type: 'number', minimum: 1, description: 'Optional exclusive source-millisecond range end.' },
         pictures: { type: 'boolean', description: 'Include the song-map and spectrogram images. Defaults to true; text data is still returned when a picture cannot be drawn.' },
+        relay: { type: 'boolean', description: 'Run the optional real-ear relay: one paid OpenRouter call that asks a hearing model for timbre, vocal emotion, arrangement and the emotional arc. Defaults to false and only works when OPENCHATCUT_LISTEN_RELAY=openrouter and OPENROUTER_API_KEY are set.' },
       },
     },
   },

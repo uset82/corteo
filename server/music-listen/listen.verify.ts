@@ -149,8 +149,8 @@ try {
   assert.ok(schema, 'listen_to_song is in the music schema set');
   assert.deepEqual(
     Object.keys((schema as { input_schema: { properties: Record<string, unknown> } }).input_schema.properties).sort(),
-    ['assetId', 'fromMs', 'itemId', 'pictures', 'toMs'],
-    'the schema exposes the shared target, a range and the picture switch',
+    ['assetId', 'fromMs', 'itemId', 'pictures', 'relay', 'toMs'],
+    'the schema exposes the shared target, a range, the picture switch and the opt-in relay',
   );
 
   // 2. The model path: Spanish summary, saved map, two PNGs, bounded text.
