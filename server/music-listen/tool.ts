@@ -13,6 +13,7 @@ import { loadStoredMusicAnalysis } from './cache.ts';
 import { inspectMusicPacks, MUSIC_PACK_IDS } from './packs.ts';
 import { listenToSong } from './listen.ts';
 import { analyzeServerMusicAsset, MissingMusicPacksError } from './runner.ts';
+import { execMusicReactionTool, MUSIC_REACTION_TOOL_NAMES } from '../../src/agent/tools/music-reactions-tools.ts';
 
 const MISSING_MODEL_PACKS_ACTION = 'missing-model-packs';
 const MODEL_PACK_SETTINGS_ROUTE = 'local/music/packs';
@@ -117,6 +118,12 @@ export async function execServerMusicTool(name: string, args: Args, ctx: AgentCo
     if (name === 'analyze_music') return await analyzeMusic(args, ctx);
     if (name === 'inspect_music') return await inspectMusic(args, ctx);
     if (name === 'listen_to_song') return await listenSong(args, ctx);
+    if (MUSIC_REACTION_TOOL_NAMES.has(name)) {
+      return await execMusicReactionTool(name, args, ctx, {
+        loadAnalysis: (asset) => loadStoredMusicAnalysis(asset.id, sourceRevisionOf(asset)),
+        unavailableAnalysis,
+      });
+    }
     return { error: `unknown tool ${name}` };
   } catch (error) {
     return { error: error instanceof Error ? error.message : String(error) };

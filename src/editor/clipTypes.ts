@@ -90,6 +90,31 @@ export type KeyframeProp = 'x' | 'y' | 'scale' | 'scaleX' | 'scaleY' | 'rotation
 /** per-prop sparse keyframe curves on an item (sorted by frame — reducer invariant) */
 export type ItemKeyframes = Partial<Record<KeyframeProp, Keyframe[]>>;
 
+export const MUSIC_REACTIONS = [
+  'pulso', 'golpe', 'temblor', 'destello', 'respirar', 'ken-burns-al-ritmo',
+] as const;
+export type MusicReaction = (typeof MUSIC_REACTIONS)[number];
+
+/** Which analysis points drive a reaction; the UI names them in Spanish. */
+export const MUSIC_REACTION_TIMINGS = [
+  'beats', 'downbeats', 'accents', 'drops', 'sections', 'energy',
+] as const;
+export type MusicReactionTiming = (typeof MUSIC_REACTION_TIMINGS)[number];
+
+/** Music motion already written on a clip, so it can be listed or removed. */
+export interface MusicReactionMeta {
+  reaction: MusicReaction;
+  timing: MusicReactionTiming;
+  intensity: number;
+  props: KeyframeProp[];
+  songMapRef: string;
+  /** Timeline frames this reaction spans on the clip. */
+  fromFrame: number;
+  toFrame: number;
+  keyframeCount: number;
+  seed?: number | string;
+}
+
 /** Edge insets in composition pixels at the current canvas size.
  * Cropped pixels are not drawn (fully transparent). Stored as 0..1 fractions of
  * canvas width (left/right) or height (top/bottom). Rendered as clip-path inset
@@ -187,6 +212,8 @@ export interface TimelineItem extends TranscriptCarrier {
    * edit frames. A keyframed prop overrides its static transform value; opacity
    * multiplies onto fades. Visual clips only. */
   keyframes?: ItemKeyframes;
+  /** Music-driven motion already written on this clip (Plan 2 › L-09). */
+  musicReactions?: MusicReactionMeta[];
   /** color/blur adjustments for visual clips (special effects/LUT) */
   filters?: ClipFilters;
   /** How this clip meets the canvas. Unset uses the timeline fit. */

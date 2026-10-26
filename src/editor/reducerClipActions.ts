@@ -329,6 +329,17 @@ export function applyClipAction(s: TimelineState, a: Action): TimelineState | un
         }),
       };
     }
+    case 'setMusicReactions': {
+      if (lockedItem(s, a.id) || !s.items.some((it) => it.id === a.id)) return s;
+      return {
+        ...s,
+        items: s.items.map((it) => (
+          it.id === a.id
+            ? { ...it, musicReactions: a.reactions.length ? a.reactions : undefined }
+            : it
+        )),
+      };
+    }
     default:
       return undefined;
   }

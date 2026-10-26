@@ -14,6 +14,7 @@ import {
   normalizeListenRange,
 } from '../../../shared/music-inference/listen-snapshot';
 import { lyricWordsForMusic } from './music-target';
+import { execMusicReactionTool, MUSIC_REACTION_TOOL_NAMES } from './music-reactions-tools';
 import {
   MAX_MUSIC_IMAGE_PLACEMENTS,
   MAX_MUSIC_PLAN_TARGETS,
@@ -335,6 +336,12 @@ export async function execMusicIntelligenceTool(name: string, args: Args, ctx: A
       return isBuiltImagePlan(built) ? imagePlanResponse(built) : built;
     }
     if (name === 'sync_images_to_music') return await syncImages(args, ctx);
+    if (MUSIC_REACTION_TOOL_NAMES.has(name)) {
+      return await execMusicReactionTool(name, args, ctx, {
+        loadAnalysis: (asset) => loadMusicAnalysisForAsset(asset),
+        unavailableAnalysis,
+      });
+    }
     return { error: `unknown tool ${name}` };
   } catch (error) {
     return { error: error instanceof Error ? error.message : String(error) };

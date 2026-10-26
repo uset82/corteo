@@ -1,4 +1,5 @@
 import type { AgentToolSchema } from '../../tool-schema';
+import { MUSIC_REACTIONS, MUSIC_REACTION_TIMINGS } from '../../../editor/musicReactions';
 
 const TARGET_PROPERTIES = {
   itemId: {
@@ -79,6 +80,54 @@ const IMAGE_PLAN_PROPERTIES = {
     type: 'string',
     description: 'Optional target video track id or alias, default V1. The target range must be empty and unlocked.',
   },
+} as const;
+
+const REACTION_PROPERTIES = {
+  itemId: {
+    type: 'string',
+    description: 'BGM timeline audio/video clip id (unique prefix accepted). Its trim and speed map song time onto the target clips.',
+  },
+  targetItemIds: {
+    type: 'array',
+    items: { type: 'string' },
+    maxItems: 64,
+    description: 'Optional visual clip ids/prefixes to animate. Defaults to every non-audio clip overlapping the BGM range.',
+  },
+  reaction: {
+    type: 'string',
+    enum: [...MUSIC_REACTIONS],
+    description: 'pulso (scale bump on beats), golpe (punch-in on drops), temblor (shake on accents), destello (brightness flash), respirar (saturation/blur follow energy), ken-burns-al-ritmo (zoom whose speed follows section energy).',
+  },
+  timing: {
+    type: 'string',
+    enum: [...MUSIC_REACTION_TIMINGS],
+    description: 'Analysis points that drive the reaction. Defaults per reaction: pulso=beats, golpe=drops, temblor=accents, destello=downbeats, respirar=energy, ken-burns-al-ritmo=sections.',
+  },
+  intensity: {
+    type: 'number',
+    minimum: 0,
+    maximum: 1,
+    description: 'Motion amount, 0..1. Default 0.5; amplitudes scale with the local section energy too.',
+  },
+  fromFrame: {
+    type: 'number',
+    minimum: 0,
+    description: 'Optional inclusive timeline-frame range start; defaults to the BGM clip start.',
+  },
+  toFrame: {
+    type: 'number',
+    minimum: 1,
+    description: 'Optional exclusive timeline-frame range end; defaults to the BGM clip end.',
+  },
+  seed: {
+    type: ['string', 'number'],
+    description: 'Optional deterministic seed for ken-burns-al-ritmo direction. Defaults to the songMapRef.',
+  },
+} as const;
+
+const SONG_MAP_REF_PROPERTY = {
+  type: 'string',
+  description: 'Opaque songMapRef from music_reaction_plan. Applying rejects a missing or stale ref.',
 } as const;
 
 export const MUSIC_INTELLIGENCE_TOOL_SCHEMAS: AgentToolSchema[] = [
@@ -194,6 +243,59 @@ export const MUSIC_INTELLIGENCE_TOOL_SCHEMAS: AgentToolSchema[] = [
         },
       },
       required: ['itemId', 'timing', 'density', 'analysisRef'],
+    },
+  },
+  {
+    name: 'music_reaction_plan',
+    description: [
+      'Build a deterministic, read-only plan for music-driven motion on visual clips: keyframe counts and sample frames, without editing the timeline.',
+      'The BGM clip trim and speed map song beats, downbeats, accents, drops, sections or the energy curve onto each target clip, and amplitudes follow the local section energy.',
+      'Returns the songMapRef that apply_music_reaction requires. This tool never starts analysis.',
+    ].join(' '),
+    input_schema: {
+      type: 'object',
+      properties: { ...REACTION_PROPERTIES },
+      required: ['itemId', 'reaction'],
+    },
+  },
+  {
+    name: 'apply_music_reaction',
+    description: [
+      'Recompute a music reaction plan and write its transform or filter keyframes on the target visual clips as one EditorCommands batch (one undo step).',
+      'Pass the songMapRef returned by music_reaction_plan to reject stale analysis; locked tracks are skipped and reported.',
+      'Applying a reaction replaces earlier music reactions that animate the same properties on those clips. This never starts analysis and never edits the BGM clip.',
+    ].join(' '),
+    input_schema: {
+      type: 'object',
+      properties: { ...REACTION_PROPERTIES, songMapRef: SONG_MAP_REF_PROPERTY },
+      required: ['itemId', 'reaction', 'songMapRef'],
+    },
+  },
+  {
+    name: 'clear_music_reaction',
+    description: [
+      'Remove music-driven motion from the target clips in one EditorCommands batch: the reaction metadata goes away and the keyframe properties it owned are cleared unless another remaining reaction still uses them.',
+      'Omit reaction to clear every music reaction on the targets. Pass songMapRef to reject a stale song map; clearing still works without it.',
+      'Locked tracks are skipped and reported.',
+    ].join(' '),
+    input_schema: {
+      type: 'object',
+      properties: {
+        itemId: REACTION_PROPERTIES.itemId,
+        targetItemIds: REACTION_PROPERTIES.targetItemIds,
+        reaction: {
+          type: 'string',
+          enum: [...MUSIC_REACTIONS],
+          description: 'Optional reaction to remove. Omit to remove every music reaction from the targets.',
+        },
+        fromFrame: REACTION_PROPERTIES.fromFrame,
+        toFrame: REACTION_PROPERTIES.toFrame,
+        songMapRef: {
+          type: 'string',
+          description: 'Optional songMapRef from music_reaction_plan; when present it must match the current map.',
+        },
+      },
+      required: ['itemId'],
     },
   },
 ];

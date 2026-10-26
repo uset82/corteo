@@ -6,10 +6,7 @@ import {
   type TimelineItem,
   type TimelineState,
 } from '../../editor/types';
-import {
-  sourceFramesToTimelineFrames,
-  sourceWindowForTimelineRange,
-} from '../../editor/sourceLimit';
+import { localFrameForSourceMs } from '../../editor/sourceLimit';
 import type { MusicAnalysis, MusicEditPlan } from '../../audio/intelligence/types';
 import {
   loadMusicAnalysisForAsset,
@@ -212,18 +209,15 @@ function listedSections(analysis: MusicAnalysis, range: { fromMs: number; toMs: 
     }));
 }
 
-function mapSourceMsToTimelineFrame(ms: number, item: TimelineItem, fps: number): number | null {
-  const window = sourceWindowForTimelineRange(item, 0, item.durationInFrames);
-  const sourceFrame = (ms / 1000) * fps;
-  if (sourceFrame <= window.startFrame || sourceFrame >= window.endFrame) return null;
-  const local = Math.round(sourceFramesToTimelineFrames(item, sourceFrame - window.startFrame));
-  if (local <= 0 || local >= item.durationInFrames) return null;
-  return item.startFrame + local;
+/** Absolute timeline frame for a song time, honouring the clip trim and speed. */
+export function musicSourceMsToTimelineFrame(ms: number, item: TimelineItem, fps: number): number | null {
+  const local = localFrameForSourceMs(item, ms, fps);
+  return local === null ? null : item.startFrame + local;
 }
 
 function mapSourcePoints(pointsMs: readonly number[], item: TimelineItem, fps: number): number[] {
   const frames = pointsMs.flatMap((ms) => {
-    const frame = mapSourceMsToTimelineFrame(ms, item, fps);
+    const frame = musicSourceMsToTimelineFrame(ms, item, fps);
     return frame === null ? [] : [frame];
   });
   return [...new Set(frames)].sort((a, b) => a - b);

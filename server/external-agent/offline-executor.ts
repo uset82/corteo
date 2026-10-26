@@ -50,6 +50,9 @@ const MUSIC_ANALYSIS_TOOL_NAMES: Record<string, true> = {
   analyze_music: true,
   inspect_music: true,
   listen_to_song: true,
+  music_reaction_plan: true,
+  apply_music_reaction: true,
+  clear_music_reaction: true,
 };
 
 /**

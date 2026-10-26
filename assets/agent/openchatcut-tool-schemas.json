@@ -5934,6 +5934,205 @@
       }
     },
     {
+      "name": "music_reaction_plan",
+      "description": "Build a deterministic, read-only plan for music-driven motion on visual clips: keyframe counts and sample frames, without editing the timeline. The BGM clip trim and speed map song beats, downbeats, accents, drops, sections or the energy curve onto each target clip, and amplitudes follow the local section energy. Returns the songMapRef that apply_music_reaction requires. This tool never starts analysis.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "BGM timeline audio/video clip id (unique prefix accepted). Its trim and speed map song time onto the target clips."
+          },
+          "targetItemIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 64,
+            "description": "Optional visual clip ids/prefixes to animate. Defaults to every non-audio clip overlapping the BGM range."
+          },
+          "reaction": {
+            "type": "string",
+            "enum": [
+              "pulso",
+              "golpe",
+              "temblor",
+              "destello",
+              "respirar",
+              "ken-burns-al-ritmo"
+            ],
+            "description": "pulso (scale bump on beats), golpe (punch-in on drops), temblor (shake on accents), destello (brightness flash), respirar (saturation/blur follow energy), ken-burns-al-ritmo (zoom whose speed follows section energy)."
+          },
+          "timing": {
+            "type": "string",
+            "enum": [
+              "beats",
+              "downbeats",
+              "accents",
+              "drops",
+              "sections",
+              "energy"
+            ],
+            "description": "Analysis points that drive the reaction. Defaults per reaction: pulso=beats, golpe=drops, temblor=accents, destello=downbeats, respirar=energy, ken-burns-al-ritmo=sections."
+          },
+          "intensity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Motion amount, 0..1. Default 0.5; amplitudes scale with the local section energy too."
+          },
+          "fromFrame": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Optional inclusive timeline-frame range start; defaults to the BGM clip start."
+          },
+          "toFrame": {
+            "type": "number",
+            "minimum": 1,
+            "description": "Optional exclusive timeline-frame range end; defaults to the BGM clip end."
+          },
+          "seed": {
+            "type": [
+              "string",
+              "number"
+            ],
+            "description": "Optional deterministic seed for ken-burns-al-ritmo direction. Defaults to the songMapRef."
+          }
+        },
+        "required": [
+          "itemId",
+          "reaction"
+        ]
+      }
+    },
+    {
+      "name": "apply_music_reaction",
+      "description": "Recompute a music reaction plan and write its transform or filter keyframes on the target visual clips as one EditorCommands batch (one undo step). Pass the songMapRef returned by music_reaction_plan to reject stale analysis; locked tracks are skipped and reported. Applying a reaction replaces earlier music reactions that animate the same properties on those clips. This never starts analysis and never edits the BGM clip.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "BGM timeline audio/video clip id (unique prefix accepted). Its trim and speed map song time onto the target clips."
+          },
+          "targetItemIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 64,
+            "description": "Optional visual clip ids/prefixes to animate. Defaults to every non-audio clip overlapping the BGM range."
+          },
+          "reaction": {
+            "type": "string",
+            "enum": [
+              "pulso",
+              "golpe",
+              "temblor",
+              "destello",
+              "respirar",
+              "ken-burns-al-ritmo"
+            ],
+            "description": "pulso (scale bump on beats), golpe (punch-in on drops), temblor (shake on accents), destello (brightness flash), respirar (saturation/blur follow energy), ken-burns-al-ritmo (zoom whose speed follows section energy)."
+          },
+          "timing": {
+            "type": "string",
+            "enum": [
+              "beats",
+              "downbeats",
+              "accents",
+              "drops",
+              "sections",
+              "energy"
+            ],
+            "description": "Analysis points that drive the reaction. Defaults per reaction: pulso=beats, golpe=drops, temblor=accents, destello=downbeats, respirar=energy, ken-burns-al-ritmo=sections."
+          },
+          "intensity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Motion amount, 0..1. Default 0.5; amplitudes scale with the local section energy too."
+          },
+          "fromFrame": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Optional inclusive timeline-frame range start; defaults to the BGM clip start."
+          },
+          "toFrame": {
+            "type": "number",
+            "minimum": 1,
+            "description": "Optional exclusive timeline-frame range end; defaults to the BGM clip end."
+          },
+          "seed": {
+            "type": [
+              "string",
+              "number"
+            ],
+            "description": "Optional deterministic seed for ken-burns-al-ritmo direction. Defaults to the songMapRef."
+          },
+          "songMapRef": {
+            "type": "string",
+            "description": "Opaque songMapRef from music_reaction_plan. Applying rejects a missing or stale ref."
+          }
+        },
+        "required": [
+          "itemId",
+          "reaction",
+          "songMapRef"
+        ]
+      }
+    },
+    {
+      "name": "clear_music_reaction",
+      "description": "Remove music-driven motion from the target clips in one EditorCommands batch: the reaction metadata goes away and the keyframe properties it owned are cleared unless another remaining reaction still uses them. Omit reaction to clear every music reaction on the targets. Pass songMapRef to reject a stale song map; clearing still works without it. Locked tracks are skipped and reported.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "BGM timeline audio/video clip id (unique prefix accepted). Its trim and speed map song time onto the target clips."
+          },
+          "targetItemIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 64,
+            "description": "Optional visual clip ids/prefixes to animate. Defaults to every non-audio clip overlapping the BGM range."
+          },
+          "reaction": {
+            "type": "string",
+            "enum": [
+              "pulso",
+              "golpe",
+              "temblor",
+              "destello",
+              "respirar",
+              "ken-burns-al-ritmo"
+            ],
+            "description": "Optional reaction to remove. Omit to remove every music reaction from the targets."
+          },
+          "fromFrame": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Optional inclusive timeline-frame range start; defaults to the BGM clip start."
+          },
+          "toFrame": {
+            "type": "number",
+            "minimum": 1,
+            "description": "Optional exclusive timeline-frame range end; defaults to the BGM clip end."
+          },
+          "songMapRef": {
+            "type": "string",
+            "description": "Optional songMapRef from music_reaction_plan; when present it must match the current map."
+          }
+        },
+        "required": [
+          "itemId"
+        ]
+      }
+    },
+    {
       "name": "browse_local_media",
       "description": "Browse local directories or search local media filenames before importing into the media pool. Desktop access is enabled by default and an explicit AGENT_IMPORT_ROOTS setting restricts it; a browser session requires that allowlist. Defaults to the home directory; pass an absolute path to browse a specific folder or drive. Returns directories and supported media paths, sizes, and modification times without importing. Use recursive with query/kind to find candidates, then import_assets for selected files. Follow nextOffset for more results. If truncated, browse narrower subdirectories; symlinks are not followed.",
       "input_schema": {
@@ -7020,6 +7219,78 @@
           "itemId",
           "timing",
           "density"
+        ]
+      }
+    },
+    {
+      "name": "music_reaction_plan",
+      "description": "Build a deterministic, read-only plan for music-driven motion on visual clips: keyframe counts and sample frames, without editing the timeline. The BGM clip trim and speed map song beats, downbeats, accents, drops, sections or the energy curve onto each target clip, and amplitudes follow the local section energy. Returns the songMapRef that apply_music_reaction requires. This tool never starts analysis.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "BGM timeline audio/video clip id (unique prefix accepted). Its trim and speed map song time onto the target clips."
+          },
+          "targetItemIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 64,
+            "description": "Optional visual clip ids/prefixes to animate. Defaults to every non-audio clip overlapping the BGM range."
+          },
+          "reaction": {
+            "type": "string",
+            "enum": [
+              "pulso",
+              "golpe",
+              "temblor",
+              "destello",
+              "respirar",
+              "ken-burns-al-ritmo"
+            ],
+            "description": "pulso (scale bump on beats), golpe (punch-in on drops), temblor (shake on accents), destello (brightness flash), respirar (saturation/blur follow energy), ken-burns-al-ritmo (zoom whose speed follows section energy)."
+          },
+          "timing": {
+            "type": "string",
+            "enum": [
+              "beats",
+              "downbeats",
+              "accents",
+              "drops",
+              "sections",
+              "energy"
+            ],
+            "description": "Analysis points that drive the reaction. Defaults per reaction: pulso=beats, golpe=drops, temblor=accents, destello=downbeats, respirar=energy, ken-burns-al-ritmo=sections."
+          },
+          "intensity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Motion amount, 0..1. Default 0.5; amplitudes scale with the local section energy too."
+          },
+          "fromFrame": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Optional inclusive timeline-frame range start; defaults to the BGM clip start."
+          },
+          "toFrame": {
+            "type": "number",
+            "minimum": 1,
+            "description": "Optional exclusive timeline-frame range end; defaults to the BGM clip end."
+          },
+          "seed": {
+            "type": [
+              "string",
+              "number"
+            ],
+            "description": "Optional deterministic seed for ken-burns-al-ritmo direction. Defaults to the songMapRef."
+          }
+        },
+        "required": [
+          "itemId",
+          "reaction"
         ]
       }
     },

@@ -84,6 +84,7 @@ const ROUTING_GROUPS: readonly RoutingGroup[] = [
       'list_audio', 'add_audio', 'normalize_loudness', 'isolate_voice', 'detect_beats',
       'analyze_music', 'inspect_music', 'listen_to_song', 'music_edit_plan', 'sync_cuts_to_music',
       'music_image_plan', 'sync_images_to_music',
+      'music_reaction_plan', 'apply_music_reaction', 'clear_music_reaction',
     ],
   },
   {
@@ -144,6 +145,7 @@ const ROUTING_GROUPS: readonly RoutingGroup[] = [
       'view_timeline_frames', 'view_asset_frames', 'detect_scenes', 'find_highlights', 'auto_reframe',
       'multicam_sync', 'change_cam', 'inspect_color', 'auto_grade', 'detect_beats', 'inspect_music',
       'music_image_plan', 'sync_images_to_music',
+      'music_reaction_plan', 'apply_music_reaction',
       'review_scene_plan',
     ],
   },

@@ -9,6 +9,7 @@ const READ_ONLY_TOOL_NAMES = new Set([
   'read_captions', 'read_project', 'read_transcript', 'find_transcript',
   'search_media', 'search_stock_media', 'search_fonts',
   'analyze_music', 'inspect_music', 'listen_to_song', 'music_edit_plan', 'music_image_plan',
+  'music_reaction_plan',
   'search_catalog',
   'read_agent_artifact', 'browse_local_media', 'score_moments', 'calibrate_scores', 'write_social_copy',
   'list_scheduled_publishes', 'score_performance',
@@ -34,6 +35,8 @@ const DRAFT_EDIT_TOOL_NAMES = new Set([
   'apply_brand_kit',
   // Plan 1 Phase 2: writes scale/x/y keyframes for a still in one batch (one undo step).
   'apply_ken_burns',
+  // Plan 2: music-driven keyframes on visual clips, written as one batch each.
+  'apply_music_reaction', 'clear_music_reaction',
   'manage_design_style',
   'import_timeline',
   'export_jianying_draft',
@@ -71,6 +74,8 @@ const SERVER_DIRECT_READ_TOOL_NAMES: Record<string, true> = {
   // One call that measures, falls back to DSP beats, draws the map and the
   // spectrogram and caches the song map. No editor tab and no timeline edits.
   listen_to_song: true,
+  // Read-only reaction plan: cached analysis plus the BGM clip mapping.
+  music_reaction_plan: true,
 };
 
 const SERVER_DIRECT_EDIT_TOOL_NAMES: Record<string, true> = {
@@ -113,6 +118,9 @@ const SERVER_DIRECT_EDIT_TOOL_NAMES: Record<string, true> = {
   export_jianying_draft: true,
   // On-device beat analysis. Marker writes go through the draft's commands.
   detect_beats: true,
+  // Music reactions: pure generator plus the draft's command batch, no media IO.
+  apply_music_reaction: true,
+  clear_music_reaction: true,
 };
 
 const SERVER_DIRECT_BROWSER_ACTIONS: Record<string, true> = {

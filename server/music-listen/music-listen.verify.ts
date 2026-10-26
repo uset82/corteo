@@ -260,6 +260,9 @@ try {
   assert.equal(isExternalServerDirectTool('inspect_music'), true);
   const names = new Set(MUSIC_INTELLIGENCE_TOOL_SCHEMAS.map((tool) => tool.name));
   assert.ok(names.has('analyze_music') && names.has('inspect_music'));
+  assert.ok(names.has('music_reaction_plan') && names.has('apply_music_reaction') && names.has('clear_music_reaction'));
+  assert.equal(isExternalServerDirectTool('music_reaction_plan'), true);
+  assert.equal(isExternalServerDirectTool('apply_music_reaction'), true);
 
   await saveStoredMusicAnalysis(analysis);
   const notes: string[] = [];
@@ -288,6 +291,40 @@ try {
   const ranged = await execServerMusicTool('inspect_music', { assetId: song.id, fromMs: 500, toMs: 1500 }, ctx as never) as Record<string, unknown>;
   assert.deepEqual(ranged.range, { fromMs: 500, toMs: 1500 });
   assert.equal(ranged.beatCount, 2);
+
+  // 8b. Reactions answer server-direct: the stored analysis drives the plan and
+  //     the apply lands as one command batch on a draft with no editor tab.
+  const reactionBatches: Array<{ actions: Array<{ type: string }>; label?: string }> = [];
+  const reactionState = {
+    fps: 30,
+    items: [
+      { id: 'bgm', kind: 'audio', track: 'A1', startFrame: 0, durationInFrames: 120, name: 'bgm', src: song.src, sourceAssetId: song.id },
+      { id: 'visual', kind: 'video', track: 'V1', startFrame: 0, durationInFrames: 120, name: 'visual' },
+    ],
+    tracks: { A1: { kind: 'audio' }, V1: { kind: 'video' } },
+  };
+  const reactionCtx = {
+    getState: () => reactionState,
+    getDoc: () => ({ assets: [song] }),
+    commands: { batch: (actions: Array<{ type: string }>, label?: string) => { reactionBatches.push({ actions, label }); } },
+  };
+  const reactionPlan = await execServerMusicTool(
+    'music_reaction_plan', { itemId: 'bgm', reaction: 'pulso' }, reactionCtx as never,
+  ) as Record<string, unknown>;
+  assert.equal(reactionPlan.ok, true);
+  assert.ok(Number(reactionPlan.keyframeCount) > 0, 'the stored analysis maps beats onto the target clip');
+  assert.equal(reactionBatches.length, 0, 'the server plan is read-only');
+  const reactionApply = await execServerMusicTool('apply_music_reaction', {
+    itemId: 'bgm', reaction: 'pulso', songMapRef: reactionPlan.songMapRef,
+  }, reactionCtx as never) as Record<string, unknown>;
+  assert.equal(reactionApply.changed, true);
+  assert.equal(reactionBatches.length, 1, 'the server apply is one batch');
+  assert.equal(reactionBatches[0]!.actions.at(-1)?.type, 'setMusicReactions');
+  const reactionStale = await execServerMusicTool('clear_music_reaction', {
+    itemId: 'bgm', songMapRef: 'song-map:stale',
+  }, reactionCtx as never) as Record<string, unknown>;
+  assert.equal(reactionStale.staleSongMapRef, true);
+  assert.equal(reactionBatches.length, 1, 'a stale clear ref rejects before the batch');
 
   // A projection without an item keeps source milliseconds; the browser tool
   // maps to timeline frames only when a clip is supplied.

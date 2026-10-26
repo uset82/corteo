@@ -29,6 +29,26 @@ export function sourceFrameAt(item: SourceTimingItem, localFrame: number): numbe
   return Math.max(0, (item.srcInFrame ?? 0) + timelineFramesToSourceFrames(item, localFrame));
 }
 
+/** Item-local frame whose source time is `ms`; null outside the clip's source window. */
+export function localFrameForSourceMs(
+  item: SourceTimingItem & Pick<TimelineItem, 'durationInFrames'>,
+  ms: number,
+  fps: number,
+): number | null {
+  if (!(fps > 0) || !Number.isFinite(ms) || !(item.durationInFrames > 0)) return null;
+  const window = sourceWindowForTimelineRange(item, 0, item.durationInFrames);
+  const sourceFrame = (Math.max(0, ms) / 1000) * fps;
+  if (sourceFrame <= window.startFrame || sourceFrame >= window.endFrame) return null;
+  const local = Math.round(sourceFramesToTimelineFrames(item, sourceFrame - window.startFrame));
+  if (local <= 0 || local >= item.durationInFrames) return null;
+  return local;
+}
+
+/** Source milliseconds at an item-local timeline frame. */
+export function sourceMsAtLocalFrame(item: SourceTimingItem, localFrame: number, fps: number): number {
+  return fps > 0 ? (sourceFrameAt(item, localFrame) / fps) * 1000 : 0;
+}
+
 /** Clamped source-media window corresponding to an item-local timeline range. */
 export function sourceWindowForTimelineRange(
   item: SourceTimingItem,
