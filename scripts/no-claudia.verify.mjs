@@ -75,6 +75,10 @@ const WHOLE_FILE = new Map([
     lines: 1,
     why: 'asserts index.html no longer contains the old name',
   }],
+  ['scripts/corteo-install.verify.mjs', {
+    lines: 2,
+    why: 'asserts the installer no longer writes its self-test under the old name',
+  }],
 ]);
 
 /** Paths and proper nouns that may keep it in any file. */
@@ -83,6 +87,7 @@ const ANYWHERE = [
   'docs/plans/02-claudia-escucha.md',
   'docs/plans/04-claudia-brand.md',
   'docs/plans/05-claudia-portable.md',
+  'docs/plans/06-claudia-polish.md',
   'claudia-bot',
   // This gate is named after the thing it forbids, so its own path in
   // package.json is the one place the string is unavoidable.
@@ -170,6 +175,7 @@ assert.deepEqual(
     'install.sh',
     // test:serial names this gate, and the gate is named after what it forbids.
     'package.json',
+    'scripts/corteo-install.verify.mjs',
     'src/brand/CorteoMarks.verify.tsx',
     'src/brand/brand-text.verify.ts',
     'src/skins.ts',

@@ -21,6 +21,7 @@ import { volumeAtFrame } from './keyframes';
 import { sourceFrameAt } from './sourceLimit';
 import { offthreadTrimBefore, offthreadVideoTransparent, useRuntimeVideoDecoder } from './serverVideoDecoder';
 import type { AspectFit, TimelineItem, TransitionItem } from './types';
+import { clipFrameFitOf, type ClipFrameFit } from './itemFrameFit';
 import { isAudioTransition } from './types';
 import { clampVisualBorderRadius, objectFitInsideVisualFrame, visibleVisualFrameRect } from './visualFrameGeometry';
 
@@ -68,7 +69,7 @@ function MixedRuntimeAudio({ item, browserRenderer, volume, ...props }: Omit<Bro
 
 export function VisualClipSurface({ item, fit, canvasW, canvasH, borderRadius, children }: {
   item: TimelineItem;
-  fit: AspectFit;
+  fit: ClipFrameFit;
   canvasW: number;
   canvasH: number;
   borderRadius: number;
@@ -211,16 +212,17 @@ export function SharedVideoVisualGroup({ group, fit, muted, canvasW, canvasH, pr
   const appearance = appearanceAt(item, localFrame, false, { width: canvasW, height: canvasH });
   const sourceWidth = item.width ?? canvasW;
   const sourceHeight = item.height ?? canvasH;
+  const itemFit = clipFrameFitOf(item, fit);
   const rect = visibleVisualFrameRect(
     { width: canvasW, height: canvasH },
     { width: sourceWidth, height: sourceHeight },
-    fit,
+    itemFit,
   );
   const resolvedRadius = clampVisualBorderRadius(appearance.borderRadius, rect);
   const style: CSSProperties = {
     width: '100%',
     height: '100%',
-    objectFit: objectFitInsideVisualFrame(fit),
+    objectFit: objectFitInsideVisualFrame(itemFit),
   };
   let visual = (
     <RuntimeVideo browserRenderer={browserRenderer} src={first.src} trimBefore={first.srcInFrame ?? 0}
@@ -298,7 +300,7 @@ export function BackgroundFillLayer({ item, frameOffset, canvasW, canvasH, brows
 interface MediaFillProps {
   item: TimelineItem;
   frameOffset: number;
-  fit: AspectFit;
+  fit: ClipFrameFit;
   muted: boolean;
   groupedAudio: boolean;
   canvasW: number;

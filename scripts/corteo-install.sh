@@ -157,13 +157,12 @@ EOF
 }
 
 self_test() {
-  local step="setup" work="$DIR/.corteo-self-test" clip out asset duration
-  trap 'printf "[corteo] self-test step failed: %s\n" "$step" >&2' ERR
+  local step="setup" work clip out asset duration
+  work="$(mktemp -d "${TMPDIR:-/tmp}/corteo-self-test.XXXXXX")"
+  trap 'printf "[corteo] self-test step failed: %s\n" "$step" >&2; printf "[corteo] self-test files kept at %s\n" "$work" >&2' ERR
   clip="$work/clip.mp4"
-  out="$DIR/corteo-self-test.mp4"
-  rm -rf "$work"
+  out="$work/corteo-self-test.mp4"
   mkdir -p "$work"
-  rm -f "$out"
   step="ffmpeg clip"
   say "generating a 2 second test clip"
   ffmpeg -y -hide_banner -loglevel error \
@@ -209,7 +208,8 @@ self_test() {
     }
   ' "$duration"
   trap - ERR
-  say "self-test video: $out (${duration}s)"
+  rm -rf "$work"
+  say "self-test passed (${duration}s); artifacts removed"
 }
 
 ensure_node

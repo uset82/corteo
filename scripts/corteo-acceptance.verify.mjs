@@ -26,6 +26,12 @@ for (const needle of [
   '1080x1920',
   'detect_beats',
   'Failed to load url /@fs/src/main.tsx',
+  'CORTEO_PORT',
+  'CORTEO_STORE_DIR',
+  '--to-audio',
+  'item fit',
+  'geq=',
+  'frame-bars.mjs',
 ]) {
   assert.match(source, new RegExp(needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), needle);
 }
@@ -35,6 +41,12 @@ assert.match(skill, /mcp token --show/);
 assert.match(skill, /detect_beats/);
 assert.match(skill, /--resolution 4k/);
 assert.match(skill, /1080x1920/);
+assert.match(skill, /Receta rápida/);
+assert.match(skill, /--to-audio/);
+assert.match(skill, /--mode cover/);
+assert.match(skill, /--background blur/);
+assert.match(skill, /while your editor is on/);
+assert.match(skill, /CORTEO_STORE_DIR/);
 assert.doesNotMatch(source, /API_KEY|BEGIN [A-Z ]*PRIVATE KEY|sk-[A-Za-z0-9]{8,}/);
 
 console.log('corteo-acceptance.verify: syntax and skill guards pass');

@@ -18,7 +18,7 @@ import { GLOBAL_FLAGS, parseFrames, projectReference } from './common.ts';
 
 const FLAGS = [
   ...GLOBAL_FLAGS,
-  'out', 'timeline', 'format', 'codec', 'resolution', 'fps', 'bitrate', 'from', 'to', 'quiet', 'dry-run',
+  'out', 'timeline', 'format', 'codec', 'resolution', 'fps', 'bitrate', 'from', 'to', 'to-audio', 'quiet', 'dry-run',
 ] as const;
 
 const FORMATS = ['video', 'audio'] as const;
@@ -63,6 +63,15 @@ export async function runRenderCommand(commandLine: CommandLine, json: boolean):
   const bitrateFlag = flagText(commandLine, 'bitrate');
   const fromFlag = flagText(commandLine, 'from');
   const toFlag = flagText(commandLine, 'to');
+  const toAudio = flagBoolean(commandLine, 'to-audio');
+  let audioEnd: number | undefined;
+  if (toAudio && toFlag === undefined) {
+    const ends = timeline.items
+      .filter((item) => item.kind === 'audio')
+      .map((item) => item.startFrame + item.durationInFrames);
+    if (ends.length === 0) throw new UsageError('render --to-audio needs an audio clip on the timeline');
+    audioEnd = Math.max(...ends);
+  }
 
   const submission = await acceptExportSubmission({
     state: { ...timeline, assets: doc.assets },
@@ -74,7 +83,9 @@ export async function runRenderCommand(commandLine: CommandLine, json: boolean):
     ...(fpsFlag === undefined ? {} : { fps: positiveNumber(fpsFlag, 'fps') }),
     ...(bitrateFlag === undefined ? {} : { videoBitrate: positiveNumber(bitrateFlag, 'bitrate') }),
     ...(fromFlag === undefined ? {} : { startFrame: parseFrames(fromFlag, timeline.fps, 'from') }),
-    ...(toFlag === undefined ? {} : { endFrameExclusive: parseFrames(toFlag, timeline.fps, 'to') }),
+    ...(toFlag !== undefined
+      ? { endFrameExclusive: parseFrames(toFlag, timeline.fps, 'to') }
+      : audioEnd !== undefined ? { endFrameExclusive: audioEnd } : {}),
   });
   const plan = submission.plan;
   if (flagBoolean(commandLine, 'dry-run')) {

@@ -107,6 +107,8 @@ export interface EditorCommands {
   setItemTransform: (id: string, patch: ClipTransform) => void;
   setItemFilters: (id: string, patch: ClipFilters) => void;
   setItemBackgroundFill: (id: string, enabled: boolean, strength?: number) => void;
+  /** Per-item cover/contain/fill and an optional letterbox color. */
+  setClipFrame: (id: string, frame: { fit?: 'contain' | 'cover' | 'fill'; backgroundColor?: string | null }) => void;
   setItemZoom: (id: string, patch: Partial<ZoomEffect> | null) => void;
   /** Replace a clip's per-clip WebGL effect stack. */
   setItemEffects: (id: string, effects: ClipEffect[], defs?: SerializableFxDef[]) => void;

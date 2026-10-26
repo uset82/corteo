@@ -187,6 +187,10 @@ export interface TimelineItem extends TranscriptCarrier {
   keyframes?: ItemKeyframes;
   /** color/blur adjustments for visual clips (special effects/LUT) */
   filters?: ClipFilters;
+  /** How this clip meets the canvas. Unset uses the timeline fit. */
+  fit?: 'contain' | 'cover' | 'fill';
+  /** Solid letterbox color when the clip does not cover the canvas. */
+  backgroundColor?: string;
   /** blurred cover copy behind the contained clip */
   backgroundFill?: boolean;
   /** user-selected background blur/dimming intensity, 0..100 percent */

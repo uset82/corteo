@@ -16,6 +16,7 @@ import { previewTransitionType } from './transitionPreview';
 import { TimelineReadinessGate } from './TimelineReadinessGate';
 import { timelineReadinessKey } from './timelineReadinessKey';
 import { isBackgroundFillActive } from './backgroundFill';
+import { mediaFitFor } from './itemFrameFit';
 import { ClipWrapper } from './TimelineClipWrapper';
 import { GlTransitionVisibility } from './GlTransitionVisibility';
 import { updateReadyGlWindows } from './glTransitionVisibilityState';
@@ -32,7 +33,7 @@ function NestedSequenceLayer({ item, project, parentWidth, parentHeight, fit, fr
   project?: ProjectDoc;
   parentWidth: number;
   parentHeight: number;
-  fit: AspectFit;
+  fit: AspectFit | 'fill';
   frameOffset: number;
   browserRenderer: boolean;
   sequenceLimits?: SequenceGraphLimits;
@@ -62,9 +63,12 @@ function NestedSequenceLayer({ item, project, parentWidth, parentHeight, fit, fr
   const scale = fit === 'cover'
     ? Math.max(parentWidth / child.width, parentHeight / child.height)
     : Math.min(parentWidth / child.width, parentHeight / child.height);
+  const frameScale = fit === 'fill'
+    ? `scale(${parentWidth / child.width}, ${parentHeight / child.height})`
+    : `scale(${scale})`;
   return (
     <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-      <div style={{ width: child.width, height: child.height, position: 'relative', flexShrink: 0, transform: `scale(${scale})` }}>
+      <div style={{ width: child.width, height: child.height, position: 'relative', flexShrink: 0, transform: frameScale }}>
         <Sequence from={dynamicFrom} durationInFrames={childDuration} layout="none">
           <TimelineContent
             state={child}
@@ -167,6 +171,7 @@ function TimelineContent({ state, project, transparent, browserRenderer = false,
   // Headless export renders deterministically frame by frame, preheating will only slow down the export, set to 0.
   // A 2s premount window multiplied the decoding cost of every 2K/4K clip; 1s still covers element warm-up.
   const environment = getRemotionEnvironment();
+  const backdrop = transparent ? undefined : (environment.isRendering ? '#000000' : GRID);
   const premountFrames = environment.isRendering ? 0 : Math.round(state.fps * 1);
   const videoAudioGroups = continuousVideoAudioGroups(ordered, state.transitions);
   const groupedVideoIds = new Set(videoAudioGroups.flatMap((group) => group.map((item) => item.id)));
@@ -295,7 +300,7 @@ function TimelineContent({ state, project, transparent, browserRenderer = false,
   const sharedVisualIds = new Set(sharedVisualGroups.flatMap((group) => group.map((item) => item.id)));
 
   return (
-    <AbsoluteFill style={{ background: transparent ? undefined : GRID }}>
+    <AbsoluteFill style={{ background: backdrop }}>
       {staticPreviewStatuses.map((status) => (
         <SelectedPreviewStatusReporter
           key={`${status.kind}:${status.targetId}`}
@@ -326,11 +331,12 @@ function TimelineContent({ state, project, transparent, browserRenderer = false,
         const captionsOff = !captionOverlayVisible(state);
         const hiddenByCaptions = captionsOff && previewTextEditFields(item) !== null;
         const fillBackground = isBackgroundFillActive(state, item);
+        const clipFit = mediaFitFor(item, fit, fillBackground);
         const foreground = (
           <ClipWrapper item={item} frameOffset={-eb} hiddenByCaptions={hiddenByCaptions}>
             {(borderRadius) => item.kind === 'sequence'
-              ? <VisualClipSurface item={item} fit={fit} canvasW={state.width} canvasH={state.height} borderRadius={borderRadius}>
-                  <NestedSequenceLayer item={item} project={project} parentWidth={state.width} parentHeight={state.height} fit={fit} frameOffset={-eb} browserRenderer={browserRenderer} sequenceLimits={sequenceLimits} muted={isMuted(item.track)} />
+              ? <VisualClipSurface item={item} fit={clipFit} canvasW={state.width} canvasH={state.height} borderRadius={borderRadius}>
+                  <NestedSequenceLayer item={item} project={project} parentWidth={state.width} parentHeight={state.height} fit={clipFit} frameOffset={-eb} browserRenderer={browserRenderer} sequenceLimits={sequenceLimits} muted={isMuted(item.track)} />
                 </VisualClipSurface>
               : item.kind === 'motion-graphic'
               ? <ItemLayer item={item} canvasW={state.width} canvasH={state.height} fit={fit} borderRadius={borderRadius} />
@@ -338,7 +344,7 @@ function TimelineContent({ state, project, transparent, browserRenderer = false,
               ? <TextLayer item={item} canvasW={state.width} canvasH={state.height} fit={fit} />
               : item.kind === 'solid'
               ? <SolidLayer item={item} canvasW={state.width} canvasH={state.height} borderRadius={borderRadius} />
-              : <MediaFill item={item} frameOffset={-eb} fit={fillBackground ? 'contain' : fit}
+              : <MediaFill item={item} frameOffset={-eb} fit={clipFit}
                   muted={isMuted(item.track)} groupedAudio={groupedVideoIds.has(item.id)}
                   gainAt={(frame) => duckGain(item.track, frame)} canvasW={state.width} canvasH={state.height}
                   borderRadius={borderRadius} browserRenderer={browserRenderer}
@@ -348,6 +354,9 @@ function TimelineContent({ state, project, transparent, browserRenderer = false,
         );
         const content = (
           <>
+            {typeof item.backgroundColor === 'string' && item.backgroundColor
+              ? <AbsoluteFill style={{ background: item.backgroundColor }} />
+              : null}
             {fillBackground && <BackgroundFillLayer item={item} frameOffset={-eb} canvasW={state.width}
               canvasH={state.height} browserRenderer={browserRenderer} />}
             {foreground}

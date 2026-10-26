@@ -5,6 +5,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck disable=SC1091
 source "$ROOT/scripts/corteo-env.sh"
 cd "$CORTEO_ROOT"
+# Vite 8's native loader lists every extensionless import, including i18n `./shorts`.
+export VITE_CONFIG_NATIVE_IGNORE_WARNING="${VITE_CONFIG_NATIVE_IGNORE_WARNING:-true}"
 npm run sync:mediapipe
 npm run sync:whisper-cli
 npm run verify:server-tool-catalog

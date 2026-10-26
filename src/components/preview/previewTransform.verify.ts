@@ -81,6 +81,17 @@ const stateOf = (patch: Partial<TimelineState> = {}): TimelineState => ({
   const { objectFitInsideVisualFrame } = previewTransformModule;
   assert.equal(objectFitInsideVisualFrame('contain'), 'fill', 'contain box is already fitted; fill avoids a second letterbox');
   assert.equal(objectFitInsideVisualFrame('cover'), 'cover');
+  assert.equal(objectFitInsideVisualFrame('fill'), 'fill');
+}
+{
+  const { visibleVisualFrameRect } = previewTransformModule;
+  const canvas = { width: 1080, height: 1920 };
+  const source = { width: 1920, height: 1080 };
+  assert.deepEqual(visibleVisualFrameRect(canvas, source, 'cover'), { x: 0, y: 0, width: 1080, height: 1920 });
+  assert.deepEqual(visibleVisualFrameRect(canvas, source, 'fill'), { x: 0, y: 0, width: 1080, height: 1920 });
+  const contained = visibleVisualFrameRect(canvas, source, 'contain');
+  assert.ok(contained.y > 100, '16:9 contain on 9:16 letterboxes');
+  assert.ok(contained.height < 1200);
 }
 
 // A wrong paint-order mirror would select the background instead of the card.

@@ -27,6 +27,7 @@ Any bot (the template is https://github.com/anabologyco-maker/claudia-bot) can i
 - `docs/plans/03-deepseek-harness.md`: Plan 3 (free models for the built-in chat through DeepSeek Harness, in two parallel tracks; its task cards are in that file).
 - `docs/plans/04-claudia-brand.md`: Plan 4 (the name and the look, in two parallel tracks; its task cards are in that file).
 - `docs/plans/05-claudia-portable.md`: the portable install (P-CL-1 to P-CL-12). A fresh box runs the curl line and follows only `skills/corteo/SKILL.md`.
+- `docs/plans/06-claudia-polish.md`: acceptance beside a running editor, 9:16 cover, the short music recipe, a quiet `corteo:local`, and a self-test that does not leave files in the repo (P-CL-13 to P-CL-17).
 - `docs/plans/05-opus-parity.md`: the first Opus-parity writeup. Plan 6 (`06-opus-parity.md`) is the executed copy; `05-corteo.md` is named there but is not in this tree.
 - `docs/plans/06-opus-parity.md`: Plan 6 (Opus parity: the scoring rubric, the one-call shorts pipeline, packaging, scheduled publishing, keyword emphasis; executed 2026-10-25, only OP-14 optional remains). Its task cards are in that file.
 - `docs/plans/PROGRESS.md`: task status, how to pick the next task, task cards, decisions, blockers.

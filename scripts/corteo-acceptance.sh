@@ -61,9 +61,46 @@ fi
 CORTEO="$CORTEO_DIR/scripts/corteo"
 [[ -x "$CORTEO" ]] || fail "wrapper missing: $CORTEO"
 
-if curl -sf -o /dev/null --max-time 2 http://127.0.0.1:5199/; then
-  fail "port 5199 is already in use"
+pick_port() {
+  node <<'EOF'
+const net = require('net');
+const requested = (process.env.CORTEO_PORT_REQUEST || '').trim();
+function free(port) {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.once('error', () => resolve(false));
+    server.listen(port, '127.0.0.1', () => server.close(() => resolve(true)));
+  });
+}
+(async () => {
+  if (requested) {
+    const port = Number(requested);
+    if (!Number.isInteger(port) || port < 1 || port > 65535) process.exit(2);
+    if (!(await free(port))) process.exit(3);
+    process.stdout.write(String(port));
+    return;
+  }
+  for (let port = 5299; port <= 5399; port += 1) {
+    if (await free(port)) {
+      process.stdout.write(String(port));
+      return;
+    }
+  }
+  process.exit(4);
+})();
+EOF
+}
+
+if [[ -n "${CORTEO_PORT:-}" ]]; then
+  PORT="$(CORTEO_PORT_REQUEST="$CORTEO_PORT" pick_port)" || fail "CORTEO_PORT ${CORTEO_PORT} is not free"
+else
+  PORT="$(pick_port)" || fail "no free port from 5299"
 fi
+export CORTEO_PORT="$PORT"
+export CORTEO_STORE_DIR="$ROOT/library"
+mkdir -p "$CORTEO_STORE_DIR"
+printf 'ACCEPTANCE_PORT=%s\n' "$CORTEO_PORT"
+printf 'ACCEPTANCE_STORE=%s\n' "$CORTEO_STORE_DIR"
 
 pushd "$CORTEO_DIR" >/dev/null
 npm run corteo:local >"$LOG" 2>&1 &
@@ -72,7 +109,7 @@ popd >/dev/null
 
 ready=0
 for _ in $(seq 1 180); do
-  if curl -sf -o /dev/null --max-time 2 http://127.0.0.1:5199/; then
+  if curl -sf -o /dev/null --max-time 2 "http://127.0.0.1:${CORTEO_PORT}/"; then
     ready=1
     break
   fi
@@ -81,7 +118,7 @@ for _ in $(seq 1 180); do
   fi
   sleep 1
 done
-(( ready == 1 )) || fail "corteo:local did not open port 5199"
+(( ready == 1 )) || fail "corteo:local did not open port ${CORTEO_PORT}"
 if grep -q 'Failed to load url /@fs/src/main.tsx' "$LOG"; then
   fail "vite warmup still requests /@fs/src/main.tsx"
 fi
@@ -90,11 +127,42 @@ json_field() {
   node -e 'const j=require(process.argv[1]); const path=process.argv[2].split("."); let cur=j; for (const key of path) cur=cur[key]; if (cur===undefined||cur===null) process.exit(1); process.stdout.write(String(cur));' "$1" "$2"
 }
 
+check_bars() {
+  FRAME="$1" MODE="$2" node "$SRC/remotion/frame-bars.mjs" "$1" "$2"
+}
+
+# --- skills/corteo/SKILL.md › Receta rápida ---
+WORK="$EXPORT/rapida"
+mkdir -p "$WORK"
+ffmpeg -y -hide_banner -loglevel error -f lavfi -i "color=c=0x224466:s=1280x720:d=4:r=30" -t 4 -c:v libx264 -pix_fmt yuv420p "$WORK/clip-a.mp4"
+ffmpeg -y -hide_banner -loglevel error -f lavfi -i "color=c=0x664422:s=1280x720:d=4:r=30" -t 4 -c:v libx264 -pix_fmt yuv420p "$WORK/clip-b.mp4"
+ffmpeg -y -hide_banner -loglevel error -f lavfi -i "sine=frequency=220:sample_rate=48000:duration=2" -t 2 "$WORK/song.wav"
+"$CORTEO" project new "Receta rapida" --size 1920x1080 --fps 30 --json > "$WORK/project.json"
+"$CORTEO" media import "$WORK/song.wav" --apply --json > "$WORK/import-song.json"
+"$CORTEO" media import "$WORK/clip-a.mp4" --apply --json > "$WORK/import-a.json"
+"$CORTEO" media import "$WORK/clip-b.mp4" --apply --json > "$WORK/import-b.json"
+A="$(json_field "$WORK/import-a.json" ops.0.result.imported.0.id)"
+B="$(json_field "$WORK/import-b.json" ops.0.result.imported.0.id)"
+SONG="$(json_field "$WORK/import-song.json" ops.0.result.imported.0.id)"
+"$CORTEO" tools call edit_item --args "{\"adds\":[{\"type\":\"audio\",\"assetId\":\"$SONG\",\"fromFrame\":0},{\"type\":\"video\",\"assetId\":\"$A\",\"fromFrame\":0},{\"type\":\"video\",\"assetId\":\"$B\",\"fromFrame\":120}]}" --apply --json > "$WORK/place.json"
+CLIP_A="$(node -e 'const j=require(process.argv[1]); const row=j.ops[0].result.results.find((item)=>item.placed&&item.placed.kind==="video"&&item.placed.startFrame===0); if(!row) process.exit(1); process.stdout.write(row.placed.itemId)' "$WORK/place.json")"
+"$CORTEO" item trim "$CLIP_A" --to 2s --apply --json > "$WORK/trim.json"
+"$CORTEO" tools call edit_item --args '{"adds":[{"type":"text","text":"Receta rapida","fromFrame":0,"durationInFrames":50,"fontSize":96,"position":"center"}]}' --apply --json > "$WORK/title.json"
+CC_RENDER_GL=swangle "$CORTEO" render --out "$WORK/rapida.mp4" --to-audio --resolution 1080p --quiet
+node -e '
+const { execFileSync } = require("child_process");
+const file = process.argv[1];
+const duration = Number(execFileSync("ffprobe", ["-v","error","-show_entries","format=duration","-of","default=nw=1:nk=1", file], { encoding: "utf8" }));
+const size = execFileSync("ffprobe", ["-v","error","-select_streams","v:0","-show_entries","stream=width,height","-of","csv=p=0", file], { encoding: "utf8" }).trim().replace(/,+$/, "");
+if (!(duration > 1.8 && duration < 2.2)) { console.error("rapida duration " + duration); process.exit(1); }
+if (size !== "1920,1080") { console.error("rapida size " + size); process.exit(1); }
+' "$WORK/rapida.mp4"
+
 # --- skills/corteo/SKILL.md › Video musical ---
 WORK="$EXPORT/musical"
 mkdir -p "$WORK"
 ffmpeg -y -hide_banner -loglevel error -f lavfi -i "color=c=0x1a1a1a:s=640x360:d=3:r=30" -t 3 -c:v libx264 -pix_fmt yuv420p "$WORK/clip-a.mp4"
-ffmpeg -y -hide_banner -loglevel error -f lavfi -i "color=c=0x333355:s=640x360:d=3:r=30" -t 3 -c:v libx264 -pix_fmt yuv420p "$WORK/clip-b.mp4"
+ffmpeg -y -hide_banner -loglevel error -f lavfi -i "color=c=0x333355:s=640x360:d=8:r=30" -t 8 -c:v libx264 -pix_fmt yuv420p "$WORK/clip-b.mp4"
 ffmpeg -y -hide_banner -loglevel error -f lavfi -i "sine=frequency=440:sample_rate=48000:duration=6" -t 6 "$WORK/song.wav"
 printf '%s\n' $'1\n00:00:03,000 --> 00:00:05,000\nprimera linea' > "$WORK/lyrics.srt"
 "$CORTEO" --help >/dev/null
@@ -127,6 +195,7 @@ CLIP_TRACK="$(json_field "$WORK/place-a.json" ops.0.result.results.0.placed.trac
 "$CORTEO" item split "$CLIP_A" --at 1s --apply --json > "$WORK/split.json"
 NEW_ID="$(json_field "$WORK/split.json" ops.0.result.newItemId)"
 [[ -n "$NEW_ID" ]] || fail "split did not return newItemId"
+"$CORTEO" item rm "$NEW_ID" --apply --json > "$WORK/rm-split.json"
 "$CORTEO" item trim "$TITLE" --fade-in 0.4 --fade-out 0.4 --apply --json > "$WORK/fade.json"
 "$CORTEO" tools call edit_track --args '{"action":"create","json":{"trackType":"audio","name":"Musica"}}' --apply --json > "$WORK/track-object.json"
 printf '%s\n' '{"action":"create","json":"{\"trackType\":\"video\",\"name\":\"Titulos\"}"}' > "$WORK/track.json"
@@ -174,12 +243,23 @@ const splitId = process.argv[5];
 const row = items.find((item) => item.id === title);
 if (!row || row.startFrame !== 30) process.exit(2);
 if (row.track === clipTrack) process.exit(3);
-if (!items.some((item) => item.id === splitId)) process.exit(4);
+if (items.some((item) => item.id === splitId)) process.exit(4);
 const name = show.timelines.find((timeline) => timeline.active) || show.timelines[0];
 if (!name || name.name !== "Secuencia 1") process.exit(5);
 if (JSON.stringify(items).includes("文字") || JSON.stringify(items).includes("序列")) process.exit(6);
 ' "$WORK/items.json" "$WORK/timeline.json" "$TITLE" "$CLIP_TRACK" "$NEW_ID"
-CC_RENDER_GL=swangle "$CORTEO" render --out "$WORK/musical.mp4" --from 0 --to 6s --resolution 1080p --quiet
+"$CORTEO" item trim "$CLIP_B" --to 6s --apply --json > "$WORK/trim-b.json"
+"$CORTEO" timeline items --json > "$WORK/items.json"
+node -e '
+const items = require(process.argv[1]).items;
+const clipB = items.find((item) => item.id === process.argv[2]);
+const end = clipB && clipB.startFrame + (clipB.durationFrames ?? clipB.durationInFrames);
+if (end !== 180) {
+  console.error(JSON.stringify(clipB && { startFrame: clipB.startFrame, durationFrames: clipB.durationFrames }));
+  process.exit(7);
+}
+' "$WORK/items.json" "$CLIP_B"
+CC_RENDER_GL=swangle "$CORTEO" render --out "$WORK/musical.mp4" --to-audio --resolution 1080p --quiet
 node -e '
 const { execFileSync } = require("child_process");
 const file = process.argv[1];
@@ -231,21 +311,23 @@ LYRIC_FRAME="$(json_field "$WORK/lyrics.json" ops.0.result.results.0.placed.star
 [[ "$LYRIC_FRAME" == "15" ]] || fail "lyric fromFrame landed at $LYRIC_FRAME"
 CC_RENDER_GL=swangle "$CORTEO" render --out "$WORK/lyric.mp4" --to 2s --resolution 1080p --quiet
 
-# --- Short vertical ---
+# --- Short vertical 9:16 ---
 WORK="$EXPORT/short"
 mkdir -p "$WORK"
-ffmpeg -y -hide_banner -loglevel error -f lavfi -i "color=c=0x111111:s=1080x1920:d=2:r=30" -t 2 -c:v libx264 -pix_fmt yuv420p "$WORK/clip.mp4"
+ffmpeg -y -hide_banner -loglevel error -f lavfi -i "color=c=black:s=1920x1080:r=30:d=3,geq=r='X/8':g='Y/4':b=128" -t 3 -c:v libx264 -pix_fmt yuv420p "$WORK/wide.mp4"
 "$CORTEO" project new "Short" --size 1080x1920 --fps 30 --json > "$WORK/project.json"
-"$CORTEO" media import "$WORK/clip.mp4" --apply --json > "$WORK/import.json"
+"$CORTEO" media import "$WORK/wide.mp4" --apply --json > "$WORK/import.json"
 CLIP="$(json_field "$WORK/import.json" ops.0.result.imported.0.id)"
 "$CORTEO" tools call edit_item --args "{\"adds\":[{\"type\":\"video\",\"assetId\":\"$CLIP\",\"fromFrame\":0}]}" --apply --json > "$WORK/place.json"
+ITEM="$(json_field "$WORK/place.json" ops.0.result.results.0.placed.itemId)"
+"$CORTEO" item fit "$ITEM" --mode cover --apply --json > "$WORK/fit-cover.json"
+"$CORTEO" tools call edit_item --args "{\"updates\":[{\"type\":\"video\",\"itemId\":\"$ITEM\",\"transform\":{\"x\":-8}}]}" --apply --json > "$WORK/offset.json"
 "$CORTEO" tools call edit_item --args '{"adds":[{"type":"text","text":"9:16","fromFrame":15,"durationInFrames":45,"fontSize":96,"position":"bottom"}]}' --apply --json > "$WORK/title.json"
-CC_RENDER_GL=swangle "$CORTEO" render --out "$WORK/short.mp4" --to 1s --resolution 1080p --quiet
-node -e '
-const { execFileSync } = require("child_process");
-const size = execFileSync("ffprobe", ["-v","error","-select_streams","v:0","-show_entries","stream=width,height","-of","csv=p=0", process.argv[1]], { encoding: "utf8" }).trim().replace(/,+$/, "");
-if (size !== "1080,1920") { console.error(size); process.exit(1); }
-' "$WORK/short.mp4"
+CC_RENDER_GL=swangle "$CORTEO" render --out "$WORK/short-cover.mp4" --to 3s --resolution 1080p --quiet
+check_bars "$WORK/short-cover.mp4" cover
+"$CORTEO" item fit "$ITEM" --mode contain --background blur --apply --json > "$WORK/fit-blur.json"
+CC_RENDER_GL=swangle "$CORTEO" render --out "$WORK/short-blur.mp4" --to 3s --resolution 1080p --quiet
+check_bars "$WORK/short-blur.mp4" blur
 
 # --- Motion title ---
 WORK="$EXPORT/titulo"
@@ -261,9 +343,9 @@ CC_RENDER_GL=swangle "$CORTEO" render --out "$WORK/titulo.mp4" --to 2s --resolut
 TOKEN_PATH="$("$CORTEO" mcp token)"
 TOKEN="$("$CORTEO" mcp token --show)"
 [[ "$TOKEN_PATH" != *"$TOKEN"* ]] || fail "mcp token printed the token with the path"
-code_denied="$(curl -sS -o "$ROOT/mcp-denied.json" -w '%{http_code}' -X POST http://127.0.0.1:5199/api/external-mcp/mcp -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}')"
+code_denied="$(curl -sS -o "$ROOT/mcp-denied.json" -w '%{http_code}' -X POST "http://127.0.0.1:${CORTEO_PORT}/api/external-mcp/mcp" -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}')"
 [[ "$code_denied" == "403" ]] || fail "MCP without a token returned $code_denied"
-code_ok="$(curl -sS -D "$ROOT/mcp-headers.txt" -o "$ROOT/mcp-body.txt" -w '%{http_code}' http://127.0.0.1:5199/api/external-mcp/mcp \
+code_ok="$(curl -sS -D "$ROOT/mcp-headers.txt" -o "$ROOT/mcp-body.txt" -w '%{http_code}' "http://127.0.0.1:${CORTEO_PORT}/api/external-mcp/mcp" \
   -H "Authorization: Bearer ${TOKEN}" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
@@ -274,6 +356,9 @@ grep -q 'serverInfo\|protocolVersion' "$ROOT/mcp-body.txt" || fail "MCP body was
 if grep -q 'Failed to load url /@fs/src/main.tsx' "$LOG"; then
   fail "vite warmup still requests /@fs/src/main.tsx"
 fi
+
+dirty="$(git -C "$CORTEO_DIR" status --short)"
+[[ -z "$dirty" ]] || fail "installer left files in the clone: ${dirty}"
 
 pass=1
 printf 'ACCEPTANCE=PASS\n'

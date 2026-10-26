@@ -22,6 +22,7 @@ export interface GenericCommands {
   setItemFilters: (id: string, patch: ClipFilters) => void;
   setItemTransform: (id: string, patch: ClipTransform) => void;
   setItemBackgroundFill: (id: string, enabled: boolean, strength?: number) => void;
+  setClipFrame: (id: string, frame: { fit?: 'contain' | 'cover' | 'fill'; backgroundColor?: string | null }) => void;
   setItemSpeed: (id: string, rate: number) => void;
   clearItemKeyframes: (id: string, prop?: KeyframeProp) => void;
   replaceItemMedia: (id: string, src: string) => void;
@@ -61,6 +62,12 @@ export function applyGeneric(plan: OpResult, commands: GenericCommands): OpResul
         plan.backgroundFill as boolean,
         plan.backgroundFillStrength as number | undefined,
       );
+    }
+    if (plan.fit !== undefined || plan.backgroundColor !== undefined) {
+      commands.setClipFrame(id, {
+        ...(plan.fit !== undefined ? { fit: plan.fit as 'contain' | 'cover' | 'fill' } : {}),
+        ...(plan.backgroundColor !== undefined ? { backgroundColor: plan.backgroundColor as string | null } : {}),
+      });
     }
     if (plan.speed !== undefined) commands.setItemSpeed(id, plan.speed as number);
     if (plan.clearKeyframes === true) commands.clearItemKeyframes(id);
