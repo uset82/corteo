@@ -59,7 +59,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | L-02 | Listening DSP in `src/audio/listen/` | done | |
 | L-03 | Mood per section + Latin labels | done | L-01 |
 | L-04 | Lyric lines, chorus candidates, SongMap + cache | done | L-02 |
-| L-05 | Pictures: map PNG + spectrogram | todo | L-04 |
+| L-05 | Pictures: map PNG + spectrogram | done | L-04 |
 | L-06 | `listen_to_song` MCP tool | todo | L-01, L-03, L-05 |
 | L-07 | Real-ear relay (off by default) | todo | L-06 |
 | L-08 | Keyframable filters + binary-search sampling | todo | |
@@ -253,7 +253,10 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Do: group the local whisper words into lines, mark repeated lines as chorus candidates, attach them to sections; user-provided lyrics win. Define the `SongMap` type and its cache keyed by asset, source revision and analyzer fingerprint.
 - Verify: new verifies for line grouping and chorus detection.
 
-### L-05 · Pictures: map PNG + spectrogram
+### L-05 · Pictures: map PNG + spectrogram — done
+- Done 2026-10-26: `server/music-listen/pictures.ts` draws the song map as pure SVG (1280×720) and rasterizes it through sharp; the spectrogram comes from ffmpeg's `showspectrumpic` (1280×480 plot, `scale=log:color=intensity`, legend on) written to a temp dir and read back. The map carries the mirrored RMS waveform, energy and bass curves, section bands labelled with the Spanish role and `displayMusicLabel` mood plus their energy percentage, downbeat ticks, drop lines with labels, the other moments, up to 14 lyric lines with mm:ss prefixes (chorus lines prefixed `·` in gold), `sin letra transcrita` when the map has no lines, and a mm:ss axis whose step adapts to the duration. `sharp` is pinned to 0.35.0 as a direct dependency, matching the existing override; the lockfile only gained that root entry.
+- Proof: `server/music-listen/pictures.verify.ts` synthesizes a 30 s 22.05 kHz sweep with pulsing bass and deterministic hiss, measures it with `measureSong`, and builds a four-line map with one repeated chorus line. It checks the SVG text before any pixels: 0:00/0:15/0:30 ticks, `intro` / `clímax · festiva` / `salida`, `90%`, `onda` / `energía` / `graves`, the dashed `drop` marker, `break`, both `· Rock &amp; Roll en la noche.` lines at 0:01 and 0:21, an escaped title, and the empty-map note. Then it rasterizes: the map is exactly 1280×720, the spectrogram is at least 1280×480 and wider than the plot because the axis and dB legend add margins; every RGB channel spans more than 40 levels (map ±240/219/231, σ 33.0/30.2/27.4; spectrogram ±255 each, σ 85.2/32.2/40.7), so neither PNG is blank. An empty path and a missing file both reject.
+- Gates: `npx tsc -b`, `npm run lint` (0 errors, 203 warnings), the new verify (1.4 s), `npm run verify:music-intelligence`, and `npm run build` passed. `CC_RENDER_GL=swangle npm test` ran 221 segments in 213.0 s, all passing on the first complete run; the first attempt aborted in `verify-registration.verify.mjs` because the new verify was not yet git-tracked, and passed once staged.
 - Plan: Plan 2 › Part A (pictures).
 - Files: new `server/music-listen/pictures.ts`; `package.json` (pin `sharp` as a direct dependency at the version in `overrides`).
 - Done when: both PNGs are generated for a synthetic song, are non-blank (pixel variance check) and show the mm:ss axis.
