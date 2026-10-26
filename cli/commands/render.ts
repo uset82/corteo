@@ -9,6 +9,7 @@ import { flagBoolean, flagText, rejectUnknownFlags, type CommandLine } from '../
 import { CliError, UsageError } from '../errors.ts';
 import { printJson, writeStderr, writeStdout } from '../output.ts';
 import { readProjectDoc, resolveProject } from '../store.ts';
+import { startRenderJob } from '../jobs.ts';
 import { resolveH264TargetBitrate } from '../../server/media-acceleration.ts';
 import { acceptExportSubmission } from '../../server/plugins/export-submission.ts';
 import { h264RenderOptions, renderTimeline, setUploadsDirProvider } from '../../server/plugins/export-rendering.ts';
@@ -19,6 +20,8 @@ import { GLOBAL_FLAGS, parseFrames, projectReference } from './common.ts';
 const FLAGS = [
   ...GLOBAL_FLAGS,
   'out', 'timeline', 'format', 'codec', 'resolution', 'fps', 'bitrate', 'from', 'to', 'to-audio', 'quiet', 'dry-run',
+  // 'job-id' is internal: the detached child reports through it.
+  'detach', 'job-id',
 ] as const;
 
 const FORMATS = ['video', 'audio'] as const;
@@ -48,7 +51,32 @@ export async function runRenderCommand(commandLine: CommandLine, json: boolean):
     throw new UsageError('render needs --out <file> (for example: occ render --out cut.mp4)');
   }
   const quiet = flagBoolean(commandLine, 'quiet');
+  const detach = flagBoolean(commandLine, 'detach');
   const project = await resolveProject(projectReference(commandLine));
+  if (detach) {
+    // Everything cheap is checked here so a typo fails in the caller's face.
+    // The render, and every remaining validation, happens in the child.
+    const job = await startRenderJob({
+      projectId: project.id,
+      projectName: project.name,
+      output: outPath,
+      args: process.argv.slice(2).filter((token) => token !== '--detach'),
+    });
+    if (json) {
+      printJson({
+        jobId: job.id,
+        state: job.state,
+        projectId: job.projectId,
+        projectName: job.projectName,
+        output: job.output,
+        pid: job.pid,
+        log: job.log,
+      });
+    } else {
+      writeStdout(`render started as ${job.id}\n  ${outPath}\n  follow: occ job wait ${job.id}`);
+    }
+    return;
+  }
   const doc = await readProjectDoc(project.id);
   const timelineId = flagText(commandLine, 'timeline') ?? doc.activeTimelineId;
   const timeline = doc.timelines.find((candidate) => candidate.id === timelineId);

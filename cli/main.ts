@@ -17,7 +17,10 @@ Usage
   occ media ls [<project>] [--json]
   occ media import <absolute-path> [--apply] [--json]
   occ mcp token [--show] [--json]
-  occ render [<project>] --out <file> [--resolution 1080p] [--fps 30] [--codec h264] [--from <frame|4s>] [--to <frame|4s>] [--to-audio] [--dry-run] [--quiet]
+  occ render [<project>] --out <file> [--resolution 1080p] [--fps 30] [--codec h264] [--from <frame|4s>] [--to <frame|4s>] [--to-audio] [--dry-run] [--quiet] [--detach]
+  occ job status [<id|prefix>] [--json]
+  occ job wait [<id|prefix>] [--timeout <seconds>] [--json]
+  occ job list [--json]
   occ export jianying [<project>] [--draft-name <name>] [--out-dir <dir>] [--json]
   occ item move <clip> [--track <track>] [--start <frame|4s>] [--apply]
   occ item trim <clip> [--start <frame>] [--duration <frames|4s>] [--to <frame|4s>] [--fade-in <s>] [--fade-out <s>] [--ripple] [--apply]
@@ -41,6 +44,13 @@ Writes
   atomically through the same revision check the app uses, and snapshots a pre-edit
   version, so every committed command is undoable from the app's version history.
   Without --apply the draft is discarded and the project is left untouched.
+
+Long renders
+  \`--detach\` starts the render as its own process and returns at once with a
+  job id, so a call that dies after five minutes does not take the render with
+  it. \`occ job wait <id>\` blocks until the job ends; \`occ job status\` and
+  \`occ job list\` do not. The job's log is the child's own stdout and stderr,
+  kept under the profile so a failure can be read after the fact.
 
 Projects
   <project> accepts a full id, a unique id prefix, or a unique name.`;
