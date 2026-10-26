@@ -34,7 +34,6 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-const EXTENSIONS = /\.(?:ts|tsx|mts|cts|mjs|cjs|js|jsx|css|html|json|sh|md|svg)$/;
 const SKIP_DIRS = ['node_modules/', 'dist/', '.git/', 'test-results/', '.workbuddy-ai/'];
 const SKIP_FILES = [
   // The record of what shipped on each date, like the plans.
@@ -42,6 +41,17 @@ const SKIP_FILES = [
   // This file: a search for a word has to contain the word.
   'scripts/no-claudia.verify.mjs',
 ];
+
+/**
+ * Every tracked file, except the ones that are not text.
+ *
+ * Filtering by extension looked tidier and had a hole: `.env.corteo.example`
+ * carries product copy and matches no extension rule, so a regression there
+ * would have passed. A NUL byte in the first block is the cheap binary test.
+ */
+function isText(buffer) {
+  return !buffer.subarray(0, 8192).includes(0);
+}
 
 /** Whole files that must keep the name to do their job, pinned by line count. */
 const WHOLE_FILE = new Map([
@@ -90,7 +100,6 @@ const PHRASES = new Map([
 const files = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' })
   .split('\0')
   .filter(Boolean)
-  .filter((file) => EXTENSIONS.test(file))
   .filter((file) => !SKIP_DIRS.some((dir) => file.startsWith(dir) || file.includes(`/${dir}`)))
   .filter((file) => !SKIP_FILES.includes(file))
   .filter((file) => !file.startsWith('docs/plans/'));
@@ -100,7 +109,9 @@ const allowedSeen = new Map();
 let scanned = 0;
 
 for (const file of files) {
-  const text = readFileSync(join(root, file), 'utf8');
+  const bytes = readFileSync(join(root, file));
+  if (!isText(bytes)) continue;
+  const text = bytes.toString('utf8');
   scanned += 1;
   if (!/claudia/i.test(text)) continue;
 
