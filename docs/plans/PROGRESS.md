@@ -558,13 +558,13 @@ Approved 2026-10-25. Task cards: `docs/plans/05-corteo.md`. Its own table, same 
 
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
-| C-01 | Skin `corteo`: tokens, default, migration | todo | |
-| C-02 | Marks, favicon, tab, fonts | todo | C-01 |
-| C-03 | Wordmark in the chat panel and the projects page | todo | C-02 |
-| C-04 | Identity review against the AI-tells list | todo | C-03 |
-| C-05 | The rename sweep and its gate | todo | |
-| C-06 | Identifiers: scripts, env files, directories, service names | todo | |
-| C-07 | Copy outside the dictionaries, the assistant, the exports | todo | C-05 |
+| C-01 | Skin `corteo`: tokens, default, migration | done | |
+| C-02 | Marks, favicon, tab, fonts | done | C-01 |
+| C-03 | Wordmark in the chat panel and the projects page | done | C-02 |
+| C-04 | Identity review against the AI-tells list | done | C-03 |
+| C-05 | The rename sweep and its gate | done | |
+| C-06 | Identifiers: scripts, env files, directories, service names | done | |
+| C-07 | Copy outside the dictionaries, the assistant, the exports | done | C-05 |
 | C-08 | The repo's own prose (README, AGENTS, CHANGELOG, install guide) | todo | C-06, C-07 |
 | C-09 | One installer, one contract (`CORTEO_*`, `--json`, `--self-test`) | todo | C-06 |
 | C-10 | Non-blocking renders (`render --detach`, `job status/wait`) | todo | |
@@ -582,6 +582,19 @@ Approved 2026-10-25. Task cards: `docs/plans/05-corteo.md`. Its own table, same 
 - The two installers become one. `install.sh` is the door for a human and for a bot: `--json` prints one object, `--self-test` renders 2 seconds and prints `CORTEO_SELF_TEST=PASS`, and the token reaches stdout only with `--print-token` (the default block carries the token's path, so a bot never puts it in a chat).
 - A corteo bot needs no Claude plan. claudia-bot needs Opus on the VM because `slop` is deep; the editor's `occ` is shallow by design, so the bot's own model drives it. C-13 is the proof of that bet, and if it fails the fallback is fewer, bigger `occ` calls rather than more, smaller ones.
 - A Grok Bot turn dies about 5 minutes into a long tool call, so a render must be startable and forgettable: C-10 (`render --detach` + `job wait`) is a dependency of the bot template, not a nicety.
+- C-06 already delivered the `CORTEO_*` half of C-09 by accident of scope: the
+  installer prints `CORTEO_*` and writes `corteo.env`. What C-09 still owns is
+  `--json`, `--self-test` and `--print-token`.
+- The phone upload page (`server/mobile-upload-service.ts`) is a bare HTML string
+  served before the stylesheet exists, so it cannot read `--cc-*`: its palette is
+  a hand copy of the `corteo` tokens. C-07 brought three drifted values back
+  (`#d97757` to `#ff4a1f` twice, `#fffaf0` to `#f7f3ea`, `#e06c60` to `#e5484d`)
+  and marked the copy in place. **Nothing verifies those hexes** -
+  `mobile-upload-service.verify` checks the copy, not the CSS - so a later token
+  change has to remember this file.
+- `#d97757` also stays in `McpGuide.tsx` on purpose: it is Anthropic's orange on
+  the Claude Code icon, not our accent, and a blind sweep would break the logo.
+  The line now says so.
 - The bot template copies claudia-bot's *mechanics* (recipe → replay, ≤6 KB per skill, ≤80 KB total, "Use when …" descriptions, detached installs, `/workspace` persistence, secrets only through the secret card) and none of its content: no claudia.gallery, no canon, no relay, no `slop`.
 
 ## Opus parity (Plan 6)

@@ -29,6 +29,7 @@ function clientSnippets(): ClientSnippet[] {
   return [
     {
       client: 'claude',
+      // Anthropic's own orange, not corteo's accent: it matches claudeSvg.
       logo: <span aria-hidden className="cc-vendor-icon" style={{ color: '#d97757', width: 26, height: 26, fontSize: 26, display: 'inline-flex' }} dangerouslySetInnerHTML={{ __html: claudeSvg }} />,
       name: 'Claude Code',
       desc: 'Anthropic 官方 CLI，Claude 订阅用户直连。',
