@@ -23,6 +23,8 @@ const { execServerMusicTool } = await import('./tool.ts');
 const { isExternalServerDirectTool } = await import('../../src/agent/external-tool-policy.ts');
 const { MUSIC_INTELLIGENCE_TOOL_SCHEMAS } = await import('../../src/agent/tools/schemas/music-intelligence-tools.ts');
 const { inspectMusicAnalysis } = await import('../../src/audio/intelligence/inspect.ts');
+const { parseClapPrototypeProfile, displayMusicLabel } = await import('../../src/audio/intelligence/clapProfile.ts');
+const { default: prototypeJson } = await import('../../src/audio/intelligence/clap-prototypes.json');
 const { BEAT_THIS_SAMPLE_RATE } = await import('../../src/audio/intelligence/beatThisPreprocess.ts');
 const { modelPackDefinition } = await import('../../shared/model-packs/catalog.ts');
 const {
@@ -144,6 +146,10 @@ try {
     beatEnergy: beats.map((_, index) => 0.5 + index / 20),
   };
   const unitEmbedding = [1, ...new Array(CLAP_INFERENCE_CONTRACT.embeddingDimension - 1).fill(0)];
+  // Every window reports the same prototype, so each section must pick it up
+  // with score ~1: the fake cannot hide a broken overlap or a lost projection.
+  const profile = parseClapPrototypeProfile(prototypeJson);
+  const festiveVector = [...profile.labels.find((label) => label.kind === 'mood' && label.label === 'festive')!.vector];
   let analyzeInputs = 0;
   const fakeInference = {
     analyze: async (input: { samples: Float32Array; sampleRate: number; windows: Float32Array[] }) => {
@@ -152,7 +158,12 @@ try {
       assert.equal(input.windows.length, sourceWindowStarts(input.samples.length, BEAT_THIS_SAMPLE_RATE).length);
       const expectedWindow = CLAP_INFERENCE_CONTRACT.sampleRate * CLAP_WINDOW_SECONDS;
       assert.ok(input.windows.every((window) => window.length === expectedWindow), 'CLAP windows are padded to 10 s');
-      return { rhythm, embedding: unitEmbedding, backends: { rhythm: 'fake', semantic: 'fake' } };
+      return {
+        rhythm,
+        embedding: unitEmbedding,
+        windowEmbeddings: input.windows.map(() => festiveVector),
+        backends: { rhythm: 'fake', semantic: 'fake' },
+      };
     },
     dispose: async () => undefined,
   };
@@ -183,6 +194,13 @@ try {
   assert.ok(analysis.sections.length >= 1, 'sections must be derived');
   assert.equal(analysis.sections[0]!.fromMs, 0);
   assert.equal(analysis.sections[analysis.sections.length - 1]!.toMs, analysis.durationMs);
+  assert.deepEqual(
+    analysis.sections.map((section) => section.mood?.label),
+    analysis.sections.map(() => 'festive'),
+    'every section gets a mood from the windows it covers',
+  );
+  assert.ok(analysis.sections.every((section) => section.mood?.kind === 'mood'), 'a section mood is a mood tag');
+  near(analysis.sections[0]!.mood!.score, 1, 1e-4, 'a section matching its window prototype scores ~1');
   assert.ok(analysis.tags.length >= 4, 'one tag per CLAP category');
   assert.equal(writes, 1);
   assert.equal(analyzeInputs, 1);
@@ -257,6 +275,14 @@ try {
   assert.equal(inspected.pointUnit, 'sourceMs');
   assert.ok(typeof inspected.analysisRef === 'string' && String(inspected.analysisRef).startsWith('music-analysis:v2:'));
   assert.ok(Array.isArray(inspected.sections) && (inspected.sections as unknown[]).length >= 1);
+  const listedSections = inspected.sections as Array<Record<string, unknown>>;
+  assert.equal(displayMusicLabel('festive'), 'festiva');
+  assert.deepEqual(
+    listedSections.map((section) => section.mood),
+    listedSections.map(() => 'festiva'),
+    'inspect lists the Spanish mood name for every section',
+  );
+  assert.ok(listedSections.every((section) => section.moodScore === 1), 'inspect keeps the mood score');
   assert.ok(Array.isArray(inspected.tags) && (inspected.tags as unknown[]).length >= 1);
 
   const ranged = await execServerMusicTool('inspect_music', { assetId: song.id, fromMs: 500, toMs: 1500 }, ctx as never) as Record<string, unknown>;

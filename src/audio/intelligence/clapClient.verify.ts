@@ -121,6 +121,13 @@ assert.ok(wasmEmbed?.type === 'embed');
 assert.notEqual(wasmEmbed.samples.buffer, samples.buffer, 'worker receives an owned copy of caller audio');
 assert.deepEqual(progress, [0.5]);
 
+const windowed = await client.embedWindows(samples, CLAP_SAMPLE_RATE);
+assert.deepEqual(windowed.windows.map((window) => window.startMs), [0], 'a one-second clip yields one window at 0 ms');
+assert.deepEqual(windowed.windows[0]!.vector, embedding, 'the kept window is the vector the mean was built from');
+assert.deepEqual(windowed.embedding, embedding, 'a single window means the same whole-song vector');
+assert.equal(workers.length, 3, 'embedWindows starts a backend like embed');
+assert.equal(workers[2]!.terminated, true, 'the embedWindows backend is terminated');
+
 let forbiddenWorkers = 0;
 const missingPackClient = new ClapClient({
   arePacksInstalled: async () => false,

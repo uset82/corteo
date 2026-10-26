@@ -110,7 +110,8 @@ function validSection(value: unknown, durationMs: number): value is MusicSection
     && typeof section.role === 'string'
     && Object.hasOwn(SECTION_ROLES, section.role)
     && inRange(section.energy, 0, 1)
-    && inRange(section.boundaryConfidence, 0, 1);
+    && inRange(section.boundaryConfidence, 0, 1)
+    && (section.mood === undefined || (validTag(section.mood) && section.mood.kind === 'mood'));
 }
 
 function validSections(value: unknown, durationMs: number): value is MusicSection[] {

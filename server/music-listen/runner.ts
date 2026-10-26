@@ -95,7 +95,7 @@ async function decodeWindows(
 async function runInference(
   file: string,
   options: AnalyzeServerMusicOptions,
-): Promise<{ output: MusicInferenceOutput; durationMs: number }> {
+): Promise<{ output: MusicInferenceOutput; durationMs: number; starts: readonly number[] }> {
   let inference = options.inference;
   if (!inference) {
     // Fail before paying for a full decode when the packs are not installed.
@@ -120,7 +120,7 @@ async function runInference(
     windows,
     onProgress: (phase, progress) => report(options, phase, progress),
   });
-  return { output, durationMs };
+  return { output, durationMs, starts };
 }
 
 async function analyzeOnce(
@@ -139,8 +139,12 @@ async function analyzeOnce(
   if (!file) {
     throw new Error(`media source ${asset.src.slice(0, 200)} is not available on this machine; re-import the file before analyzing`);
   }
-  const { output, durationMs } = await runInference(file, options);
+  const { output, durationMs, starts } = await runInference(file, options);
   const embedding = normalizeMusicEmbedding(output.embedding);
+  const sectionWindows = output.windowEmbeddings.map((vector, index) => ({
+    startMs: ((starts[index] ?? 0) / BEAT_THIS_SAMPLE_RATE) * 1000,
+    vector,
+  }));
   const analysis = composeMusicAnalysis({
     assetId: asset.id,
     sourceRevision,
@@ -148,6 +152,7 @@ async function analyzeOnce(
     rhythm: output.rhythm,
     tags: tagsFromClapEmbedding(embedding),
     embedding,
+    sectionWindows,
   });
   report(options, 'semantic', 1);
   await store.write(analysis);

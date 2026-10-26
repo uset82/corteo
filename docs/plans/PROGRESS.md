@@ -52,7 +52,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P1-7 | Webhooks with HMAC | optional | P4-3 |
 | L-01 | Server-side Beat This + CLAP runner | done | |
 | L-02 | Listening DSP in `src/audio/listen/` | done | |
-| L-03 | Mood per section + Latin labels | todo | L-01 |
+| L-03 | Mood per section + Latin labels | done | L-01 |
 | L-04 | Lyric lines, chorus candidates, SongMap + cache | todo | L-02 |
 | L-05 | Pictures: map PNG + spectrogram | todo | L-04 |
 | L-06 | `listen_to_song` MCP tool | todo | L-01, L-03, L-05 |
@@ -219,7 +219,11 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Done when: all synthetic-audio tests in Plan 2 › Verification pass, generated in the test (no audio fixtures in git).
 - Verify: the new verifies, `npx tsx src/audio/beats.verify.ts`.
 
-### L-03 · Mood per section + Latin labels
+### L-03 · Mood per section + Latin labels — done
+- Done 2026-10-26: CLAP keeps one embedding per representative window (`ClapClient.embedWindows`, `windowEmbeddings` through the forked server core), and `withSectionMoods` scores every section against the mood prototypes using the windows it covers, weighted by overlap. Records keep one canonical English vocabulary; `displayMusicLabel` applies Spanish where a person reads it, so a cached analysis never depends on the UI language. The analyzer fingerprint moved to `clap-profile-v2`, so v1 records without a mood are re-analyzed instead of served.
+- Latin labels: `scripts/build-clap-prototypes.mjs` rebuilt the checked-in profile from the pinned `Xenova/clap-htsat-unfused` revision with the CLAP text encoder — 5 moods (nostalgic, hopeful, festive, sensual, spiritual) and 7 genres (cumbia, salsa, bolero, reggaeton, huayno, flamenco, latin rock). The JSON went from 32 to 44 labels and the original 32 vectors are byte-identical; the generator writes the same compact shape, so a re-run with unchanged vectors produces no diff. The text encoder (about 127 MB) is fetched once into `~/.cache/corteo-clap-text`, never into the app's pack directory; the `music-semantics-lite` pack ships the audio encoder only.
+- Proof: `music-listen.verify.ts` feeds a fake core that returns the `festive` prototype for every window; the composed analysis gives every section a `festive` mood with score 1, and `inspect_music` lists `mood: 'festiva'` with `moodScore: 1`. `clapProfile.verify.ts` covers two sections scored from different windows, overlap weighting, below-threshold sections staying moodless instead of `unknown`, the no-window passthrough, and the Spanish names (`reggaeton` → `reguetón`, `latin rock` → `rock latino`). `clapClient.verify.ts` checks `embedWindows` keeps each window offset and the same unit mean. Both cache validators (`shared/music-inference/analysis-record.ts`, `src/audio/intelligence/store.ts`) now reject a section whose stored mood is not a `mood` tag.
+- Gates: `npx tsc -b`, `npm run lint` (0 errors, 203 warnings), `npm run verify:music-intelligence` (every suite, including the three above). `npm run verify:affected` cannot map `shared/` and asset changes, so it handed off to the full gate: `CC_RENDER_GL=swangle npm test` ran 218/219 segments in 661.5 s — the only failure was the concurrent session's then-uncommitted `scripts/no-claudia.verify.mjs` (it flagged its own new lines; the same session committed `8568949` for it) — and `npm run build` passed with upstream's chunk-size warning.
 - Plan: Plan 2 › Part A (mood per section).
 - Files: `src/audio/intelligence/clapClient.ts`, the prototypes JSON next to it, new `scripts/build-clap-prototypes.mjs` (add a `!/scripts/…` line to `.gitignore`).
 - Do: score each section's windows against the prototypes; add the Latin moods and genres from the plan with Spanish display names. Embeddings never leave the server.

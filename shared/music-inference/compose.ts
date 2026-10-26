@@ -1,4 +1,5 @@
 import { deriveMusicSections } from '../../src/audio/intelligence/sections.ts';
+import { withSectionMoods, type SectionWindow } from '../../src/audio/intelligence/clapProfile.ts';
 import {
   MUSIC_ANALYSIS_SCHEMA_VERSION,
   MUSIC_MODEL_PACK_FINGERPRINTS,
@@ -22,6 +23,8 @@ export interface ComposeMusicAnalysisInput extends MusicAnalysisIdentity {
   readonly rhythm: BeatThisAnalysis;
   readonly tags: readonly MusicTag[];
   readonly embedding: readonly number[];
+  /** Per-window CLAP embeddings; each section is scored against the ones it covers. */
+  readonly sectionWindows?: readonly SectionWindow[];
   readonly createdAt?: number;
 }
 
@@ -74,6 +77,7 @@ function sortedTimes(values: readonly number[], durationMs: number): number[] {
 
 export function composeMusicAnalysis(input: ComposeMusicAnalysisInput): MusicAnalysis {
   const series = beatSeries(input.rhythm.beatsMs, input.rhythm.beatEnergy, input.durationMs);
+  const sections = deriveMusicSections({ durationMs: input.durationMs, beatsMs: series.beatsMs, beatEnergy: series.beatEnergy });
   return {
     schemaVersion: MUSIC_ANALYSIS_SCHEMA_VERSION,
     assetId: input.assetId,
@@ -86,7 +90,7 @@ export function composeMusicAnalysis(input: ComposeMusicAnalysisInput): MusicAna
     beatConfidence: Number.isFinite(input.rhythm.confidence) ? Math.max(0, Math.min(1, input.rhythm.confidence)) : 0,
     beatsMs: series.beatsMs,
     downbeatsMs: sortedTimes(input.rhythm.downbeatsMs, input.durationMs),
-    sections: deriveMusicSections({ durationMs: input.durationMs, beatsMs: series.beatsMs, beatEnergy: series.beatEnergy }),
+    sections: input.sectionWindows ? withSectionMoods(sections, input.sectionWindows) : sections,
     tags: normalizedMusicTags(input.tags),
     embedding: [...input.embedding],
   };

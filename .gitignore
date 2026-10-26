@@ -99,6 +99,9 @@ MODEL-OPT-PLAN.md
 !/scripts/corteo-env.sh
 !/scripts/tunnel.mjs
 !/scripts/sync-mediapipe.mjs
+# Regenerates the checked-in CLAP prototypes; the JSON it writes is committed,
+# so the generator has to travel with it.
+!/scripts/build-clap-prototypes.mjs
 # Stable regressions are *.verify.* by convention (see the *.check.* rule
 # above), so they are never local-only.
 !/scripts/*.verify.mjs

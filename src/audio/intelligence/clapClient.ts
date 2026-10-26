@@ -33,6 +33,19 @@ export interface ClapClientOptions {
   embedTimeoutMs?: number;
 }
 
+export interface ClapWindowEmbedding {
+  /** Offset of the window in the analysed source, milliseconds. */
+  readonly startMs: number;
+  readonly vector: number[];
+}
+
+export interface ClapWindowEmbeddings {
+  /** Mean of the window vectors, unit-normalized: the whole-song label. */
+  readonly embedding: number[];
+  /** One vector per window, in source order: the per-section labels. */
+  readonly windows: ClapWindowEmbedding[];
+}
+
 interface PendingWorkerRequest {
   resolve: (result: ClapWorkerResult) => void;
   reject: (reason: Error) => void;
@@ -74,6 +87,16 @@ export class ClapClient {
     onProgress?: ClapProgressListener,
     signal?: AbortSignal,
   ): Promise<number[]> {
+    return (await this.embedWindows(samples, sampleRate, onProgress, signal)).embedding;
+  }
+
+  /** Same run as `embed`, but keeps each window so sections can be scored on their own audio. */
+  async embedWindows(
+    samples: Float32Array,
+    sampleRate: number,
+    onProgress?: ClapProgressListener,
+    signal?: AbortSignal,
+  ): Promise<ClapWindowEmbeddings> {
     validateInput(samples, sampleRate);
     throwIfAborted(signal);
     if (!await this.checkPacks([SEMANTIC_PACK_ID])) {
@@ -106,7 +129,7 @@ export class ClapClient {
     sampleRate: number,
     onProgress?: ClapProgressListener,
     signal?: AbortSignal,
-  ): Promise<number[]> {
+  ): Promise<ClapWindowEmbeddings> {
     const worker = this.createWorker();
     try {
       const loaded = await requestWorker(
@@ -119,7 +142,7 @@ export class ClapClient {
       );
       if (loaded.type !== 'loaded') throw new Error('CLAP worker returned an unexpected load result');
       throwIfAborted(signal);
-      return await embedWindows(
+      return await embedWorkerWindows(
         worker,
         samples,
         sampleRate,
@@ -143,6 +166,16 @@ export async function embedMusicAudio(
   signal?: AbortSignal,
 ): Promise<number[]> {
   return new ClapClient().embed(samples, sampleRate, onProgress, signal);
+}
+
+/** Embeds every representative window and keeps it, for the per-section moods. */
+export async function embedMusicAudioWindows(
+  samples: Float32Array,
+  sampleRate: number,
+  onProgress?: ClapProgressListener,
+  signal?: AbortSignal,
+): Promise<ClapWindowEmbeddings> {
+  return new ClapClient().embedWindows(samples, sampleRate, onProgress, signal);
 }
 
 function createClapWorker(): Worker {
@@ -182,16 +215,17 @@ function normalizedMean(sum: Float64Array, count: number): number[] {
   return validateEmbedding(mean.map((value) => value / norm));
 }
 
-async function embedWindows(
+async function embedWorkerWindows(
   worker: Worker,
   samples: Float32Array,
   sampleRate: number,
   timeoutMs: number,
   onProgress?: ClapProgressListener,
   signal?: AbortSignal,
-): Promise<number[]> {
+): Promise<ClapWindowEmbeddings> {
   const starts = sourceWindowStarts(samples.length, sampleRate);
   const sum = new Float64Array(CLAP_EMBEDDING_DIMENSION);
+  const windows: ClapWindowEmbedding[] = [];
   for (let index = 0; index < starts.length; index += 1) {
     throwIfAborted(signal);
     const source = samples.slice(starts[index], starts[index]! + sampleRate * WINDOW_SECONDS);
@@ -206,9 +240,10 @@ async function embedWindows(
     );
     if (result.type !== 'embedding') throw new Error('CLAP worker returned no embedding');
     const vector = validateEmbedding(result.vector);
+    windows.push({ startMs: (starts[index]! / sampleRate) * 1000, vector });
     for (let dimension = 0; dimension < sum.length; dimension += 1) sum[dimension] += vector[dimension]!;
   }
-  return normalizedMean(sum, starts.length);
+  return { embedding: normalizedMean(sum, starts.length), windows };
 }
 
 function validateInput(samples: Float32Array, sampleRate: number): void {

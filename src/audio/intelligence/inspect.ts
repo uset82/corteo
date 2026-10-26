@@ -2,6 +2,7 @@
 // MCP/CLI runner. Keeping one implementation means analyze_music answers with
 // the same fields whether a tab is open or not.
 import type { TimelineItem } from '../../editor/types';
+import { displayMusicLabel } from './clapProfile';
 import {
   sourceFramesToTimelineFrames,
   sourceWindowForTimelineRange,
@@ -39,13 +40,20 @@ function listedSections(analysis: MusicAnalysis, range: { fromMs: number; toMs: 
   return analysis.sections
     .filter((section) => section.toMs > range.fromMs && section.fromMs < range.toMs)
     .slice(0, MAX_INSPECT_SECTIONS)
-    .map((section) => ({
-      fromMs: section.fromMs,
-      toMs: section.toMs,
-      role: section.role,
-      energy: Number(section.energy.toFixed(3)),
-      confidence: Number(section.boundaryConfidence.toFixed(3)),
-    }));
+    .map((section) => {
+      const listed: Record<string, unknown> = {
+        fromMs: section.fromMs,
+        toMs: section.toMs,
+        role: section.role,
+        energy: Number(section.energy.toFixed(3)),
+        confidence: Number(section.boundaryConfidence.toFixed(3)),
+      };
+      if (section.mood) {
+        listed.mood = displayMusicLabel(section.mood.label);
+        listed.moodScore = Number(section.mood.score.toFixed(3));
+      }
+      return listed;
+    });
 }
 
 export function mapSourceMsToTimelineFrame(ms: number, item: TimelineItem, fps: number): number | null {

@@ -37,7 +37,10 @@ export interface MusicInferenceInput {
 
 export interface MusicInferenceOutput {
   readonly rhythm: BeatThisAnalysis;
+  /** Mean of the window embeddings, unit-normalized. */
   readonly embedding: number[];
+  /** One unit vector per CLAP window, in input order; sections are scored from these. */
+  readonly windowEmbeddings: number[][];
   readonly backends: { readonly rhythm: string; readonly semantic: string };
 }
 
@@ -314,17 +317,20 @@ class ForkedMusicInference implements MusicInference {
 
     const clap = this.clapChannel();
     const sum = new Float64Array(CLAP_INFERENCE_CONTRACT.embeddingDimension);
+    const windowEmbeddings: number[][] = [];
     let semanticBackend = '';
     for (let index = 0; index < input.windows.length; index += 1) {
       input.onProgress?.('semantic', index / input.windows.length);
       const embedded = embeddingResult(await clap.request({ type: 'embed', window: input.windows[index]! }));
       semanticBackend = embedded.backend;
+      windowEmbeddings.push(embedded.vector);
       for (let dimension = 0; dimension < sum.length; dimension += 1) sum[dimension] += embedded.vector[dimension]!;
       input.onProgress?.('semantic', (index + 1) / input.windows.length);
     }
     return {
       rhythm: rhythm.analysis,
       embedding: normalizedMeanVector(sum, input.windows.length),
+      windowEmbeddings,
       backends: { rhythm: rhythm.backend, semantic: semanticBackend },
     };
   }

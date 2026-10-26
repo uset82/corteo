@@ -1,12 +1,70 @@
 import prototypeJson from './clap-prototypes.json';
+import { normalizedMeanVector } from '../../../shared/music-inference/clapWindows';
 import {
   CLAP_EMBEDDING_DIMENSION,
 } from './clapTypes';
-import type { MusicTag, MusicTagKind } from './types';
+import type { MusicSection, MusicTag, MusicTagKind } from './types';
 
 const TAG_KINDS = ['genre', 'mood', 'instrument', 'usage'] as const satisfies readonly MusicTagKind[];
 const SCORE_DECIMALS = 4;
 const UNIT_TOLERANCE = 1e-3;
+
+/**
+ * Display names for the prototype labels. The record keeps the canonical
+ * English label (one vocabulary for every client); Spanish is applied where a
+ * person reads it, so a stored analysis never depends on the UI language.
+ */
+const SPANISH_LABELS: Readonly<Record<string, string>> = {
+  energetic: 'enérgica',
+  calm: 'serena',
+  tense: 'tensa',
+  romantic: 'romántica',
+  dreamy: 'soñadora',
+  playful: 'juguetona',
+  melancholic: 'melancólica',
+  epic: 'épica',
+  nostalgic: 'nostálgica',
+  hopeful: 'esperanzadora',
+  festive: 'festiva',
+  sensual: 'sensual',
+  spiritual: 'espiritual',
+  electronic: 'electrónica',
+  rock: 'rock',
+  'hip-hop': 'hip-hop',
+  pop: 'pop',
+  orchestral: 'orquestal',
+  acoustic: 'acústica',
+  jazz: 'jazz',
+  ambient: 'ambiental',
+  cumbia: 'cumbia',
+  salsa: 'salsa',
+  bolero: 'bolero',
+  reggaeton: 'reguetón',
+  huayno: 'huayno',
+  flamenco: 'flamenco',
+  'latin rock': 'rock latino',
+  vocal: 'voz',
+  instrumental: 'instrumental',
+  guitar: 'guitarra',
+  piano: 'piano',
+  strings: 'cuerdas',
+  drums: 'batería',
+  synth: 'sintetizador',
+  brass: 'metales',
+  vlog: 'videoblog',
+  travel: 'viajes',
+  trailer: 'tráiler',
+  corporate: 'corporativo',
+  wedding: 'boda',
+  sports: 'deportes',
+  suspense: 'suspenso',
+  background: 'fondo',
+  unknown: 'desconocido',
+};
+
+export function displayMusicLabel(label: string): string {
+  return SPANISH_LABELS[label] ?? label;
+}
 
 export const DEFAULT_CLAP_TAG_THRESHOLDS: Readonly<Record<MusicTagKind, number>> = {
   genre: 0.2,
@@ -65,6 +123,58 @@ export function classifyClapEmbedding(
       label: best.score >= thresholds[kind] ? best.label : 'unknown',
       score: roundScore(best.score),
     };
+  });
+}
+
+export interface SectionWindow {
+  readonly startMs: number;
+  readonly vector: readonly number[];
+}
+
+// The CLAP processor looks at 10 s of audio per embedding; a section shorter
+// than that still gets a mood from the windows it overlaps.
+const DEFAULT_SECTION_WINDOW_MS = 10_000;
+const DEFAULT_SECTION_MOOD_THRESHOLD = 0.15;
+
+/**
+ * Scores each section against the mood prototypes using the embeddings of the
+ * windows it covers, weighted by overlap. A section scores its own audio
+ * instead of inheriting the whole song's label.
+ */
+export function withSectionMoods(
+  sections: readonly MusicSection[],
+  windows: readonly SectionWindow[],
+  options: { windowMs?: number; threshold?: number; profile?: ClapPrototypeProfile } = {},
+): MusicSection[] {
+  if (!windows.length) return [...sections];
+  const windowMs = options.windowMs ?? DEFAULT_SECTION_WINDOW_MS;
+  const threshold = options.threshold ?? DEFAULT_SECTION_MOOD_THRESHOLD;
+  const profile = parseClapPrototypeProfile(options.profile ?? checkedInProfile);
+  const normalized = windows.map((window) => ({
+    startMs: window.startMs,
+    vector: normalizeEmbedding(window.vector, 'CLAP window embedding'),
+  }));
+  return sections.map((section) => {
+    const overlap = normalized
+      .map((window) => ({
+        vector: window.vector,
+        weight: Math.min(section.toMs, window.startMs + windowMs) - Math.max(section.fromMs, window.startMs),
+      }))
+      .filter((window) => window.weight > 0);
+    if (!overlap.length) return section;
+    const sum = new Float64Array(CLAP_EMBEDDING_DIMENSION);
+    let total = 0;
+    for (const window of overlap) {
+      total += window.weight;
+      for (let dimension = 0; dimension < sum.length; dimension += 1) {
+        sum[dimension] += window.vector[dimension]! * window.weight;
+      }
+    }
+    const mean = normalizedMeanVector(sum, total);
+    const mood = classifyClapEmbedding(mean, profile, {
+      thresholds: { mood: threshold, genre: 1, instrument: 1, usage: 1 },
+    }).find((tag) => tag.kind === 'mood');
+    return mood && mood.label !== 'unknown' ? { ...section, mood } : section;
   });
 }
 

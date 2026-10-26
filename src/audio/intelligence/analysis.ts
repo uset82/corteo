@@ -2,8 +2,8 @@ import type { MediaAsset } from '../../editor/types';
 import { sourceRevisionOf } from '../../editor/mediaSourceRevision';
 import { decodeAudioSource } from './audioDecode';
 import { analyzeBeatThis } from './beatThisClient';
-import { embedMusicAudio } from './clapClient';
-import { tagsFromClapEmbedding } from './clapProfile';
+import { embedMusicAudioWindows } from './clapClient';
+import { tagsFromClapEmbedding, withSectionMoods, type SectionWindow } from './clapProfile';
 import { deriveMusicSections } from './sections';
 import { BEAT_THIS_SAMPLE_RATE } from './beatThisPreprocess';
 import { MUSIC_ANALYSIS_SCHEMA_VERSION, MUSIC_ANALYZER_FINGERPRINT, MUSIC_MODEL_PACK_FINGERPRINTS } from './types';
@@ -89,7 +89,9 @@ function composeMusicAnalysis(
   series: { beatsMs: number[]; beatEnergy: number[] },
   tags: MusicTag[],
   embedding: number[],
+  sectionWindows: readonly SectionWindow[],
 ): MusicAnalysis {
+  const sections = deriveMusicSections({ durationMs, beatsMs: series.beatsMs, beatEnergy: series.beatEnergy });
   return {
     schemaVersion: MUSIC_ANALYSIS_SCHEMA_VERSION,
     assetId: asset.id,
@@ -102,7 +104,7 @@ function composeMusicAnalysis(
     beatConfidence: Number.isFinite(rhythm.confidence) ? Math.max(0, Math.min(1, rhythm.confidence)) : 0,
     beatsMs: series.beatsMs,
     downbeatsMs: sortedTimes(rhythm.downbeatsMs, durationMs),
-    sections: deriveMusicSections({ durationMs, beatsMs: series.beatsMs, beatEnergy: series.beatEnergy }),
+    sections: withSectionMoods(sections, sectionWindows),
     tags,
     embedding,
   };
@@ -134,16 +136,17 @@ export async function analyzeMusicAsset(asset: MediaAsset, options: AnalyzeMusic
 
     throwIfAborted(options.signal);
     report(options, 'semantic', 0);
-    const embedding = normalizeEmbedding(await embedMusicAudio(
+    const clap = await embedMusicAudioWindows(
       samples,
       DECODE_SAMPLE_RATE,
       (progress) => report(options, 'semantic', progress),
       options.signal,
-    ));
+    );
+    const embedding = normalizeEmbedding(clap.embedding);
     samples = null;
     const tags = normalizedTags(await tagsFromClapEmbedding(embedding));
     report(options, 'semantic', 1);
-    return composeMusicAnalysis(asset, durationMs, rhythm, series, tags, embedding);
+    return composeMusicAnalysis(asset, durationMs, rhythm, series, tags, embedding, clap.windows);
   } finally {
     samples = null;
   }
