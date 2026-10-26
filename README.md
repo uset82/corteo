@@ -131,7 +131,7 @@ this README and `PROGRESS.md` disagree, `PROGRESS.md` wins.
 
 - The interface opens in Spanish, but only part of it is translated: untranslated strings show in English. English is complete and Chinese is the source language; Italian and Russian are also partial.
 - Generation tools — images, voice, video, music — need their own paid API keys and stay off until configured.
-- Any bot installs corteo on its own Linux VM with `curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/scripts/corteo-install.sh | bash`, then `npm run corteo:local` and `npm run corteo -- ...`. The skill is [`skills/corteo/SKILL.md`](skills/corteo/SKILL.md). The Cloudflare tunnel is optional.
+- Any bot installs corteo on its own Linux VM with `curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/install.sh | bash`, then `npm run corteo:local` and `npm run corteo -- ...`. The skill is [`skills/corteo/SKILL.md`](skills/corteo/SKILL.md). The Cloudflare tunnel is optional.
 - Ken Burns, duplicate detection and countdown live on a separate development branch and are not in `main` yet.
 
 ## Requirements

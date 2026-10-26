@@ -19,7 +19,7 @@ _corteo_env_apply() {
   cd "$root"
   export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
   if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
-    printf '[corteo] Node 24 is required and nvm is not installed. Run scripts/corteo-install.sh\n' >&2
+    printf '[corteo] Node 24 is required and nvm is not installed. Run install.sh\n' >&2
     return 1
   fi
   case $- in *u*) nounset=1 ;; esac

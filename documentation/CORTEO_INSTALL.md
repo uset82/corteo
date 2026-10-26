@@ -44,6 +44,17 @@ Full option list: `install.sh --help`. Useful flags: `--no-start`,
 `--with-desktop`, `--skip-system-deps`, `--dry-run`, `--uninstall` and
 `--uninstall --purge`.
 
+Three flags exist for the agent doing the installing:
+
+| flag | what it does |
+|---|---|
+| `--json` | one JSON object on stdout instead of the `CORTEO_*` lines; progress moves to stderr |
+| `--self-test` | after installing, create a project, import a generated 2 second clip, render it at 480p and check the duration with `ffprobe` |
+| `--print-token` | put the MCP token in the output; without it you get its path |
+
+`--json --self-test` is the whole contract in one call: install it, prove it
+renders, hand back a single object.
+
 ## Upgrading from the old name
 
 The install used to live in `~/claudia` under `claudia.service`. Running the
@@ -75,7 +86,7 @@ CORTEO_STATUS=ok
 CORTEO_URL=http://127.0.0.1:5199
 CORTEO_LOCAL_URL=http://127.0.0.1:5199
 CORTEO_MCP_URL=http://127.0.0.1:5199/api/external-mcp/mcp
-CORTEO_MCP_TOKEN=<43-character token>
+CORTEO_MCP_TOKEN_FILE=/home/you/corteo/secrets.env
 CORTEO_OCC=/home/you/corteo/bin/occ
 CORTEO_APP_DIR=/home/you/corteo/app
 CORTEO_DATA_DIR=/home/you/.openchatcut/dev-profiles/<uuid>
@@ -84,6 +95,8 @@ CORTEO_LOG=/home/you/corteo/logs/corteo.log
 CORTEO_MANAGER=systemd
 CORTEO_MIGRATED_FROM=/home/you/claudia
 CORTEO_LEGACY_SERVICE=stopped
+CORTEO_PORT_STATE=free
+CORTEO_SELF_TEST=pass
 ```
 
 `CORTEO_MIGRATED_FROM` is the path the install came from, or `none`. It is the
@@ -91,8 +104,20 @@ only line that tells you the old tree moved; `CORTEO_APP_DIR` is already the new
 one. `CORTEO_LEGACY_SERVICE` is `stopped`, or `none` when there was no old
 service to stop.
 
-The same values are written to `~/corteo/corteo.env` with mode `0600`. The
-token is also in `~/corteo/secrets.env`; that file is what the service reads.
+The same values are written to `~/corteo/corteo.env` with mode `0600`.
+
+The token is not in that block unless you pass `--print-token`. What you get
+instead is `CORTEO_MCP_TOKEN_FILE`: a `0600` file the bot reads for itself, so
+the secret never has to pass through a chat transcript or a log. That is also
+the file the service reads.
+
+`CORTEO_PORT_STATE` is `free` when 5199 was available and `shifted` when it was
+not. The default port is a preference, so the installer walks up to the next
+free one and says which it took; an explicit `--port` is a promise, so a busy
+one stops the install instead.
+
+`CORTEO_SELF_TEST` is `pass`, `fail`, or `skipped` when `--self-test` was not
+asked for.
 
 If the run fails, stderr ends with:
 
@@ -104,10 +129,38 @@ CORTEO_FAILED_STAGE=<stage>
 and the exit code is non-zero. Do not report success unless
 `CORTEO_STATUS=ok` is present.
 
+## One object instead of lines
+
+`--json` prints the same keys as a single object on stdout and sends every
+progress line to stderr, so a bot can parse stdout without filtering anything:
+
+```json
+{
+  "CORTEO_STATUS": "ok",
+  "CORTEO_MCP_URL": "http://127.0.0.1:5199/api/external-mcp/mcp",
+  "CORTEO_MCP_TOKEN_FILE": "/home/you/corteo/secrets.env",
+  "CORTEO_PORT_STATE": "free",
+  "CORTEO_SELF_TEST": "pass",
+  "CORTEO_START": true
+}
+```
+
+Booleans are real booleans — `CORTEO_START`, `CORTEO_WITH_DESKTOP`,
+`CORTEO_SKIP_SYSTEM_DEPS`, `CORTEO_PURGE` — not `1` and `0`. In the plain
+`KEY=VALUE` output they stay `1` and `0`, which is the format that output has
+always had.
+
+A failure is still exactly one object on stdout, with a non-zero exit code:
+
+```json
+{"CORTEO_STATUS":"failed","CORTEO_FAILED_STAGE":"installing dependencies"}
+```
+
 ## Connect over MCP
 
-Use this JSON in the client's MCP configuration, replacing `<token>` with
-`CORTEO_MCP_TOKEN`:
+Use this JSON in the client's MCP configuration, replacing `<token>` with the
+value in `CORTEO_MCP_TOKEN_FILE` (or with `CORTEO_MCP_TOKEN` if you installed
+with `--print-token`):
 
 ```json
 {

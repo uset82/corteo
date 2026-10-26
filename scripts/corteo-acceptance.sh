@@ -50,15 +50,18 @@ LOG="$ROOT/corteo-local.log"
 EXPORT="$ROOT/exports"
 mkdir -p "$EXPORT"
 
-if ! bash "$SRC/scripts/corteo-install.sh" | tee "$INSTALL_LOG"; then
+# C-09 retired scripts/corteo-install.sh: install.sh is the one door now, and
+# --self-test is the proof the old script used to carry. --no-start keeps this
+# harness in charge of when the editor comes up.
+if ! bash "$SRC/install.sh" --dir "$CORTEO_DIR" --no-start --self-test | tee "$INSTALL_LOG"; then
   fail "installer failed"
 fi
-grep -q 'CORTEO_SELF_TEST=PASS' "$INSTALL_LOG" || fail "installer did not print CORTEO_SELF_TEST=PASS"
-if grep -q 'Downloading Chrome Headless Shell' "$INSTALL_LOG"; then
-  grep -q 'downloading Remotion'"'"'s headless shell now' "$INSTALL_LOG" || fail "headless shell downloaded without the installer saying so"
-fi
+grep -q '^CORTEO_SELF_TEST=pass$' "$INSTALL_LOG" || fail "installer did not print CORTEO_SELF_TEST=pass"
 
-CORTEO="$CORTEO_DIR/scripts/corteo"
+# Take the tree from the installer's own report instead of assuming its layout.
+APP="$(sed -n 's/^CORTEO_APP_DIR=//p' "$INSTALL_LOG" | tail -n 1)"
+[[ -n "$APP" && -d "$APP" ]] || fail "the installer did not report a usable CORTEO_APP_DIR"
+CORTEO="$APP/scripts/corteo"
 [[ -x "$CORTEO" ]] || fail "wrapper missing: $CORTEO"
 
 pick_port() {
@@ -102,7 +105,7 @@ mkdir -p "$CORTEO_STORE_DIR"
 printf 'ACCEPTANCE_PORT=%s\n' "$CORTEO_PORT"
 printf 'ACCEPTANCE_STORE=%s\n' "$CORTEO_STORE_DIR"
 
-pushd "$CORTEO_DIR" >/dev/null
+pushd "$APP" >/dev/null
 npm run corteo:local >"$LOG" 2>&1 &
 SERVER_PID=$!
 popd >/dev/null

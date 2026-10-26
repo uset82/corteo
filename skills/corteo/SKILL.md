@@ -25,7 +25,7 @@ Do not call `npm run corteo` from a Node 20 shell. That crashes with `ERR_UNKNOW
 On a fresh Debian or Ubuntu box, once. It installs Node 24 if needed, clones the repo to `~/corteo`, and renders a 2 second test MP4. Safe to run again. ffmpeg must already be installed (`apt-get install -y ffmpeg`).
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/scripts/corteo-install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/install.sh | bash
 ```
 
 PASS looks like `CORTEO_SELF_TEST=PASS`. FAIL looks like `CORTEO_SELF_TEST=FAIL` plus a line `self-test step failed: <step>`. The free-model chat harness is optional and is not part of this install.

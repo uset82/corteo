@@ -590,7 +590,7 @@ Approved 2026-10-25. Task cards: `docs/plans/05-corteo.md`. Its own table, same 
 | C-06 | Identifiers: scripts, env files, directories, service names | done | |
 | C-07 | Copy outside the dictionaries, the assistant, the exports | done | C-05 |
 | C-08 | The repo's own prose (README, AGENTS, CHANGELOG, install guide) | done | C-06, C-07 |
-| C-09 | One installer, one contract (`CORTEO_*`, `--json`, `--self-test`) | todo | C-06 |
+| C-09 | One installer, one contract (`CORTEO_*`, `--json`, `--self-test`) | done | C-06 |
 | C-10 | Non-blocking renders (`render --detach`, `job status/wait`) | todo | |
 | C-11 | The bot template: profile, four skills, build gate | todo | C-09, C-10 |
 | C-12 | "Conectar un bot" card | todo | C-09 |
@@ -606,9 +606,32 @@ Approved 2026-10-25. Task cards: `docs/plans/05-corteo.md`. Its own table, same 
 - The two installers become one. `install.sh` is the door for a human and for a bot: `--json` prints one object, `--self-test` renders 2 seconds and prints `CORTEO_SELF_TEST=PASS`, and the token reaches stdout only with `--print-token` (the default block carries the token's path, so a bot never puts it in a chat).
 - A corteo bot needs no Claude plan. claudia-bot needs Opus on the VM because `slop` is deep; the editor's `occ` is shallow by design, so the bot's own model drives it. C-13 is the proof of that bet, and if it fails the fallback is fewer, bigger `occ` calls rather than more, smaller ones.
 - A Grok Bot turn dies about 5 minutes into a long tool call, so a render must be startable and forgettable: C-10 (`render --detach` + `job wait`) is a dependency of the bot template, not a nicety.
-- C-06 already delivered the `CORTEO_*` half of C-09 by accident of scope: the
-  installer prints `CORTEO_*` and writes `corteo.env`. What C-09 still owns is
-  `--json`, `--self-test` and `--print-token`.
+- C-06 delivered the `CORTEO_*` half of C-09 by accident of scope: the installer
+  prints `CORTEO_*` and writes `corteo.env`. C-09 added `--json`, `--self-test`
+  and `--print-token` on top of that.
+- C-09 retired `scripts/corteo-install.sh`. Its self-test moved into
+  `install.sh --self-test` and the file is gone, so there is one door. That
+  deletion rippled into seven places the card's file list did not name:
+  `README.md`, `README.es.md`, `AGENTS.md`, `skills/corteo/SKILL.md`,
+  `scripts/corteo-env.sh`, the `scripts/no-claudia.verify.mjs` allowlist, and
+  `scripts/corteo-acceptance.sh`, which actually *ran* the retired script.
+  **The acceptance harness was adapted but not executed** — it needs a Linux VM,
+  so C-13 is its first real run. It now reads `CORTEO_APP_DIR` out of the
+  installer's own report instead of assuming where the tree lands.
+- The default output no longer carries the token. `CORTEO_MCP_TOKEN_FILE` points
+  at `secrets.env` (0600) and `--print-token` is the only way to get the value,
+  so a bot can install without a secret entering a transcript. The token is
+  `stdout-only` in the report machinery: it is never written to `corteo.env`.
+- The default port is a preference, an explicit `--port` is a promise. A busy
+  5199 walks up to the next free port and reports `CORTEO_PORT_STATE=shifted`;
+  `--port 5199` on a busy 5199 stops the install instead. `MCP_URL` is rebuilt
+  when the port moves, which is the one thing that would silently go stale.
+- Text mode keeps `CORTEO_START=1`/`0`; only `--json` promotes those four keys
+  to real booleans. Changing the text format would have broken the existing
+  `install.verify` assertion and anything that greps it.
+- `--json` keeps stdout for exactly one object and moves every progress line to
+  stderr, so a bot never filters the human log out of the result. A failure is
+  still one object (`CORTEO_STATUS=failed` plus the stage) with a non-zero exit.
 - The phone upload page (`server/mobile-upload-service.ts`) is a bare HTML string
   served before the stylesheet exists, so it cannot read `--cc-*`: its palette is
   a hand copy of the `corteo` tokens. C-07 brought three drifted values back

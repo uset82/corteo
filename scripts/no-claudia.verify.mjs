@@ -75,10 +75,6 @@ const WHOLE_FILE = new Map([
     lines: 1,
     why: 'asserts index.html no longer contains the old name',
   }],
-  ['scripts/corteo-install.verify.mjs', {
-    lines: 2,
-    why: 'asserts the installer no longer writes its self-test under the old name',
-  }],
 ]);
 
 /** Paths and proper nouns that may keep it in any file. */
@@ -175,7 +171,6 @@ assert.deepEqual(
     'install.sh',
     // test:serial names this gate, and the gate is named after what it forbids.
     'package.json',
-    'scripts/corteo-install.verify.mjs',
     'src/brand/CorteoMarks.verify.tsx',
     'src/brand/brand-text.verify.ts',
     'src/skins.ts',

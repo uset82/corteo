@@ -29,6 +29,14 @@ UNINSTALL=0
 PURGE=0
 DRY_RUN=0
 CLONE=auto
+JSON_MODE=0
+PRINT_TOKEN=0
+SELF_TEST=0
+PORT_EXPLICIT=0
+PORT_STATE="free"
+EMITTED=0
+SELF_TEST_RESULT="skipped"
+SELF_TEST_STEP="setup"
 
 # The install used to live in ~/claudia under claudia.service. One install, one
 # port: a live old one is stopped and reused instead of building a second tree
@@ -41,7 +49,17 @@ MIGRATED_FROM="none"
 
 CURRENT_STAGE="start"
 
-say() { printf '[corteo] %s\n' "$*"; }
+# In --json mode stdout carries exactly one object, so progress moves to
+# stderr. A bot reads stdout, a human reads the terminal, and neither has to
+# parse the other's format.
+say() {
+  if (( JSON_MODE == 1 )); then
+    printf '[corteo] %s\n' "$*" >&2
+  else
+    printf '[corteo] %s\n' "$*"
+  fi
+}
+
 warn() { printf '[corteo] warning: %s\n' "$*" >&2; }
 
 die() {
@@ -56,7 +74,11 @@ stage() {
 
 on_exit() {
   local code=$?
-  if (( code != 0 )); then
+  (( code == 0 )) && return 0
+  if (( JSON_MODE == 1 && EMITTED == 0 )); then
+    printf '{"CORTEO_STATUS":"failed","CORTEO_FAILED_STAGE":"%s"}\n' \
+      "$(json_escape "$CURRENT_STAGE")"
+  else
     printf 'CORTEO_STATUS=failed\nCORTEO_FAILED_STAGE=%s\n' "$CURRENT_STAGE" >&2
   fi
 }
@@ -82,10 +104,22 @@ Options
   --uninstall           Stop and remove the service (keeps the app and data)
   --purge               With --uninstall: also delete the app and profile data
   --dry-run             Print the plan and exit without changing anything
+  --json                Print one JSON object instead of CORTEO_* lines
+  --print-token         Put the MCP token in the output (default: its path)
+  --self-test           After installing, render 2 seconds and report PASS
   -h, --help            Show this help
 
 The installer never prompts. It prints CORTEO_* values that an agent can parse,
-and writes the same values to <dir>/corteo.env.
+and writes the same values to <dir>/corteo.env. With --json the same keys come
+back as one object on stdout and every progress line moves to stderr.
+
+The MCP token is not printed unless you ask with --print-token. The default
+output carries CORTEO_MCP_TOKEN_FILE, a 0600 file the bot reads for itself, so
+the secret never has to travel through a chat transcript.
+
+--self-test proves the install renders: it creates a project, imports a
+generated 2 second clip, renders it at 480p and checks the duration with
+ffprobe. It reports CORTEO_SELF_TEST=PASS, or "pass" in the --json object.
 
 An install from before the rename (~/claudia with claudia.service) is stopped,
 disabled and moved into ~/corteo, keeping its checkout and its MCP token, so
@@ -118,8 +152,8 @@ parse_args() {
       --dir=*) DIR="${1#*=}"; shift ;;
       --host) need_value "$1" "${2:-}"; HOST="$2"; shift 2 ;;
       --host=*) HOST="${1#*=}"; shift ;;
-      --port) need_value "$1" "${2:-}"; PORT="$2"; shift 2 ;;
-      --port=*) PORT="${1#*=}"; shift ;;
+      --port) need_value "$1" "${2:-}"; PORT="$2"; PORT_EXPLICIT=1; shift 2 ;;
+      --port=*) PORT="${1#*=}"; PORT_EXPLICIT=1; shift ;;
       --ref) need_value "$1" "${2:-}"; REF="$2"; shift 2 ;;
       --ref=*) REF="${1#*=}"; shift ;;
       --no-start) START=0; shift ;;
@@ -129,6 +163,9 @@ parse_args() {
       --uninstall) UNINSTALL=1; shift ;;
       --purge) PURGE=1; shift ;;
       --dry-run) DRY_RUN=1; shift ;;
+      --json) JSON_MODE=1; shift ;;
+      --print-token) PRINT_TOKEN=1; shift ;;
+      --self-test) SELF_TEST=1; shift ;;
       -h|--help) usage; exit 0 ;;
       *) die "unknown option: $1 (see --help)" ;;
     esac
@@ -195,10 +232,31 @@ preflight() {
   refuse_dangerous_dir
 }
 
+# An explicit --port is a promise, so a busy one stops the install. The default
+# is a preference: a bot VM often already has something on 5199, and failing the
+# whole install over a default would be a poor trade. MCP_URL is built from PORT
+# in parse_args, so it is rebuilt here whenever the port moves.
+PORT_SEARCH_LIMIT=20
+
 check_port() {
-  if port_in_use; then
+  if ! port_in_use; then
+    PORT_STATE="free"
+    return 0
+  fi
+  if (( PORT_EXPLICIT == 1 )); then
     die "port $PORT is already in use; pass --port <free port> or stop the other process (ss -ltnp | grep $PORT)"
   fi
+  local candidate
+  for (( candidate = PORT + 1; candidate <= PORT + PORT_SEARCH_LIMIT; candidate++ )); do
+    PORT="$candidate"
+    if ! port_in_use; then
+      PORT_STATE="shifted"
+      MCP_URL="http://$MCP_HOST:$PORT/api/external-mcp/mcp"
+      warn "the default port was busy; using $PORT"
+      return 0
+    fi
+  done
+  die "no free port between $DEFAULT_PORT and $(( DEFAULT_PORT + PORT_SEARCH_LIMIT )); pass --port <free port>"
 }
 
 # ── the install from before the rename ───────────────────────────────────────
@@ -298,25 +356,25 @@ print_dry_run() {
     port_state="in-use"
     warn "port $PORT is already in use; the real install would stop here"
   fi
-  cat <<EOF
-CORTEO_STATUS=dry-run
-CORTEO_OS=$(uname -s) $(uname -m)
-CORTEO_DIR=$DIR
-CORTEO_APP_DIR=$APP_DIR
-CORTEO_NODE_SYSTEM=$node_now
-CORTEO_NODE_TARGET=$NODE_MAJOR
-CORTEO_URL=http://$HOST:$PORT
-CORTEO_MCP_URL=$MCP_URL
-CORTEO_REF=$REF
-CORTEO_START=$START
-CORTEO_WITH_DESKTOP=$WITH_DESKTOP
-CORTEO_SKIP_SYSTEM_DEPS=$SKIP_SYSTEM_DEPS
-CORTEO_PORT_STATE=$port_state
-CORTEO_SERVICE=corteo.service
-CORTEO_LOG=$LOG_FILE
-CORTEO_LEGACY_DIR=$LEGACY_DIR
-CORTEO_LEGACY_ACTION=$LEGACY_ACTION
-EOF
+  report CORTEO_STATUS dry-run
+  report CORTEO_OS "$(uname -s) $(uname -m)"
+  report CORTEO_DIR "$DIR"
+  report CORTEO_APP_DIR "$APP_DIR"
+  report CORTEO_NODE_SYSTEM "$node_now"
+  report CORTEO_NODE_TARGET "$NODE_MAJOR"
+  report CORTEO_URL "http://$HOST:$PORT"
+  report CORTEO_MCP_URL "$MCP_URL"
+  report CORTEO_REF "$REF"
+  report CORTEO_START "$START" bool
+  report CORTEO_WITH_DESKTOP "$WITH_DESKTOP" bool
+  report CORTEO_SKIP_SYSTEM_DEPS "$SKIP_SYSTEM_DEPS" bool
+  report CORTEO_SELF_TEST "$(if (( SELF_TEST == 1 )); then printf 'planned'; else printf 'skipped'; fi)"
+  report CORTEO_PORT_STATE "$port_state"
+  report CORTEO_SERVICE "corteo.service"
+  report CORTEO_LOG "$LOG_FILE"
+  report CORTEO_LEGACY_DIR "$LEGACY_DIR"
+  report CORTEO_LEGACY_ACTION "$LEGACY_ACTION"
+  emit
 }
 
 ensure_node() {
@@ -666,6 +724,59 @@ read_profile_id() {
   ' "$metadata" 2>/dev/null || return 1
 }
 
+json_escape() {
+  local value="$1"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  value="${value//$'\n'/\\n}"
+  value="${value//$'\r'/\\r}"
+  value="${value//$'\t'/\\t}"
+  printf '%s' "$value"
+}
+
+REPORT_KEYS=()
+REPORT_VALUES=()
+REPORT_KINDS=()
+
+# report <key> <value> [raw|bool|stdout-only]
+#   raw         a number, emitted unquoted in JSON
+#   bool        1/0 in text (the long-standing contract), true/false in JSON
+#   stdout-only never written to corteo.env (the token lives in secrets.env)
+report() {
+  REPORT_KEYS+=("$1")
+  REPORT_VALUES+=("$2")
+  REPORT_KINDS+=("${3:-string}")
+}
+
+# One object on stdout in --json mode, KEY=VALUE lines otherwise. The same keys
+# either way, so a human and a bot are reading one contract.
+emit() {
+  local i
+  if (( JSON_MODE == 1 )); then
+    printf '{'
+    for i in "${!REPORT_KEYS[@]}"; do
+      (( i > 0 )) && printf ','
+      if [[ "${REPORT_KINDS[$i]}" == "raw" ]]; then
+        printf '"%s":%s' "${REPORT_KEYS[$i]}" "${REPORT_VALUES[$i]}"
+      elif [[ "${REPORT_KINDS[$i]}" == "bool" ]]; then
+        if [[ "${REPORT_VALUES[$i]}" == "1" ]]; then
+          printf '"%s":true' "${REPORT_KEYS[$i]}"
+        else
+          printf '"%s":false' "${REPORT_KEYS[$i]}"
+        fi
+      else
+        printf '"%s":"%s"' "${REPORT_KEYS[$i]}" "$(json_escape "${REPORT_VALUES[$i]}")"
+      fi
+    done
+    printf '}\n'
+  else
+    for i in "${!REPORT_KEYS[@]}"; do
+      printf '%s=%s\n' "${REPORT_KEYS[$i]}" "${REPORT_VALUES[$i]}"
+    done
+  fi
+  EMITTED=1
+}
+
 write_report() {
   stage "writing the connection report"
   mkdir -p "$DIR"
@@ -674,26 +785,35 @@ write_report() {
     data_dir="$HOME/.openchatcut/dev-profiles/$profile_id"
   fi
 
+  report CORTEO_STATUS ok
+  report CORTEO_URL "http://$HOST:$PORT"
+  report CORTEO_LOCAL_URL "http://127.0.0.1:$PORT"
+  report CORTEO_MCP_URL "$MCP_URL"
+  report CORTEO_MCP_TOKEN_FILE "$SECRETS"
+  report CORTEO_OCC "$BIN_DIR/occ"
+  report CORTEO_APP_DIR "$APP_DIR"
+  report CORTEO_DATA_DIR "$data_dir"
+  report CORTEO_GUIDE "$APP_DIR/documentation/CORTEO_INSTALL.md"
+  report CORTEO_LOG "$LOG_FILE"
+  report CORTEO_MANAGER "$MANAGER"
+  report CORTEO_MIGRATED_FROM "$MIGRATED_FROM"
+  report CORTEO_LEGACY_SERVICE "$LEGACY_SERVICE_STATE"
+  report CORTEO_PORT_STATE "$PORT_STATE"
+  report CORTEO_SELF_TEST "$SELF_TEST_RESULT"
+  if (( PRINT_TOKEN == 1 )); then
+    report CORTEO_MCP_TOKEN "$OPENCHATCUT_MCP_TOKEN" stdout-only
+  fi
+
   (
     umask 077
-    cat > "$REPORT" <<EOF
-CORTEO_STATUS=ok
-CORTEO_URL=http://$HOST:$PORT
-CORTEO_LOCAL_URL=http://127.0.0.1:$PORT
-CORTEO_MCP_URL=$MCP_URL
-CORTEO_MCP_TOKEN=$OPENCHATCUT_MCP_TOKEN
-CORTEO_OCC=$BIN_DIR/occ
-CORTEO_APP_DIR=$APP_DIR
-CORTEO_DATA_DIR=$data_dir
-CORTEO_GUIDE=$APP_DIR/documentation/CORTEO_INSTALL.md
-CORTEO_LOG=$LOG_FILE
-CORTEO_MANAGER=$MANAGER
-CORTEO_MIGRATED_FROM=$MIGRATED_FROM
-CORTEO_LEGACY_SERVICE=$LEGACY_SERVICE_STATE
-EOF
+    local i
+    for i in "${!REPORT_KEYS[@]}"; do
+      [[ "${REPORT_KINDS[$i]}" == "stdout-only" ]] && continue
+      printf '%s=%s\n' "${REPORT_KEYS[$i]}" "${REPORT_VALUES[$i]}"
+    done > "$REPORT"
   )
   chmod 600 "$REPORT"
-  cat "$REPORT"
+  emit
 }
 
 do_uninstall() {
@@ -760,21 +880,117 @@ do_uninstall() {
   say "uninstall complete"
 }
 
+# ── the self-test ────────────────────────────────────────────────────────────
+# Folded in from scripts/corteo-install.sh, which existed only to run these
+# steps. The CLI is called through cli-dist/occ.mjs rather than the installed
+# wrapper on purpose: the wrapper exports OPENCHATCUT_DEV_PROFILE_ID, and this
+# test has to run in its own data directory so it cannot touch real projects.
+
+self_test_body() {
+  local work="$1"
+  local clip="$work/clip.mp4"
+  local out="$work/render.mp4"
+  local duration=""
+  local cli=("$NODE_BIN" "$APP_DIR/cli-dist/occ.mjs")
+
+  SELF_TEST_STEP="ffmpeg clip"
+  printf '%s' "$SELF_TEST_STEP" > "$work/.step"
+  say "generating a 2 second test clip"
+  ffmpeg -y -hide_banner -loglevel error \
+    -f lavfi -i "color=c=0x1a1a1a:s=640x360:d=2:r=30" \
+    -f lavfi -i "anullsrc=r=48000:cl=stereo" \
+    -t 2 -c:v libx264 -pix_fmt yuv420p -c:a aac -shortest "$clip"
+
+  export OPENCHATCUT_PROVIDERS=off
+  export OPENCHATCUT_DATA_DIR="$work/library"
+  export OPENCHATCUT_DEV_HEAP_MB=6144
+  export CC_RENDER_GL=swangle
+  unset OPENCHATCUT_DEV_PROFILE_ID || true
+
+  SELF_TEST_STEP="project new"
+  printf '%s' "$SELF_TEST_STEP" > "$work/.step"
+  "${cli[@]}" project new "corteo self-test" --fps 30 --size 640x360 --json >/dev/null
+
+  SELF_TEST_STEP="media import"
+  printf '%s' "$SELF_TEST_STEP" > "$work/.step"
+  "${cli[@]}" media import "$clip" --apply --json >/dev/null
+
+  SELF_TEST_STEP="media ls"
+  printf '%s' "$SELF_TEST_STEP" > "$work/.step"
+  local asset
+  asset="$("${cli[@]}" media ls --json | "$NODE_BIN" -e '
+    let raw = "";
+    process.stdin.on("data", (chunk) => { raw += chunk; });
+    process.stdin.on("end", () => {
+      const parsed = JSON.parse(raw);
+      const asset = (parsed.assets || [])[0];
+      if (!asset || !asset.id) process.exit(1);
+      process.stdout.write(asset.id);
+    });
+  ')"
+  [[ -n "$asset" ]] || { say "media ls returned no asset id"; return 1; }
+
+  SELF_TEST_STEP="place clip"
+  printf '%s' "$SELF_TEST_STEP" > "$work/.step"
+  "${cli[@]}" tools call edit_item \
+    --args "{\"adds\":[{\"type\":\"video\",\"assetId\":\"${asset}\",\"fromFrame\":0}]}" \
+    --apply --json >/dev/null
+
+  SELF_TEST_STEP="render"
+  printf '%s' "$SELF_TEST_STEP" > "$work/.step"
+  say "rendering 2 seconds at 480p"
+  "${cli[@]}" render --out "$out" --to 2s --resolution 480p --quiet
+
+  SELF_TEST_STEP="ffprobe"
+  printf '%s' "$SELF_TEST_STEP" > "$work/.step"
+  duration="$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$out")"
+  "$NODE_BIN" -e '
+    const duration = Number(process.argv[1]);
+    if (!Number.isFinite(duration) || duration < 1.5 || duration > 2.5) {
+      console.error("duration out of range: " + process.argv[1]);
+      process.exit(1);
+    }
+  ' "$duration"
+  say "rendered ${duration}s"
+}
+
+# A failing command inside a bare call would exit the script through set -e and
+# lose the step name, so the body runs in a subshell and reports afterwards.
+self_test() {
+  stage "self-test"
+  command -v ffmpeg >/dev/null 2>&1 \
+    || die "the self-test needs ffmpeg (sudo apt-get install -y ffmpeg)"
+  command -v ffprobe >/dev/null 2>&1 \
+    || die "the self-test needs ffprobe (sudo apt-get install -y ffmpeg)"
+  [[ -f "$APP_DIR/cli-dist/occ.mjs" ]] || die "cli-dist/occ.mjs is missing; the self-test cannot run"
+
+  local work status=0
+  work="$(mktemp -d "${TMPDIR:-/tmp}/corteo-self-test.XXXXXX")"
+  ( set -euo pipefail; self_test_body "$work" ) || status=$?
+  if (( status != 0 )); then
+    SELF_TEST_RESULT="fail"
+    say "self-test files kept at $work"
+    die "self-test failed at step '$(cat "$work/.step" 2>/dev/null || printf 'unknown')'"
+  fi
+  SELF_TEST_RESULT="pass"
+  rm -rf "$work"
+  say "self-test passed"
+}
+
 main() {
   parse_args "$@"
 
   if (( UNINSTALL == 1 )); then
     if legacy_present; then LEGACY_ACTION="stop"; fi
     if (( DRY_RUN == 1 )); then
-      cat <<EOF
-CORTEO_STATUS=dry-run
-CORTEO_ACTION=uninstall
-CORTEO_DIR=$DIR
-CORTEO_PURGE=$PURGE
-CORTEO_SERVICE=corteo.service
-CORTEO_LEGACY_DIR=$LEGACY_DIR
-CORTEO_LEGACY_ACTION=$LEGACY_ACTION
-EOF
+      report CORTEO_STATUS dry-run
+      report CORTEO_ACTION uninstall
+      report CORTEO_DIR "$DIR"
+      report CORTEO_PURGE "$PURGE" bool
+      report CORTEO_SERVICE "corteo.service"
+      report CORTEO_LEGACY_DIR "$LEGACY_DIR"
+      report CORTEO_LEGACY_ACTION "$LEGACY_ACTION"
+      emit
       exit 0
     fi
     do_uninstall
@@ -801,6 +1017,9 @@ EOF
   install_system_deps
   start_service
   wait_for_health
+  if (( SELF_TEST == 1 )); then
+    self_test
+  fi
   write_report
 
   say "done"
