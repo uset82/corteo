@@ -611,7 +611,7 @@ Approved 2026-10-25. Task cards: `docs/plans/05-corteo.md`. Its own table, same 
 | C-09 | One installer, one contract (`CORTEO_*`, `--json`, `--self-test`) | done | C-06 |
 | C-10 | Non-blocking renders (`render --detach`, `job status/wait`) | done | |
 | C-11 | The bot template: profile, four skills, build gate | done | C-09, C-10 |
-| C-12 | "Conectar un bot" card | todo | C-09 |
+| C-12 | "Conectar un bot" card | done | C-09 |
 | C-13 | The bot run proof on a clean VM | todo | C-11, C-12 |
 | C-14 | End-to-end proof, with the name checked | todo | C-04, C-08, C-13 |
 | C-15 | Release: publish and the note | optional | C-14 |
@@ -694,6 +694,23 @@ Approved 2026-10-25. Task cards: `docs/plans/05-corteo.md`. Its own table, same 
   The recipe builds, the four skills are in it, and every budget is enforced by
   the gate; the import itself is Carlos's to try, and C-13 is where the
   executable half gets its proof.
+
+- The card is built from constants, not from state: `corteoDefineConnection()`
+  takes no argument, so no call site can hand a token to text that ends up in a
+  screenshot. The old signature took one and printed it in a comment; that was
+  the leak, and it was one line of the card away from a shared image.
+- `CORTEO_MCP_URL` still names the hosted worker. A bot on another machine needs
+  it; a bot on this machine can use the local origin the dialog already shows at
+  the top. Two URLs, one endpoint, and the card says which is which.
+- The card that was replaced said "hand this to corteo, she edits this project
+  from outside this computer" — a feminine reference to a bot that no longer
+  exists, in the one dialog that explains how to connect one. It is now the card
+  that says what a bot is, what it needs, and where the token file lives.
+- `CopySnippetButton` grew an optional label instead of a second component: the
+  card needs two copy buttons with one behaviour, and a second component would
+  have been two places to forget the clipboard failure path.
+- The card renders before the token loads, because it never needed the token. The
+  client list below it still waits for one; those snippets do carry it.
 
 ## Opus parity (Plan 6)
 Executed 2026-10-25. Task cards and the full record live in `docs/plans/06-opus-parity.md`.

@@ -6,7 +6,7 @@ import { editorBootstrapInfo } from '../../agent/editor-credential';
 import { theme, themeAlpha } from '../../theme';
 import { useT } from '../../i18n/locale';
 import { Icon } from '../icons';
-import { CORTEO_MCP_URL, corteoDefineConnection } from './botConnection';
+import { CORTEO_INSTALL_LINE, CORTEO_MCP_URL, CORTEO_TOKEN_FILE, corteoDefineConnection } from './botConnection';
 import { qwenWorkConnectJson } from './mcpClientConfig';
 import claudeSvg from '../../../assets/vendor-icons/claude-color.svg?raw';
 import codexPng from '../../../assets/vendor-icons/codex-color.png';
@@ -162,7 +162,7 @@ function ConnectButton({ client, onStatus }: { client: ClientSnippet['client']; 
   );
 }
 
-function CopySnippetButton({ getSnippet, onStatus }: { getSnippet: () => string; onStatus: (message: string, ok: boolean) => void }) {
+function CopySnippetButton({ getSnippet, onStatus, label }: { getSnippet: () => string; onStatus: (message: string, ok: boolean) => void; label?: string }) {
   const t = useT();
   const [state, setState] = useState<'idle' | 'done' | 'error'>('idle');
   return (
@@ -191,7 +191,7 @@ function CopySnippetButton({ getSnippet, onStatus }: { getSnippet: () => string;
       }}
     >
       <Icon name={state === 'done' ? 'check' : 'copy'} size={11} />
-      {state === 'done' ? t('已复制') : t('复制配置')}
+      {state === 'done' ? t('已复制') : label ?? t('复制配置')}
     </button>
   );
 }
@@ -267,21 +267,40 @@ export function McpGuideDialog({ onClose }: { onClose: () => void }) {
 
         <div style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 600 }}>{t('连接 corteo')}</span>
-            {mcpToken ? (
-              <div style={{ marginLeft: 'auto' }}>
-                <CopySnippetButton
-                  getSnippet={() => corteoDefineConnection(mcpToken)}
-                  onStatus={() => {}}
-                />
-              </div>
-            ) : null}
+            <span style={{ fontSize: 12, fontWeight: 600 }}>{t('连接一个 bot')}</span>
+            <span style={{ color: theme.textMuted, fontSize: 11.5 }}>{t('一次安装，之后它自己驱动 corteo。')}</span>
           </div>
-          <div style={{ color: theme.textMuted, fontSize: 12, lineHeight: 1.55 }}>
-            {t('把下面的配置交给 corteo。她从这台电脑以外编辑这个工程。编辑器的域名必须写进 hosting.egressDomains。')}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ color: theme.textMuted, fontSize: 11.5 }}>{t('MCP 地址')}</span>
+            <div style={{ marginLeft: 'auto' }}>
+              <CopySnippetButton getSnippet={() => CORTEO_MCP_URL} label={t('复制地址')} onStatus={() => {}} />
+            </div>
           </div>
           <pre style={endpointStyle}>{CORTEO_MCP_URL}</pre>
-          {mcpToken ? <pre style={snippetStyle}>{corteoDefineConnection(mcpToken)}</pre> : null}
+
+          <div style={{ color: theme.textMuted, fontSize: 11.5, lineHeight: 1.55 }}>
+            {t('令牌文件')} <code style={{ color: theme.text }}>{CORTEO_TOKEN_FILE}</code>
+            {' · '}
+            {t('机器人读这个文件，不要把内容贴进对话。')}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ color: theme.textMuted, fontSize: 11.5 }}>{t('安装命令')}</span>
+            <div style={{ marginLeft: 'auto' }}>
+              <CopySnippetButton getSnippet={() => CORTEO_INSTALL_LINE} label={t('复制命令')} onStatus={() => {}} />
+            </div>
+          </div>
+          <pre style={snippetStyle}>{CORTEO_INSTALL_LINE}</pre>
+
+          <div style={{ color: theme.textMuted, fontSize: 11.5 }}>
+            {t('把下面的片段交给 bot；它只带环境变量名，没有令牌。')}
+          </div>
+          <pre style={snippetStyle}>{corteoDefineConnection()}</pre>
+
+          <div style={{ color: theme.textDim, fontSize: 11 }}>
+            {t('导出与取帧工具需要一个已注册的编辑器标签页：在终端运行 npm run editor-host。')}
+          </div>
         </div>
 
         {mcpToken ? (

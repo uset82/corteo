@@ -31,6 +31,16 @@ export default {
   // Settings
   '设置 · API 密钥': 'Configuración · Claves API',
   '外部 Agent 接入 (MCP)': 'Conexión Agent Externa (MCP)',
+  '连接一个 bot': 'Conectar un bot',
+  '一次安装，之后它自己驱动 corteo。': 'Una instalación y luego lo maneja solo.',
+  'MCP 地址': 'URL del MCP',
+  '复制地址': 'Copiar URL',
+  '复制命令': 'Copiar comando',
+  '令牌文件': 'Archivo del token',
+  '机器人读这个文件，不要把内容贴进对话。': 'El bot lee este archivo; no pegues su contenido en el chat.',
+  '安装命令': 'Comando de instalación',
+  '把下面的片段交给 bot；它只带环境变量名，没有令牌。': 'Dale el fragmento de abajo al bot; lleva nombres de variables de entorno, no el token.',
+  '导出与取帧工具需要一个已注册的编辑器标签页：在终端运行 npm run editor-host。': 'Las herramientas de exportación y de fotogramas necesitan una pestaña del editor registrada: ejecuta npm run editor-host en una terminal.',
   '编辑快捷键': 'Editar Atajos de Teclado',
   
   // Loading states
