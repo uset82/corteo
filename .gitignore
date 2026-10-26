@@ -96,7 +96,8 @@ MODEL-OPT-PLAN.md
 !/scripts/editor-host.mjs
 !/scripts/corteo-local.mjs
 !/scripts/corteo-local.sh
-!/scripts/corteo-install.sh
+!/scripts/build-bot-recipe.mjs
+!/scripts/bot-rehearsal.sh
 !/scripts/corteo-acceptance.sh
 !/scripts/sync-publish.sh
 !/scripts/corteo
@@ -125,3 +126,12 @@ public/whisper-cli/
 
 # Agent tooling local state (Command Code taste captures)
 .commandcode/
+
+# The bot recipe is a deliverable, not build output: a person imports the JSON
+# straight into a Grok Bot, so it is committed and its generator travels with it.
+# The "dist/" rule above matches at any depth, and git never re-includes inside an
+# ignored directory, so the directory is reopened first and its contents closed
+# again.
+!/bot/dist/
+/bot/dist/*
+!/bot/dist/recipe.json

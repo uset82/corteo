@@ -605,8 +605,8 @@ Approved 2026-10-25. Task cards: `docs/plans/05-corteo.md`. Its own table, same 
 | C-07 | Copy outside the dictionaries, the assistant, the exports | done | C-05 |
 | C-08 | The repo's own prose (README, AGENTS, CHANGELOG, install guide) | done | C-06, C-07 |
 | C-09 | One installer, one contract (`CORTEO_*`, `--json`, `--self-test`) | done | C-06 |
-| C-10 | Non-blocking renders (`render --detach`, `job status/wait`) | todo | |
-| C-11 | The bot template: profile, four skills, build gate | todo | C-09, C-10 |
+| C-10 | Non-blocking renders (`render --detach`, `job status/wait`) | done | |
+| C-11 | The bot template: profile, four skills, build gate | done | C-09, C-10 |
 | C-12 | "Conectar un bot" card | todo | C-09 |
 | C-13 | The bot run proof on a clean VM | todo | C-11, C-12 |
 | C-14 | End-to-end proof, with the name checked | todo | C-04, C-08, C-13 |
@@ -657,6 +657,39 @@ Approved 2026-10-25. Task cards: `docs/plans/05-corteo.md`. Its own table, same 
   the Claude Code icon, not our accent, and a blind sweep would break the logo.
   The line now says so.
 - The bot template copies claudia-bot's *mechanics* (recipe → replay, ≤6 KB per skill, ≤80 KB total, "Use when …" descriptions, detached installs, `/workspace` persistence, secrets only through the secret card) and none of its content: no claudia.gallery, no canon, no relay, no `slop`.
+
+- C-10's detached child was blamed for dying, and the mechanism was fine: the
+  child completed at about 20 s with exit 0 every time. What looked like a dead
+  render was tsx's cold start plus a launcher that closed its console. The verify
+  now measures the baseline on the same machine (`occ where --json`) and allows
+  `baseline + 15 s` instead of an absolute 20 s, because an absolute budget on a
+  loaded box tests the box, not the code.
+- A job is a file written by the process that did the work, never by the poller.
+  `render --detach` writes the record before it forks and the child finishes it,
+  so `job status` can never claim a render succeeded that never ran; a `running`
+  record whose pid is gone is reported `failed` with the log tail.
+- `job wait` prints the report and *then* throws on a failed job, so a caller that
+  parses stdout still gets the state and a caller that checks the exit code still
+  fails. Both habits exist in the wild; only one of them could be served.
+- The bot recipe is committed even though `dist/` is build output everywhere
+  else, because the JSON is what a person hands to Grok and the generator is the
+  only thing that can prove it matches `bot/`. `--check` validates and compares,
+  so a stale recipe fails the gate instead of shipping.
+- The scrub judges install instructions **line by line** and skips negated lines.
+  The first run failed on the profile's own "Never install a plugin" — a rule that
+  forbids the thing it names is not the thing it names, and a scrubber that cannot
+  tell the difference trains you to write around it.
+- The rehearsal is not a copy of the skill, it is the skill's own lines executed.
+  `corteo-setup` carries them between `# rehearsal:begin` / `# rehearsal:end`, and
+  `bot-recipe.verify` fails when a line in the skill is missing from
+  `scripts/bot-rehearsal.sh`. The install line stays replayable because the source
+  is a variable: `https://…/corteo/main` in the skill, `file://` + the checkout in
+  the rehearsal, same text both ways.
+- **C-11's import clause is the one thing not executed here**: "the recipe imports
+  into a Grok Bot and the bot lists four skills" needs a Grok Bot, not a shell.
+  The recipe builds, the four skills are in it, and every budget is enforced by
+  the gate; the import itself is Carlos's to try, and C-13 is where the
+  executable half gets its proof.
 
 ## Opus parity (Plan 6)
 Executed 2026-10-25. Task cards and the full record live in `docs/plans/06-opus-parity.md`.
