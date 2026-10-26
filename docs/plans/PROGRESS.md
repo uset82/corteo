@@ -62,7 +62,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | L-05 | Pictures: map PNG + spectrogram | done | L-04 |
 | L-06 | `listen_to_song` MCP tool | done | L-01, L-03, L-05 |
 | L-07 | Real-ear relay (off by default) | done | L-06 |
-| L-08 | Keyframable filters + binary-search sampling | todo | |
+| L-08 | Keyframable filters + binary-search sampling | done | |
 | P2-1 | Ken Burns | done | |
 | L-09 | Music reactions + tools | todo | L-06, L-08, P2-1 |
 | L-10 | Caption motion `latido` | todo | L-06 |
@@ -279,9 +279,12 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Files: new `server/music-listen/relay.ts`, `server/music-listen/relay.verify.ts`; `server/music-listen/listen.ts`, `server/music-listen/tool.ts`, `server/music-listen/listen.verify.ts`, `shared/music-inference/listen-snapshot.ts`, `src/agent/tools/music-intelligence-tools.ts`, `src/agent/tools/schemas/music-intelligence-tools.ts`, `assets/agent/openchatcut-tool-schemas.json`, `package.json`.
 - Done when: the mock test covers request shape, the `audio_tokens` rule, caching, and no call when off.
 
-### L-08 · Keyframable filters + binary-search sampling
+### L-08 · Keyframable filters + binary-search sampling — done
+- Done 2026-10-26: `brightness`, `contrast`, `saturate` and `blur` joined `KeyframeProp` and the registry (ranges 0..3, 0..3, 0..4 and 0..100 px; defaults 1/1/1/0; base value read from `item.filters`). `clipFiltersAt` in `clipFade.ts` samples each channel, clamps easing overshoot to the registry range and rounds to four decimals; a keyframed channel overrides its static filter and the other channels keep theirs. `appearanceAt` emits the CSS `filter` when the clip has static filters or a non-empty filter channel, and `BackgroundFillLayer` reads the same sampled values, so the blurred canvas copy flashes with the clip. The inspector's transform sliders and their reset list skip the four channels (the Filters section owns those values), so no duplicate rows appear. `edit_item` accepts the channels through its existing whitelist, and its schema text names them and their ranges. `sampleKeyframes` now binary-searches the sorted array instead of scanning it, because beat reactions put hundreds of keyframes on one clip.
+- Proof: `src/editor/keyframes.verify.ts` asserts the registry entries and base values, a 0.6→2 brightness pair producing `brightness(0.6)`/`brightness(1.3)`/`brightness(2)` through `appearanceAt` while `contrast(1.2)` stays static, an undefined filter when neither filters nor channels exist, an easing overshoot clamped to 3, split carry of the brightness channel, and binary-search sampling equal to the old linear scan at every frame −10..420 for keyframe counts 1/2/3/17/200 across five easings. `edit-item-generic.verify.ts` keeps the unknown-prop probe on `sharpen` (it used `blur`, which is now real) and `keyframes.verify.ts` adds the image-accepted / audio-rejected / range-rejected cases plus a reducer write.
+- Gates: `npx tsc -b`, `npm run lint` (0 errors, 204 warnings), `npx tsx src/editor/keyframes.verify.ts`, `npm run verify:editor`, `npm run verify:export-gl`, `npm run verify:agent-tools`, `npm run verify:components`, and `npm run verify:server-tool-catalog` after `npm run generate:server-tool-catalog` passed.
 - Plan: Plan 2 › Part C (animatable filters).
-- Files: `src/editor/clipTypes.ts`, `src/editor/keyframeRegistry.ts`, `src/editor/clipFade.ts`, `src/editor/TimelineMediaLayer.tsx`, `edit_item` schema and executor, `src/editor/keyframes.ts`.
+- Files: `src/editor/clipTypes.ts`, `src/editor/keyframeRegistry.ts`, `src/editor/clipFade.ts`, `src/editor/TimelineMediaLayer.tsx`, `src/editor/keyframes.ts`, `src/editor/keyframes.verify.ts`, `src/agent/tools/edit-item-generic.ts`, `src/agent/tools/edit-item-generic.verify.ts`, `src/agent/tools/schemas/edit-item-tools.ts`, `src/components/inspector/InspectorContent.tsx`, `src/components/inspector/InspectorKeyframeControls.tsx`, `assets/agent/openchatcut-tool-schemas.json`.
 - Done when: a brightness keyframe pair changes the preview and the export identically, and `sampleKeyframes` gives the same results as before on the existing tests.
 - Verify: `npx tsx src/editor/keyframes.verify.ts`, `npm run verify:editor`, `npm run verify:export-gl`.
 
@@ -422,6 +425,7 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-26 · L-07 · `OPENCHATCUT_PROVIDERS=off` does not block the relay: it is the plan's one opt-in paid exception and is already double-gated by `OPENCHATCUT_LISTEN_RELAY=openrouter` plus `OPENROUTER_API_KEY`. The verify keeps the providers switch off while the relay runs, so enabling the relay can never open any other cloud route.
 - 2026-10-26 · L-07 · `LISTEN_RELAY_CROSS_CHECK_MODEL` is asked once more only when the first answer reports zero audio tokens; a verified first answer never pays for two calls. Reason: the cross-check exists to rescue an unproven listen, not to double the price of every note.
 - 2026-10-26 · L-07 · The relay reads `.env.corteo` (Plan 5's current name; `npm run start:corteo` loads it with `--env-file-if-exists`) rather than the card's older `.env.claudia`. The relay settings are process env, not keystore entries, so they never appear in the settings UI or travel to the browser.
+- 2026-10-26 · L-08 · A keyframed filter channel overrides its static `filters` value, the same rule the transform properties already follow, and the background fill multiplies those per-frame values. Reason: a flash or breathing reaction has to move both copies of the picture or the letterboxed background would stay frozen while the clip pulses. The four channels are kept out of the inspector's transform slider list because the Filters section already owns those values; showing them twice would give two controls for one number.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.

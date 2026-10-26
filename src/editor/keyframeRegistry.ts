@@ -16,6 +16,11 @@ export interface KeyframePropertyDefinition {
 
 const visual = (item: TimelineItem) => item.kind !== 'audio';
 const roundableVisual = (item: TimelineItem) => item.kind !== 'audio' && item.kind !== 'text';
+/** Filter channels are edited in the Filters section, not the transform sliders. */
+export const FILTER_KEYFRAME_PROPS = Object.freeze(['brightness', 'contrast', 'saturate', 'blur'] as const);
+export type FilterKeyframeProp = (typeof FILTER_KEYFRAME_PROPS)[number];
+export const isFilterKeyframeProp = (prop: KeyframeProp): prop is FilterKeyframeProp =>
+  (FILTER_KEYFRAME_PROPS as readonly string[]).includes(prop);
 const audible = (item: TimelineItem) => item.kind === 'audio' || item.kind === 'video';
 const compact = (value: number) => String(Number(value.toFixed(2)));
 const percent = (value: number) => `${compact(value)}%`;
@@ -78,6 +83,30 @@ export const KEYFRAME_PROPERTY_REGISTRY: Record<KeyframeProp, KeyframePropertyDe
     step: 1, defaultValue: 0, supports: roundableVisual,
     getBaseValue: (item) => item.transform?.borderRadius ?? 0,
     toTransformPatch: (borderRadius) => ({ borderRadius }),
+    format: (value) => `${compact(value)}px`,
+  },
+  brightness: {
+    id: 'brightness', label: '亮度', valueRange: [0, 3], editorRange: [0, 2],
+    step: 0.01, defaultValue: 1, supports: visual,
+    getBaseValue: (item) => item.filters?.brightness ?? 1,
+    format: percent,
+  },
+  contrast: {
+    id: 'contrast', label: '对比度', valueRange: [0, 3], editorRange: [0, 2],
+    step: 0.01, defaultValue: 1, supports: visual,
+    getBaseValue: (item) => item.filters?.contrast ?? 1,
+    format: percent,
+  },
+  saturate: {
+    id: 'saturate', label: '饱和度', valueRange: [0, 4], editorRange: [0, 2],
+    step: 0.01, defaultValue: 1, supports: visual,
+    getBaseValue: (item) => item.filters?.saturate ?? 1,
+    format: percent,
+  },
+  blur: {
+    id: 'blur', label: '模糊', valueRange: [0, 100], editorRange: [0, 50],
+    step: 1, defaultValue: 0, supports: visual,
+    getBaseValue: (item) => item.filters?.blur ?? 0,
     format: (value) => `${compact(value)}px`,
   },
   volume: {

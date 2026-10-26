@@ -74,16 +74,20 @@ export function sampleKeyframes(kfs: readonly Keyframe[], frame: number): number
   if (frame <= kfs[0].frame) return kfs[0].value;
   const last = kfs[kfs.length - 1];
   if (frame >= last.frame) return last.value;
-  for (let i = 0; i < kfs.length - 1; i++) {
-    const a = kfs[i];
-    const b = kfs[i + 1];
-    if (frame <= b.frame) {
-      const span = b.frame - a.frame;
-      if (span <= 0) return b.value;
-      return a.value + easeProgress((frame - a.frame) / span, a.easing) * (b.value - a.value);
-    }
+  // Binary search: beat reactions put hundreds of keyframes on one clip, and the
+  // linear scan ran once per rendered frame.
+  let lo = 0;
+  let hi = kfs.length - 1;
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1;
+    if (frame <= kfs[mid].frame) hi = mid;
+    else lo = mid;
   }
-  return last.value;
+  const a = kfs[lo];
+  const b = kfs[hi];
+  const span = b.frame - a.frame;
+  if (span <= 0) return b.value;
+  return a.value + easeProgress((frame - a.frame) / span, a.easing) * (b.value - a.value);
 }
 
 /**

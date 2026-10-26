@@ -1,7 +1,7 @@
 import { useState, type CSSProperties, type PropsWithChildren } from 'react';
 import type { ClipTransform, Keyframe, KeyframeEasing, KeyframeProp, TimelineItem } from '../../editor/types';
 import { sampleKeyframes } from '../../editor/keyframes';
-import { KEYFRAME_PROPS, getKeyframePropertyDefinition } from '../../editor/keyframeRegistry';
+import { KEYFRAME_PROPS, getKeyframePropertyDefinition, isFilterKeyframeProp } from '../../editor/keyframeRegistry';
 import { useT } from '../../i18n/locale';
 import { Icon } from '../icons';
 import {
@@ -205,8 +205,10 @@ export function TransformControl({
   const crop = normalizedFlexCrop(item.transform?.crop);
   const rows = KEYFRAME_PROPS
     .map(getKeyframePropertyDefinition)
-    // Volume is not part of the transform stack — VolumeControl has its own keyframe track
-    .filter((definition) => definition.id !== 'volume' && definition.supports(item));
+    // Volume and the filter channels have their own controls with their own tracks
+    .filter((definition) => definition.id !== 'volume'
+      && !isFilterKeyframeProp(definition.id)
+      && definition.supports(item));
   return (
     <div className="cc-insp-stack">
       {rows.map((r) => {

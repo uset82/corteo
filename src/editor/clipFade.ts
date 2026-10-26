@@ -1,5 +1,6 @@
 import { sampleKeyframes } from './keyframes';
-import type { TimelineItem } from './types';
+import { coerceKeyframeValue, isFilterKeyframeProp } from './keyframeRegistry';
+import type { ClipFilters, KeyframeProp, TimelineItem } from './types';
 import { flexCropClipPath, hasFlexCrop } from './flexCrop';
 
 /** Fade multiplier at a Sequence-relative frame. */
@@ -31,6 +32,29 @@ export interface ClipAppearance {
   foregroundStyle: import('react').CSSProperties;
 }
 
+/** Filter values at an item-local frame: a keyframed channel overrides the
+ *  static ClipFilters value, clamped so easing overshoot cannot emit a negative
+ *  CSS filter. */
+export function clipFiltersAt(item: TimelineItem, frame: number): Required<ClipFilters> {
+  const channel = (prop: KeyframeProp, fallback: number): number => {
+    const kfs = item.keyframes?.[prop];
+    if (!kfs?.length) return item.filters?.[prop as keyof ClipFilters] ?? fallback;
+    return coerceKeyframeValue(prop, sampleKeyframes(kfs, frame));
+  };
+  const tidy = (value: number): number => Math.round(value * 1e4) / 1e4;
+  return {
+    brightness: tidy(channel('brightness', 1)),
+    contrast: tidy(channel('contrast', 1)),
+    saturate: tidy(channel('saturate', 1)),
+    blur: tidy(channel('blur', 0)),
+  };
+}
+
+const hasFilterChannel = (item: TimelineItem): boolean =>
+  (Object.keys(item.keyframes ?? {}) as KeyframeProp[]).some((prop) => (
+    isFilterKeyframeProp(prop) && (item.keyframes?.[prop]?.length ?? 0) > 0
+  ));
+
 /** Per-frame clip appearance (opacity/border/transform/crop/filters) shared by
  *  the clip wrapper and the shared-visual video group. */
 export function appearanceAt(
@@ -57,7 +81,9 @@ export function appearanceAt(
   const crop = transform?.crop;
   const clipPath = hasFlexCrop(crop) ? flexCropClipPath(crop, canvas.width, canvas.height) : undefined;
   const opacity = clipOpacityAt(item, frame, hiddenByCaptions);
-  const filters = item.filters;
+  const filters = item.filters !== undefined || hasFilterChannel(item)
+    ? clipFiltersAt(item, frame)
+    : null;
   return {
     opacity,
     borderRadius: Math.max(0, keyframeValue('borderRadius') ?? transform?.borderRadius ?? 0),
@@ -66,7 +92,7 @@ export function appearanceAt(
       transformOrigin: '50% 50%',
       transformBox: 'border-box',
       filter: filters
-        ? `brightness(${filters.brightness ?? 1}) contrast(${filters.contrast ?? 1}) saturate(${filters.saturate ?? 1}) blur(${filters.blur ?? 0}px)`
+        ? `brightness(${filters.brightness}) contrast(${filters.contrast}) saturate(${filters.saturate}) blur(${filters.blur}px)`
         : undefined,
       clipPath,
     },

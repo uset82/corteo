@@ -124,8 +124,8 @@ const SLIP_UPDATE_KEYS: Record<string, true> = {
   deltaInFrames: true,
 };
 
-// keyframes arg: {x|y|scale|rotation|opacity|volume: [{frame,value,easing?}…]} — boundary
-// validation for LLM output (prop whitelist, finite frame ≥0, value in range, easing shape).
+// keyframes arg: {x|y|scale|rotation|opacity|brightness|contrast|saturate|blur: [{frame,value,easing?}…]}
+// — boundary validation for LLM output (prop whitelist, finite frame ≥0, value in range, easing shape).
 function parseKeyframesArg(raw: unknown): { keyframes?: ItemKeyframes; error?: string } {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
     return { error: 'keyframes must be an object mapping prop → [{frame,value,easing?}]' };

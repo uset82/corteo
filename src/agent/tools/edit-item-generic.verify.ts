@@ -103,7 +103,7 @@ for (const [alias, canonical] of [
   assert.deepEqual(calls[0], ['setItemKeyframe', 'v1_abc', 'opacity', 0, 1, canonical], `${alias} canonicalizes before commit`);
 }
 assert.ok(validateGenericUpdate(state, { type: 'video', itemId: 'v1_abc', keyframes: { opacity: [{ frame: 0, value: 2 }] } }).error, 'out-of-range keyframe value errors');
-assert.ok(validateGenericUpdate(state, { type: 'video', itemId: 'v1_abc', keyframes: { blur: [{ frame: 0, value: 1 }] } }).error, 'unknown keyframe prop errors');
+assert.ok(validateGenericUpdate(state, { type: 'video', itemId: 'v1_abc', keyframes: { sharpen: [{ frame: 0, value: 1 }] } }).error, 'unknown keyframe prop errors');
 assert.ok(validateGenericUpdate(state, { type: 'video', itemId: 'v1_abc', keyframes: { opacity: [{ frame: 0, value: 1, easing: 'zigzag' }] } }).error, 'bad easing errors');
 
 // ── no fields → error ──

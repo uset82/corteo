@@ -3,7 +3,7 @@ import type { PropSpec } from '../../types';
 import type { TimelineItem } from '../../editor/types';
 import { KEN_BURNS_LABEL_KEYS, KEN_BURNS_MENU_ORDER } from '../kenBurnsMenu';
 import { backgroundFillStrengthOf } from '../../editor/backgroundFill';
-import { KEYFRAME_PROPS, getKeyframePropertyDefinition } from '../../editor/keyframeRegistry';
+import { KEYFRAME_PROPS, getKeyframePropertyDefinition, isFilterKeyframeProp } from '../../editor/keyframeRegistry';
 import { inspectorMixedValue } from '../../editor/inspectorBatch';
 import { useT } from '../../i18n/locale';
 import { hasFlexCrop, type FlexCropEdge } from '../../editor/flexCrop';
@@ -128,7 +128,9 @@ function InspectorTabContent(props: InspectorContentProps) {
 
 function BasicTab({ panel, item, schema, playheadLocal }: InspectorContentProps) {
   const t = useT();
-  const transformProps = KEYFRAME_PROPS.filter((prop) => prop !== 'volume' && getKeyframePropertyDefinition(prop).supports(item));
+  const transformProps = KEYFRAME_PROPS.filter((prop) => prop !== 'volume'
+    && !isFilterKeyframeProp(prop)
+    && getKeyframePropertyDefinition(prop).supports(item));
   const cropActive = panel.selectedItems.some((entry) => hasFlexCrop(entry.transform?.crop));
   const resetDisabled = !transformProps.some((prop) => {
     const definition = getKeyframePropertyDefinition(prop);

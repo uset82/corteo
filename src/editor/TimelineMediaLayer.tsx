@@ -14,9 +14,8 @@ import { hasOperationalTranscript } from '../transcript/types';
 import { voiceIsolationMix } from '../audio/voiceMix';
 import { audibleTranscriptSegments } from './audioTranscriptGuard';
 import { backgroundFillAppearanceFor, backgroundFillFilter } from './backgroundFill';
-import { appearanceAt } from './clipFade';
+import { appearanceAt, clipFadeFactor, clipFiltersAt, clipOpacityAt } from './clipFade';
 import { zoomAt } from './zoom';
-import { clipFadeFactor, clipOpacityAt } from './clipFade';
 import { volumeAtFrame } from './keyframes';
 import { sourceFrameAt } from './sourceLimit';
 import { offthreadTrimBefore, offthreadVideoTransparent, useRuntimeVideoDecoder } from './serverVideoDecoder';
@@ -272,15 +271,15 @@ export function BackgroundFillLayer({ item, frameOffset, canvasW, canvasH, brows
   browserRenderer: boolean;
 }) {
   const appearance = backgroundFillAppearanceFor(item, canvasW, canvasH);
-  const opacity = clipOpacityAt(item, useCurrentFrame() + frameOffset);
+  const localFrame = useCurrentFrame() + frameOffset;
+  const opacity = clipOpacityAt(item, localFrame);
   const trimBefore = sourceFrameAt(item, frameOffset);
-  const filters = item.filters;
   const style: CSSProperties = {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
     transform: `scale(${appearance.overscanScale})`,
-    filter: backgroundFillFilter(appearance, filters),
+    filter: backgroundFillFilter(appearance, clipFiltersAt(item, localFrame)),
   };
   const effect = firstGlEffect(item);
   return (
