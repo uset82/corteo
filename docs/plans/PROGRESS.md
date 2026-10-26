@@ -53,7 +53,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P-CL-15 | Short music recipe, trim --to, render --to-audio | done | P-CL-11 |
 | P-CL-16 | corteo:local starts without Vite warnings | done | P-CL-10 |
 | P-CL-17 | Installer self-test leaves no files in the repo | done | P-CL-3 |
-| P1-6 | `videoclip-musical` skill | todo | P1-2 |
+| P1-6 | `videoclip-musical` skill | done | P1-2 |
 | P1-7 | Webhooks with HMAC | optional | P4-3 |
 | L-01 | Server-side Beat This + CLAP runner | done | |
 | L-02 | Listening DSP in `src/audio/listen/` | done | |
@@ -198,7 +198,10 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Done when: with no normal browser open, `openchatcut_status` over MCP reports a connected editor and `tools/list` returns the full editor tool set (not the 44 offline tools).
 - Verify: MCP smoke test before and after starting it.
 
-### P1-6 · `videoclip-musical` skill
+### P1-6 · `videoclip-musical` skill — done
+- Done 2026-10-25 in `53e7413`: `src/agent/skills/videoclip-musical/SKILL.md` (66 lines, `user-invocable`) walks the six steps with tools that exist today. `load_skill {"name":"videoclip-musical"}` over MCP against the dev server returned 13,902 bytes with the full file. The skill count moved to 31 in `skill-loading.verify.ts`, and the bundled-skills list in `assets/agent/openchatcut-tool-schemas.json` was regenerated. Later commits kept the skill current: `36bb9e2` added `apply_ken_burns` to step 3 and `3d3b1cd` renamed the visible app to Claudia.
+- Also fixed in `53e7413`: the merged P1-2 code read `process.env` at module scope in `src/agent/external-tool-schemas.ts`, which reaches the browser through the editor bridge and crashed the editor page with "process is not defined". It now uses the existing `PROVIDERS_OFF` define in the browser and reads the env only when `process` exists (tsx/server).
+- Re-marked 2026-10-26: the `3c40299` merge resolved PROGRESS.md from the other side and dropped this row (P2-1's mark was restored in `a010b92`; P1-6's was not), so the card is back with no code change. Re-ran the gate: `npm run verify:skills` passes. Step 2's rewrite to `listen_to_song` belongs to L-12.
 - Plan: Plan 1 › Phase 1 (skill).
 - Files: new `src/agent/skills/videoclip-musical/SKILL.md` (copy the frontmatter shape of `src/agent/skills/music-intelligence/SKILL.md`).
 - Do: Claudia's end-to-end workflow from the plan. Name only tools that exist today; each later task that adds a tool updates this skill.
