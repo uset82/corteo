@@ -612,7 +612,7 @@ Approved 2026-10-25. Task cards: `docs/plans/05-corteo.md`. Its own table, same 
 | C-10 | Non-blocking renders (`render --detach`, `job status/wait`) | done | |
 | C-11 | The bot template: profile, four skills, build gate | done | C-09, C-10 |
 | C-12 | "Conectar un bot" card | done | C-09 |
-| C-13 | The bot run proof on a clean VM | todo | C-11, C-12 |
+| C-13 | The bot run proof on a clean VM | doing | C-11, C-12 |
 | C-14 | End-to-end proof, with the name checked | todo | C-04, C-08, C-13 |
 | C-15 | Release: publish and the note | optional | C-14 |
 
@@ -711,6 +711,19 @@ Approved 2026-10-25. Task cards: `docs/plans/05-corteo.md`. Its own table, same 
   have been two places to forget the clipboard failure path.
 - The card renders before the token loads, because it never needed the token. The
   client list below it still waits for one; those snippets do carry it.
+
+- C-13 is **half done and honestly labelled**: `scripts/bot-rehearsal.sh` and its
+  gate exist, and the gate is in `test:serial`. The run itself needs a clean
+  Linux box — bash, Node 24, ffmpeg and five minutes of npm — and this session
+  had none of those, so the card stays `doing` rather than claiming a proof it
+  did not make. Run `BOT_REHEARSAL=1 node scripts/bot-rehearsal.verify.mjs` on
+  the VM; it prints the wall time per step and the render's ffprobe facts, and
+  those are what belong in this section.
+- The gate checks structure, not the run, and says so in its own output. What it
+  refuses to let rot: a throwaway `HOME`, the checkout as the install source
+  (`file://`), a `BOT_REHEARSAL=PASS` line, the h264 and duration assertions,
+  and a cleanup that may only ever delete `${TMP:?}`. A rehearsal that quietly
+  stopped rehearsing would still exit 0; this is what notices.
 
 ## Opus parity (Plan 6)
 Executed 2026-10-25. Task cards and the full record live in `docs/plans/06-opus-parity.md`.
