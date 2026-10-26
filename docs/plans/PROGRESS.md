@@ -58,7 +58,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | L-01 | Server-side Beat This + CLAP runner | done | |
 | L-02 | Listening DSP in `src/audio/listen/` | done | |
 | L-03 | Mood per section + Latin labels | done | L-01 |
-| L-04 | Lyric lines, chorus candidates, SongMap + cache | todo | L-02 |
+| L-04 | Lyric lines, chorus candidates, SongMap + cache | done | L-02 |
 | L-05 | Pictures: map PNG + spectrogram | todo | L-04 |
 | L-06 | `listen_to_song` MCP tool | todo | L-01, L-03, L-05 |
 | L-07 | Real-ear relay (off by default) | todo | L-06 |
@@ -243,7 +243,11 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Done when: inspect results list a mood per section with Spanish names.
 - Verify: `npm run verify:music-intelligence`.
 
-### L-04 · Lyric lines, chorus candidates, SongMap + cache
+### L-04 · Lyric lines, chorus candidates, SongMap + cache — done
+- Done 2026-10-26: `src/audio/listen/songMap.ts` groups timed words into display lines (a 700 ms gap, sentence punctuation, or the 8 s / 14-word caps ends one), drops blank and non-finite words, clamps negative starts and collapses whitespace. Repeated lines are found after NFD normalization — accents, case and punctuation cannot hide a repeat — and become 1-based chorus groups in order of first appearance; each line is attached to the section containing its start, clamping to the first or last section. `buildSongMap` copies the analysis sections with their moods, lets user-provided timed lines replace the transcript entirely, and records `lyricsSource` as `transcript`, `user` or `none`.
+- Cache: `shared/music-inference/song-map-record.ts` keys a map by asset, source revision and its own fingerprint (`clap-profile-v2+song-map-v1`), so a grouping change drops maps without throwing away the analysis; the validator checks the schema version, contiguous sections that end at the duration, line times and section indexes, and that every line carrying a group number is listed in exactly one group. `server/music-listen/song-map-cache.ts` reads and writes it through the shared project store under `song-map:<sha256>`, beside `music-analysis:<sha256>`.
+- Proof: `songMap.verify.ts` covers silence, punctuation and both length caps, dirty input (blank, NaN, negative starts), accent/case-insensitive repeats, two groups ordered by first appearance, section boundaries and past-the-end clamping, and the transcript/user/none sources with user lines winning. `song-map-cache.verify.ts` round-trips a map, misses on a different revision or asset, and treats a stale fingerprint, untidy line text, an out-of-range section index or a group without its number as misses; it also refuses to write an invalid map.
+- Gates: `npx tsc -b`, `npm run lint` (0 errors, 203 warnings), both new verifies, `npm run verify:music-intelligence`, and `npm run build` all passed. `CC_RENDER_GL=swangle npm test` ran 221 segments in 165.8 s, all passing after one rerun: the first run failed only `scripts/harness/models.verify.mjs` on its `thinkingMs > 0` timing assertion under the runner's 4-way parallelism, and the same verify passed standalone and in the rerun.
 - Plan: Plan 2 › Part A (lyrics) and the tool output it feeds.
 - Files: `src/audio/listen/` (SongMap type), the server cache next to the music-analysis cache.
 - Do: group the local whisper words into lines, mark repeated lines as chorus candidates, attach them to sections; user-provided lyrics win. Define the `SongMap` type and its cache keyed by asset, source revision and analyzer fingerprint.

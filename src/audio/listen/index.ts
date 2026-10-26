@@ -13,6 +13,24 @@ export { deriveMoments } from './moments.ts';
 export { estimateKey } from './key.ts';
 export { buildEbur128Args, parseEbur128 } from './ebur128.ts';
 export type { LoudnessPoint, LoudnessReport } from './ebur128.ts';
+export {
+  SONG_MAP_ANALYZER_FINGERPRINT,
+  SONG_MAP_SCHEMA_VERSION,
+  attachLinesToSections,
+  buildSongMap,
+  groupWordsIntoLines,
+  markChorusLines,
+  normalizedLineText,
+} from './songMap.ts';
+export type {
+  BuildSongMapInput,
+  LineGroupingOptions,
+  SongLyricWord,
+  SongMap,
+  SongMapChorusGroup,
+  SongMapLine,
+  SongMapSection,
+} from './songMap.ts';
 export type {
   EnergyFrame,
   KeyEstimate,
