@@ -1,11 +1,28 @@
 {
-  // Replaces the static asset worker. `npx wrangler deploy` from this repo
-  // publishes the proxy to https://corteo.uset82.workers.dev/
+  // Worker name must match the Cloudflare service: corteo.
+  // Workers Builds runs `npx wrangler deploy` and does not run a separate
+  // build step. Wrangler itself runs `build.command` before uploading assets.
   "name": "corteo",
-  "main": "cloudflare/proxy-worker.mjs",
-  "compatibility_date": "2026-10-25",
-  "workers_dev": true,
-  "vars": {
-    "TUNNEL_ORIGIN": "https://editor.uset82.com"
+  "main": "cloudflare/worker.js",
+  // A compatibility date in the future is rejected by Cloudflare's clock.
+  "compatibility_date": "2026-10-24",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": [
+      "/api/*",
+      "/llm/*",
+      "/assemblyai/*",
+      "/e2b/*",
+      "/upload/*",
+      "/export/*",
+      "/generate/*",
+      "/jobs/*",
+      "/assets/*.wasm"
+    ]
+  },
+  "build": {
+    "command": "npm run build:cloudflare"
   }
 }

@@ -39,6 +39,7 @@
     "dev:shared": "vite --config config/vite.config.ts",
     "prebuild": "node scripts/sync-shader-sources.mjs --check && npm run sync:mediapipe && npm run sync:whisper-cli && npm run verify:server-tool-catalog",
     "build": "tsc -b && vite build --config config/vite.config.ts",
+    "build:cloudflare": "node cloudflare/build.mjs",
     "update:model-capabilities": "node --use-env-proxy scripts/update-llm-model-capabilities.mjs",
     "verify:affected": "node scripts/run-affected-verifies.mjs",
     "verify:media-drag": "tsx src/media/drag.verify.ts",
