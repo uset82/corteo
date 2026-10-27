@@ -76,7 +76,7 @@ Read that as six steps:
 | `CORTEO_DATA_DIR` | the project library. Back this up, not the app. |
 | `CORTEO_SELF_TEST` | the installer's own render: `pass`, `fail`, or `skipped`. |
 | `CORTEO_GUIDE` | the human documentation, on disk. |
-| `CORTEO_PORT_STATE` | `free`, `moved`, or `in-use` — why the port is what it is. |
+| `CORTEO_PORT_STATE` | `free` or `shifted` — why the port is what it is. |
 
 `CORTEO_MCP_TOKEN` appears **only** if someone passed `--print-token`, and then
 only on stdout. You never pass it. If the person asks for the token, give them
@@ -108,8 +108,9 @@ Then hand off to `corteo-edit` in the next turn.
 |---|---|
 | `"CORTEO_STATUS":"failed"` and a stage | Read the last 20 lines of the log. Report the stage, not the stack. One retry, then stop and ask. |
 | `node -v` is under 24 | Nothing. The installer brings Node 24 itself; you never install it. |
+| `git is required` | `sudo apt-get install -y git`, then re-run the block. Preflight checks for git before anything else, so nothing was half-installed. |
 | apt or sudo missing, Chromium libraries absent | The installer prints the exact `apt-get` line and continues. Offer the line; only the person can run it. |
-| Port taken | Nothing. `CORTEO_PORT_STATE` says `moved` and `CORTEO_URL` has the new port. Never hardcode 5199. |
+| Port taken | Nothing. `CORTEO_PORT_STATE` says `shifted` and `CORTEO_URL` has the new port. Never hardcode 5199. |
 | The turn died mid-install | Re-run the block. It is idempotent and the log is appended, not truncated. |
 | `ffprobe` missing | `sudo apt-get install -y ffmpeg`, then re-run the self-test only. |
 
