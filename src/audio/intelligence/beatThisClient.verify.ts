@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { analyzeBeatThis, pickBeatThisPeaks } from './beatThisClient';
 
 const beat = new Float32Array(20).fill(-1);
@@ -38,5 +39,12 @@ await assert.rejects(
   (error: unknown) => error instanceof Error && error.name === 'AbortError',
 );
 
+
+// onnxruntime-web loads its Emscripten glue as a separate module; a worker that
+// pins only the .wasm dies with "Cannot convert undefined to a BigInt" on every
+// backend, so browser music analysis never starts.
+const worker = readFileSync(new URL('./beatThis.worker.ts', import.meta.url), 'utf8');
+assert.match(worker, /ort-wasm-simd-threaded\.jsep\.mjs\?url/);
+assert.match(worker, /wasmPaths = \{ mjs: \w+, wasm: \w+ \}/);
 
 console.log('beatThisClient.verify: ok');
