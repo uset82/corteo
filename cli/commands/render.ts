@@ -2,19 +2,12 @@
 // pipeline: the same plan builder, media materialization and Remotion render the
 // /export job route drives. Only the transport differs — no HTTP, no browser
 // dialog, no render queue. Nothing here modifies the project.
-import { randomUUID } from 'node:crypto';
-import { rename, stat, unlink } from 'node:fs/promises';
-import { basename, dirname, join } from 'node:path';
 import { flagBoolean, flagText, rejectUnknownFlags, type CommandLine } from '../args.ts';
 import { CliError, UsageError } from '../errors.ts';
-import { printJson, writeStderr, writeStdout } from '../output.ts';
+import { printJson, writeStdout } from '../output.ts';
 import { readProjectDoc, resolveProject } from '../store.ts';
 import { startRenderJob } from '../jobs.ts';
-import { resolveH264TargetBitrate } from '../../server/media-acceleration.ts';
-import { acceptExportSubmission } from '../../server/plugins/export-submission.ts';
-import { h264RenderOptions, renderTimeline, setUploadsDirProvider } from '../../server/plugins/export-rendering.ts';
-import { uploadDir } from '../../server/media-dir.ts';
-import { exportOutputSize, retimeFps, withExportPermit } from '../../server/plugins/export-runtime.ts';
+import { renderProjectToFile } from '../render-file.ts';
 import { GLOBAL_FLAGS, parseFrames, projectReference } from './common.ts';
 
 const FLAGS = [
@@ -43,9 +36,6 @@ function positiveNumber(input: string, flag: string): number {
 
 export async function runRenderCommand(commandLine: CommandLine, json: boolean): Promise<void> {
   rejectUnknownFlags(commandLine, FLAGS);
-  // The CLI does not mount exportPlugin, which normally wires the active library
-  // into Remotion. Use the same provider for materialization and media serving.
-  setUploadsDirProvider(uploadDir);
   const outPath = flagText(commandLine, 'out');
   if (outPath === undefined || !outPath.trim()) {
     throw new UsageError('render needs --out <file> (for example: occ render --out cut.mp4)');
@@ -91,107 +81,32 @@ export async function runRenderCommand(commandLine: CommandLine, json: boolean):
   const bitrateFlag = flagText(commandLine, 'bitrate');
   const fromFlag = flagText(commandLine, 'from');
   const toFlag = flagText(commandLine, 'to');
-  const toAudio = flagBoolean(commandLine, 'to-audio');
-  let audioEnd: number | undefined;
-  if (toAudio && toFlag === undefined) {
-    const ends = timeline.items
-      .filter((item) => item.kind === 'audio')
-      .map((item) => item.startFrame + item.durationInFrames);
-    if (ends.length === 0) throw new UsageError('render --to-audio needs an audio clip on the timeline');
-    audioEnd = Math.max(...ends);
-  }
-
-  const submission = await acceptExportSubmission({
-    state: { ...timeline, assets: doc.assets },
-    project: doc,
-    timelineId: timeline.id,
-    format,
+  const result = await renderProjectToFile({
+    projectId: project.id, output: outPath, timelineId, format, quiet,
+    toAudio: flagBoolean(commandLine, 'to-audio'), dryRun: flagBoolean(commandLine, 'dry-run'),
     ...(codecFlag === undefined ? {} : { codec: oneOf(codecFlag, CODECS, 'codec') }),
     ...(resolutionFlag === undefined ? {} : { resolution: oneOf(resolutionFlag, RESOLUTIONS, 'resolution') }),
     ...(fpsFlag === undefined ? {} : { fps: positiveNumber(fpsFlag, 'fps') }),
-    ...(bitrateFlag === undefined ? {} : { videoBitrate: positiveNumber(bitrateFlag, 'bitrate') }),
-    ...(fromFlag === undefined ? {} : { startFrame: parseFrames(fromFlag, timeline.fps, 'from') }),
-    ...(toFlag !== undefined
-      ? { endFrameExclusive: parseFrames(toFlag, timeline.fps, 'to') }
-      : audioEnd !== undefined ? { endFrameExclusive: audioEnd } : {}),
+    ...(bitrateFlag === undefined ? {} : { bitrate: positiveNumber(bitrateFlag, 'bitrate') }),
+    ...(fromFlag === undefined ? {} : { fromFrame: parseFrames(fromFlag, timeline.fps, 'from') }),
+    ...(toFlag === undefined ? {} : { endFrameExclusive: parseFrames(toFlag, timeline.fps, 'to') }),
   });
-  const plan = submission.plan;
-  if (flagBoolean(commandLine, 'dry-run')) {
-    await submission.cleanup();
+  if (result.dryRun) {
     const summary = {
-      projectId: project.id,
-      timelineId: timeline.id,
-      output: outPath,
-      codec: plan.media.codec,
-      extension: plan.media.ext,
-      scale: plan.scale,
-      frameRange: plan.frameRange ?? null,
-      totalFrames: plan.totalFrames,
-      durationSeconds: plan.durationSeconds,
-      filename: plan.filename,
+      projectId: result.projectId, timelineId: result.timelineId, output: result.output,
+      codec: result.codec, extension: result.extension, scale: result.scale,
+      frameRange: result.frameRange, totalFrames: result.frames,
+      durationSeconds: result.durationSeconds, filename: result.filename,
     };
     if (json) printJson(summary);
-    else writeStdout(`plan: ${plan.media.codec} ${plan.totalFrames} frames → ${outPath}`);
+    else writeStdout(`plan: ${result.codec} ${result.frames} frames → ${outPath}`);
     return;
   }
-  // The partial keeps the final extension: Remotion validates the output filename
-  // against the codec (a ".partial" suffix makes it refuse to render).
-  const extension = plan.media.ext;
-  const partial = join(dirname(outPath), `${basename(outPath, `.${extension}`)}.partial-${randomUUID()}.${extension}`);
-  try {
-    await withExportPermit(async () => {
-      await renderTimeline({
-        state: plan.state,
-        project: plan.project,
-        timelineId: plan.timelineId,
-        outputLocation: partial,
-        codec: plan.media.codec,
-        frameRange: plan.frameRange,
-        scale: plan.scale,
-        videoBitrate: plan.videoBitrate,
-        ...await h264RenderOptions(plan.media.codec),
-        ...(quiet ? {} : {
-          onProgress: (progress: number) => {
-            writeStderr(`rendering ${Math.round(progress * 100)}%`);
-          },
-        }),
-      });
-      if (plan.retimeFps !== undefined) {
-        const outputSize = exportOutputSize(plan.state, plan.scale);
-        const retimed = `${partial}.retimed.${extension}`;
-        await retimeFps(
-          partial,
-          retimed,
-          plan.retimeFps,
-          plan.media.codec as 'h264' | 'vp8',
-          plan.videoBitrate ?? resolveH264TargetBitrate({ ...outputSize, fps: plan.retimeFps }),
-          undefined,
-        );
-        await unlink(partial).catch(() => {});
-        await rename(retimed, partial);
-      }
-    });
-    await rename(partial, outPath);
-  } catch (error) {
-    await unlink(partial).catch(() => {});
-    throw error;
-  } finally {
-    await submission.cleanup();
-  }
-
-  const size = (await stat(outPath)).size;
   if (json) {
-    printJson({
-      projectId: project.id,
-      timelineId: timeline.id,
-      output: outPath,
-      bytes: size,
-      codec: plan.media.codec,
-      frames: plan.totalFrames,
-      durationSeconds: plan.durationSeconds,
-    });
+    printJson({ projectId: result.projectId, timelineId: result.timelineId, output: result.output,
+      bytes: result.bytes, codec: result.codec, frames: result.frames, durationSeconds: result.durationSeconds });
     return;
   }
-  writeStdout(`${outPath}  ${(size / (1024 * 1024)).toFixed(1)}MB  ${plan.media.codec}  ${
-    plan.durationSeconds.toFixed(2)}s  ${plan.totalFrames} frames`);
+  writeStdout(`${outPath}  ${(result.bytes / (1024 * 1024)).toFixed(1)}MB  ${result.codec}  ${
+    result.durationSeconds.toFixed(2)}s  ${result.frames} frames`);
 }
