@@ -47,6 +47,10 @@ For "short", "reel", "story", "TikTok", or "vertical", create the project with `
 
 Render to `~/corteo-exports/<name>.mp4` or the host profile exportDir, and attach that same absolute path in the chat. Never deliver a relative path.
 
+## Del teléfono al MP4
+
+Save the attachment in the host inbox; `"$CORTEO" host show <host> --json` gives `mediaInbox`. Run `"$CORTEO" inbox --host <host> --json`, then attach `attachPath` in the same chat.
+
 ## Start
 
 The installer starts the editor unless `--no-start` was passed. In a developer checkout, leave the following running when you also want the editor page or MCP. The shell does not need it for imports, edits, or render.

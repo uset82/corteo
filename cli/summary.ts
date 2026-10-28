@@ -69,6 +69,7 @@ export interface ItemRow {
   readonly durationFrames: number;
   readonly duration: string;
   readonly source: string;
+  readonly fit?: 'contain' | 'cover' | 'fill';
 }
 
 function sourceLabel(item: TimelineItem): string {
@@ -96,6 +97,7 @@ export function itemRows(timeline: Timeline, track?: string): ItemRow[] {
       durationFrames: item.durationInFrames,
       duration: formatDuration(item.durationInFrames, timeline.fps),
       source: sourceLabel(item),
+      ...(item.fit === undefined ? {} : { fit: item.fit }),
     }));
 }
 

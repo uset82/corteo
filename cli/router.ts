@@ -8,6 +8,7 @@ import { runEditCommand } from './commands/edit.ts';
 import { runExportCommand } from './commands/export.ts';
 import { runItemCommand } from './commands/item.ts';
 import { runHostCommand } from './commands/host.ts';
+import { runInboxCommand } from './commands/inbox.ts';
 import { runJobCommand } from './commands/job.ts';
 import { runMcpCommand } from './commands/mcp.ts';
 import { runMediaCommand } from './commands/media.ts';
@@ -46,6 +47,8 @@ async function dispatch(commandLine: CommandLine): Promise<void> {
       return runMediaCommand(positionals, commandLine, json);
     case 'host':
       return runHostCommand(positionals, commandLine, json);
+    case 'inbox':
+      return runInboxCommand(commandLine, json);
     case 'job':
       return runJobCommand(positionals, commandLine, json);
     case 'mcp':
