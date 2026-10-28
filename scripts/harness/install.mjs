@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  command, homeFrom, httpGet, loadHarnessConfig, logDone, logStep, parseArgs, pathsFor,
+  command, ensurePnpm, homeFrom, httpGet, loadHarnessConfig, logDone, logStep, parseArgs, pathsFor,
   readInstalledDsh, readJson, readVendorCommit, requireCommand, requireNode24, writePrivateJson,
 } from './lib.mjs';
 
@@ -23,7 +23,7 @@ export async function installHarness({
 
   requireNode24();
   requireCommand('git', 'apt install git', env);
-  requireCommand('pnpm', 'npm install -g pnpm@10', env);
+  const pnpmEnv = ensurePnpm({ home: paths.home, env });
 
   let changed = false;
 
@@ -63,7 +63,7 @@ export async function installHarness({
   const wantedLink = `link:${paths.vendor}`;
   if (linked !== wantedLink) {
     command(paths.dshBin, ['plugin', '--profile', config.profile, 'add', paths.vendor], {
-      env: { ...env, DSH_HOME: paths.home },
+      env: { ...pnpmEnv, DSH_HOME: paths.home },
     });
     changed = true;
   }

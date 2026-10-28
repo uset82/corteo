@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs';
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { request } from 'node:http';
 import { homedir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { delimiter, dirname, join, resolve } from 'node:path';
 
 export const HARNESS_CONFIG = 'config/harness.json';
 
@@ -177,4 +177,11 @@ export function logDone(text) {
 
 export function logFail(text) {
   console.error(`\n✗ ${text}`);
+}
+
+export function ensurePnpm({ home, env = process.env }) {
+  if (command('pnpm', ['--version'], { env, allowFailure: true }).status === 0) return env;
+  const tools = join(home, 'tools');
+  command('npm', ['install', '--prefix', tools, 'pnpm@10'], { env });
+  return { ...env, PATH: [join(tools, 'node_modules', '.bin'), env.PATH ?? ''].join(delimiter) };
 }

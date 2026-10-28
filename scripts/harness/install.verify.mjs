@@ -22,6 +22,11 @@ appendFileSync(process.env.CALL_LOG, 'npm ' + args.join(' ') + '\\n');
 const prefix = args[args.indexOf('--prefix') + 1];
 const spec = args.at(-1);
 const version = spec.slice(spec.lastIndexOf('@') + 1);
+if (spec === 'pnpm@10') {
+  mkdirSync(join(prefix, 'node_modules/.bin'), { recursive: true });
+  writeFileSync(join(prefix, 'node_modules/.bin/pnpm'), '#!/usr/bin/env node\\nprocess.stdout.write("10.0.0")\\n', { mode: 0o755 });
+  process.exit(0);
+}
 mkdirSync(join(prefix, 'node_modules/@deepseek-ai/dsh'), { recursive: true });
 writeFileSync(join(prefix, 'node_modules/@deepseek-ai/dsh/package.json'), JSON.stringify({ name: '@deepseek-ai/dsh', version }));
 mkdirSync(join(prefix, 'node_modules/.bin'), { recursive: true });
@@ -201,7 +206,20 @@ try {
     );
   }
 
-  console.log('harness install verify passed (4 scenarios)');
+  {
+    const home = join(scratch, 'home-no-pnpm');
+    const noPnpmBin = join(scratch, 'no-pnpm-bin');
+    await mkdir(noPnpmBin, { recursive: true });
+    for (const name of ['npm', 'git']) {
+      await writeFile(join(noPnpmBin, name), fakeCommands[name], { mode: 0o755 });
+    }
+    await resetCallLog();
+    await installHarness({ root, home, env: { ...baseEnv, PATH: noPnpmBin + ':' + join(process.execPath, '..') + ':/usr/bin:/bin' },
+      probe: async () => ({ status: 0 }) });
+    assert.ok((await readCallLog()).includes('npm install --prefix ' + join(home, 'tools') + ' pnpm@10'));
+  }
+
+  console.log('harness install verify passed (5 scenarios)');
 } finally {
   const { rm } = await import('node:fs/promises');
   await rm(scratch, { recursive: true, force: true });
