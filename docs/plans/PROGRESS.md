@@ -960,11 +960,12 @@ The three verifies pass, the row is `done`, and the scratch directory was delete
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
 | EV-34 | Replay `skills/corteo/SKILL.md` the way a host would | done | |
-| EV-35 | The install guide says what `install.sh` does now | todo | EV-34 |
+| EV-35 | The install guide says what `install.sh` does now | done | EV-34 |
 | EV-36 | The bot template learns the inbox and the song film | todo | EV-35 (soft) |
 
 ### ED: results
 
+- EV-35 (2026-10-28): ran `bash install.sh --help`, `bash install.sh --dry-run --json`, `bash install.sh --dry-run --host-profile muse` and `bash install.sh --dry-run --no-brain` from `~/corteo-dsh`; the dry runs created nothing. `documentation/CORTEO_INSTALL.md` now lists all 17 `--help` flags, the `CORTEO_HOST_PROFILE`/`CORTEO_BRAIN` inputs, the 22 full-report keys plus `CORTEO_MCP_TOKEN`, the brain keys (`CORTEO_BRAIN=ok|failed|skipped`, `CORTEO_BRAIN_STEP`, `CORTEO_BRAIN_URL`), the host keys (`CORTEO_SKILL_PATH`, `CORTEO_MEDIA_INBOX`, `CORTEO_EXPORT_DIR`), the dry-run keys (`CORTEO_OS`, `CORTEO_NODE_SYSTEM`, `CORTEO_NODE_TARGET`, `CORTEO_REF`, `CORTEO_START`, `CORTEO_WITH_DESKTOP`, `CORTEO_SKIP_SYSTEM_DEPS`, `CORTEO_PORT_STATE`, `CORTEO_SERVICE`, `CORTEO_LEGACY_DIR`, `CORTEO_LEGACY_ACTION`) and the uninstall dry-run keys (`CORTEO_ACTION`, `CORTEO_PURGE`); the self-test is documented as lowercase `pass`. A check extracted 17 flags from `--help` and 36 `report CORTEO_*` names from `install.sh` and found all of them in the guide. Verify: `node scripts/no-claudia.verify.mjs` ok; `npm run verify:install` ok (22 report keys, self-test shape, side-effect-free dry run, `--json` object, JSON failure).
 - Run 2026-10-28 in `~/corteo-dsh` (branch `ev-dsh`), Node v24.22.1. The replay copy replaced `~/corteo-exports` with `$T/exports` and both `~/corteo/scripts/corteo` and `$HOME/corteo/scripts/corteo` with `$CORTEO=~/corteo-dsh/scripts/corteo` (the bash blocks write the wrapper as `$HOME/...`). Scratch: `CORTEO_STORE_DIR=$T/library CORTEO_EXPORT_DIR=$T/exports CORTEO_MEDIA_INBOX=$T/inbox CC_RENDER_GL=swangle`; no editor server, no brain. `$T` deleted.
 - Bash blocks, in document order:
   - block-01 One name: PASS 11 s (`CORTEO=...` and `--help`; `CORTEO_OCC` and the env source skipped).

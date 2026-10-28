@@ -40,17 +40,31 @@ curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/install.sh \
   | bash -s -- --dir /opt/corteo --port 5199
 ```
 
-Full option list: `install.sh --help`. Useful flags: `--no-start`,
-`--with-desktop`, `--skip-system-deps`, `--dry-run`, `--uninstall` and
-`--uninstall --purge`.
-
-Three flags exist for the agent doing the installing:
+Every option is in `install.sh --help`:
 
 | flag | what it does |
 |---|---|
+| `--dir <path>` | install root; default `~/corteo` |
+| `--host <addr>` | bind address; default `127.0.0.1`. The MCP URL stays on `127.0.0.1` for the usual loopback values and follows the address otherwise |
+| `--host-profile <name>` | bot host: `grok`, `muse` or `claude-duet`. Installs the skill where that host reads it and creates its inbox and export folder; the report carries the three paths. `CORTEO_HOST_PROFILE` sets it too |
+| `--port <port>` | editor port; default `5199` |
+| `--ref <branch\|tag>` | git ref to install; default `main` |
+| `--no-start` | install and print the values, but do not start the editor or the brain |
+| `--no-brain` | skip starting the free-model brain; `CORTEO_BRAIN=off` does the same |
+| `--with-desktop` | download the Electron binary too (desktop development) |
+| `--skip-system-deps` | do not try to install the Chromium libraries for rendering |
+| `--clone` | always clone into `--dir`, even when run from a checkout |
+| `--uninstall` | stop and remove the service; keep the app and data |
+| `--purge` | with `--uninstall`: also delete the app and the profile data |
+| `--dry-run` | print the plan and exit without changing anything |
 | `--json` | one JSON object on stdout instead of the `CORTEO_*` lines; progress moves to stderr |
-| `--self-test` | after installing, create a project, import a generated 2 second clip, render it at 480p and check the duration with `ffprobe` |
 | `--print-token` | put the MCP token in the output; without it you get its path |
+| `--self-test` | after installing, create a project, import a generated 2 second clip, render it at 480p and check the duration with `ffprobe`; the report carries `CORTEO_SELF_TEST=pass` in lowercase, not `PASS` |
+| `-h`, `--help` | show the help |
+
+`CORTEO_HOST_PROFILE` and `CORTEO_BRAIN` (`on` or `off`) set the same choices
+from the environment before the flags are read; an explicit `--host-profile` or
+`--no-brain` wins.
 
 `--json --self-test` is the whole contract in one call: install it, prove it
 renders, hand back a single object.
@@ -83,6 +97,10 @@ The last block on stdout is machine-readable:
 
 ```text
 CORTEO_STATUS=ok
+CORTEO_HOST_PROFILE=none
+CORTEO_SKILL_PATH=none
+CORTEO_MEDIA_INBOX=none
+CORTEO_EXPORT_DIR=none
 CORTEO_URL=http://127.0.0.1:5199
 CORTEO_LOCAL_URL=http://127.0.0.1:5199
 CORTEO_MCP_URL=http://127.0.0.1:5199/api/external-mcp/mcp
@@ -97,12 +115,39 @@ CORTEO_MIGRATED_FROM=/home/you/claudia
 CORTEO_LEGACY_SERVICE=stopped
 CORTEO_PORT_STATE=free
 CORTEO_SELF_TEST=pass
+CORTEO_BRAIN=ok
+CORTEO_BRAIN_STEP=none
+CORTEO_BRAIN_URL=http://127.0.0.1:18890/v1
 ```
 
-`CORTEO_MIGRATED_FROM` is the path the install came from, or `none`. It is the
-only line that tells you the old tree moved; `CORTEO_APP_DIR` is already the new
-one. `CORTEO_LEGACY_SERVICE` is `stopped`, or `none` when there was no old
-service to stop.
+The host keys are `none` without `--host-profile`; with one they carry the
+skill path, the inbox and the export folder that host uses.
+
+| key | meaning |
+|---|---|
+| `CORTEO_STATUS` | `ok` on a successful install, `dry-run` for a plan, `failed` with `CORTEO_FAILED_STAGE` on an error |
+| `CORTEO_HOST_PROFILE` | `grok`, `muse`, `claude-duet`, or `none` |
+| `CORTEO_SKILL_PATH` | where the host's skill was written; `none` without a host profile |
+| `CORTEO_MEDIA_INBOX` | the folder that host uses for attachments; `none` without a host profile |
+| `CORTEO_EXPORT_DIR` | the folder that host attaches renders from; `none` without a host profile |
+| `CORTEO_URL` | the editor on the bind address |
+| `CORTEO_LOCAL_URL` | the editor on loopback |
+| `CORTEO_MCP_URL` | the MCP endpoint the host connects to |
+| `CORTEO_MCP_TOKEN_FILE` | the `0600` file holding `OPENCHATCUT_MCP_TOKEN`; the default output never carries the token itself |
+| `CORTEO_OCC` | the `occ` wrapper |
+| `CORTEO_APP_DIR` | the installed checkout |
+| `CORTEO_DATA_DIR` | the active profile under `~/.openchatcut/dev-profiles/`, or `unknown` if the profile id cannot be read |
+| `CORTEO_GUIDE` | this guide inside the installed app |
+| `CORTEO_LOG` | the editor log |
+| `CORTEO_MANAGER` | `systemd` or `nohup` |
+| `CORTEO_MIGRATED_FROM` | the path the install came from, or `none`; the only line that says the old tree moved, because `CORTEO_APP_DIR` is already the new one |
+| `CORTEO_LEGACY_SERVICE` | `stopped`, or `none` when there was no old service to stop |
+| `CORTEO_PORT_STATE` | `free`, or `shifted` when the default port was busy and the installer moved up |
+| `CORTEO_SELF_TEST` | `pass` (lowercase), `fail`, or `skipped` when `--self-test` was not asked for |
+| `CORTEO_BRAIN` | `ok`, `failed`, or `skipped` when `--no-brain`, `--no-start` or `CORTEO_BRAIN=off` kept it off |
+| `CORTEO_BRAIN_STEP` | `none` on success or skip; the failed boot step otherwise |
+| `CORTEO_BRAIN_URL` | `http://127.0.0.1:18890/v1` when the brain started, `none` otherwise |
+| `CORTEO_MCP_TOKEN` | only with `--print-token`, and never written to the report file |
 
 The same values are written to `~/corteo/corteo.env` with mode `0600`.
 
@@ -111,13 +156,12 @@ instead is `CORTEO_MCP_TOKEN_FILE`: a `0600` file the bot reads for itself, so
 the secret never has to pass through a chat transcript or a log. That is also
 the file the service reads.
 
-`CORTEO_PORT_STATE` is `free` when 5199 was available and `shifted` when it was
-not. The default port is a preference, so the installer walks up to the next
-free one and says which it took; an explicit `--port` is a promise, so a busy
-one stops the install instead.
+The default port is a preference, so the installer walks up to the next free one
+and says which it took; an explicit `--port` is a promise, so a busy one stops
+the install instead.
 
-`CORTEO_SELF_TEST` is `pass`, `fail`, or `skipped` when `--self-test` was not
-asked for.
+A failed brain start does not fail the install: video still renders, and the
+report says `CORTEO_BRAIN=failed` with the step in `CORTEO_BRAIN_STEP`.
 
 If the run fails, stderr ends with:
 
@@ -155,6 +199,31 @@ A failure is still exactly one object on stdout, with a non-zero exit code:
 ```json
 {"CORTEO_STATUS":"failed","CORTEO_FAILED_STAGE":"installing dependencies"}
 ```
+
+## What the dry run prints
+
+`--dry-run` checks the machine and prints the plan without writing anything. It
+uses `CORTEO_STATUS=dry-run` and these keys:
+
+| key | meaning |
+|---|---|
+| `CORTEO_HOST_PROFILE` | the host profile that would be installed, or `none` |
+| `CORTEO_OS` | `uname -s` and `uname -m` of the machine |
+| `CORTEO_DIR`, `CORTEO_APP_DIR` | the install root and checkout that would be used |
+| `CORTEO_NODE_SYSTEM`, `CORTEO_NODE_TARGET` | the Node found on `PATH` (`not installed` if none) and the major the installer wants |
+| `CORTEO_URL`, `CORTEO_MCP_URL` | the URLs the install would use |
+| `CORTEO_REF` | the git ref |
+| `CORTEO_START`, `CORTEO_WITH_DESKTOP`, `CORTEO_SKIP_SYSTEM_DEPS` | the plan's booleans; `true`/`false` under `--json`, `1`/`0` in the text output |
+| `CORTEO_SELF_TEST` | `planned` or `skipped` |
+| `CORTEO_PORT_STATE` | `free` or `in-use`; a real install would move up from a busy default |
+| `CORTEO_BRAIN` | `planned` or `skipped` |
+| `CORTEO_SERVICE` | the service unit |
+| `CORTEO_LOG` | the log path |
+| `CORTEO_LEGACY_DIR`, `CORTEO_LEGACY_ACTION` | the old root and the migration the install would take (`none`, `move`, `kept-both` or `ignored`) |
+
+`--uninstall --dry-run` prints its own plan: `CORTEO_STATUS=dry-run`,
+`CORTEO_ACTION=uninstall`, `CORTEO_DIR`, `CORTEO_PURGE`, `CORTEO_SERVICE`,
+`CORTEO_LEGACY_DIR` and `CORTEO_LEGACY_ACTION`.
 
 ## Connect over MCP
 
