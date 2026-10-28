@@ -86,7 +86,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P5-1 | Full Spanish dictionary | done (all modules translated; the brand.ts fold-in is left) | |
 | P5-2 | i18n coverage + placeholder gate | done | P5-1 |
 | P5-3 | Untranslated-text scan | done | P5-2 |
-| P6-1 | Bot end-to-end proof + screenshots | todo | every task above is `done` or `blocked` |
+| P6-1 | Bot end-to-end proof + screenshots | blocked (no e2e media) | every task above is `done` or `blocked` |
 | P7-1 | EffectCraft titles sidecar | optional | P6-1 |
 
 ### P-CL-13 to P-CL-17 · Claudia polish — done
@@ -471,6 +471,7 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-28 · P4-3 · The sequence tabs show "Comparar versiones" when the active sequence belongs to a variant group. The dialog loads the P4-2 manifest (or renders it on demand), plays the 2×2 480p previews muted and synchronised, shows each note/status, and calls `chooseVariant` for "Elegir esta versión". The command now fires the `variant.chosen` CustomEvent (detail `{groupId,timelineId}`), verified with an EventTarget.
 - 2026-10-28 · P5-2 · `scripts/check-i18n.mjs` now reads the assembled Spanish modules (including the legacy `const base` in `es/index.ts`) and fails when any English key has no Spanish entry or when a `{placeholder}` set differs. Current catalog: 2709 English entries, 2747 Spanish entries, 100% coverage, 0 placeholder mismatches.
 - 2026-10-28 · P5-3 · Ran the es-ES Playwright scan on this branch at 1600×1000 against a scratch store (`CORTEO_PORT=5205 CORTEO_STORE_DIR=/tmp/p53-store`): projects, editor, timeline, every inspector tab, all six library tabs, export and all Settings categories, plus the chat. It found only the ten bundled CJK font-family names and the demo template's own English content (`The envelope method explained`, `How to start this week`, `Highlight Color`); no raw UI strings. The scan script stays outside the repo because it needs a live editor, a seeded store and the Playwright browser. Screenshots: `test-results/corteo/p53-*.png` (not committed). Prior raw-string fixes for ASR rows, the CapCut/JianYing header, the downloads tooltip and the sequence-cycle option were reused.
+- P6-1 · 2026-10-28 · The e2e proof needs the user's media: a 3:28 song WAV, a 1280×720 clip and a photo. `~/corteo-media`, `CORTEO_E2E_MEDIA_DIR` and `CLAUDIA_E2E_MEDIA_DIR` are all absent on this VM, so no export or screenshot can be produced honestly. Unblock: put the three files in `~/corteo-media` or set `CORTEO_E2E_MEDIA_DIR` to their folder. All other Plan 1 tasks are `done` or (L-13) blocked on the same missing song.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.
