@@ -1,6 +1,25 @@
-// Spanish UI translations - complete corteo translation
-// Chinese text is the key, Spanish is the value
-export default {
+// Spanish UI assembly. Chinese text is the key, Spanish is the value.
+// Per-module files mirror src/i18n/dict/en/ (P5-1); `base` holds the entries that
+// predate them and is spread last, so no wording translated before P5-1 changes.
+// dictRegistry.ts spreads es/brand.ts over this default export.
+import audio from './audio';
+import captions from './captions';
+import chat from './chat';
+import components from './components';
+import editor from './editor';
+import exportPanel from './exportPanel';
+import fx from './fx';
+import library from './library';
+import media from './media';
+import review from './review';
+import settings1 from './settings-1';
+import settings2 from './settings-2';
+import templatesData from './templates-data';
+import timeline from './timeline';
+import topbar from './topbar';
+import transcript from './transcript';
+
+const base: Record<string, string> = {
   '歌曲地图标题': 'Mapa de la canción',
   '歌曲地图返回': 'Volver',
   '歌曲地图调性': 'Tonalidad',
@@ -257,4 +276,6 @@ export default {
   '连接 corteo': 'Conectar corteo',
   '把下面的配置交给 corteo。她从这台电脑以外编辑这个工程。编辑器的域名必须写进 hosting.egressDomains。':
     'Dale a corteo la configuración de abajo para que edite este proyecto desde fuera de este PC. El dominio del editor tiene que estar en hosting.egressDomains.',
-} as Record<string, string>;
+};
+
+export default Object.assign({}, audio, captions, chat, components, editor, exportPanel, fx, library, media, review, settings1, settings2, templatesData, timeline, topbar, transcript, base) as Record<string, string>;
