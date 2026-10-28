@@ -27,6 +27,10 @@ EXPORT_DIR="none"
 PORT="$DEFAULT_PORT"
 REF="$DEFAULT_REF"
 START=1
+BRAIN_ENABLED="${CORTEO_BRAIN:-on}"
+BRAIN_STATE="skipped"
+BRAIN_STEP="none"
+BRAIN_URL="none"
 WITH_DESKTOP=0
 SKIP_SYSTEM_DEPS=0
 UNINSTALL=0
@@ -103,6 +107,7 @@ Options
   --port <port>         Editor port (default: 5199)
   --ref <branch|tag>    Git ref to install (default: main)
   --no-start            Install everything and print the values, but do not start
+  --no-brain            Skip starting the free-model brain
   --with-desktop        Download the Electron binary too (desktop development)
   --skip-system-deps    Do not try to install Chromium libraries for rendering
   --clone               Always clone into --dir, even when run from a checkout
@@ -164,6 +169,7 @@ parse_args() {
       --ref) need_value "$1" "${2:-}"; REF="$2"; shift 2 ;;
       --ref=*) REF="${1#*=}"; shift ;;
       --no-start) START=0; shift ;;
+      --no-brain) BRAIN_ENABLED=off; shift ;;
       --with-desktop) WITH_DESKTOP=1; shift ;;
       --skip-system-deps) SKIP_SYSTEM_DEPS=1; shift ;;
       --clone) CLONE=1; shift ;;
@@ -383,6 +389,7 @@ print_dry_run() {
   report CORTEO_SKIP_SYSTEM_DEPS "$SKIP_SYSTEM_DEPS" bool
   report CORTEO_SELF_TEST "$(if (( SELF_TEST == 1 )); then printf 'planned'; else printf 'skipped'; fi)"
   report CORTEO_PORT_STATE "$port_state"
+  report CORTEO_BRAIN "$(if [[ "$BRAIN_ENABLED" == off ]] || (( START == 0 )); then printf skipped; else printf planned; fi)"
   report CORTEO_SERVICE "corteo.service"
   report CORTEO_LOG "$LOG_FILE"
   report CORTEO_LEGACY_DIR "$LEGACY_DIR"
@@ -831,6 +838,9 @@ write_report() {
   report CORTEO_LEGACY_SERVICE "$LEGACY_SERVICE_STATE"
   report CORTEO_PORT_STATE "$PORT_STATE"
   report CORTEO_SELF_TEST "$SELF_TEST_RESULT"
+  report CORTEO_BRAIN "$BRAIN_STATE"
+  report CORTEO_BRAIN_STEP "$BRAIN_STEP"
+  report CORTEO_BRAIN_URL "$BRAIN_URL"
   if (( PRINT_TOKEN == 1 )); then
     report CORTEO_MCP_TOKEN "$OPENCHATCUT_MCP_TOKEN" stdout-only
   fi
@@ -1008,6 +1018,27 @@ self_test() {
   say "self-test passed"
 }
 
+start_brain() {
+  stage "brain"
+  if [[ "$BRAIN_ENABLED" == off ]] || (( START == 0 )); then
+    BRAIN_STATE="skipped"
+    return
+  fi
+  local result="$LOG_DIR/brain-boot.json" status=0
+  ( cd "$APP_DIR" && set -a && . "$SECRETS" && set +a && export CORTEO_MCP_URL="$MCP_URL" && PATH="$NODE_BIN_DIR:$PATH" "$NODE_BIN" scripts/harness/boot.mjs --json --editor-url "http://127.0.0.1:$PORT" ) > "$result" 2>>"$LOG_FILE" || status=$?
+  local values parsed_state
+  values="$("$NODE_BIN" -e 'try { const r = require(process.argv[1]); console.log((r.ok === true ? "ok" : "failed") + "\n" + (r.step || "boot") + "\n" + (r.brainUrl || "none")); } catch { console.log("failed\nboot\nnone"); }' "$result")"
+  parsed_state="$(printf '%s\n' "$values" | sed -n '1p')"
+  if (( status == 0 )) && [[ "$parsed_state" == ok ]]; then
+    BRAIN_STATE="ok"
+    BRAIN_URL="$(printf '%s\n' "$values" | sed -n '3p')"
+  else
+    BRAIN_STATE="failed"
+    BRAIN_STEP="$(printf '%s\n' "$values" | sed -n '2p')"
+    warn "the free-model brain did not start (step: $BRAIN_STEP); video still works. Retry: cd $APP_DIR && npm run brain"
+  fi
+}
+
 main() {
   parse_args "$@"
 
@@ -1052,6 +1083,7 @@ main() {
   if (( SELF_TEST == 1 )); then
     self_test
   fi
+  start_brain
   write_report
 
   say "done"

@@ -848,7 +848,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-14 | Alias router with 429 failover | done | EV-13 |
 | EV-15 | `npm run brain:serve` | done | EV-14 |
 | EV-16 | `npm run brain`: boot, no browser, no pasted key | done | EV-15 |
-| EV-17 | Installer starts the brain (`brain` step) | todo | EV-16, EV-02 (soft) |
+| EV-17 | Installer starts the brain (`brain` step) | done | EV-16, EV-02 (soft) |
 | EV-18 | `delegate` MCP tool | todo | EV-14 |
 | EV-19 | The IDE door | todo | EV-14, EV-03 (soft) |
 | EV-20 | The brain, live on this machine | todo | EV-16, EV-18, EV-17 (soft) |
@@ -894,6 +894,8 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 - EV-15: brain.verify, install.verify (including local pnpm fallback), start.verify and both registration gates passed. Fake dsh and router stopped cleanly; private state and logs carry no exposed key in status.
 
 - EV-16: boot.verify and both registration gates passed; doctor, install and brain regression verifies also passed. Existing installer and doctor progress emitters gained injectable callbacks so JSON boot output remains one object. Brain state is recorded during startup so a failed forward step can stop the spawned process.
+
+- EV-17: bash syntax, verify:install and verify:affected passed; --no-brain dry run reported CORTEO_BRAIN=skipped.
 
 ### EV: blockers
 - EV-12: no talking video in /home/carlos/corteo-media. Checked talk.mp4, talk.mov, talk.mkv and talk.webm; none exists. No speech was synthesized and no server was started. A talking video of at least two minutes at one of those paths unblocks the live run.

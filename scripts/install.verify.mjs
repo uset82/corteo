@@ -42,7 +42,7 @@ assert.match(source, /OPENCHATCUT_MCP_TOKEN/, 'install.sh must provision an MCP 
 
 const help = run(['--help']);
 for (const flag of [
-  '--dir', '--host', '--host-profile', '--port', '--ref', '--no-start', '--with-desktop',
+  '--dir', '--host', '--host-profile', '--port', '--ref', '--no-start', '--no-brain', '--with-desktop',
   '--skip-system-deps', '--uninstall', '--purge', '--dry-run',
   '--json', '--print-token', '--self-test',
 ]) {
@@ -85,6 +85,7 @@ const REPORTED = [
   'CORTEO_GUIDE', 'CORTEO_LOG', 'CORTEO_MANAGER', 'CORTEO_MIGRATED_FROM',
   'CORTEO_LEGACY_SERVICE', 'CORTEO_PORT_STATE', 'CORTEO_SELF_TEST',
   'CORTEO_HOST_PROFILE', 'CORTEO_SKILL_PATH', 'CORTEO_MEDIA_INBOX', 'CORTEO_EXPORT_DIR',
+  'CORTEO_BRAIN', 'CORTEO_BRAIN_STEP', 'CORTEO_BRAIN_URL',
 ];
 for (const key of REPORTED) {
   assert.ok(
@@ -102,6 +103,8 @@ assert.match(source, /ffprobe -v error -show_entries format=duration/, 'the self
 assert.match(source, /cli-dist\/occ\.mjs/, 'the self-test must drive the CLI');
 assert.doesNotMatch(source, /"\$BIN_DIR\/occ" project new/, 'the self-test must not use the wrapper that pins the dev profile');
 console.log('install.verify: self-test shape OK');
+assert.match(source, /self_test\n  fi\n  start_brain\n  write_report/);
+assert.doesNotMatch(source.match(/start_brain\(\) \{[\s\S]*?\n\}/)[0], /\bdie\b/);
 
 if (process.platform !== 'linux') {
   console.log(`install.verify: dry-run skipped on ${process.platform} (installer targets Linux)`);
@@ -118,6 +121,10 @@ try {
   // Text mode keeps the 1/0 contract it has always had; only --json promotes
   // these to real booleans.
   assert.match(dry, /^CORTEO_START=1$/m);
+  assert.match(dry, /^CORTEO_BRAIN=planned$/m);
+  assert.match(run(['--dry-run', '--no-brain'], { env }), /^CORTEO_BRAIN=skipped$/m);
+  assert.match(run(['--dry-run', '--no-start'], { env }), /^CORTEO_BRAIN=skipped$/m);
+  assert.match(run(['--dry-run'], { env: { ...env, CORTEO_BRAIN: 'off' } }), /^CORTEO_BRAIN=skipped$/m);
   assert.match(dry, /^CORTEO_PORT_STATE=(free|shifted|in-use)$/m);
   assert.doesNotMatch(dry, /^CORTEO_MCP_TOKEN=/m, 'the default output must not carry the token');
   assert.deepEqual(readdirSync(work), [], '--dry-run must not create files');
