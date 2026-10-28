@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from '@babel/parser';
+import { runSpanishGate } from './i18n-es-gate.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SOURCE_ROOT = path.join(ROOT, 'src');
@@ -341,9 +342,14 @@ const uiFiles = walk(SOURCE_ROOT).filter((filePath) => {
   if (relative.startsWith('src/editor/')) return false;
   return !isTestFile(relative);
 });
+// P5-2: the Spanish dictionary has its own gate — coverage, matching
+// placeholders and one wording per key. It lives in ./i18n-es-gate.mjs so this
+// file stays well under the 500-line limit.
+const spanish = runSpanishGate(ROOT);
 const issues = [
   ...translationIssues,
   ...uiFiles.flatMap((filePath) => auditUiFile(filePath, keys)),
+  ...spanish.issues.map((line) => `es 词典：${line}`),
 ];
 
 if (issues.length > 0) {
@@ -352,4 +358,4 @@ if (issues.length > 0) {
   process.exit(1);
 }
 
-console.log(`i18n 校验通过：${uiFiles.length} 个 UI 文件，${keys.size} 个英文词条`);
+console.log(`i18n 校验通过：${uiFiles.length} 个 UI 文件，${keys.size} 个英文词条，${spanish.keys} 个西语词条`);

@@ -58,33 +58,33 @@ const base: Record<string, string> = {
   // Dashboard
   '· 我的工程': '· Mis Proyectos',
   '工程': 'Proyectos',
-  '新建工程': 'Nuevo Proyecto',
-  '导入工程': 'Importar Proyecto',
+  '新建工程': 'Nuevo proyecto',
+  '导入工程': 'Importar proyecto',
   '导入 .ccproj 工程文件(兼容旧 .ccproj.json)': 'Importar archivo de proyecto .ccproj (compatible con .ccproj.json antiguo)',
   '导出为流式 .ccproj(含素材,可在桌面版/其它机器导入)': 'Exportar como .ccproj (con medios, importable en escritorio u otros equipos)',
-  '搜索工程': 'Buscar Proyectos',
-  '清除搜索': 'Limpiar Búsqueda',
-  '清理素材': 'Limpiar Medios',
+  '搜索工程': 'Buscar proyectos',
+  '清除搜索': 'Limpiar búsqueda',
+  '清理素材': 'Limpiar medios',
   '清理所有工程都不引用的上传素材(测试/已删工程残留)': 'Limpiar medios no referenciados (pruebas/proyectos eliminados)',
   '打开 {name}': 'Abrir {name}',
   '重命名': 'Renombrar',
   '双击重命名': 'Doble clic para renombrar',
   '复制': 'Copiar',
   '删除': 'Eliminar',
-  '确认删除': 'Confirmar Eliminación',
+  '确认删除': 'Confirmar eliminación',
   '彻底删除工程,并清掉只有它引用的素材文件': 'Eliminar proyecto permanentemente y limpiar sus archivos de medios',
-  '{n} 个': '{n} elementos',
-  '{n} / {total} 个': '{n} / {total} elementos',
+  '{n} 个': '{n}',
+  '{n} / {total} 个': '{n} de {total}',
   '已永久删除「{name}」': 'Eliminado permanentemente «{name}»',
   
   // Model setup
   '配置模型后开始使用 Agent': 'Configurar modelos para usar Agent',
   '配置任一云端或本地模型，即可在编辑器中使用对话式剪辑。': 'Configure un modelo en la nube o local para usar edición conversacional.',
-  '配置模型': 'Configurar Modelo',
+  '配置模型': 'Configurar modelo',
   
   // Settings
-  '设置 · API 密钥': 'Configuración · Claves API',
-  '外部 Agent 接入 (MCP)': 'Conexión Agent Externa (MCP)',
+  '设置 · API 密钥': 'Ajustes y claves de API',
+  '外部 Agent 接入 (MCP)': 'Agentes externos (MCP)',
   '连接一个 bot': 'Conectar un bot',
   '一次安装，之后它自己驱动 corteo。': 'Una instalación y luego lo maneja solo.',
   'MCP 地址': 'URL del MCP',
@@ -95,7 +95,7 @@ const base: Record<string, string> = {
   '安装命令': 'Comando de instalación',
   '把下面的片段交给 bot；它只带环境变量名，没有令牌。': 'Dale el fragmento de abajo al bot; lleva nombres de variables de entorno, no el token.',
   '导出与取帧工具需要一个已注册的编辑器标签页：在终端运行 npm run editor-host。': 'Las herramientas de exportación y de fotogramas necesitan una pestaña del editor registrada: ejecuta npm run editor-host en una terminal.',
-  '编辑快捷键': 'Editar Atajos de Teclado',
+  '编辑快捷键': 'Editar atajos de teclado',
   
   // Loading states
   '加载工程…': 'Cargando proyecto…',
@@ -104,8 +104,8 @@ const base: Record<string, string> = {
   '工程数据暂时无法读取': 'Los datos del proyecto no se pueden leer temporalmente',
   '为避免覆盖已保存的内容，已停止打开该工程。数据仍保留在本机存储中，可稍后重试。': 'Para evitar sobrescribir contenido guardado, se detuvo la apertura del proyecto. Los datos permanecen en almacenamiento local, intente más tarde.',
   '重试': 'Reintentar',
-  '返回工程列表': 'Regresar a la Lista de Proyectos',
-  '示例工程': 'Proyecto de Ejemplo',
+  '返回工程列表': 'Volver a proyectos',
+  '示例工程': 'Proyecto de ejemplo',
   
   // Top bar
   '文件': 'Archivo',
@@ -113,7 +113,7 @@ const base: Record<string, string> = {
   '查看': 'Ver',
   '项目': 'Proyecto',
   '导出': 'Exportar',
-  '设置': 'Configuración',
+  '设置': 'Ajustes',
   
   // Timeline
   '时间轴': 'Línea de Tiempo',
