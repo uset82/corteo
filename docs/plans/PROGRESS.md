@@ -953,9 +953,9 @@ None yet.
 ## EV track · DeepSeek Harness (ED)
 Folder `~/corteo-dsh`, branch `ev-dsh`. Plan 7 › "Finishing in three tracks". Only DeepSeek Harness edits this section.
 
-**ED (2026-10-28):** EV-34, EV-35 and EV-36 are done: the corteo skill's recipes were replayed, `documentation/CORTEO_INSTALL.md` now describes every installer flag and report key, and the bot's `corteo-edit` skill carries the inbox and song-film recipes with a regenerated `bot/dist/recipe.json`.
-The EV-34 fixes were four wrong skill texts; EV-35 was checked against `install.sh --help` plus its dry runs, and EV-36's recipes were replayed in scratch libraries (the 15 s song-film run's non-exit is recorded under ED: blockers; the 6 s run exits cleanly).
-The six verifies pass (skill, acceptance, no-claudia, install, bot-recipe, bot-rehearsal), all three rows are `done`, and the scratch directories were deleted.
+**ED (2026-10-28):** EV-34, EV-35, EV-36 and EV-37 are done: the corteo skill's recipes were replayed, `documentation/CORTEO_INSTALL.md` now describes every installer flag and report key, the bot's `corteo-edit` skill carries the inbox and song-film recipes with a regenerated `bot/dist/recipe.json`, and `occ song-film` exits when it is done.
+EV-37 found no pending music request: the warm workers' piped stderr and IPC kept the CLI alive, so the host unrefs all three handles while idle and `occ` disposes it after the command; the 15 s command exits 0 in 33.7 s, 0.28 s after its JSON, and the extended `cli/song-film.verify.ts` proves a pending fake host cannot keep the CLI alive.
+The earlier six verifies and the EV-37 verifies pass (`npx tsc -b`, `cli/song-film.verify.ts`, `verify:cli`, `verify:music-intelligence`, 10 affected verifies), all four rows are `done`, the EV-36 blocker is resolved, and the scratch directories were deleted.
 
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
