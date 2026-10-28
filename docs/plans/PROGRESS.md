@@ -939,14 +939,16 @@ Folder `~/corteo-zcode`, branch `ev-zcode`, editor port 5201. Plan 7 › "Finish
 
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
-| EV-33 | The music UI in a real browser (EV-22 to EV-24) | todo | |
+| EV-33 | The music UI in a real browser (EV-22 to EV-24) | blocked | |
 | EV-25 | L-13 on a real song, on port 5201 | todo | a song in `~/corteo-media` |
 | EV-12 | Long to short, live, on port 5201 | todo | a talking video in `~/corteo-media` |
 
 ### EZ: results
 
+- EV-33: the code half is green, the browser half is blocked. `npx tsc -b` exit 0 and `npm run verify:i18n` exit 0 (all five commands) run from the Windows side of the share through a `subst` drive, with TypeScript 7.0.2 and `@typescript/typescript-win32-x64` 7.0.2 plus `@esbuild/win32-x64` 0.28.2 copied in from `~/corteo/node_modules` (identical versions). The three music UI verifies pass: `song-map-dialog.verify` (Spanish sections, map and optional listening evidence), `music-map-strip.verify` (Spanish sections, trim/speed positions), `music-reaction-section.verify` (Spanish controls, one-batch apply). One defect found and fixed in a6c11a8: the song badge and the song-map dialog rendered `速度`, `拍号` and `能量` in English because `src/i18n/dict/es/index.ts` never carried them (the keys date from the upstream base commit a1b4d3a; EV-24 put two of them in the dialog). They now read Tempo, Compás and Energía. Not done: checks (a), (b) and (c) in a real browser and their screenshots, because the editor cannot start in this session (EZ: blockers). Port 5201 never opened; Qoder's editor on 5199 was left alone.
+
 ### EZ: blockers
-None yet.
+- EV-33: the editor cannot start here, so (a), (b) and (c) have no browser and no screenshots. `wsl.exe -e bash -lc '...'` is refused by the sandbox: `PROGRAM BLOCKED BY SECURITY POLICY ... wsl.exe (C:\Windows\system32\wsl.exe)`, Program Blacklist, not approvable. Without WSL, `bash scripts/corteo-env.sh --require-node` (the `precorteo:local` gate) prints `[corteo] Node 24 is required and nvm is not installed. Run install.sh`: `$HOME/.nvm/nvm.sh` does not exist and `HOME` is `C:\Users\carlos`. Bypassing that gate, `CORTEO_PORT=5201 node scripts/corteo-local.mjs` prints `[corteo] Node 22.22.2 is too old. corteo needs Node 24.`; the newest Node on the Windows side is v22.22.2 (managed) and v22.22.0 (system). A Node 24 would still not be enough: `server/music-listen/inference.ts` and `inference-worker.ts` load `onnxruntime-node` and `server/music-listen/pictures.ts` loads `sharp`, and this checkout holds only their Linux builds, so the song analysis behind (a), (b) and (c) cannot run. Unblocks with a session that can run commands inside WSL (remove `wsl.exe` from Security Center › Command Security › Program Blacklist), then `CORTEO_PORT=5201 npm run corteo:local` and the card's Playwright script. Qoder's editor on 5199 was not driven: track rule 6 asks for this track's own port and a scratch library.
 
 ---
 
