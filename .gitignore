@@ -105,6 +105,7 @@ MODEL-OPT-PLAN.md
 !/scripts/corteo-env.sh
 !/scripts/tunnel.mjs
 !/scripts/sync-mediapipe.mjs
+!/scripts/sync-yt-dlp.mjs
 # Regenerates the checked-in CLAP prototypes; the JSON it writes is committed,
 # so the generator has to travel with it.
 !/scripts/build-clap-prototypes.mjs
@@ -118,6 +119,7 @@ MODEL-OPT-PLAN.md
 node_modules
 public/mediapipe/
 public/whisper-cli/
+/vendor/
 
 
 # Local npm cache
