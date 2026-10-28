@@ -118,6 +118,8 @@ const SERVER_DIRECT_EDIT_TOOL_NAMES: Record<string, true> = {
   export_jianying_draft: true,
   // On-device beat analysis. Marker writes go through the draft's commands.
   detect_beats: true,
+  // Ken Burns: pure generator and one command batch, no media IO.
+  apply_ken_burns: true,
   // Music reactions: pure generator plus the draft's command batch, no media IO.
   apply_music_reaction: true,
   clear_music_reaction: true,

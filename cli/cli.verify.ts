@@ -510,11 +510,25 @@ try {
     ? importedImage.imported[0].id
     : undefined;
   assert.equal(typeof imageAssetId, 'string', 'the image must land in the pool');
-  occOk([
+  const imagePlacement = occJson<CallJson>([
     'tools', 'call', 'edit_item',
     '--args', JSON.stringify({ adds: [{ type: 'image', assetId: imageAssetId }] }),
-    '--project', created.id, '--apply',
+    '--project', created.id, '--apply', '--json',
   ]);
+  const placedImage = imagePlacement.ops[0]?.result as { results: { placed: { itemId: string } }[] };
+  const imageItemId = placedImage.results[0]!.placed.itemId;
+  const kenBurns = occJson<CallJson>([
+    'tools', 'call', 'apply_ken_burns',
+    '--args', JSON.stringify({ itemId: imageItemId, direction: 'in' }),
+    '--project', created.id, '--apply', '--json',
+  ]);
+  assert.equal(kenBurns.applied, true);
+  const kenDocPath = join(HOME, 'ken-doc.json');
+  occOk(['project', 'show', created.id, '--doc', '--out', kenDocPath]);
+  const kenDoc = JSON.parse(readFileSync(kenDocPath, 'utf8'));
+  const kenItem = kenDoc.timelines.flatMap((timeline: { items: { id: string }[] }) => timeline.items)
+    .find((item: { id: string }) => item.id === imageItemId);
+  assert.ok(kenItem.keyframes.scale.length >= 2, 'Ken Burns writes scale keyframes headlessly');
   const stubPath = join(HOME, 'capcut-stub.mjs');
   const stubDraftPath = join(HOME, 'stubbed-draft');
   writeFileSync(stubPath, [

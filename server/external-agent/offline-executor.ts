@@ -86,6 +86,10 @@ export async function executeOfflineTool(
   args: Args,
   ctx: AgentContext,
 ): Promise<unknown> {
+  if (name === 'apply_ken_burns') {
+    const { execKenBurnsTool } = await import('../../src/agent/tools/ken-burns-tools.js');
+    return execKenBurnsTool(name, args, ctx);
+  }
   if (name === 'edit_item' || name === 'manage_effects') return executeGlBackedTool(name, args, ctx);
   if (CATALOG_TOOL_NAMES[name] === true) return executeCatalogTool(name, args, ctx);
   if (PATH_IMPORT_TOOL_NAMES[name] === true) {
