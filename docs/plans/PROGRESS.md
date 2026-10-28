@@ -83,7 +83,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P4-1 | Variants model + tools | todo | |
 | P4-2 | `render_variant_previews` | todo | P4-1 |
 | P4-3 | "Comparar versiones" dialog | todo | P4-2 |
-| P5-1 | Full Spanish dictionary | todo | |
+| P5-1 | Full Spanish dictionary | done (all modules translated; the brand.ts fold-in is left) | |
 | P5-2 | i18n coverage + placeholder gate | todo | P5-1 |
 | P5-3 | Untranslated-text scan | todo | P5-2 |
 | P6-1 | Bot end-to-end proof + screenshots | todo | every task above is `done` or `blocked` |
