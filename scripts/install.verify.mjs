@@ -42,7 +42,7 @@ assert.match(source, /OPENCHATCUT_MCP_TOKEN/, 'install.sh must provision an MCP 
 
 const help = run(['--help']);
 for (const flag of [
-  '--dir', '--host', '--port', '--ref', '--no-start', '--with-desktop',
+  '--dir', '--host', '--host-profile', '--port', '--ref', '--no-start', '--with-desktop',
   '--skip-system-deps', '--uninstall', '--purge', '--dry-run',
   '--json', '--print-token', '--self-test',
 ]) {
@@ -84,6 +84,7 @@ const REPORTED = [
   'CORTEO_MCP_TOKEN_FILE', 'CORTEO_OCC', 'CORTEO_APP_DIR', 'CORTEO_DATA_DIR',
   'CORTEO_GUIDE', 'CORTEO_LOG', 'CORTEO_MANAGER', 'CORTEO_MIGRATED_FROM',
   'CORTEO_LEGACY_SERVICE', 'CORTEO_PORT_STATE', 'CORTEO_SELF_TEST',
+  'CORTEO_HOST_PROFILE', 'CORTEO_SKILL_PATH', 'CORTEO_MEDIA_INBOX', 'CORTEO_EXPORT_DIR',
 ];
 for (const key of REPORTED) {
   assert.ok(
@@ -91,6 +92,7 @@ for (const key of REPORTED) {
     `write_report must report ${key}`,
   );
 }
+assert.match(source, /prepare_profile\n  ensure_token\n  install_host_profile/, 'host installation follows profile and token setup');
 console.log(`install.verify: ${REPORTED.length} report keys present OK`);
 
 // ── the self-test exists and cannot be a no-op ──────────────────────────────
@@ -120,6 +122,14 @@ try {
   assert.doesNotMatch(dry, /^CORTEO_MCP_TOKEN=/m, 'the default output must not carry the token');
   assert.deepEqual(readdirSync(work), [], '--dry-run must not create files');
 
+  const hostDry = JSON.parse(run(['--dry-run', '--host-profile', 'muse', '--json'], { env }));
+  assert.equal(hostDry.CORTEO_HOST_PROFILE, 'muse');
+  assert.deepEqual(readdirSync(work), [], 'host dry-run must not create files');
+  const badHost = runExpectingFailure(['--dry-run', '--host-profile', 'nope']);
+  assert.notEqual(badHost.status, 0);
+  assert.ok(badHost.stderr.includes('unknown host profile: nope (use grok, muse or claude-duet)'));
+  const envHost = JSON.parse(run(['--dry-run', '--json'], { env: { ...env, CORTEO_HOST_PROFILE: 'grok' } }));
+  assert.equal(envHost.CORTEO_HOST_PROFILE, 'grok');
   const uninstallDry = run(['--uninstall', '--dry-run', '--dir', installDir], { env });
   assert.match(uninstallDry, /^CORTEO_ACTION=uninstall$/m);
   assert.deepEqual(readdirSync(work), [], '--uninstall --dry-run must not create files');

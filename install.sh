@@ -20,6 +20,10 @@ DEFAULT_REF="main"
 
 DIR="$DEFAULT_DIR"
 HOST="$DEFAULT_HOST"
+HOST_PROFILE="${CORTEO_HOST_PROFILE:-}"
+SKILL_PATH="none"
+MEDIA_INBOX="none"
+EXPORT_DIR="none"
 PORT="$DEFAULT_PORT"
 REF="$DEFAULT_REF"
 START=1
@@ -95,6 +99,7 @@ Usage
 Options
   --dir <path>          Install root (default: ~/corteo)
   --host <addr>         Bind address (default: 127.0.0.1)
+  --host-profile <name>  Bot host: grok, muse or claude-duet (installs the skill where that host reads it, creates its inbox and exports folder)
   --port <port>         Editor port (default: 5199)
   --ref <branch|tag>    Git ref to install (default: main)
   --no-start            Install everything and print the values, but do not start
@@ -150,6 +155,8 @@ parse_args() {
     case "$1" in
       --dir) need_value "$1" "${2:-}"; DIR="$2"; shift 2 ;;
       --dir=*) DIR="${1#*=}"; shift ;;
+      --host-profile) need_value "$1" "${2:-}"; HOST_PROFILE="$2"; shift 2 ;;
+      --host-profile=*) HOST_PROFILE="${1#*=}"; shift ;;
       --host) need_value "$1" "${2:-}"; HOST="$2"; shift 2 ;;
       --host=*) HOST="${1#*=}"; shift ;;
       --port) need_value "$1" "${2:-}"; PORT="$2"; PORT_EXPLICIT=1; shift 2 ;;
@@ -170,6 +177,11 @@ parse_args() {
       *) die "unknown option: $1 (see --help)" ;;
     esac
   done
+
+  case "$HOST_PROFILE" in
+    ""|grok|muse|claude-duet) ;;
+    *) die "unknown host profile: $HOST_PROFILE (use grok, muse or claude-duet)" ;;
+  esac
 
   DEFAULT_DIR="$(normalize_dir "$DEFAULT_DIR")"
   DIR="$(normalize_dir "$DIR")"
@@ -357,6 +369,7 @@ print_dry_run() {
     warn "port $PORT is already in use; the real install would stop here"
   fi
   report CORTEO_STATUS dry-run
+  report CORTEO_HOST_PROFILE "${HOST_PROFILE:-none}"
   report CORTEO_OS "$(uname -s) $(uname -m)"
   report CORTEO_DIR "$DIR"
   report CORTEO_APP_DIR "$APP_DIR"
@@ -515,6 +528,20 @@ export OPENCHATCUT_EDITOR_URL="\${OPENCHATCUT_EDITOR_URL:-http://127.0.0.1:$PORT
 exec "\$NODE" "\$APP/cli-dist/occ.mjs" "\$@"
 EOF
   chmod +x "$BIN_DIR/occ"
+}
+
+install_host_profile() {
+  [[ -n "$HOST_PROFILE" ]] || return 0
+  stage "host profile"
+  local result
+  result="$(CORTEO_PORT="$PORT" "$NODE_BIN" "$APP_DIR/cli-dist/occ.mjs" host install "$HOST_PROFILE" --json)" \
+    || die "could not install host profile"
+  SKILL_PATH="$(printf '%s' "$result" | "$NODE_BIN" -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>process.stdout.write(JSON.parse(s).skillPath))')" \
+    || die "could not read host profile skill path"
+  MEDIA_INBOX="$(printf '%s' "$result" | "$NODE_BIN" -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>process.stdout.write(JSON.parse(s).mediaInbox))')" \
+    || die "could not read host profile inbox"
+  EXPORT_DIR="$(printf '%s' "$result" | "$NODE_BIN" -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>process.stdout.write(JSON.parse(s).exportDir))')" \
+    || die "could not read host profile export directory"
 }
 
 prepare_profile() {
@@ -786,6 +813,10 @@ write_report() {
   fi
 
   report CORTEO_STATUS ok
+  report CORTEO_HOST_PROFILE "${HOST_PROFILE:-none}"
+  report CORTEO_SKILL_PATH "$SKILL_PATH"
+  report CORTEO_MEDIA_INBOX "$MEDIA_INBOX"
+  report CORTEO_EXPORT_DIR "$EXPORT_DIR"
   report CORTEO_URL "http://$HOST:$PORT"
   report CORTEO_LOCAL_URL "http://127.0.0.1:$PORT"
   report CORTEO_MCP_URL "$MCP_URL"
@@ -1014,6 +1045,7 @@ main() {
   build_cli
   prepare_profile
   ensure_token
+  install_host_profile
   install_system_deps
   start_service
   wait_for_health
