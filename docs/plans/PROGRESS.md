@@ -857,7 +857,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-23 | L-11 part 2: Mapa musical | blocked | EV-00 (soft) |
 | EV-24 | L-11 part 3: Mapa de la canción | blocked | EV-00 (soft) |
 | EV-25 | L-13: listening end to end on a real song | blocked | EV-21 (soft), EV-22 (soft), EV-23 (soft), EV-24 (soft) |
-| EV-26 | `EVOLUTION=PASS` acceptance script | todo | EV-05 (soft), EV-10 (soft), EV-11 (soft), EV-14 (soft), EV-18 (soft), EV-19 (soft) |
+| EV-26 | `EVOLUTION=PASS` acceptance script | done | EV-05 (soft), EV-10 (soft), EV-11 (soft), EV-14 (soft), EV-18 (soft), EV-19 (soft) |
 | EV-27 | README Estado for what the night wired | todo | EV-26 (soft) |
 
 ### EV: results
@@ -911,6 +911,9 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 
 - EV-24: tsc, lint (0 errors), song-map-dialog.verify, verify:components, both registration gates and 13 affected verifies passed. The dialog uses available asset transcripts; tonal key and relay data are optional and the current browser analysis does not supply them. The two new EV-24 files were inadvertently included in the EV-22 progress correction commit 3c95fbe because they were already staged; history was not rewritten.
 
+- EV-26: `bash scripts/evolution-acceptance.sh` printed EVOLUTION=PASS. Wall seconds: profiles 11, roundtrip 16, song-film 34, shorts 1, router 0, delegate 1, ide-door 2, clean 0. The optional brain-live step was not requested (EVOLUTION_LIVE unset). Acceptance verify, no-claudia, both registration gates and affected verify passed; scratch files removed and git status unchanged.
+
+### EV: blockers
 - EV-25: `find /home/carlos/corteo-media -maxdepth 1` could not find a song because the directory does not exist. Checked the configured default directory for wav, mp3, m4a and flac; no editor or downloads were started. A real song in that directory unblocks the proof. Screenshots are also skipped while EV-22 and EV-24 are blocked.
 
 - EV-24: `npm run verify:i18n` exited 1 at `src/i18n/dict/it/settingsCoverage.verify.ts`, on the same 10 missing Italian bot-connection keys as EV-00. The source-key check passed; adding those pre-existing Italian translations and rerunning the gate unblocks the card. The implementation is retained for review.

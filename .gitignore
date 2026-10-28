@@ -99,6 +99,7 @@ MODEL-OPT-PLAN.md
 !/scripts/build-bot-recipe.mjs
 !/scripts/bot-rehearsal.sh
 !/scripts/corteo-acceptance.sh
+!/scripts/evolution-acceptance.sh
 !/scripts/sync-publish.sh
 !/scripts/corteo
 !/scripts/corteo-env.sh
