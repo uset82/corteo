@@ -7,6 +7,8 @@ import { deriveMoments } from './moments.ts';
 import { estimateKey } from './key.ts';
 import type { SongMeasurements } from './types.ts';
 
+export { parseLrc, resolveLyrics, splitPlainLyrics, timeUntimedLines } from './lyricsInput.ts';
+export type { LyricsInput } from './lyricsInput.ts';
 export { FRAME_MS, spectrumFrames } from './spectrum.ts';
 export { detectOnsets, pickAccents } from './onsets.ts';
 export { deriveMoments } from './moments.ts';

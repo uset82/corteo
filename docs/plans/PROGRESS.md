@@ -838,7 +838,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-04 | One render function for every MP4 verb | done | EV-00 (soft) |
 | EV-05 | Phone round trip: `occ inbox` | done | EV-01, EV-04 |
 | EV-06 | `apply_ken_burns` runs headless | done | EV-00 (soft) |
-| EV-07 | Lyrics in: paste, file beside the song, transcript | todo | EV-00 (soft) |
+| EV-07 | Lyrics in: paste, file beside the song, transcript | done | EV-00 (soft) |
 | EV-08 | Song-film plan (pure) | todo | EV-07 |
 | EV-09 | `occ song-film`: place | todo | EV-04, EV-08 |
 | EV-10 | `occ song-film`: animate and render | todo | EV-09, EV-06 (soft) |
@@ -876,6 +876,8 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 - EV-05: tsc, inbox.verify, verify:cli, skill guard and registration gates passed. Live result: {"ok":true,"host":"grok","input":"/tmp/tmp.NPmw65x4Pe/inbox/clip.mp4","projectId":"9ad0bcf2-10b5-4acd-bb06-309fe25ab9aa","exportPath":"/tmp/tmp.NPmw65x4Pe/exports/clip-20261028-082032.mp4","attachPath":"/tmp/tmp.NPmw65x4Pe/exports/clip-20261028-082032.mp4","width":1080,"height":1920,"fps":30,"durationSeconds":3,"bytes":6463,"dryRun":false}. ffprobe: 720x1280, 3.000000 seconds; temp directory removed. The existing timeline summary omitted fit, so cli/summary.ts now exposes it for the required assertion.
 
 - EV-06: tsc, offline-runtime.verify, verify:cli, verify:mcp, verify:agent-tools and catalog generation/check passed. tools ls row: {"name":"apply_ken_burns","headless":true}; generated catalog unchanged.
+
+- EV-07: tsc, lyricsInput.verify, verify:music-intelligence and both registration gates passed.
 
 ### EV: blockers
 - EV-00 baseline: CC_RENDER_GL=swangle npm test exited 1 in src/i18n/dict/it/settingsCoverage.verify.ts: Italian settings dictionary is missing 10 keys for the bot connection UI (AssertionError, expected empty array). This predates EV changes; no fix attempted per card scope. Adding the missing Italian translations would unblock the gate. The serial chain stopped at that assertion and printed no segment summary.
