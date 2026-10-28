@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { ffmpegBin } from '../server/media-binaries.ts';
 
 const SONG_SECONDS = 12;
@@ -115,6 +115,35 @@ try {
   const missing = run(['song-film', '--audio', join(home, 'missing.wav'), '--json']);
   assert.equal(missing.status, 2);
   assert.match(missing.stderr, /song-film needs an absolute --audio path that exists/);
+
+  // EV-37: a music request still pending when the command finishes must not keep
+  // the one-shot CLI alive. The fake host is installed before cli/main.ts loads
+  // and keeps a real worker child (its stderr pipe is one of the refs the old
+  // host leaked); the CLI's lazy dispose must kill it after the command. `where`
+  // never touches music, so this exercises the backstop without model packs.
+  const entry = join(home, 'pending-music-entry.mjs');
+  const url = (relative: string) => pathToFileURL(join(root, relative)).href;
+  writeFileSync(entry, [
+    "import { fork } from 'node:child_process';",
+    `import { setDefaultMusicInferenceForTest } from ${JSON.stringify(url('server/music-listen/inference.ts'))};`,
+    `const child = fork(new URL(${JSON.stringify(url('server/music-listen/inference-worker.ts'))}).pathname, [], { execArgv: [], serialization: 'advanced', stdio: ['ignore', 'ignore', 'pipe', 'ipc'] });`,
+    "const pending = new Promise(() => {});",
+    "setDefaultMusicInferenceForTest({",
+    "  analyze: () => pending,",
+    "  dispose: async () => { child.kill(); await new Promise((resolve) => child.once('exit', resolve)); },",
+    "});",
+    "console.log('PENDING_MUSIC_REQUEST');",
+    `await import(${JSON.stringify(url('cli/main.ts'))});`,
+  ].join('\n'));
+  const pendingStarted = Date.now();
+  const pending = spawnSync(process.execPath, ['--import', 'tsx', entry, 'where', '--json'], {
+    cwd: root, env, encoding: 'utf8', timeout: 10_000,
+  });
+  const pendingMs = Date.now() - pendingStarted;
+  assert.equal(pending.error, undefined, `the CLI did not exit after a pending music request: ${pending.error?.message ?? ''}`);
+  assert.equal(pending.status, 0, pending.stderr);
+  assert.match(pending.stdout, /PENDING_MUSIC_REQUEST/);
+  assert.ok(pendingMs < 10_000, `the CLI took ${pendingMs} ms to exit with a pending music request`);
   console.log('song-film.verify: ok');
 } finally {
   rmSync(home, { recursive: true, force: true });

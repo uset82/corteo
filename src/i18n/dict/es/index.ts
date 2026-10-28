@@ -1,6 +1,25 @@
-// Spanish UI translations - complete corteo translation
-// Chinese text is the key, Spanish is the value
-export default {
+// Spanish UI assembly. Chinese text is the key, Spanish is the value.
+// Per-module files mirror src/i18n/dict/en/ (P5-1); `base` holds the entries that
+// predate them and is spread last, so no wording translated before P5-1 changes.
+// dictRegistry.ts spreads es/brand.ts over this default export.
+import audio from './audio';
+import captions from './captions';
+import chat from './chat';
+import components from './components';
+import editor from './editor';
+import exportPanel from './exportPanel';
+import fx from './fx';
+import library from './library';
+import media from './media';
+import review from './review';
+import settings1 from './settings-1';
+import settings2 from './settings-2';
+import templatesData from './templates-data';
+import timeline from './timeline';
+import topbar from './topbar';
+import transcript from './transcript';
+
+const base: Record<string, string> = {
   '歌曲地图标题': 'Mapa de la canción',
   '歌曲地图返回': 'Volver',
   '歌曲地图调性': 'Tonalidad',
@@ -22,7 +41,6 @@ export default {
   '歌曲地图未开启真实耳朵': 'El oído real está apagado en este servidor.',
   '歌曲地图文件不可达': 'El servidor no encuentra el archivo de esta canción.',
   '歌曲地图真实耳朵失败': 'El oído real no pudo escuchar esta canción.',
-  '更多操作': 'Más acciones',
   '音乐地图显示': 'Mapa musical',
   '音乐反应标题': 'Reaccionar a la música',
   '音乐反应脉冲': 'Pulso',
@@ -47,52 +65,7 @@ export default {
   '音乐反应完成': 'Reacción musical actualizada.',
   '音乐反应未更改': 'No se cambió ninguna reacción. Revisa la canción, el momento y las pistas bloqueadas.',
   // Music analysis badge, popover and song map (src/audio/intelligence/*).
-  '音乐分析': 'Análisis de música',
-  '音乐分析：{name}，{status}': 'Análisis de música: {name}, {status}',
-  '{name} 的音乐分析': 'Análisis de música de {name}',
-  '检查模型': 'Comprobando los modelos',
-  '模型未安装': 'Modelos no instalados',
-  '分析音乐': 'Analizar la música',
-  '重新分析': 'Volver a analizar',
-  '重试分析': 'Reintentar el análisis',
-  '排队中': 'En la cola',
-  '分析失败': 'El análisis falló',
-  '分析失败：{message}': 'El análisis falló: {message}',
-  '解码音频': 'Decodificando el audio',
-  '分析节拍': 'Analizando el ritmo',
-  '理解音乐内容': 'Entendiendo la música',
-  '已加入本地分析队列。': 'Añadido a la cola de análisis local.',
-  '已显示缓存结果；重新分析需要先安装模型包。': 'Se muestra el resultado guardado; para volver a analizar hay que instalar los paquetes de modelos.',
-  '尚未安装所需模型包。请在本地 AI 设置中分别下载节拍与音乐语义模型；这里不会自动下载。': 'Faltan los paquetes de modelos. Descarga aparte los modelos de ritmo y de semántica musical en Ajustes de IA local; aquí nunca se descargan solos.',
-  '正在检查本地模型…': 'Comprobando los modelos locales…',
-  '在本机分析节拍、结构和音乐语义。音频不会上传。': 'Analiza el ritmo, la estructura y la semántica musical en este equipo. El audio nunca se sube.',
-  '置信度': 'Confianza',
-  '节奏详情': 'Detalles del ritmo',
-  '{beats} 个节拍 · {downbeats} 个重拍': '{beats} pulsos · {downbeats} tiempos fuertes',
-  '节拍时间点': 'Momentos de pulso',
-  '重拍时间点': 'Momentos de tiempo fuerte',
-  '另有 {count} 个时间点': '{count} momentos más',
-  '音乐标签': 'Etiquetas de música',
-  '流派': 'Género',
-  '情绪': 'Ánimo',
-  '乐器': 'Instrumento',
-  '用途': 'Uso',
-  '段落': 'Secciones',
-  '边界': 'Frontera',
-  '未识别到明确段落': 'No se detectaron secciones claras',
-  '前奏': 'Intro',
-  '推进': 'Subida',
-  '高潮': 'Clímax',
-  '间奏': 'Puente',
-  '平稳': 'Estable',
-  '尾奏': 'Final',
-  '未知': 'Desconocido',
-  '自动分析新导入的音视频': 'Analizar automáticamente el audio y el vídeo recién importados',
-  '需要先在本地 AI 设置中单独下载模型包；开启此选项不会自动下载。': 'Primero descarga los paquetes de modelos en Ajustes de IA local; activar esta opción nunca descarga nada solo.',
   // The inspector tab strip the music reaction section lives in.
-  '属性分类': 'Categorías de propiedades',
-  '基础': 'Básico',
-  '动画': 'Animación',
   // Dashboard
   '· 我的工程': '· Mis Proyectos',
   '工程': 'Proyectos',
@@ -314,4 +287,6 @@ export default {
   '连接 corteo': 'Conectar corteo',
   '把下面的配置交给 corteo。她从这台电脑以外编辑这个工程。编辑器的域名必须写进 hosting.egressDomains。':
     'Dale a corteo la configuración de abajo para que edite este proyecto desde fuera de este PC. El dominio del editor tiene que estar en hosting.egressDomains.',
-} as Record<string, string>;
+};
+
+export default Object.assign({}, audio, captions, chat, components, editor, exportPanel, fx, library, media, review, settings1, settings2, templatesData, timeline, topbar, transcript, base) as Record<string, string>;

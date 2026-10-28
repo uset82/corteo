@@ -83,7 +83,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P4-1 | Variants model + tools | todo | |
 | P4-2 | `render_variant_previews` | todo | P4-1 |
 | P4-3 | "Comparar versiones" dialog | todo | P4-2 |
-| P5-1 | Full Spanish dictionary | todo | |
+| P5-1 | Full Spanish dictionary | done (all modules translated; the brand.ts fold-in is left) | |
 | P5-2 | i18n coverage + placeholder gate | todo | P5-1 |
 | P5-3 | Untranslated-text scan | todo | P5-2 |
 | P6-1 | Bot end-to-end proof + screenshots | todo | every task above is `done` or `blocked` |
@@ -329,6 +329,7 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Browser proof, run in an isolated detached worktree on port 5203 with a private `HOME` and a private Vite dep cache so the concurrent session's server restarts cannot wipe an in-flight analysis: song-328.wav (208 s) went queued → running → ready in 57 s, 120 BPM, 99 % confidence, 417 pulses and 380 downbeats. Screenshots in `test-results/claudia/`: `l11-01-badge-popover-before.png`, `l11-02-badge-popover-ready.png`, `l11-03-mapa-de-la-cancion.png` (+ `-full`), `l11-04-mapa-musical-timeline.png` (+ `-full`, 3 sections / 379 downbeats / 1 drop, toolbar toggle `aria-pressed=true`), `l11-05-inspector-reaccion.png` (+ `-full`) and `l11-06-inspector-applied.png` (+ `-full`, apply toast seen). This closes the browser half that EV-33 could not reach.
 - Two dev-server observations, neither a product defect: Vite lazily optimizes `@huggingface/transformers` when the CLAP phase first imports it, and the resulting "optimized dependencies changed. reloading" reloads the page mid-analysis (the second run completes); a `500` on a derivative request appears in the console the moment the audio clip lands on the timeline, next to `[waveform] derivative request cancelled`, and belongs to the waveform/preview path.
 - Gates: `npx tsc -b` exit 0, `npm run verify:components` exit 0, `npm run verify:i18n` exit 0 (check-i18n 161 UI files and 2652 English entries, 85 music UI keys Spanish), `npm run verify:music-intelligence` exit 0, `node scripts/verify-gate-coverage.verify.mjs` exit 0, `npm run lint` 0 errors.
+- Merge note (2026-10-28): 13bc836 and the published P5-1 dictionary both carry the same set of music keys. The merge keeps P5-1's per-module files and their spread order; the 46 keys that an es module already had were dropped from the `base` object, so each key keeps exactly one wording. The wording kept is the P5-1 module one (`Análisis musical`, `En cola`, `Analizar de nuevo`, `Introducción`, `Desarrollo`, `Cierre`, `Límite`, `Ambiente`, `Etiquetas musicales`); 24 of the dropped copies were identical anyway, and the nine song-map volume/ear keys stay in `base` because no module carried them.
 - Plan: Plan 2 › Part C (UI) and Part D.
 - Files: new `server/music-listen/relay-route.ts` (92) + verify (120), `src/audio/listen/songMeasurement.ts` (37) + verify (47), `src/audio/listen/useSongMeasurement.ts` (34), `src/i18n/dict/es/musicUiCoverage.verify.ts` (33); `src/audio/intelligence/MusicAnalysisBadge.tsx` (370), `src/audio/intelligence/SongMapDialog.tsx` (120), `src/audio/intelligence/music-analysis.css` (227), `src/audio/intelligence/beatThis.worker.ts`, `src/audio/intelligence/beatThisClient.verify.ts`, `src/audio/intelligence/song-map-dialog.verify.tsx` (54), `server/music-listen/plugin.ts`, `src/i18n/dict/en/audio.ts`, `src/i18n/dict/es/index.ts`, `package.json`.
 - Done when: "Reaccionar a la música", "Mapa musical" and "Mapa de la canción" work in Spanish; each new component stays under 500 lines.
@@ -842,16 +843,16 @@ Plan: `docs/plans/07-evolution.md` (Plan 7). Executors: ChatGPT Terra (EV-00 to 
 **Done, per table.**
 
 - Qoder (`Evolution night (EV)`): 31 cards, every row except the two blocked below — EV-00 to EV-11, EV-13 to EV-24, EV-26 to EV-32.
-- ZCode (`EV track · ZCode (EZ)`): none. All three of its cards are blocked (below).
+- ZCode (`EV track · ZCode (EZ)`): EV-33 done on 2026-10-28 by 13bc836 after this report (the browser pass ran from `~/corteo`); EV-25 and EV-12 remain blocked (below).
 - DeepSeek Harness (`EV track · DeepSeek Harness (ED)`): EV-34 and EV-35 done. EV-36 was added after the track closed (cf3c516) and stays `todo`; it is outside the night's close.
 
 **Blocked, per table.**
 
 - EV-12 (Qoder and EZ): no talking video. `~/corteo-media` does not exist, so `talk.mp4`, `talk.mov`, `talk.mkv` and `talk.webm` are all absent. A talking video of at least two minutes there unblocks the live long-to-shorts run.
 - EV-25 (Qoder and EZ): no song. `~/corteo-media` does not exist, so there is no wav, mp3, m4a or flac to listen to. A song there unblocks the end-to-end listening proof (L-13).
-- EV-33 (EZ): the editor cannot start in that session. `wsl.exe` is refused by the Windows security policy, the Windows side has no Node 24, and the Linux `onnxruntime-node` and `sharp` builds cannot run there. The music UI code is verified from the share; the browser pass and its screenshots are not. A session that can run commands in WSL and open a browser on port 5201 unblocks it.
+- EV-33 (EZ): the editor cannot start in that session. `wsl.exe` is refused by the Windows security policy, the Windows side has no Node 24, and the Linux `onnxruntime-node` and `sharp` builds cannot run there. The music UI code is verified from the share; the browser pass and its screenshots are not. A session that can run commands in WSL and open a browser on port 5201 unblocks it. Closed on 2026-10-28 by 13bc836: the music UI ran in a real Chromium from `~/corteo` (L-11 section and EV-33 results line).
 
-**Commits.** The night is `7cc7315..HEAD`: 47 commits at this report, `7cc7315` being the EV-00 baseline. Per card: EV-00 2c689c8; EV-01 6947b79; EV-02 045bdc5; EV-03 0fec4d1; EV-04 71f711c; EV-05 941816d; EV-06 19f8cd5; EV-07 1ccf9c9; EV-08 d8aa295; EV-09 d4d9e11; EV-10 7bf8175; EV-11 61f8088; EV-12 29d37ce and 8a97722; EV-13 90d19d5; EV-14 7150ead; EV-15 1984298; EV-16 b931ae2; EV-17 b92b862; EV-18 c4729b7; EV-19 aaef63b; EV-20 28db7ca; EV-21 560795b and bb5a24f; EV-22 4e6c805 (and 3c95fbe, which also carries EV-24's files); EV-23 dc2f5e2; EV-24 d60279d and a6c11a8; EV-25 0962bc4 and 314122b; EV-26 d58ea1e; EV-27 49533e2; EV-28 25a7918; EV-29 4658e3b; EV-30 d27ddcb; EV-31 24d84d4, 4fa8a06 and 449249a; EV-32 the commit that carries this report. Plan-level commits: aa36b17 and cf3c516. Track commits: EV-33 b724785; EV-34 8ca98b9 and 4f2da87; EV-35 7380645; the EZ close 0caa903.
+**Commits.** The night is `7cc7315..HEAD`: 47 commits at this report, `7cc7315` being the EV-00 baseline. Per card: EV-00 2c689c8; EV-01 6947b79; EV-02 045bdc5; EV-03 0fec4d1; EV-04 71f711c; EV-05 941816d; EV-06 19f8cd5; EV-07 1ccf9c9; EV-08 d8aa295; EV-09 d4d9e11; EV-10 7bf8175; EV-11 61f8088; EV-12 29d37ce and 8a97722; EV-13 90d19d5; EV-14 7150ead; EV-15 1984298; EV-16 b931ae2; EV-17 b92b862; EV-18 c4729b7; EV-19 aaef63b; EV-20 28db7ca; EV-21 560795b and bb5a24f; EV-22 4e6c805 (and 3c95fbe, which also carries EV-24's files); EV-23 dc2f5e2; EV-24 d60279d and a6c11a8; EV-25 0962bc4 and 314122b; EV-26 d58ea1e; EV-27 49533e2; EV-28 25a7918; EV-29 4658e3b; EV-30 d27ddcb; EV-31 24d84d4, 4fa8a06 and 449249a; EV-32 the commit that carries this report. Plan-level commits: aa36b17 and cf3c516. Track commits: EV-33 b724785 and 13bc836; EV-34 8ca98b9 and 4f2da87; EV-35 7380645; the EZ close 0caa903.
 
 **Push.** `bash scripts/sync-publish.sh` ran from `/tmp/corteo-ev32` (branch `ev-publish`) after this report was committed: it found `github/main` and `origin/cursor/video-editor-mvp-d191` already in HEAD, ran `CC_RENDER_GL=swangle npm test` in the worktree (exit 0, `✓ 242 test segments passed in 216.6s (4 parallel)`), and pushed `05ff4fc` to `github main` (`274496b..05ff4fc`) and `origin cursor/video-editor-mvp-d191` (`5045d58..05ff4fc`), exit 0. `git ls-remote` returned `05ff4fc5a20ddd196cb4156ac6f857e440d4e4ba` for both refs. This follow-up commit carries that reading and was published the same way; the two refs then returned this commit.
 
@@ -890,6 +891,7 @@ Plan: `docs/plans/07-evolution.md` (Plan 7). Executors: ChatGPT Terra (EV-00 to 
 | EV-30 | The first full `npm test` since C-12 | done | EV-29 |
 | EV-31 | Merge the ZCode and DeepSeek Harness tracks | done | EV-30, EZ and ED tables finished |
 | EV-32 | Final gates, publish, report | done | EV-31, EV-27 (soft) |
+| EV-33 | The music UI in a real browser (EZ row, carried here; 13bc836) | done | EV-22, EV-23, EV-24 |
 
 ### EV: results
 Each card appends its outputs here: commands, JSON, ffprobe values, wall times. Never a token or a key.
@@ -971,13 +973,13 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 ## EV track · ZCode (EZ)
 Folder `~/corteo-zcode`, branch `ev-zcode`, editor port 5201. Plan 7 › "Finishing in three tracks". Only ZCode edits this section.
 
-**EZ closed 2026-10-28.** EV-33 is blocked: the music UI code is verified from the Windows side of the share, but no editor can start here to see it in a browser.  
+**EZ closed 2026-10-28.** EV-33 is done: the editor could not start in this session, but Qoder ran the browser pass from `~/corteo` in 13bc836 (real Chromium, song analysis, all three music surfaces in Spanish).  
 EV-25 and EV-12 are blocked: `~/corteo-media` does not exist, so there is no song and no talking video.  
 One real defect was fixed on the way (a6c11a8: Tempo, Compás, Energía); nothing is pushed, and EQ's EV-31 merge carries these rows over.
 
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
-| EV-33 | The music UI in a real browser (EV-22 to EV-24) | blocked | |
+| EV-33 | The music UI in a real browser (EV-22 to EV-24) | done (13bc836) | |
 | EV-25 | L-13 on a real song, on port 5201 | blocked | a song in `~/corteo-media` |
 | EV-12 | Long to short, live, on port 5201 | blocked | a talking video in `~/corteo-media` |
 
@@ -986,6 +988,8 @@ One real defect was fixed on the way (a6c11a8: Tempo, Compás, Energía); nothin
 - EV-12: not run, there is no talking video. `/home/carlos/corteo-media` does not exist, so `talk.mp4`, `talk.mov`, `talk.mkv` and `talk.webm` are all absent. No speech was synthesized, no editor or editor-host was started and no render was attempted.
 - EV-25: not run, there is no song. `/home/carlos/corteo-media` does not exist (`ls` → `No such file or directory`); `CORTEO_E2E_MEDIA_DIR` is unset in this environment and is not in `.env.corteo.example`, and this worktree has no `.env.corteo`. No editor was started and no model pack was downloaded.
 - EV-33: the code half is green, the browser half is blocked. `npx tsc -b` exit 0 and `npm run verify:i18n` exit 0 (all five commands) run from the Windows side of the share through a `subst` drive, with TypeScript 7.0.2 and `@typescript/typescript-win32-x64` 7.0.2 plus `@esbuild/win32-x64` 0.28.2 copied in from `~/corteo/node_modules` (identical versions). The three music UI verifies pass: `song-map-dialog.verify` (Spanish sections, map and optional listening evidence), `music-map-strip.verify` (Spanish sections, trim/speed positions), `music-reaction-section.verify` (Spanish controls, one-batch apply). One defect found and fixed in a6c11a8: the song badge and the song-map dialog rendered `速度`, `拍号` and `能量` in English because `src/i18n/dict/es/index.ts` never carried them (the keys date from the upstream base commit a1b4d3a; EV-24 put two of them in the dialog). They now read Tempo, Compás and Energía. Not done: checks (a), (b) and (c) in a real browser and their screenshots, because the editor cannot start in this session (EZ: blockers). Port 5201 never opened; Qoder's editor on 5199 was left alone.
+
+- EV-33 (closed by EQ): 13bc836 ran the browser half from `~/corteo` in an isolated worktree on port 5203: song-328.wav (208 s) went to ready in 57 s with 120 BPM, 99 % confidence, 417 pulses and 380 downbeats; Mapa de la canción showed Tonalidad A menor and Volumen -17.7 dB, the timeline strip 3 sections / 379 downbeats / 1 drop, and the inspector applied Pulso; ten screenshots in `test-results/claudia/`. Merged into the published night with the L-11 merge; `npm run verify:i18n`, `npm run verify:components` and `npm run verify:music-intelligence` are green on the merged tree.
 
 ### EZ: blockers
 - EV-12: no talking video in /home/carlos/corteo-media: the directory does not exist and none of talk.mp4, talk.mov, talk.mkv or talk.webm is there. A talking video of at least two minutes unblocks it. The EV-33 editor blocker would also have to clear first: this card needs `npm run corteo:local`, `npm run editor-host`, `transcribe_track` and the three 480p renders.
@@ -997,19 +1001,22 @@ One real defect was fixed on the way (a6c11a8: Tempo, Compás, Energía); nothin
 ## EV track · DeepSeek Harness (ED)
 Folder `~/corteo-dsh`, branch `ev-dsh`. Plan 7 › "Finishing in three tracks". Only DeepSeek Harness edits this section.
 
-**ED (2026-10-28):** EV-34 is done; the 10 runnable bash blocks and the two server-free prose recipes in `skills/corteo/SKILL.md` were replayed on a scratch library and every render was probed.
-Four wrong texts were fixed (id one-liners, `placed.startFrame`, `--apply` scope, `edit_track` message); no code fault was found.
-The three verifies pass, the row is `done`, and the scratch directory was deleted.
+**ED (2026-10-28):** EV-34, EV-35, EV-36 and EV-37 are done: the corteo skill's recipes were replayed, `documentation/CORTEO_INSTALL.md` now describes every installer flag and report key, the bot's `corteo-edit` skill carries the inbox and song-film recipes with a regenerated `bot/dist/recipe.json`, and `occ song-film` exits when it is done.
+EV-37 found no pending music request: the warm workers' piped stderr and IPC kept the CLI alive, so the host unrefs all three handles while idle and `occ` disposes it after the command; the 15 s command exits 0 in 33.7 s, 0.28 s after its JSON, and the extended `cli/song-film.verify.ts` proves a pending fake host cannot keep the CLI alive.
+The earlier six verifies and the EV-37 verifies pass (`npx tsc -b`, `cli/song-film.verify.ts`, `verify:cli`, `verify:music-intelligence`, 10 affected verifies), all four rows are `done`, the EV-36 blocker is resolved, and the scratch directories were deleted.
 
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
 | EV-34 | Replay `skills/corteo/SKILL.md` the way a host would | done | |
 | EV-35 | The install guide says what `install.sh` does now | done | EV-34 |
-| EV-36 | The bot template learns the inbox and the song film | todo | EV-35 (soft) |
+| EV-36 | The bot template learns the inbox and the song film | done | EV-35 (soft) |
+| EV-37 | `occ song-film` exits when it is done | done | EV-36 |
 
 ### ED: results
 
+- EV-37 (2026-10-28): reproduced the 15 s hang with both packs present (`HOME=/tmp/l11-home`; the shared cache currently lacks the rhythm pack): the command wrote its JSON and a valid 1080x1920, 15.019 s MP4 at 43 s, then stayed alive with two `server/music-listen/inference-worker.ts` children until killed at 15 minutes. Temporary debug (reverted) showed every music request settled (`rhythm id=1`, `clap id=1,2`, `pending=0`); the handles active after `runCommand` were four Sockets, the two warm workers' IPC channels and piped stderr. Fix: `WorkerChannel` now refs the child, its IPC channel and its stderr for a request and unrefs all three when `pending` empties; `close()` keeps the child and a bounded timer ref'd while it exits (otherwise Node drained the loop and exited 13); `cli/main.ts` disposes the default host after `run()` through a lazy import guarded by the new `server/music-listen/loaded.ts`; `setDefaultMusicInferenceForTest` is the verify seam. `cli/song-film.verify.ts` now runs a fake pending host with a real worker child: the CLI exits under 10 s (the test times out with `ETIMEDOUT` when the dispose is temporarily disabled, so it is not vacuous). Wall time: 15 s command exit 0 in 33.67 s, 0.28 s after the JSON file; 6 s command exit 0 in 20 s. Verify: `npx tsc -b`; `npx tsx cli/song-film.verify.ts`; `npm run verify:cli`; `npm run verify:music-intelligence`; `npm run verify:affected -- cli/main.ts cli/song-film.verify.ts server/music-listen/inference.ts server/music-listen/loaded.ts` (10 verifies); `npm run lint` 0 errors. Scratch libraries deleted.
 - EV-35 (2026-10-28): ran `bash install.sh --help`, `bash install.sh --dry-run --json`, `bash install.sh --dry-run --host-profile muse` and `bash install.sh --dry-run --no-brain` from `~/corteo-dsh`; the dry runs created nothing. `documentation/CORTEO_INSTALL.md` now lists all 17 `--help` flags, the `CORTEO_HOST_PROFILE`/`CORTEO_BRAIN` inputs, the 22 full-report keys plus `CORTEO_MCP_TOKEN`, the brain keys (`CORTEO_BRAIN=ok|failed|skipped`, `CORTEO_BRAIN_STEP`, `CORTEO_BRAIN_URL`), the host keys (`CORTEO_SKILL_PATH`, `CORTEO_MEDIA_INBOX`, `CORTEO_EXPORT_DIR`), the dry-run keys (`CORTEO_OS`, `CORTEO_NODE_SYSTEM`, `CORTEO_NODE_TARGET`, `CORTEO_REF`, `CORTEO_START`, `CORTEO_WITH_DESKTOP`, `CORTEO_SKIP_SYSTEM_DEPS`, `CORTEO_PORT_STATE`, `CORTEO_SERVICE`, `CORTEO_LEGACY_DIR`, `CORTEO_LEGACY_ACTION`) and the uninstall dry-run keys (`CORTEO_ACTION`, `CORTEO_PURGE`); the self-test is documented as lowercase `pass`. A check extracted 17 flags from `--help` and 36 `report CORTEO_*` names from `install.sh` and found all of them in the guide. Verify: `node scripts/no-claudia.verify.mjs` ok; `npm run verify:install` ok (22 report keys, self-test shape, side-effect-free dry run, `--json` object, JSON failure).
+- EV-36 (2026-10-28): added `## From a phone to an MP4` (`"$CORTEO_OCC" inbox --host grok --json`, send `attachPath`) and `## A song and its lyrics into a film` (`"$CORTEO_OCC" song-film --audio /absolute/path/song.wav --to 30s --json`, `--lyrics-text`/`--stills`, render 15 to 30 seconds first) to `bot/skills/corteo-edit/SKILL.md`, in its own voice with `. ~/corteo/corteo.env` first. The body is 5657 B of the 6144 B budget. Replay in scratch libraries, with `~/corteo-dsh/scripts/corteo` standing in for `$CORTEO_OCC` and the scratch `CORTEO_STORE_DIR`/`CORTEO_EXPORT_DIR`/`CORTEO_MEDIA_INBOX`: `inbox --host grok --json` returned `attachPath` and a 720x1280, 3.000 s MP4; `song-film --audio <6 s wav> --to 6s --stills a.png,b.png --json` exited 0 in 27 s with a 1080x1920, 6.016 s MP4 with audio. A 15 s song-film run wrote a valid 1080x1920, 15.019 s MP4 but its CLI did not exit; see ED: blockers. Regenerated `bot/dist/recipe.json`. Verify: `npm run verify:bot-recipe` ok (4 skills, recipe current), `node scripts/bot-rehearsal.verify.mjs` ok, `node scripts/no-claudia.verify.mjs` ok. The `. ~/corteo/corteo.env` line was not sourced (no curl install here); the scratch env replaced it.
 - Run 2026-10-28 in `~/corteo-dsh` (branch `ev-dsh`), Node v24.22.1. The replay copy replaced `~/corteo-exports` with `$T/exports` and both `~/corteo/scripts/corteo` and `$HOME/corteo/scripts/corteo` with `$CORTEO=~/corteo-dsh/scripts/corteo` (the bash blocks write the wrapper as `$HOME/...`). Scratch: `CORTEO_STORE_DIR=$T/library CORTEO_EXPORT_DIR=$T/exports CORTEO_MEDIA_INBOX=$T/inbox CC_RENDER_GL=swangle`; no editor server, no brain. `$T` deleted.
 - Bash blocks, in document order:
   - block-01 One name: PASS 11 s (`CORTEO=...` and `--help`; `CORTEO_OCC` and the env source skipped).
@@ -1037,4 +1044,34 @@ The three verifies pass, the row is `done`, and the scratch directory was delete
 - Verify: `node scripts/corteo-skill.verify.mjs` ok; `node scripts/corteo-acceptance.verify.mjs` ok; `node scripts/no-claudia.verify.mjs` ok (2599 tracked files).
 
 ### ED: blockers
-None yet.
+- ED: EV-36 code fault (`song-film` does not exit on a 15 s song): `~/corteo-dsh/scripts/corteo song-film --audio <15 s wav> --to 15s --stills a.png,b.png --json` wrote its JSON and a valid 1080x1920, 15.019 s MP4 with audio at about 2 minutes, then stayed alive with two `server/music-listen/inference-worker.ts` children (the CLI was in `do_epoll_wait`, no error printed) until it was killed at the 15-minute rule. The same command with a 6 s song and `--to 6s` exited 0 in 27 s with a valid 1080x1920, 6.016 s MP4, so the bot recipe text is not affected and EV-36 stays done. A song-film run on 15 s or more that exits and prints its JSON unblocks closing this; a likely place to look is an unawaited `listen_to_song` request holding the worker ref (`REQUEST_TIMEOUT_MS` is 20 minutes in `server/music-listen/inference.ts`), but that was not proven. No code was changed. Resolved 2026-10-28 by EV-37: the pending-request guess was wrong — every request settled; the refs were the warm workers' piped stderr (plus IPC), now unref'd while idle, and `occ` disposes the host after the command. The 15 s command exits 0 in 33.7 s, 0.28 s after its JSON.
+
+## P5-1 track · WorkBuddy
+
+Branch `p5-workbuddy` in `~/corteo-zcode`. Every module of `src/i18n/dict/en/` now resolves to Spanish: 2,434 keys in 16 new files under `src/i18n/dict/es/`, on top of the 206 entries that already lived in `es/index.ts` (`base`) and the 121 in `es/brand.ts`. `es/index.ts` is an assembly now — `Object.assign({}, …modules, base)` — with `base` spread **last**, so nothing translated before P5-1 changed wording.
+
+| Commit | Module | Keys | File |
+| --- | --- | --- | --- |
+| `ce29ebd` | timeline | 244 | `timeline.ts` |
+| `f1894ba` | media | 211 | `media.ts` |
+| `a1785e5` | components | 296 | `components.ts` |
+| `b8a3845` | exportPanel | 186 | `exportPanel.ts` |
+| `1389592` | chat | 321 | `chat.ts` |
+| `8bbace9` | editor | 25 | `editor.ts` |
+| `880510c` | topbar | 6 | `topbar.ts` |
+| `51853c7` | review | 15 | `review.ts` |
+| `9be9057` | templates-data | 24 | `templates-data.ts` |
+| `68f7271` | audio | 49 | `audio.ts` |
+| `1ea38c0` | transcript | 82 | `transcript.ts` |
+| `c670bf4` | fx | 141 | `fx.ts` |
+| `4522160` | captions | 150 | `captions.ts` |
+| `340809d` | library | 168 | `library.ts` |
+| `8dd4f7b` | settings | 516 | `settings-1.ts` (153), `settings-2.ts` (363) |
+
+- `settings` is the only module that needed splitting: 516 keys do not fit the 500-line gate in one file. The cut follows the page order of the dialog, so `settings-1.ts` holds the shell, the capability groups, the field labels, the routing options and the interface / proxy pages, and `settings-2.ts` holds the Codex, Copilot, Claude Code and Grok accounts, the design style, the shortcuts, the media cleanup, the MCP guide and the local model pages. `es/index.ts` imports them as `settings1` and `settings2`.
+- Vocabulary is Premiere Pro's Spanish: Línea de tiempo, Secuencia, Fotograma clave, Cuchilla, Controles de efectos, plus Clave de croma, Viñeteado, Desvanecido and Matiz for the effect parameters. Sentence case, "tú", and every `{placeholder}` byte-identical to the English.
+- Two labels the duplicate-key check caught, each fixed in its own commit: `931607c` — timeline carried `字` as `S` while the caption tool renders it as an `A`; and `19c3f3e` — library carried `已安装` as `Instaladas`, which read wrong on the model rows in settings, so both are `Instalado` now.
+- Skipped on purpose: nothing. All 2,434 keys have Spanish; the keys `base` and `brand` already carried (the song-map labels, the `音乐反应*` family, `创建会话`, the transcript entry in `settings`, …) were left exactly as they were instead of being duplicated into the new files.
+- Gates after every module: `tsc -b`, `node scripts/check-i18n.mjs` (161 UI files, 2,643 English entries), `locale.verify.ts`, `it/settingsCoverage.verify.ts`, `it/mediaCoverage.verify.ts` and `settings/transcription-language.verify.ts`, plus a local check that no new file duplicates a `base`/`brand` key, that no key is missing from its `en/` module, that placeholders match, and that no file passes 500 lines. All green, every time.
+- Not verified: the Spanish in a browser. No editor starts from the Windows side of the share — same blocker as EV-33 — so the wording was checked as data, not seen on screen.
+- Nothing is pushed. The branch is merged later.

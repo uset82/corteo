@@ -13,9 +13,12 @@ import type { ClapRuntimeConfig } from '../../shared/music-inference/clap.ts';
 import type { RhythmRuntimeConfig } from '../../shared/music-inference/rhythm.ts';
 import { normalizedMeanVector } from '../../shared/music-inference/clapWindows.ts';
 import { CLAP_INFERENCE_CONTRACT } from '../../shared/vector-inference-contract.ts';
+import { musicInferenceLoaded } from './loaded.ts';
 import type { BeatThisAnalysis } from '../../src/audio/intelligence/types.ts';
 import type { MusicInferenceWorkerKind } from './inference-worker.ts';
 import type { MusicPackFiles } from './packs.ts';
+
+musicInferenceLoaded.value = true;
 
 const REQUEST_TIMEOUT_MS = 20 * 60_000;
 const START_TIMEOUT_MS = 60_000;
@@ -123,9 +126,28 @@ class WorkerChannel {
       ));
     });
     this.child = child;
+    // The child starts ref'd so `start()` cannot lose its event loop while it
+    // waits for `ready`; settle() drops the refs again when the request is done.
+    this.setChildRefs(child, true);
+    return child;
+  }
+
+  /**
+   * A warm worker must not keep its host alive. The child handle and its IPC
+   * channel are the obvious refs; the piped stderr is a third one, and leaving
+   * it ref'd is why `occ song-film` used to sit in `do_epoll_wait` after its JSON.
+   */
+  private setChildRefs(child: ChildProcess, active: boolean): void {
+    const stderr = child.stderr as unknown as { ref?: () => void; unref?: () => void } | null;
+    if (active) {
+      child.ref();
+      child.channel?.ref();
+      stderr?.ref?.();
+      return;
+    }
     child.unref();
     child.channel?.unref();
-    return child;
+    stderr?.unref?.();
   }
 
   private handleMessage(message: unknown): void {
@@ -159,10 +181,7 @@ class WorkerChannel {
     clearTimeout(pending.timer);
     if (error) pending.reject(error);
     else pending.resolve(value!);
-    if (this.pending.size === 0) {
-      this.child?.unref();
-      this.child?.channel?.unref();
-    }
+    if (this.pending.size === 0 && this.child) this.setChildRefs(this.child, false);
   }
 
   private fail(error: Error): void {
@@ -225,8 +244,7 @@ class WorkerChannel {
       REQUEST_TIMEOUT_MS,
     );
     this.pending.set(requestId, { resolve, reject, onProgress, timer });
-    child.channel?.ref();
-    child.ref();
+    this.setChildRefs(child, true);
     try {
       child.send({ ...message, requestId }, (error) => {
         if (error) this.settle(requestId, error);
@@ -258,9 +276,19 @@ class WorkerChannel {
     this.starting = null;
     for (const requestId of [...this.pending.keys()]) this.settle(requestId, new Error('music inference is disposed'));
     if (!child || child.exitCode !== null || child.signalCode !== null) return;
+    // By now every handle may be unref'd. Keep the child and a timer ref'd until
+    // it exits, or Node drains the loop mid-`close()` and exits with an unsettled
+    // top-level await (code 13).
+    child.ref();
+    let timer: NodeJS.Timeout | undefined;
     const exited = new Promise<void>((resolve) => child.once('exit', () => resolve()));
+    const timeout = new Promise<void>((resolve) => { timer = setTimeout(resolve, 5_000); });
     child.kill();
-    await Promise.race([exited, new Promise<void>((resolve) => setTimeout(resolve, 5_000).unref())]);
+    try {
+      await Promise.race([exited, timeout]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
   }
 }
 
@@ -380,4 +408,9 @@ export async function disposeDefaultMusicInference(): Promise<void> {
   const inference = defaultInference;
   defaultInference = null;
   if (inference) await inference.dispose();
+}
+
+/** Verification seam: installs a host a test can leave with a pending request. */
+export function setDefaultMusicInferenceForTest(inference: MusicInference | null): void {
+  defaultInference = inference;
 }
