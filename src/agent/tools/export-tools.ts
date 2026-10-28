@@ -15,7 +15,7 @@ import {
 } from '../../export/agentExportTracking';
 import type { ExportJobResult, ExportJobSnapshot } from '../../export/exportWorkflowTypes';
 import { variantGroups, variantMembers } from '../../editor/variants';
-import { variantPreviewBody } from '../../export/variantPreviews';
+import { submitVariantPreviewJob, type VariantPreviewJob } from '../../export/variantPreviews';
 import type { ProjectDoc } from '../../editor/types';
 
 // ═════════════════════════════════════ ══════════════════════════════════════
@@ -267,11 +267,11 @@ async function renderVariantPreviews(args: Args, ctx: AgentContext): Promise<unk
     if (!groupId) return { error: 'no variant group yet — call create_variants first' };
     const members = variantMembers(project, groupId);
     if (!members.length) return { error: `no variant group ${groupId}` };
-    const previews: Array<{ timelineId: string; label: string; renderId: string }> = [];
+    const previews: VariantPreviewJob[] = [];
     for (const member of members.slice(0, 4)) {
-      const renderId = await submitJob(await variantPreviewBody(project, member));
-      sessionJobs.push({ renderId, timelineId: member.id, saveToMediaPool: false });
-      previews.push({ timelineId: member.id, label: member.variant?.label ?? member.name, renderId });
+      const preview = await submitVariantPreviewJob(project, member);
+      sessionJobs.push({ renderId: preview.renderId, timelineId: member.id, saveToMediaPool: false });
+      previews.push(preview);
     }
     return {
       ok: true,

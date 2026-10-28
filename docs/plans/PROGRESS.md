@@ -82,7 +82,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P3-4 | "Importar desde enlace" dialog | done (platform job or direct URL, live progress; not seen in a browser) | P3-2 |
 | P4-1 | Variants model + tools | done (groups on the doc, three tools wired; the tab badge was typechecked, not seen) | |
 | P4-2 | `render_variant_previews` | done (one 480p job per version from its own snapshot; verified against a stubbed `/export/job`, no real render) | P4-1 |
-| P4-3 | "Comparar versiones" dialog | todo | P4-2 |
+| P4-3 | "Comparar versiones" dialog | done (2x2 grid on one clock; the pick writes the doc; not seen in a browser) | P4-2 |
 | P5-1 | Full Spanish dictionary | done (all modules translated; the brand.ts fold-in is left) | |
 | P5-2 | i18n coverage + placeholder gate | done (coverage, placeholders, one wording per key; allowlist empty) | P5-1 |
 | P5-3 | Untranslated-text scan | done | P5-2 |
@@ -443,8 +443,15 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Verify: `npx tsx src/export/variantPreviews.verify.ts` (registered in `verify:agent-tools`). It asserts the body shape (480p/h264, the version's own timelineId and snapshot, live doc untouched), one POST per member in tab order, untagged copies skipped, the four-version cap, the export registry wiring, the unknown-group and no-group errors, and the policy class. `npx tsc -b`, catalog regeneration, policy/mcp/exposure/export verifies and both registration gates are green.
 - Limitation: no real render was submitted — the verify stubs `/export/job` and the dialog's snapshot read. Whether the server accepts a 480p job end-to-end is only proven by the enum and the existing export path.
 
-### P4-3 · "Comparar versiones" dialog
+### P4-3 · "Comparar versiones" dialog — done
 - Plan: Plan 1 › Phase 4. A 2x2 grid of synced players, "Elegir esta versión", the `variant.chosen` event.
+- Files: `src/components/timeline/CompareVersionsDialog.tsx`, `src/components/timeline/variantCompare.ts`, `src/components/timeline/TimelineTabs.tsx`, `src/export/variantPreviews.ts` (`submitVariantPreviewJob`, now shared with the agent tool), `src/index.css`, `src/i18n/dict/{en,es}/timeline.ts`.
+- The tab bar grows a "比较版本" button only when `variantGroups(doc)` is non-empty; it opens the newest group. Everything inside reads and writes the persisted doc, like P4-1 — the plan's `variant.chosen` webhook still has no implementation in this tree; the pick is `commands.chooseVariant`.
+- Opening the dialog starts one 480p job per member through the same `submitVariantPreviewJob` `render_variant_previews` uses (so the dialog can never drift from the tool), polls each snapshot every 800 ms, and swaps that cell to a `<video>` as soon as its render finishes. Closing cancels the unfinished jobs.
+- One clock: the first ready version is the master; every 200 ms the followers are seeked when they drift more than 0.2 s and clamped to their own length (versions may differ). "一起播放" starts every player from the shared time, the range slider seeks all, and a cell that finishes while the grid is playing joins on the next tick.
+- "选用此版本" calls `commands.chooseVariant(groupId, timelineId)`: that sequence becomes active, the siblings become `已淘汰`, and the button turns into a disabled `已选用`. A failed preview shows the server reason and a `重试` button; more than four members show `只显示前 4 个版本`; Escape closes.
+- Verify: `npx tsx --tsconfig tsconfig.app.json src/components/timeline/variantCompare.verify.tsx` (registered in `verify:components`). It covers the four-version cap, the drift threshold and its absolute direction, the seek clamp, the time format, the status keys, the SSR markup for every preview phase and status (players only for ready versions, progress, error + retry, the disabled chosen button, the four-version hint, the shared clock) and greps the wiring: the tab bar gate, `commands.chooseVariant`, `submitVariantPreviewJob`, cancel-on-close and the drift check. `npx tsc -b` clean, `check-i18n` green (165 UI files, 2,742 EN, 2,779 ES), `variantPreviews.verify` and `export-tools.verify` green after the refactor, registration and gate coverage green at 737 verify files.
+- Limitation: never opened in a browser. Playback sync is covered by the pure helpers and by typed wiring, not by watching two videos play; the P6-1 screenshot of this dialog is the real proof.
 
 ### P5-1 · Full Spanish dictionary
 - Plan: Plan 1 › Phase 5.

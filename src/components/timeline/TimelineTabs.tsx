@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { theme, themeAlpha } from '../../theme';
 import { ratioLabel, type ProjectDoc } from '../../editor/types';
 import type { EditorCommands } from '../../editor/store';
+import { variantGroups } from '../../editor/variants';
 import { useT } from '../../i18n/locale';
 import { Icon } from '../icons';
+import { CompareVersionsDialog } from './CompareVersionsDialog';
 
 interface TimelineTabsProps {
   doc: ProjectDoc;
@@ -17,10 +19,12 @@ export function TimelineTabs({ doc, commands }: TimelineTabsProps) {
   const t = useT();
   const [renaming, setRenaming] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
+  const [compareGroup, setCompareGroup] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   useEffect(() => { if (renaming) inputRef.current?.select(); }, [renaming]);
 
   const timelines = doc.timelines.filter((t) => !t.hidden).sort((a, b) => a.order - b.order);
+  const groups = variantGroups(doc);
   const commitRename = () => {
     if (renaming && draft.trim()) commands.renameTimeline(renaming, draft.trim());
     setRenaming(null);
@@ -83,6 +87,13 @@ export function TimelineTabs({ doc, commands }: TimelineTabsProps) {
         );
       })}
       <span style={{ width: 6 }} />
+      {groups.length > 0 && (
+        <button
+          onClick={() => setCompareGroup(groups[0]!)}
+          title={t('并排比较候选版本，选一个作为成片')}
+          style={{ ...tabBtn, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+        ><Icon name="grid" size={13} />{t('比较版本')}</button>
+      )}
       <button onClick={() => commands.createTimeline()} title={t('新建序列')} style={tabBtn}>{t('＋序列')}</button>
       <button onClick={() => commands.duplicateTimeline(doc.activeTimelineId)} title={t('复制当前序列')} style={{ ...tabBtn, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="copy" size={13} />{t('复制')}</button>
       <button
@@ -90,6 +101,14 @@ export function TimelineTabs({ doc, commands }: TimelineTabsProps) {
         title={t('把当前序列复制为 9:16 竖屏（长转短）')}
         style={{ ...tabBtn, display: 'inline-flex', alignItems: 'center', gap: 4 }}
       ><Icon name="swap" size={13} />{t('竖屏副本')}</button>
+      {compareGroup && (
+        <CompareVersionsDialog
+          doc={doc}
+          groupId={compareGroup}
+          commands={commands}
+          onClose={() => setCompareGroup(null)}
+        />
+      )}
     </div>
   );
 }

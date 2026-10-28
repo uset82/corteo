@@ -964,6 +964,30 @@ button, input, select { font: inherit; }
 .cc-import-link-note { margin:0; color:var(--cc-text-muted); font-size:11px; }
 .cc-import-link-error { margin:0; color:var(--cc-danger); font-size:11px; }
 .cc-import-link-actions { display:flex; justify-content:flex-end; gap:8px; }
+.cc-compare-dialog { width:min(980px, calc(100vw - 48px)); max-height:calc(100vh - 48px); overflow:auto; }
+.cc-compare-head { display:flex; align-items:center; justify-content:space-between; }
+.cc-compare-head button { padding:0 2px; border:none; background:none; color:var(--cc-text-muted); font-size:16px; cursor:pointer; }
+.cc-compare-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+.cc-compare-cell { display:flex; flex-direction:column; gap:6px; padding:8px; border:0.5px solid var(--cc-border); border-radius:6px; background:var(--cc-panel); }
+.cc-compare-cell[data-status="chosen"] { border-color:var(--cc-accent); }
+.cc-compare-cell[data-status="discarded"] { opacity:0.72; }
+.cc-compare-cell-head { display:flex; align-items:center; gap:6px; min-width:0; }
+.cc-compare-label { padding:1px 5px; border:0.5px solid var(--cc-accent); border-radius:4px; color:var(--cc-accent); font-size:10px; font-weight:600; }
+.cc-compare-cell[data-status="chosen"] .cc-compare-label { background:var(--cc-accent); color:var(--cc-on-accent); }
+.cc-compare-cell[data-status="discarded"] .cc-compare-label { border-color:var(--cc-border); color:var(--cc-text-dim); }
+.cc-compare-name { flex:1; min-width:0; overflow:hidden; color:var(--cc-text); font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
+.cc-compare-status { color:var(--cc-text-dim); font-size:10px; white-space:nowrap; }
+.cc-compare-screen { position:relative; display:grid; place-items:center; aspect-ratio:16/9; border-radius:4px; background:var(--cc-inset); overflow:hidden; }
+.cc-compare-screen video { width:100%; height:100%; background:#000; object-fit:contain; }
+.cc-compare-progress, .cc-compare-failed { display:flex; flex-direction:column; align-items:center; gap:6px; padding:8px; color:var(--cc-text-muted); font-size:11px; text-align:center; }
+.cc-compare-percent { font-variant-numeric:tabular-nums; }
+.cc-compare-error { color:var(--cc-danger); word-break:break-word; }
+.cc-compare-note { margin:0; color:var(--cc-text-muted); font-size:11px; }
+.cc-compare-hint, .cc-compare-empty { margin:0; color:var(--cc-text-dim); font-size:11px; }
+.cc-compare-controls { display:flex; align-items:center; gap:10px; }
+.cc-compare-controls input[type="range"] { flex:1; min-width:0; padding:0; border:none; background:none; accent-color:var(--cc-accent); }
+.cc-compare-time { color:var(--cc-text-muted); font-size:11px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+@media (max-width: 720px) { .cc-compare-grid { grid-template-columns:1fr; } }
 
 /* Instant tooltip (toolbar): The native title has ~1s browser inherent delay, and it appears immediately when hovering here.
    The data-tip carries the copy and pops it downwards (the toolbar is at the top of the timeline panel); use -r to right-align the text near the right edge to prevent overflow.
