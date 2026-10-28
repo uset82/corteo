@@ -56,6 +56,9 @@ try {
   assert.equal(result.uploader, 'Canal');
   assert.equal(result.license, 'CC-BY');
   assert.equal(added.length, 1, 'one pool asset is added');
+  assert.deepEqual((added[0] as { source?: unknown }).source, {
+    title: 'Una canción', uploader: 'Canal', pageUrl: 'https://youtu.be/abc', license: 'CC-BY',
+  }, 'platform attribution is stored on the asset');
   assert.deepEqual(notes, ['Descargando de la plataforma… 50%', 'Descargando de la plataforma… 100%']);
 } finally {
   globalThis.fetch = originalFetch;

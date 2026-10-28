@@ -35,6 +35,18 @@ export const STOCK_TOOL_SCHEMAS: AgentToolSchema[] = [
           enum: [...MEDIA_TYPE_ENUM],
           description: 'Asset type override; auto-detected from Content-Type / URL extension when omitted.',
         },
+        source: {
+          type: 'object',
+          description: 'Optional attribution stored on the asset (applies to every URL in a batch): platform title/uploader/page/license, or the lyric line and search query behind a real photo.',
+          properties: {
+            title: { type: 'string', maxLength: 300 },
+            uploader: { type: 'string', maxLength: 300 },
+            pageUrl: { type: 'string', maxLength: 2000 },
+            license: { type: 'string', maxLength: 300 },
+            lyricLine: { type: 'string', maxLength: 1000 },
+            searchQuery: { type: 'string', maxLength: 300 },
+          },
+        },
         projectId: {
           type: 'string',
           description: 'Ignored because OpenChatCut uses the active project.',

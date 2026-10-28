@@ -89,6 +89,12 @@ export async function execPlatformImportTool(name: string, args: Args, ctx: Agen
   if (!done) return { error: 'platform import finished without a file' };
   const state = ctx.getState();
   const asset = await directoryFileToAsset({ ...done.file, importId: crypto.randomUUID() }, state.fps);
+  asset.source = {
+    title: done.title,
+    ...(done.uploader ? { uploader: done.uploader } : {}),
+    pageUrl: done.sourceUrl,
+    ...(done.license ? { license: done.license } : {}),
+  };
   ctx.commands.addAsset(asset);
   return {
     ok: true,

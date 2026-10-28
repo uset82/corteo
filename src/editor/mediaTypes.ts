@@ -28,6 +28,17 @@ export interface SourceClockMetadata {
   dropFrame: boolean;
 }
 
+/** Source attribution for a pool asset (P3-3). All fields are optional so old
+ * projects and ordinary uploads load unchanged. */
+export interface MediaSourceCredits {
+  title?: string;
+  uploader?: string;
+  pageUrl?: string;
+  license?: string;
+  lyricLine?: string;
+  searchQuery?: string;
+}
+
 export interface MediaAsset extends TranscriptCarrier {
   id: string;
   name: string;
@@ -52,6 +63,8 @@ export interface MediaAsset extends TranscriptCarrier {
   sourceTimecode?: SourceClockMetadata;
   /** Capture-device clock normalized at ingest when source timecode is absent. */
   captureClock?: SourceClockMetadata;
+  /** Optional source attribution (P3-3). Absent on uncredited media and old projects. */
+  source?: MediaSourceCredits;
   width?: number;
   height?: number;
   code?: string;

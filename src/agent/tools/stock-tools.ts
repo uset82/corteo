@@ -1,5 +1,6 @@
 export { STOCK_TOOL_SCHEMAS, STOCK_TOOL_NAMES } from './schemas/stock-tools';
 import type { AgentContext } from '../context';
+import { readSourceCredits, type MediaSourceCredits } from '../../media/credits';
 import type { MediaAsset } from '../../editor/types';
 import { safeSourceFilename } from '../../media/sourceFilename';
 import { fallbackDuration, isHttpUrl, nameFromUrl, probeUrl, sniffKind, type PoolKind } from './stock-url-utils';
@@ -150,6 +151,7 @@ async function registerMediaUrl(
     height?: number;
     properties?: unknown;
     forceRemote?: boolean;
+    source?: MediaSourceCredits;
   },
   ctx: AgentContext,
 ): Promise<BatchRow> {
@@ -223,6 +225,7 @@ async function registerMediaUrl(
     durationInFrames,
     width: typeof opts.width === 'number' && opts.width > 0 ? opts.width : undefined,
     height: typeof opts.height === 'number' && opts.height > 0 ? opts.height : undefined,
+    ...(opts.source ? { source: opts.source } : {}),
   };
 
   if (kind === 'motion-graphic' && Array.isArray(opts.properties)) {
@@ -255,8 +258,9 @@ async function execDownloadMedia(args: Args, ctx: AgentContext): Promise<unknown
 
   const batchName = urls.length === 1 && typeof args.name === 'string' ? args.name : undefined;
   const type = typeof args.type === 'string' ? args.type : undefined;
+  const source = readSourceCredits(args.source);
 
-  return batchEnvelope(await serialBatch(urls, (url) => registerMediaUrl(url, { name: batchName, type }, ctx)));
+  return batchEnvelope(await serialBatch(urls, (url) => registerMediaUrl(url, { name: batchName, type, source }, ctx)));
 }
 
 async function execPushAsset(args: Args, ctx: AgentContext): Promise<unknown> {

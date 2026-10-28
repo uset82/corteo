@@ -64,6 +64,10 @@ try {
   const downloaded = await execStockTool('download_media', {
     url: 'https://cdn.example.test/camera-source.mov',
     name: 'Edited interview title',
+    source: {
+      title: 'Camión de noche', uploader: 'Claudia', pageUrl: 'https://youtu.be/camion',
+      license: 'CC-BY', lyricLine: 'La noche entera', searchQuery: 'faro azul',
+    },
   }, context) as { succeeded: number; results: Array<{ assetId: string }> };
   assert.equal(downloaded.succeeded, 1);
   const downloadedAsset = draft.getDoc().assets.find((asset) => asset.id === downloaded.results[0]?.assetId);
@@ -73,6 +77,10 @@ try {
   assert.equal(Object.hasOwn(importRequests[0] ?? {}, 'name'), false,
     'display override is never forwarded as a materialized filename hint');
   assert.equal(downloadedAsset?.originalFilePath, undefined);
+  assert.deepEqual(downloadedAsset?.source, {
+    title: 'Camión de noche', uploader: 'Claudia', pageUrl: 'https://youtu.be/camion',
+    license: 'CC-BY', lyricLine: 'La noche entera', searchQuery: 'faro azul',
+  }, 'download_media stores the optional source credits');
 
   draft.commands.renameMediaAsset(downloadedAsset!.id, 'Second display name');
   const renamed = draft.getDoc().assets.find((asset) => asset.id === downloadedAsset!.id);

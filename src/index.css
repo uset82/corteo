@@ -949,6 +949,15 @@ button, input, select { font: inherit; }
 .cc-media-duplicates-item img, .cc-media-duplicates-thumb { width:80px; height:45px; object-fit:cover; border-radius:3px; background:var(--cc-inset); }
 .cc-media-duplicates-item > div { flex:1; display:flex; flex-direction:column; gap:2px; }
 .cc-media-duplicates-item span, .cc-media-duplicates-note { color:var(--cc-text-muted); font-size:11px; }
+.cc-credits-dialog { width:min(680px, calc(100vw - 32px)); max-height:min(82vh, 760px); overflow:auto; }
+.cc-credits-head { display:flex; align-items:center; justify-content:space-between; }
+.cc-credits-list { display:flex; flex-direction:column; gap:10px; }
+.cc-credits-row { display:flex; flex-direction:column; gap:4px; padding:8px 0; border-top:0.5px solid var(--cc-border); }
+.cc-credits-field { display:flex; gap:8px; font-size:12px; }
+.cc-credits-field > span:first-child { width:110px; color:var(--cc-text-dim); flex-shrink:0; }
+.cc-credits-field a { color:var(--cc-accent); word-break:break-all; }
+.cc-credits-note { color:var(--cc-text-muted); font-size:11px; }
+.cc-credits-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; }
 
 /* Instant tooltip (toolbar): The native title has ~1s browser inherent delay, and it appears immediately when hovering here.
    The data-tip carries the copy and pops it downwards (the toolbar is at the top of the timeline panel); use -r to right-align the text near the right edge to prevent overflow.
