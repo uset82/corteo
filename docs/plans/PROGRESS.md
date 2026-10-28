@@ -75,7 +75,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P2-3 | Duplicate detector | done | |
 | P2-4 | HEVC export + presets | done | |
 | P2-5 | Countdown timecode | done | |
-| P2-6 | Premiere shortcut preset | todo | |
+| P2-6 | Premiere shortcut preset | done | |
 | P3-1 | Pinned yt-dlp sync | todo | |
 | P3-2 | Platform import route + `import_from_platform` | todo | P3-1 |
 | P3-3 | Source credits + `creditos.txt` | todo | P3-2 |
@@ -463,6 +463,7 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-28 · P4-1 · A version is a sibling timeline with an optional `variant: { groupId, label, note, status }`; `create_variants` uses the same `tl.duplicate` reducer action as `duplicateTimeline`, batched under "Crear versiones". `choose_variant` updates the group statuses and the active sequence in one "Elegir versión" batch; `get_variant_choice` polls the shared draft with an injectable clock (45 s default). Old projects load unchanged because the tag is optional. Previews and the comparison dialog stay in P4-2/P4-3.
 - 2026-10-28 · P4-2 · `render_variant_previews` renders every version at 480p (864x486 for 16:9) through the existing Remotion pipeline and export permit, stages files before replacing them, writes `manifest.json` under the profile's `variant-previews/<groupId>/` and serves it from `/api/variant-previews`. The tool is a real operation (approval-gated, browser-tier, no headless server-direct path); the comparison dialog stays P4-3.
 - 2026-10-28 · P2-2 · ASS `\k`/`\kf`/`\ko` became word-level timing (last word extends to the Dialogue end), and ASS imports default to the new `verso` style with `word` pacing so the karaoke highlight is visible; SRT/VTT keep the existing black-bar default. The UI import button and `import_subtitles` share `parseSubtitles`, which creates one caption track in one undo batch. Videoclip groups `verso`/`coro` in the style menu.
+- 2026-10-28 · P2-6 · The Premiere Pro preset is a selectable keymap overlay: C blade, Y slip, R rate stretch, T trim, split moved to Mod+K so C can be the razor; B and N stay unbound because corteo has no ripple/rolling edit modes yet. Manual rebindings still win over the preset. This reuses the implementation from the earlier `p2-6-workbuddy` commit (`587f1e7`).
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.
