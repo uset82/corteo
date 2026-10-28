@@ -129,6 +129,30 @@ function localizeDefaultSequenceName(name: string, t: ReturnType<typeof useT>): 
   const match = /^序列 (\d+)$/.exec(name);
   return match ? t('序列 {n}', { n: match[1]! }) : name;
 }
+function sequenceDisabledTitle(t: ReturnType<typeof useT>, option: SequenceLibraryOption): string | undefined {
+  const params = option.disabledReasonParams ?? {};
+  switch (option.disabledReasonCode) {
+    case 'SEQUENCE_TIMELINE_MISSING':
+      return t('序列引用的时间线不存在：{id}', { id: String(params.id ?? '—') });
+    case 'SEQUENCE_FPS_MISMATCH':
+      return t('序列帧率不一致：{parent} 为 {parentFps} fps，{child} 为 {childFps} fps', {
+        parent: String(params.parent ?? '—'),
+        parentFps: String(params.parentFps ?? '—'),
+        child: String(params.child ?? '—'),
+        childFps: String(params.childFps ?? '—'),
+      });
+    case 'SEQUENCE_CYCLE':
+      return t('序列存在循环引用：{path}', { path: String(params.path ?? '') });
+    case 'SEQUENCE_DEPTH_LIMIT':
+      return t('序列嵌套超过最大深度 {limit}', { limit: String(params.limit ?? '—') });
+    case 'SEQUENCE_NODE_LIMIT':
+      return t('序列渲染图超过最大节点数 {limit}', { limit: String(params.limit ?? '—') });
+    case 'SEQUENCE_DUPLICATE_TIMELINE_ID':
+      return t('时间线 ID 重复：{id}', { id: String(params.id ?? '—') });
+    default:
+      return option.disabledReason;
+  }
+}
 export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddAudio, playerRef, fps, items, getSequenceOptions, onAddSequence, trackOptions, captionTracks, onSetCaptions, onCreateCaptionTrack, onUpdateCaptions, onSetItemTranscript, onToggleWord, onCleanScript, onSetGapCap, onSetTranscriptPlayOrder, onReorderTrackItems, onClearEdits, assets, mediaFolders, usedAssetIds, offlineAssetIds, onAssetLoadError, onImportMedia, onImportMobileMedia, onIngestDirectoryAsset, onTranscribeAsset, onAddMediaItem, onAddMediaAssetsToTimeline, onUseMediaAI, onCreateMediaFolder, onRenameMediaFolder, onDeleteMediaFolder, onMoveMediaAssets, onRenameMediaAsset, onRenameMediaAssets, onSetMediaAssetFavorite, onSetMediaAssetsFavorite, onRemoveMediaAsset, onRemoveMediaAssets, onPasteMediaAssets, onJumpToMediaItem, onRemoveDuplicateMediaAssets, onRemoveDuplicateMediaItems, onRelinkMediaAsset, creativeMode, onCreativeModeChange, onAddSolid, onUseTemplateAI, selectedItem, onApplyTransition, onApplyFx, onApplyZoom }: LibraryPanelProps) {
   const t = useT();
   const selKind = selectedItem?.kind ?? null;
@@ -219,7 +243,7 @@ export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddA
                 key={option.id}
                 type="button"
                 disabled={!!option.disabledReason}
-                title={option.disabledReason}
+                title={sequenceDisabledTitle(t, option)}
                 onClick={() => onAddSequence(option.id)}
                 className="cc-sequence-row"
               >
