@@ -4,6 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ffmpegBin } from '../server/media-binaries.ts';
 
 const SONG_SECONDS = 12;
 const SAMPLE_RATE = 22050;
@@ -71,10 +72,18 @@ try {
   const audio = join(home, 'song.wav');
   writeFileSync(audio, wavFile(synthSong(), SAMPLE_RATE));
   writeFileSync(join(home, 'song.txt'), 'uno\ndos\ntres\ncuatro\n');
-  const output = run(['song-film', '--audio', audio, '--to', '12s', '--json']);
+  const still = join(home, 'still.png');
+  const generated = spawnSync(ffmpegBin(), ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=blue:s=32x32', '-frames:v', '1', still]);
+  assert.equal(generated.status, 0, generated.stderr.toString());
+  const output = run(['song-film', '--audio', audio, '--stills', still, '--to', '12s', '--dry-run', '--json']);
   assert.equal(output.status, 0, output.stderr);
   const report = JSON.parse(output.stdout);
   assert.equal(report.ok, true);
+  assert.equal(report.stage, 'rendered');
+  assert.equal(report.render.dryRun, true);
+  assert.equal(report.render.frames, 360);
+  assert.equal(report.reactions.applied, false);
+  assert.ok(report.reactions.reason);
   assert.equal(report.lyricsSource, 'txt');
   assert.equal(report.textIds.length, 4);
   assert.equal(report.cutGrid, 'downbeat');
@@ -87,11 +96,20 @@ try {
   assert.equal(show.status, 0, show.stderr);
   const doc = JSON.parse(readFileSync(docPath, 'utf8'));
   const items = doc.timelines.flatMap((timeline: { items: { id: string; startFrame: number }[] }) => timeline.items);
-  for (const id of report.visualIds) {
+  for (const id of report.textIds) {
+    const card = items.find((item: { id: string }) => item.id === id);
+    assert.ok(card.keyframes.scale.length >= 2);
+    assert.equal(card.keyframes.opacity[0].value, 0);
+    assert.equal(card.keyframes.opacity.at(-1).value, 0);
+  }
+  for (const [index, id] of report.visualIds.entries()) {
     const visual = items.find((item: { id: string }) => item.id === id);
+    assert.ok(visual.keyframes.scale.length >= 2);
+    assert.ok(visual.keyframes.saturate.length >= 2);
+    if (index % 4 >= 2) assert.ok(visual.keyframes.x?.length >= 2 || visual.keyframes.y?.length >= 2);
     assert.ok(visual.startFrame === 0 || downbeats.some((beat) => Math.abs(beat - visual.startFrame) <= 1));
   }
-  const pasted = run(['song-film', '--audio', audio, '--to', '12s', '--lyrics-text', 'texto propio', '--json']);
+  const pasted = run(['song-film', '--audio', audio, '--to', '12s', '--lyrics-text', 'texto propio', '--dry-run', '--json']);
   assert.equal(pasted.status, 0, pasted.stderr);
   assert.equal(JSON.parse(pasted.stdout).lyricsSource, 'pasted');
   const missing = run(['song-film', '--audio', join(home, 'missing.wav'), '--json']);

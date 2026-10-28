@@ -51,6 +51,12 @@ Render to `~/corteo-exports/<name>.mp4` or the host profile exportDir, and attac
 
 Save the attachment in the host inbox; `"$CORTEO" host show <host> --json` gives `mediaInbox`. Run `"$CORTEO" inbox --host <host> --json`, then attach `attachPath` in the same chat.
 
+## Película de una canción
+
+Run `"$CORTEO" song-film --audio /absolute/path/song.wav --to 30s --json`. Add `--lyrics-text` for pasted lyrics or `--stills` for comma-separated absolute image paths. Lyrics priority: pasted text, a neighbouring .lrc, a neighbouring .txt, then the local transcript. Render 15 to 30 seconds first; render the full song when the person asks.
+
+For MCP hosts without a shell: `import_asset` → `edit_item` (audio) → `detect_beats {itemId}` → `listen_to_song {itemId}` (look at both pictures) → `edit_item` adds → `edit_item` keyframes → `apply_ken_burns` → `music_reaction_plan` and `apply_music_reaction` when a model analysis exists → `occ render`.
+
 ## Start
 
 The installer starts the editor unless `--no-start` was passed. In a developer checkout, leave the following running when you also want the editor page or MCP. The shell does not need it for imports, edits, or render.

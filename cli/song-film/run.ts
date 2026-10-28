@@ -101,7 +101,7 @@ export async function placeSongFilm(options: SongFilmOptions) {
     { apply: true, summary: 'Película de la canción: colocar' });
   const ids = placedIds(placement.executions[0]?.result);
   if (ids.length !== adds.length) throw new CliError('song-film did not place every requested item');
-  return { ok: true, stage: 'placed', projectId: project.id, audioItemId, bpm: beatResult.bpm ?? 0,
+  return { plan, fromFrame: options.fromFrame, toFrame, report: { ok: true, stage: 'placed', projectId: project.id, audioItemId, bpm: beatResult.bpm ?? 0,
     lyricsSource: lyrics.source, lines: lyrics.lines, cutGrid: plan.cutGrid, cuts: plan.cutFrames,
-    visualIds: ids.slice(0, plan.visuals.length), textIds: ids.slice(plan.visuals.length) };
+    visualIds: ids.slice(0, plan.visuals.length), textIds: ids.slice(plan.visuals.length) } };
 }
