@@ -2,6 +2,7 @@
 // Per-module files mirror src/i18n/dict/en/ (P5-1); `base` holds the entries that
 // predate them and is spread last, so no wording translated before P5-1 changes.
 // dictRegistry.ts spreads es/brand.ts over this default export.
+import chat from './chat';
 import components from './components';
 import exportPanel from './exportPanel';
 import media from './media';
@@ -266,4 +267,4 @@ const base: Record<string, string> = {
     'Dale a corteo la configuración de abajo para que edite este proyecto desde fuera de este PC. El dominio del editor tiene que estar en hosting.egressDomains.',
 };
 
-export default Object.assign({}, components, exportPanel, media, timeline, base) as Record<string, string>;
+export default Object.assign({}, chat, components, exportPanel, media, timeline, base) as Record<string, string>;
