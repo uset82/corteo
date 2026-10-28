@@ -15,7 +15,7 @@ export default {
   'Ctrl/⌘+滚轮 缩放时间轴 · Alt+滚轮 缩放轨道高度': 'Ctrl/⌘+rueda para el zoom de la línea de tiempo · Alt+rueda para la altura de las pistas',
   '视': 'V',
   '音': 'A',
-  '字': 'S',
+  '字': 'A',
   // ── TimelineToolbar.tsx ──
   '新建序列': 'Nueva secuencia',
   '新建轨道': 'Nueva pista',
