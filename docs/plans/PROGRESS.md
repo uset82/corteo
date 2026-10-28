@@ -85,7 +85,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P4-3 | "Comparar versiones" dialog | todo | P4-2 |
 | P5-1 | Full Spanish dictionary | done (all modules translated; the brand.ts fold-in is left) | |
 | P5-2 | i18n coverage + placeholder gate | todo | P5-1 |
-| P5-3 | Untranslated-text scan | todo | P5-2 |
+| P5-3 | Untranslated-text scan | blocked (scan done; raw strings listed) | P5-2 |
 | P6-1 | Bot end-to-end proof + screenshots | todo | every task above is `done` or `blocked` |
 | P7-1 | EffectCraft titles sidecar | optional | P6-1 |
 
@@ -414,6 +414,12 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 
 ### P5-3 · Untranslated-text scan
 - Plan: Plan 1 › Phase 5. Playwright scan of the listed screens for Chinese and untranslated English.
+- Ran 2026-10-28 on the L-11 merge (1635d7d) with `CORTEO_PORT=5205 CORTEO_STORE_DIR=/tmp/p53-store npm run corteo:local`, chromium from `~/.cache/ms-playwright`, locale `es-ES`, 1600x1000. It used 5205, not 5203 as planned, because 13bc836's worktree server still held 5203 and it is not ours to kill.
+- Screens: projects; editor; the six library tabs (Medios, Biblioteca, Secuencias, Transcripción, Subtítulos, Habilidad); the inspector tabs (Básico, Vídeo, Animación — Audio is disabled for the demo clips); the export dialog; all six Settings categories with every group and vendor pane open; and the chat panel. Screenshots, one per screen and per tab, in `test-results/corteo/` (not committed).
+- Fixed: the four skill summaries that `SkillsTabPanel` passes through `t()` (`把带货…`, `把一条长视频…`, `把新闻素材…`, `把重复流程…`) were missing from both dictionaries; added to `en/library.ts` and `es/library.ts`. The inspector's Vídeo tab read `Video` because `es/index.ts` mapped `视频` to the English word; it now says `Vídeo`, as `生视频` already did. No other key was missing: the es dictionary still covers all 2628 en keys.
+- Still on screen after the fixes, none of it a dictionary problem (files and lines under Blockers): the Whisper model language line and sizes in Settings › Modelos locales, `CapCut / 剪映` in the export dialog, the downloads-folder `title`, the English `Sequence cycle detected: …` tooltip in Secuencias, and the ten bundled CJK font families in the font picker.
+- Expected, not a finding: the demo template's own text (`The envelope method explained`, `How to start this week`) and its `Highlight Color` field label — content of `assets/templates/openchatcut-templates.json`, like footage.
+- The scan script stays outside the repo (`/tmp/p53-scan.cjs`): it needs a running editor with a seeded store and the Playwright browser, so as a `test:serial` verify it would only ever skip; P5-2's static gate is the in-repo guard. The exact run and output are recorded in the decisions below.
 
 ### P6-1 · Bot end-to-end proof + screenshots
 - Plan: Plan 1 › Phase 6.
@@ -466,9 +472,14 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-28 · EV · Terra ran EV-00 to EV-26 alone. The rest finishes in three tracks at once, one git worktree each: Qoder (`~/corteo`, the EV table, the merge and the only push), ZCode (`~/corteo-zcode`, branch `ev-zcode`, the EZ table), DeepSeek Harness (`~/corteo-dsh`, branch `ev-dsh`, the ED table). Reason: Carlos's call after Terra stopped.
 - 2026-10-28 · EV-28 · The ten Italian keys missing since C-12 went in at setup, before the tracks branched: the gap kept `verify:i18n` red for all three tracks and kept `npm test` from ever reaching `test:serial`.
 - 2026-10-28 · EV · If `sync-publish.sh` stops only on failures EV-30 recorded as pre-existing, the work goes to the GitHub branch `ev-evolution` instead of `main`.
+- 2026-10-28 · P5-3 · The scan ran on 5205 because 13bc836's worktree server still held 5203; a text scan is read-only, so a second port was better than stopping another session's server.
+- 2026-10-28 · P5-3 · The four missing skill summaries were added to both dictionaries, not turned into data: `SkillsTabPanel` already calls `t(skill.summary)` and the keys are the catalog's Chinese `summary` strings, so the dictionary was the only gap.
+- 2026-10-28 · P5-3 · The scan script stays outside the repo (`/tmp/p53-scan.cjs`): as a `test:serial` verify it would always skip, because it needs a live editor, a seeded store and the Playwright browser that the chain does not provide. The static es coverage gate of P5-2 is the in-repo guard.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.
+
+- P5-3 · 2026-10-28 · The es-ES scan found no further dictionary gaps, but five strings still reach the screen raw and need component or data changes the card keeps out of scope: (1) `shared/asr-models.ts` keeps `language: '中文 / English / Italiano / Русский / Português'`, Chinese `sizeLabel` (`约 176MB`, `约 351MB`, `约 1.2GB`, `约 1.5GB`) and Chinese `note`, and `src/components/settings/LocalAsrPane.tsx:257` renders `m.language` and `m.sizeLabel` without `t()`; (2) `src/export/useExportDialogModel.ts:54` sets `summary: 'CapCut / 剪映'` and `src/export/ExportDialogShell.tsx:72` renders it raw; (3) `src/export/ExportDestinationBar.tsx:26` passes `title={destination.label}`, so the downloads destination keeps the Chinese `浏览器下载目录` from `src/export/exportDestinationModel.ts:71` as its tooltip even when the visible text is Spanish; (4) `src/editor/sequenceGraph.ts:80` returns an English `Sequence cycle detected: …`, shown as the disabled option's title by `src/library/LibraryPanel.tsx:218` (the active timeline is listed as a sequence option, which is a self-cycle); (5) the ten bundled CJK font families in `FontFamilyPicker.tsx:131` are font names and are expected to stay as authored. Unblock: allow wrapping (1)–(4) in `t()` and adding the keys to both dictionaries, or move the strings into data; (5) needs no action.
 
 - HW-1 to HW-5 · resolved 2026-10-25. An earlier note said WorkBuddy was blocked because `wsl.exe` was on its Program Blacklist and `harness-workbuddy` had no HW commits. It finished the five tasks the same day, and this merge brings them in.
 
