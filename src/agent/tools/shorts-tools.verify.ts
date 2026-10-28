@@ -49,7 +49,7 @@ interface MomentOut {
   gate: string; gateReasons: string[]; title: string; reason: string; risks: string[];
 }
 type Result = {
-  ok?: boolean; error?: string; moments: MomentOut[]; rejected: MomentOut[]; modelUsed: boolean;
+  ok?: boolean; error?: string; reviewEs: string; moments: MomentOut[]; rejected: MomentOut[]; modelUsed: boolean;
   failedBatches: number; genre: string; chapters: number; candidates: number; alternates: number; threshold: number;
 };
 
@@ -75,6 +75,8 @@ assert.ok(result.chapters >= 1, `chapters were segmented, got ${result.chapters}
 assert.ok(result.candidates >= 2, `candidates were built, got ${result.candidates}`);
 assert.strictEqual(result.moments.length, 2, 'count caps the returned moments');
 assert.strictEqual(result.threshold, 55, 'the publish threshold is exposed');
+assert.match(result.reviewEs, /1\. [\s\S]*Por qué:[\s\S]*Riesgos:[\s\S]*Tendencia: no disponible/);
+assert.ok(result.reviewEs.length <= 3000);
 
 const [best, second] = result.moments;
 assert.ok(best.score >= second.score, 'moments are ranked best first');

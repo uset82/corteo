@@ -17,7 +17,7 @@ that gets cut.
 
 1. `transcribe_track` — nothing below works without a word-level transcript.
 2. `score_moments` — rank candidates 0-99 before cutting anything. It is a rubric, not a
-   prediction: read `subscores`, `reason` and `risks`, and pass the user's own words in
+   prediction: show `reviewEs` to the person and wait for a yes before `make_shorts`; read `subscores`, `reason` and `risks`, and pass the user's own words in
    `direction`. `calibration: true` uses the project's learned weights.
 3. `make_shorts` — the one call: score → cut → captions → reframe → optional 480p previews.
    Pass `minScore` from the ranking, `ranges` when the user already picked moments, and
@@ -39,7 +39,7 @@ that gets cut.
 
 Read-only: `score_moments`, `calibrate_scores`, `write_social_copy`, `emphasize_keywords` (with
 `apply: false`), `list_scheduled_publishes`, `score_performance`. Everything that edits is one
-undo step. Reframe and preview renders need an editor tab; the rest runs headless.
+undo step. `transcribe_track`, `score_moments`, `make_shorts`, reframe and preview renders need an editor tab.
 
 ## Workflow
 

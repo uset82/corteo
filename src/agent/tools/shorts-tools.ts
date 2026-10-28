@@ -5,6 +5,7 @@ import { msToFrame } from '../../transcript/types';
 import { analyzeMoments } from '../shorts/analyze';
 import { computeCalibration } from '../shorts/calibration';
 import { PUBLISH_THRESHOLD } from '../shorts/score';
+import { shortsReviewEs } from '../shorts/review-text';
 import { readGenre } from '../shorts/score-ranges';
 import { pickTranscribedItem } from '../shorts/transcript-item';
 import type { ScoredMoment } from '../shorts/types';
@@ -134,6 +135,7 @@ export async function execShortsTool(name: string, args: Args, ctx: AgentContext
     genre: analysis.detectedGenre ?? readGenre(args.genre),
     durationBounds: { minSeconds, maxSeconds },
     moments,
+    reviewEs: shortsReviewEs(moments.map((moment) => ({ ...moment, startSeconds: moment.startFrame / state.fps, endSeconds: moment.endFrame / state.fps }))),
     rejected,
     alternates: Math.max(0, analysis.passing - moments.length),
     ...(calibration
