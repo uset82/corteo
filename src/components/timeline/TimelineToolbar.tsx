@@ -1,7 +1,7 @@
 // Toolbar at the top of the timeline (translated verbatim from Timeline.tsx): Editing mode cluster / Drop track mode / Narration recording /
 // Play + time code / zoom cluster / aspect ratio / caption display / full screen. The timecode span is drawn by the playhead painter
 // timecodeRef direct writing (rAF frame), here only the initial value is rendered.
-import { useRef, useState, type MouseEvent, type RefObject } from 'react';
+import { useRef, useState, useSyncExternalStore, type MouseEvent, type RefObject } from 'react';
 import { theme } from '../../theme';
 import { Icon, type IconName } from '../icons';
 import { ASPECT_PRESETS, captionTrackEntries, type TimelineState } from '../../editor/types';
@@ -9,7 +9,7 @@ import type { EditorCommands } from '../../editor/store';
 import { useT } from '../../i18n/locale';
 import { useFocusReturn } from '../../hooks/useFocusReturn';
 import { invokeAction } from '../../shortcuts/actionRegistry';
-import { MIN_TIME_ZOOM, fmt, type EditMode } from './timelineUtil';
+import { MIN_TIME_ZOOM, formatTimecode, getTimecodeMode, subscribeTimecodeMode, toggleTimecodeMode, type EditMode } from './timelineUtil';
 import { TimelineSpeedControl } from './TimelineSpeedControl';
 import { SceneDetectionDialog } from '../../scene-detection/SceneDetectionDialog';
 import { MotionTrackingDialog } from '../../tracking/MotionTrackingDialog';
@@ -131,6 +131,14 @@ export function TimelineToolbar({
   zoom, setZoom, frameRateLock, musicMapVisible, onToggleMusicMap,
 }: TimelineToolbarProps) {
   const t = useT();
+  const timecodeMode = useSyncExternalStore(subscribeTimecodeMode, getTimecodeMode, getTimecodeMode);
+  const timecodeTitle = timecodeMode === 'remaining'
+    ? t('剩余时间：点击切换为已用时间')
+    : t('已用时间：点击切换为剩余时间');
+  const toggleTimecode = () => {
+    const next = toggleTimecodeMode();
+    if (timecodeRef.current) timecodeRef.current.textContent = formatTimecode(playheadFrame, total, state.fps, next);
+  };
   const speedItem = state.items.find((item) => (
     item.id === state.selectedId && (item.kind === 'video' || item.kind === 'audio' || item.kind === 'sequence')
   )) ?? null;
@@ -209,7 +217,21 @@ export function TimelineToolbar({
         active={playing}
         onClick={() => invokeAction('play-pause', undefined, 'toolbar')}
       />
-      <span ref={timecodeRef} className="cc-timeline-timecode">{fmt(playheadFrame, state.fps)} / {fmt(total, state.fps)}</span>
+      <span
+        ref={timecodeRef}
+        className="cc-timeline-timecode"
+        role="button"
+        tabIndex={0}
+        style={{ cursor: 'pointer' }}
+        title={timecodeTitle}
+        aria-label={timecodeTitle}
+        onClick={toggleTimecode}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
+          toggleTimecode();
+        }}
+      >{formatTimecode(playheadFrame, total, state.fps, timecodeMode)}</span>
       </div>
       <div className="cc-timeline-view-controls">
       <TB icon="zoomOut" title={t('缩小时间轴 (⌘−)')} tipRight onClick={() => invokeAction('zoom-out', undefined, 'toolbar')} />

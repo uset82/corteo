@@ -9,6 +9,7 @@ import {
 } from './bitrate';
 import { ExportBitrateControl } from './ExportBitrateControl';
 import { ExportQaCard, InfoCard, Row, Segmented } from './ExportDialogParts';
+import { EXPORT_PRESETS, exportPresetFor } from './exportPresets';
 import {
   EXPORT_FPS,
   EXPORT_RESOLUTION_OPTIONS,
@@ -45,6 +46,7 @@ interface VideoSettingsProps {
 
 function VideoSettings({ video, busy, qualityMode, setQualityMode }: VideoSettingsProps) {
   const t = useT();
+  const preset = exportPresetFor(video.codec, video.resolution);
   return (
     <>
       <Row label={t('画质策略')}>
@@ -62,14 +64,37 @@ function VideoSettings({ video, busy, qualityMode, setQualityMode }: VideoSettin
           ? t('高清优先预览；导出默认高码率，不主动压缩导入素材。')
           : t('平衡流畅与体积；预览可用轻量副本，导出默认自动码率。')}
       </p>
+      <Row label={t('预置')}>
+        <div className="cc-export-segmented">
+          {EXPORT_PRESETS.map((entry) => {
+            const active = preset?.id === entry.id;
+            return (
+              <button
+                key={entry.id}
+                type="button"
+                className={`cc-export-seg${active ? ' active' : ''}`}
+                aria-pressed={active}
+                disabled={busy}
+                onClick={() => {
+                  video.setCodec(entry.codec);
+                  video.setResolution(entry.resolution);
+                }}
+              >
+                {t(entry.label)}
+              </button>
+            );
+          })}
+        </div>
+      </Row>
       <Row label={t('格式 / 编码')}>
         <select
           className="cc-export-select"
           value={video.codec}
-          onChange={(event) => video.setCodec(event.target.value as 'h264' | 'vp8' | 'prores')}
+          onChange={(event) => video.setCodec(event.target.value as 'h264' | 'h265' | 'vp8' | 'prores')}
           disabled={busy}
         >
           <option value="h264">MP4 (H.264)</option>
+          <option value="h265">{t('MP4 (H.265 / HEVC)')}</option>
           <option value="vp8">WebM (VP8)</option>
           <option value="prores">{t('ProRes 422 HQ 母带 (.mov)')}</option>
         </select>
@@ -77,6 +102,11 @@ function VideoSettings({ video, busy, qualityMode, setQualityMode }: VideoSettin
       {video.codec === 'prores' && (
         <p className="cc-export-footnote">
           {t('ProRes 母带体积较大，仅本机渲染；适合调色或交给达芬奇继续剪。网发请用 H.264。')}
+        </p>
+      )}
+      {video.codec === 'h265' && (
+        <p className="cc-export-footnote">
+          {t('HEVC 只在本机渲染；文件带有 hvc1 标记，Apple 播放器可直接播放。')}
         </p>
       )}
       <Row label={t('分辨率')}>

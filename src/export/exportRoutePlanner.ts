@@ -140,6 +140,23 @@ export async function planVideoExportRoute(options: BrowserExportOptions): Promi
       reason: 'ProRes 母带仅支持本机渲染',
     };
   }
+  // HEVC is Remotion/server-only just like ProRes (no WebCodecs HEVC here).
+  if (options.codec === 'h265') {
+    const hevc = {
+      id: 'hevc-server',
+      label: 'HEVC · 本机渲染',
+      hardware: false,
+      transport: 'server' as const,
+    };
+    return {
+      browser,
+      browserEngine: browserEngineInfo,
+      serverEngine: hevc,
+      route: 'server',
+      engine: hevc,
+      reason: 'HEVC 仅支持本机渲染',
+    };
+  }
   const serverCanRender = serverScaledExportDimensions(options.state, options.resolution).representable;
   return {
     browser,

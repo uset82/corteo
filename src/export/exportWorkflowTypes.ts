@@ -72,7 +72,7 @@ export interface UseExportWorkflowOptions {
   projectName: string;
   base: string;
   tab: ExportTab;
-  codec: 'h264' | 'vp8' | 'prores';
+  codec: 'h264' | 'h265' | 'vp8' | 'prores';
   resolution: ExportResolution;
   fps: number;
   requestedVideoBitrate?: number;
