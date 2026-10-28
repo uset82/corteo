@@ -848,3 +848,18 @@ Boundaries
 - Verify: `npm run verify:bot-recipe`; `node scripts/bot-rehearsal.verify.mjs`; `node scripts/no-claudia.verify.mjs`.
 - Commit: `EV-36: the bot template learns the inbox and the song film`.
 - Out of scope: `bot/skills/corteo-setup/SKILL.md` (its blocks are replayed by `scripts/bot-rehearsal.sh`); the other bot skills; code.
+
+### EV-37 · `occ song-film` exits when it is done (ED)
+- Needs: EV-36.
+- Why: ED's blocker for EV-36. On a 15 s song, `song-film` writes its JSON and a valid MP4, then stays alive with two `server/music-listen/inference-worker.ts` children until killed; on a 6 s song it exits. A bot waiting on the command hangs.
+- Read: `server/music-listen/inference.ts` (the worker host: children are `ref`'d while a request is pending and `unref`'d when `pending` empties; `REQUEST_TIMEOUT_MS` is 20 minutes; `disposeDefaultMusicInference`), `server/music-listen/listen.ts` and `server/music-listen/tool.ts` (who sends requests), `cli/song-film/run.ts` and `cli/song-film/animate.ts`, `cli/main.ts` (it sets `process.exitCode` and never calls `process.exit`).
+- This card may change code in `server/music-listen/` and `cli/` only.
+- Do:
+  1. Reproduce: the 15 s command from the blocker in a `mktemp -d` scratch library, with a 2-minute wall limit (`timeout 600`). While it hangs, log which request is still pending: add a temporary debug line or use `--inspect`, never commit it.
+  2. Fix the cause: the request that stays pending after the command's work is done must be awaited, finished or cancelled where it is sent. Do not raise or lower `REQUEST_TIMEOUT_MS`.
+  3. Backstop: a one-shot CLI must not wait on warm workers. After `runCommand` finishes (success or error), `cli/main.ts` disposes the music inference host if it was loaded (import `server/music-listen/inference.ts` lazily, so commands that never touched music do not load it). The MCP server keeps its warm workers; only the CLI disposes.
+  4. A verify: extend `cli/song-film.verify.ts` (or the nearest existing verify) so a run whose music request is still pending when the command finishes exits within 10 s of printing its JSON. Use an injected fake worker if the real one needs model packs; tests must not need them.
+- Done when: the 15 s command exits by itself within 10 s of printing its JSON (record the wall time), the 6 s command still exits, and the verify passes.
+- Verify: `npx tsc -b`; `npx tsx cli/song-film.verify.ts`; `npm run verify:cli`; `npm run verify:music-intelligence`; `npm run verify:affected -- <the files you changed>`; the registration gates if you add a verify.
+- Commit: `EV-37: occ song-film exits when it is done`.
+- Out of scope: the MCP server's warm workers; model packs; anything outside `server/music-listen/` and `cli/`.

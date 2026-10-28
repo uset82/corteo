@@ -5,6 +5,7 @@ import { flagText, parseCommandLine } from './args.ts';
 import { CliError, EXIT_FAILURE, EXIT_OK, EXIT_USAGE, UsageError } from './errors.ts';
 import { writeStderr, writeStdout } from './output.ts';
 import { applyGlobalOptions } from './profile.ts';
+import { musicInferenceLoaded } from '../server/music-listen/loaded.ts';
 
 const USAGE = `occ — OpenChatCut command line
 
@@ -60,6 +61,18 @@ Long renders
 Projects
   <project> accepts a full id, a unique id prefix, or a unique name.`;
 
+/** A one-shot CLI must not wait on warm music workers. The import is lazy so a
+ *  command that never touched music does not load the inference host. */
+async function disposeMusicInferenceAfterCommand(): Promise<void> {
+  if (!musicInferenceLoaded.value) return;
+  try {
+    const { disposeDefaultMusicInference } = await import('../server/music-listen/inference.ts');
+    await disposeDefaultMusicInference();
+  } catch (error) {
+    writeStderr(`music inference cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
 function reportError(error: unknown): number {
   if (error instanceof UsageError) {
     writeStderr(error.message);
@@ -114,3 +127,4 @@ export async function run(argv: readonly string[]): Promise<number> {
 }
 
 process.exitCode = await run(process.argv.slice(2));
+await disposeMusicInferenceAfterCommand();
