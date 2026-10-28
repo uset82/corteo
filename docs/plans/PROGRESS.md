@@ -991,9 +991,9 @@ One real defect was fixed on the way (a6c11a8: Tempo, Compás, Energía); nothin
 ## EV track · DeepSeek Harness (ED)
 Folder `~/corteo-dsh`, branch `ev-dsh`. Plan 7 › "Finishing in three tracks". Only DeepSeek Harness edits this section.
 
-**ED (2026-10-28):** EV-34, EV-35, EV-36 and EV-37 are done: the corteo skill's recipes were replayed, `documentation/CORTEO_INSTALL.md` now describes every installer flag and report key, the bot's `corteo-edit` skill carries the inbox and song-film recipes with a regenerated `bot/dist/recipe.json`, and `occ song-film` exits when it is done.
-EV-37 found no pending music request: the warm workers' piped stderr and IPC kept the CLI alive, so the host unrefs all three handles while idle and `occ` disposes it after the command; the 15 s command exits 0 in 33.7 s, 0.28 s after its JSON, and the extended `cli/song-film.verify.ts` proves a pending fake host cannot keep the CLI alive.
-The earlier six verifies and the EV-37 verifies pass (`npx tsc -b`, `cli/song-film.verify.ts`, `verify:cli`, `verify:music-intelligence`, 10 affected verifies), all four rows are `done`, the EV-36 blocker is resolved, and the scratch directories were deleted.
+**ED (2026-10-28):** EV-34 to EV-38 are done: the corteo skill's recipes and MCP blocks were replayed (the MCP blocks against an editor on port 5202), `documentation/CORTEO_INSTALL.md` now describes every installer flag and report key, the bot's `corteo-edit` skill carries the inbox and song-film recipes with a regenerated `bot/dist/recipe.json`, and `occ song-film` exits when it is done.
+EV-38 passed the handshake, tools/list (53 headless, 144 with editor-host, `delegate` listed), `openchatcut_status`, the `delegate` example (`brain_unavailable`, with the skill's do-it-yourself line), the phone block and all four shorts tool names; the only text fix was the editor-host `--base` note for a non-default `CORTEO_PORT`.
+The skill, acceptance, no-claudia and earlier EV-34 to EV-37 verifies pass, all five rows are `done`, the EV-36 blocker is resolved, and the editor, editor-host and scratch libraries are gone.
 
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
