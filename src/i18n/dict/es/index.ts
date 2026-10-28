@@ -9,6 +9,10 @@ export default {
   '歌曲地图歌词': 'Letra',
   '歌曲地图已听': 'Escuchado de verdad',
   '歌曲地图未验证': 'Sin verificar',
+  // Music analysis metrics, shown by the song badge and the song-map dialog
+  '速度': 'Tempo',
+  '拍号': 'Compás',
+  '能量': 'Energía',
   '音乐地图显示': 'Mapa musical',
   '音乐反应标题': 'Reaccionar a la música',
   '音乐反应脉冲': 'Pulso',
