@@ -191,6 +191,10 @@ export interface EditorCommands {
   switchTimeline: (id: string) => void;
   /** copy a timeline (optionally retargeting the canvas for long→short); returns the copy's id */
   duplicateTimeline: (id: string, opts?: { name?: string; retarget?: { width: number; height: number; fit?: AspectFit }; activate?: boolean }) => string;
+  /** Plan 1 Phase 4: one batch of sibling copies tagged with a shared variant group. */
+  createVariants: (id: string, variants: ReadonlyArray<{ label: string; note?: string }>) => { groupId: string; ids: string[] };
+  /** Mark one version elegida, the rest descartada and make it active, in one undo step. */
+  chooseVariant: (id: string) => { ok: boolean; changed: boolean; groupId?: string; error?: string };
   deleteTimeline: (id: string) => void;
   renameTimeline: (id: string, name: string) => void;
   retargetTimeline: (id: string, width: number, height: number, fit?: AspectFit) => void;

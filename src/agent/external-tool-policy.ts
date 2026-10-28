@@ -12,7 +12,7 @@ const READ_ONLY_TOOL_NAMES = new Set([
   'music_reaction_plan',
   'search_catalog',
   'read_agent_artifact', 'browse_local_media', 'score_moments', 'calibrate_scores', 'write_social_copy',
-  'find_duplicate_media',
+  'find_duplicate_media', 'get_variant_choice',
   'list_scheduled_publishes', 'score_performance',
 ]);
 
@@ -45,6 +45,8 @@ const DRAFT_EDIT_TOOL_NAMES = new Set([
   // itself is a library write, reviewed in offline-tool-authorization.ts.
   'import_asset', 'import_assets', 'import_folder',
   'detect_beats',
+  // Plan 1 Phase 4: sibling sequence copies and their status tags, through the draft's commands.
+  'create_variants', 'choose_variant',
 ]);
 
 const SERVER_DIRECT_READ_TOOL_NAMES: Record<string, true> = {
@@ -77,6 +79,8 @@ const SERVER_DIRECT_READ_TOOL_NAMES: Record<string, true> = {
   listen_to_song: true,
   // Read-only reaction plan: cached analysis plus the BGM clip mapping.
   music_reaction_plan: true,
+  // Reads a variant group; wait:true polls the shared draft, writes nothing.
+  get_variant_choice: true,
   // Exact hashes + ffmpeg dHash frames read the project's uploads; nothing is written.
   find_duplicate_media: true,
 };
@@ -126,6 +130,9 @@ const SERVER_DIRECT_EDIT_TOOL_NAMES: Record<string, true> = {
   // Music reactions: pure generator plus the draft's command batch, no media IO.
   apply_music_reaction: true,
   clear_music_reaction: true,
+  // Variants: duplicate sibling timelines and tag/status changes, no media IO.
+  create_variants: true,
+  choose_variant: true,
 };
 
 const SERVER_DIRECT_BROWSER_ACTIONS: Record<string, true> = {

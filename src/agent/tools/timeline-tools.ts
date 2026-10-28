@@ -23,7 +23,7 @@ function resolveDims(a: { ratio?: unknown; width?: unknown; height?: unknown }):
   return null;
 }
 
-function findTimeline(doc: ProjectDoc, id: unknown): Timeline | null {
+export function findTimeline(doc: ProjectDoc, id: unknown): Timeline | null {
   const q = String(id ?? '');
   if (!q) return null;
   return doc.timelines.find((t) => t.id === q || t.id.startsWith(q) || t.name === q) ?? null;

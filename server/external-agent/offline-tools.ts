@@ -16,6 +16,7 @@ import { MARKERS_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/markers-tool
 import { READ_PROJECT_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/read-project-tools.js';
 import { SCRIPT_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/script-tools.js';
 import { TIMELINE_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/timeline-tools.js';
+import { VARIANT_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/variant-tools.js';
 import { TRACK_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/track-tools.js';
 import { TRANSCRIPT_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/transcript-tools.js';
 import { WATERMARK_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/watermark-tools.js';
@@ -46,6 +47,7 @@ const OFFLINE_SCHEMA_GROUPS = [
   KEN_BURNS_TOOL_SCHEMAS,
   LIBRARY_TOOL_SCHEMAS,
   TIMELINE_TOOL_SCHEMAS,
+  VARIANT_TOOL_SCHEMAS,
   MUSIC_INTELLIGENCE_TOOL_SCHEMAS,
   TRACK_TOOL_SCHEMAS,
   SCRIPT_TOOL_SCHEMAS,

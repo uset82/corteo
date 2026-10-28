@@ -68,6 +68,8 @@ const VERB: Record<string, string> = {
   clean_script: '清理口播',
   edit_captions: '编辑字幕',
   manage_timelines: '管理序列',
+  create_variants: '创建版本',
+  choose_variant: '选择版本',
   edit_track: '管理轨道',
   manage_media_pool: '整理素材池',
   isolate_voice: '人声隔离',

@@ -13,6 +13,7 @@ import type {
   MusicReactionMeta,
   ProjectDoc,
   Timeline,
+  TimelineVariant,
   TimelineState,
   TimelineItem,
   TrackFlags,
@@ -115,13 +116,14 @@ export const TRANSITION_RECONCILING_ACTIONS = new Set<Action['type']>([
 export type ProjectAction =
   | { type: 'tl.create'; timeline: Timeline; activate?: boolean }
   | { type: 'tl.switch'; id: string }
-  | { type: 'tl.duplicate'; id: string; newId: string; name: string; retarget?: { width: number; height: number; fit?: AspectFit }; activate?: boolean }
+  | { type: 'tl.duplicate'; id: string; newId: string; name: string; retarget?: { width: number; height: number; fit?: AspectFit }; activate?: boolean; variant?: TimelineVariant }
   | { type: 'tl.delete'; id: string }
   | { type: 'tl.rename'; id: string; name: string }
   | { type: 'tl.retarget'; id: string; width: number; height: number; fit?: AspectFit }
   /** Project frame rate: every timeline at once, only before anything is placed (timelineFrameRate.ts). */
   | { type: 'tl.setFps'; fps: number }
   | { type: 'tl.setHidden'; id: string; hidden: boolean }
+  | { type: 'tl.setVariant'; id: string; variant?: TimelineVariant }
   | { type: 'tl.setDoc'; doc: ProjectDoc }
   | { type: 'pool.createFolder'; folder: MediaFolder }
   | { type: 'pool.renameFolder'; id: string; name: string }
@@ -169,5 +171,5 @@ export type ProjectDispatch = (a: AnyAction | HistoryControlAction) => void;
 
 export const MUTATING = new Set(['add', 'updateProps', 'relinkTimelineItem', 'move', 'retime', 'slip', 'setVolume', 'setFade', 'setTransform', 'setFilters', 'setZoom', 'setEffects', 'setSpeed', 'replaceMedia', 'reframeKeyframe', 'removeReframeKeyframe', 'setKeyframe', 'removeKeyframe', 'clearKeyframes', 'addTransition', 'setTransition', 'removeTransition', 'addMarker', 'updateMarker', 'removeMarker', 'duplicate', 'remove', 'split', 'clear', 'addAsset', 'setCanvas', 'toggleTrack', 'track.create', 'track.update', 'track.delete', 'track.tighten', 'setCaptions', 'updateCaptions', 'setCaptionsHidden', 'updateWatermark', 'setItemTranscript', 'setItemVariants', 'setMusicReactions', 'toggleWord', 'deleteWords', 'cleanScript', 'setGapCap', 'setTranscriptPlayOrder', 'reorderTrackItems', 'clearEdits', 'fixTranscriptWord', 'renameSpeaker', 'setItemDenoise', 'setFullState',
   // project-level (tl.switch is navigation → deliberately NOT here, so it makes no history step)
-  'tl.create', 'tl.duplicate', 'tl.delete', 'tl.rename', 'tl.retarget', 'tl.setFps', 'tl.setHidden', 'tl.setDoc',
+  'tl.create', 'tl.duplicate', 'tl.delete', 'tl.rename', 'tl.retarget', 'tl.setFps', 'tl.setHidden', 'tl.setVariant', 'tl.setDoc',
   'pool.createFolder', 'pool.renameFolder', 'pool.deleteFolder', 'pool.moveAssets', 'pool.updateAsset', 'pool.setTranscription', 'pool.relinkAsset', 'pool.canonicalizeAsset', 'pool.removeAsset', 'design.set', 'design.patch', 'brand.set', 'setBackgroundFill', 'setClipFrame'])

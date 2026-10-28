@@ -62,7 +62,18 @@ export interface TimelineState {
   fxDefs?: Record<string, SerializableFxDef>;
 }
 
-/** one timeline/sequence within a project (a project holds many timelines).
+/** Plan 1 Phase 4: sibling versions of one sequence. Optional, so documents
+ * saved before the variant system keep loading unchanged. */
+export type VariantStatus = 'borrador' | 'elegida' | 'descartada';
+export interface TimelineVariant {
+  groupId: string;
+  label: string;
+  note: string;
+  status: VariantStatus;
+}
+
+/**
+ * one timeline/sequence within a project (a project holds many timelines).
  * A Timeline IS a TimelineState plus identity — so every component that consumes
  * a TimelineState keeps working when handed the active timeline. */
 export interface Timeline extends TimelineState {
@@ -72,6 +83,8 @@ export interface Timeline extends TimelineState {
   order: number;
   /** hidden tab (manage_timelines update.hidden): data kept, tab not shown */
   hidden?: boolean;
+  /** Plan 1 Phase 4: sibling-version membership and the chat choice. */
+  variant?: TimelineVariant;
 }
 
 /** Track ids in visual top-to-bottom order. Legacy four-lane states still work. */

@@ -11,6 +11,7 @@ import {
 import { planSlip } from './slip';
 import { sourceFramesToTimelineFrames } from './sourceLimit';
 import type { EditorCommands } from './storeCommands';
+import { createVariantCommands } from './variantCommands';
 import {
   DEFAULT_OVERLAY_TRACK_NAME,
   DEFAULT_SOLID_NAME,
@@ -43,7 +44,6 @@ import type {
 // that already exist and collide (e.g. split/duplicate reusing a live id →
 // two items share an id → moveItem moves both). crypto.randomUUID avoids that.
 const uid = (p: string) => `${p}_${crypto.randomUUID()}`;
-
 // The editor command set over a project dispatch fn — reused by the live store
 // (real dispatch → history) and by the proposal draft engine (draft dispatch
 // that records + applies to a scratch ProjectDoc without touching the real one).
@@ -140,7 +140,7 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
         const newId = uid('tl');
         dispatch({ type: 'tl.duplicate', id, newId, name: opts?.name ?? sequenceCopyName(src?.name), retarget: opts?.retarget, activate: opts?.activate });
         return newId;
-      },
+      }, ...createVariantCommands(dispatch, getDoc),
       deleteTimeline: (id) => dispatch({ type: 'tl.delete', id }),
       renameTimeline: (id, name) => dispatch({ type: 'tl.rename', id, name }),
       retargetTimeline: (id, width, height, fit) => dispatch({ type: 'tl.retarget', id, width, height, fit }),

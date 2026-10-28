@@ -59,9 +59,12 @@ export function projectReduce(p: ProjectDoc, a: AnyAction): ProjectDoc {
         // clone verbatim (item ids stay — timelines never share one items[] array,
         // so ids can't collide; retarget swaps the canvas for long→short).
         const copy: Timeline = {
-          ...src, id: a.newId, name: a.name, order: maxOrder(p) + 1, selectedId: null, hidden: false,
+          ...src,
+          ...(a.variant ? { variant: a.variant } : { variant: undefined }),
+          id: a.newId, name: a.name, order: maxOrder(p) + 1, selectedId: null, hidden: false,
           ...(a.retarget ? { width: a.retarget.width, height: a.retarget.height, fit: a.retarget.fit ?? src.fit ?? 'contain' } : {}),
         };
+        if (!a.variant) delete copy.variant;
         const next = { ...p, timelines: [...p.timelines, copy], activeTimelineId: a.activate === false ? p.activeTimelineId : copy.id };
         return sequenceGraphError(next) ? p : next;
       }
@@ -84,6 +87,17 @@ export function projectReduce(p: ProjectDoc, a: AnyAction): ProjectDoc {
       }
       case 'tl.setFps':
         return withProjectFrameRate(p, a.fps);
+      case 'tl.setVariant':
+        return {
+          ...p,
+          timelines: p.timelines.map((timeline) => {
+            if (timeline.id !== a.id) return timeline;
+            if (a.variant) return { ...timeline, variant: a.variant };
+            const next = { ...timeline };
+            delete next.variant;
+            return next;
+          }),
+        };
       case 'tl.setHidden': {
         // The last visible timeline cannot be hidden.
         const visible = p.timelines.filter((t) => !t.hidden);
