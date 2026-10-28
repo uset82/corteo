@@ -1,6 +1,6 @@
 # Progress
 
-**Evolution night (2026-10-28):** for this run, ChatGPT Terra executes only the `Evolution night (EV)` table at the end of this file, top to bottom, following `docs/plans/07-evolution.md` and its night loop, and does not pick any other `todo` row (P2-2 to P2-6, P3-*, P4-*, P5-*, P6-1, P7-1, P1-7 and C-14 stay as they are). C-13 shows `doing` from an earlier session; it is not part of this run, so leave it. L-11, L-12 and L-13 are carried out by EV-21 to EV-25, which set those rows `done` in their own commits.
+**Evolution night (2026-10-28):** Terra ran EV-00 to EV-26. The rest finishes in three tracks (`docs/plans/07-evolution.md` › Finishing in three tracks): Qoder works the `Evolution night (EV)` table in `~/corteo`, ZCode the `EV track · ZCode (EZ)` table in `~/corteo-zcode`, DeepSeek Harness the `EV track · DeepSeek Harness (ED)` table in `~/corteo-dsh`. Each agent picks only from its own table and edits only its own section. Nobody picks another `todo` row (P2-2 to P2-6, P3-*, P4-*, P5-*, P6-1, P7-1, P1-7 and C-14 stay as they are). C-13 shows `doing` from an earlier session; leave it.
 
 The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2), `docs/plans/03-deepseek-harness.md` (Plan 3), `docs/plans/04-claudia-brand.md` (Plan 4), `docs/plans/05-claudia-portable.md` (P-CL), `docs/plans/06-claudia-polish.md` (P-CL-13 to P-CL-17), `docs/plans/05-opus-parity.md` and `docs/plans/06-opus-parity.md` (Plan 6). Rules and the work loop: `AGENTS.md`.
 
@@ -456,6 +456,9 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-28 · EV · The MCP token, `.env.corteo` and the whole project JSON are never sent to a lane.
 - 2026-10-28 · EV · Carlos chose: the plan files are committed locally before the night and pushed only at its end; Terra may download the music packs `rhythm-lite` and `music-semantics-lite` for L-13; the bot path goes first in the EV table.
 - 2026-10-28 · EV · The planning decisions D1 to D19 (host profile files and skill paths, the song film as an `occ` composition, `apply_ken_burns` headless, shorts kept in the browser tier with a Spanish review, the brain process and router on `127.0.0.1:18890`, `delegate` as an MCP control tool, the editor linked through `/api/keys`, local pnpm, `CORTEO_E2E_MEDIA_DIR`, soft needs) are in `docs/plans/07-evolution.md` › Decisions made.
+- 2026-10-28 · EV · Terra ran EV-00 to EV-26 alone. The rest finishes in three tracks at once, one git worktree each: Qoder (`~/corteo`, the EV table, the merge and the only push), ZCode (`~/corteo-zcode`, branch `ev-zcode`, the EZ table), DeepSeek Harness (`~/corteo-dsh`, branch `ev-dsh`, the ED table). Reason: Carlos's call after Terra stopped.
+- 2026-10-28 · EV-28 · The ten Italian keys missing since C-12 went in at setup, before the tracks branched: the gap kept `verify:i18n` red for all three tracks and kept `npm test` from ever reaching `test:serial`.
+- 2026-10-28 · EV · If `sync-publish.sh` stops only on failures EV-30 recorded as pre-existing, the work goes to the GitHub branch `ev-evolution` instead of `main`.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.
@@ -824,7 +827,7 @@ has been compared in pixels**; a render on a machine with Chromium closes it.
 
 ## Evolution night (EV)
 
-Plan: `docs/plans/07-evolution.md` (Plan 7). Executor: ChatGPT Terra. Picking rule: top to bottom, the first `todo` whose Needs are `done`. A need marked `(soft)` may also be `blocked`; a `blocked` hard need blocks the card at once (Plan 7, D19). The card text, the verify commands and the commit messages are in the plan.
+Plan: `docs/plans/07-evolution.md` (Plan 7). Executors: ChatGPT Terra (EV-00 to EV-26), then Qoder for this table; ZCode and DeepSeek Harness work their own tables at the end of this file. Picking rule: top to bottom, the first `todo` whose Needs are `done`. A need marked `(soft)` may also be `blocked`; a `blocked` hard need blocks the card at once (Plan 7, D19). The card text, the verify commands and the commit messages are in the plan.
 
 ### EV night report
 Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit shas, the `npm test` exit line, and the push result.
@@ -858,8 +861,12 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-24 | L-11 part 3: Mapa de la canción | blocked | EV-00 (soft) |
 | EV-25 | L-13: listening end to end on a real song | blocked | EV-21 (soft), EV-22 (soft), EV-23 (soft), EV-24 (soft) |
 | EV-26 | `EVOLUTION=PASS` acceptance script | done | EV-05 (soft), EV-10 (soft), EV-11 (soft), EV-14 (soft), EV-18 (soft), EV-19 (soft) |
-| EV-27 | README Estado for what the night wired | todo | EV-26 (soft) |
+| EV-27 | README Estado for what the night wired | todo | EV-31 |
 | EV-28 | The ten Italian keys, so `npm test` runs to the end | done | |
+| EV-29 | Close EV-22, EV-23 and EV-24 now that `verify:i18n` passes | todo | EV-28 |
+| EV-30 | The first full `npm test` since C-12 | todo | EV-29 |
+| EV-31 | Merge the ZCode and DeepSeek Harness tracks | todo | EV-30, EZ and ED tables finished |
+| EV-32 | Final gates, publish, report | todo | EV-31, EV-27 (soft) |
 
 ### EV: results
 Each card appends its outputs here: commands, JSON, ffprobe values, wall times. Never a token or a key.
@@ -924,3 +931,33 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 - EV-22: `npm run verify:i18n` exits 1 at `src/i18n/dict/it/settingsCoverage.verify.ts`: Italian settings dictionary is missing the same 10 bot-connection keys recorded at EV-00 (AssertionError, expected empty array). Ran the component suite and source-key check; no change to the pre-existing Italian dictionary was made, as the repository instructions prohibit fixing a test that failed before this card. Adding those Italian translations and rerunning verify:i18n would unblock the card. The implemented UI is retained for review; the card is blocked because its required gate is not green.
 - EV-12: no talking video in /home/carlos/corteo-media. Checked talk.mp4, talk.mov, talk.mkv and talk.webm; none exists. No speech was synthesized and no server was started. A talking video of at least two minutes at one of those paths unblocks the live run.
 - EV-00 baseline: CC_RENDER_GL=swangle npm test exited 1 in src/i18n/dict/it/settingsCoverage.verify.ts: Italian settings dictionary is missing 10 keys for the bot connection UI (AssertionError, expected empty array). This predates EV changes; no fix attempted per card scope. Adding the missing Italian translations would unblock the gate. The serial chain stopped at that assertion and printed no segment summary. Resolved 2026-10-28 by EV-28.
+
+---
+
+## EV track · ZCode (EZ)
+Folder `~/corteo-zcode`, branch `ev-zcode`, editor port 5201. Plan 7 › "Finishing in three tracks". Only ZCode edits this section.
+
+| ID | Task | Status | Needs |
+|----|------|--------|-------|
+| EV-33 | The music UI in a real browser (EV-22 to EV-24) | todo | |
+| EV-25 | L-13 on a real song, on port 5201 | todo | a song in `~/corteo-media` |
+| EV-12 | Long to short, live, on port 5201 | todo | a talking video in `~/corteo-media` |
+
+### EZ: results
+
+### EZ: blockers
+None yet.
+
+---
+
+## EV track · DeepSeek Harness (ED)
+Folder `~/corteo-dsh`, branch `ev-dsh`. Plan 7 › "Finishing in three tracks". Only DeepSeek Harness edits this section.
+
+| ID | Task | Status | Needs |
+|----|------|--------|-------|
+| EV-34 | Replay `skills/corteo/SKILL.md` the way a host would | todo | |
+
+### ED: results
+
+### ED: blockers
+None yet.

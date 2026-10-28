@@ -652,3 +652,181 @@ At the top of PROGRESS › "Evolution night (EV)", fill "EV night report":
 - `npm test`: the exact last line from step 8, and from `sync-publish.sh` if it ran.
 - Push: the two `git push` results, or why nothing was pushed.
 - Not proven tonight: everything recorded as unproven or skipped (live Muse and Claude Duet, a phone, anything blocked on media).
+
+## Finishing in three tracks (2026-10-28)
+
+Terra ran EV-00 to EV-26 by itself. What is left goes to three agents at once, each in its own git worktree on this machine. The worktrees share one `.git`, so every branch is visible to the others locally. Nobody pushes before EV-32.
+
+### Where things stand at the split
+
+- `done`: EV-00 to EV-11, EV-13 to EV-21, EV-26, and EV-28 (done at setup).
+- EV-22, EV-23, EV-24 (L-11): implemented, committed, and their own verifies pass. They were `blocked` only because `npm run verify:i18n` failed on ten Italian keys missing since C-12; EV-28 added them, and EV-29 closes the three cards.
+- EV-25 (L-13) and EV-12: blocked on Carlos's media in `~/corteo-media` (the folder did not exist at the split).
+- EV-27: `todo`, after the merge.
+- `npm test` had not reached `test:serial` since C-12: `verify:i18n` is the last `pretest` step. EV-30 is the first full run. `scripts/sync-publish.sh` will not push while the suite is red.
+- Nothing is pushed.
+
+### Tracks
+
+| Track | Agent | Folder | Branch | Editor port | Table in PROGRESS | Cards, in order |
+|---|---|---|---|---|---|---|
+| EQ | Qoder, the integrator | `~/corteo` | `cursor/video-editor-mvp-d191` | 5199 | Evolution night (EV) | EV-29, EV-30, EV-31, EV-27, EV-32 |
+| EZ | ZCode | `~/corteo-zcode` | `ev-zcode` | 5201 | EV track · ZCode (EZ) | EV-33, then EV-25 and EV-12 when their media exists |
+| ED | DeepSeek Harness | `~/corteo-dsh` | `ev-dsh` | none | EV track · DeepSeek Harness (ED) | EV-34 |
+
+### Who edits what
+
+- ED: `skills/corteo/SKILL.md` and its ED section of PROGRESS.
+- EZ: `src/components/inspector/`, `src/components/timeline/`, `src/audio/intelligence/`, `src/i18n/dict/en/components.ts`, `src/i18n/dict/en/timeline.ts`, `src/i18n/dict/en/audio.ts`, `src/i18n/dict/es/index.ts`, the `verify:components` line of `package.json`, and its EZ section of PROGRESS.
+- EQ: everything else, including `test:serial`, the main task table, the EV table, the README and the report. Until EV-31, EQ leaves the EZ and ED files alone: a full-suite failure in one of them is recorded under EV: blockers and fixed after the merge.
+- A card that seems to need another track's file: record it under your blockers and continue.
+
+### Rules for the tracks (they win over older card text)
+
+1. Pick only from your own table: the first `todo` whose Needs are met (D19 still applies).
+2. Register a new verify only in your own group line (EZ: `verify:components`). Only EQ edits `test:serial`. `pretest` runs `verify:components`, so the gates still find the file.
+3. EZ and ED never edit the main task table or the EV table. EV-31 copies their outcomes there.
+4. Never push, never merge another branch, never edit another track's folder.
+5. Only EQ runs `npm run brain`, `npm run brain:*` or `npm run harness*`. The DeepSeek Harness agent runs on that harness: nothing may stop or restart it while ED works.
+6. Live checks use your own editor port (`CORTEO_PORT=<port> npm run corteo:local`) and scratch libraries (`CORTEO_STORE_DIR`). Stop your editor before your last commit.
+7. Everything else in this plan still applies: the hard rules, the decisions, and the per-card loop (set `doing`, implement, verify, at most three attempts per error, stage by path, commit with the card's message and the row set to `done` or `blocked` in the same commit).
+8. When your table has no `todo` or `doing` row, write a three-line summary at the top of your section, commit it, and stop.
+
+### EV-28 · The ten Italian keys, so `npm test` runs to the end (done at setup)
+- `src/i18n/dict/it/mcpGuide.ts` gained the ten "Conectar un bot" keys that `src/i18n/dict/it/settingsCoverage.verify.ts` had asked for since C-12. `npm run verify:i18n` passes.
+- Commit: `EV-28: the ten Italian keys of the connect-a-bot card, so npm test runs to the end`.
+
+### EV-29 · Close EV-22, EV-23 and EV-24 (EQ)
+- Needs: EV-28.
+- Do: for each card, run its Verify list from this plan now that `verify:i18n` passes: `npx tsc -b`; its own verify (`npx tsx --tsconfig tsconfig.app.json <path>`, using the path the card's commit really added: `git show --stat` on its commit); `npm run verify:components`; `npm run verify:i18n`; the registration gates. Green → set the row `done`, add a results line, and mark its blocker entry "resolved by EV-28". A real failure → the row stays `blocked` with the new error.
+- Done when: the three rows are `done`, or carry a new, real blocker.
+- Commit: `EV-29: EV-22 to EV-24 pass now that the Italian keys are in`.
+- Out of scope: the browser check (EV-33); the L-11 row (EV-31).
+
+### EV-30 · The first full `npm test` since C-12 (EQ)
+- Needs: EV-29.
+- Do: `npx tsc -b`; `npm run lint`; `CC_RENDER_GL=swangle npm test` (6 to 12 minutes; the 15-minute rule counts silence); `npm run build`. For each failing segment, run `git log --oneline -5 -- <the failing verify> <the files it tests>`:
+  - code an EV commit touched (`git log` shows `EV-…`): the night's failure. Fix it, one commit per fix (`EV-<card>: fix <what> found by the full gate`), rerun that segment, then the suite.
+  - code no EV commit touched: pre-existing. Record it under EV: blockers with the command and the output tail; do not fix it.
+  - an EZ- or ED-owned file: record it and fix it after EV-31.
+- Done when: the suite's last line is recorded, and every failure is fixed or recorded with its evidence.
+- Verify: the suite and the build.
+- Commit: the fixes as above, then `EV-30: record the first full run of the suite since C-12`.
+- Out of scope: fixing pre-existing failures; new features.
+
+### EV-31 · Merge the ZCode and DeepSeek Harness tracks (EQ)
+- Needs: EV-30, and every row of the EZ and ED tables `done` or `blocked` (read them with `git show ev-zcode:docs/plans/PROGRESS.md` and `git show ev-dsh:docs/plans/PROGRESS.md`).
+- Do: from a clean tree in `~/corteo`: `git merge --no-ff ev-dsh -m "EV-31: merge the DeepSeek Harness track"`, then `git merge --no-ff ev-zcode -m "EV-31: merge the ZCode track"`. In PROGRESS keep both sides' sections. Any other conflict means an ownership rule broke: keep both changes when they are independent, else block EV-31 with the hunks. Then carry the outcomes into the main tables: the EV-25 and EV-12 rows of the EV table from EZ; L-11 `done` when EV-22, EV-23 and EV-24 are `done`; L-13 `done` when EV-25 is `done`; and any fix EV-30 postponed for an EZ or ED file. Commit `EV-31: carry the track results into the main tables`.
+- Verify: `npx tsc -b`; `npm run lint`; `npm run verify:i18n`; `npm run verify:components`; `node scripts/corteo-skill.verify.mjs`; `node scripts/corteo-acceptance.verify.mjs`; the registration gates.
+- Done when: both merges are in `cursor/video-editor-mvp-d191` and those checks pass.
+- Out of scope: removing the worktrees and branches. Carlos does that after the push (`git worktree remove ~/corteo-zcode`, `git worktree remove ~/corteo-dsh`).
+
+### EV-27 · README (EQ, after EV-31)
+The card above, unchanged, run after the merge so the README describes the merged result (L-11 included when EV-29 and EV-33 are done). Its Needs now say EV-31.
+
+### EV-32 · Final gates, publish, report (EQ)
+- Needs: EV-31, EV-27 (soft).
+- Do: night-loop steps 8 to 10 on the merged tree. Run `npx tsc -b`, `npm run lint`, `CC_RENDER_GL=swangle npm test` and `npm run build`, and fix failures EV cards caused. Then `bash scripts/sync-publish.sh`. If it stops only because the suite is red on failures EV-30 recorded as pre-existing, push to a GitHub branch instead with `git push github HEAD:refs/heads/ev-evolution` (never `main`, never force), and record why. Fill the "EV night report" with, per table, the done and blocked ids and reasons, the commit range, the suite's last line and the push result. Commit it as `EV: night report` and publish it the same way.
+- Done when: the report is committed and its push result recorded.
+- Out of scope: deleting worktrees or branches.
+
+### EV-33 · The music UI in a real browser (EZ)
+- Needs: none.
+- Read: the cards EV-22, EV-23 and EV-24 and their commits (`git log --oneline --grep "EV-2[234]"`). Also read `screenshots/listen-e2e.mts`, an untracked Playwright script from an earlier session, for selector style; never edit or commit it.
+- Do:
+  1. `CORTEO_PORT=5201 npm run corteo:local` in its own terminal (this worktree gets its own dev profile).
+  2. Music packs (L14 covers this download): `curl -s http://127.0.0.1:5201/api/model-packs`. For each of `rhythm-lite` and `music-semantics-lite` that is not installed, run `curl -sS -X POST http://127.0.0.1:5201/api/model-packs/download -H 'Origin: http://127.0.0.1:5201' -H 'Sec-Fetch-Site: same-origin' -H 'Content-Type: application/json' -d '{"id":"rhythm-lite"}'`, then poll `GET /api/model-packs/tasks/<id>` until it finishes. Unproven: if the route refuses, record the response and check the UI with the DSP data it can show.
+  3. Make a 20 s synthetic song (copy `synthSong`/`wavFile` from `server/music-listen/listen.verify.ts` into a scratch script outside the repo) and one 1080x1920 still (`ffmpeg … geq=…`, like the 9:16 recipe).
+  4. Write a scratch Playwright script outside the repo (`chromium` from `~/.cache/ms-playwright`, locale `es-ES`, 1600x1000) against `http://127.0.0.1:5201`: new project; import the song and the still; place both; analyze the song from its badge. Then check:
+     - (a) Inspector › Animación › "Reaccionar a la música": Aplicar with Pulso adds keyframes, and one Ctrl+Z removes them all.
+     - (b) "Mapa musical", turned on from the timeline's More actions, shows section bands and downbeat ticks under the music clip.
+     - (c) The badge's "Mapa de la canción" opens the dialog with tempo, Spanish sections and an SVG map.
+
+     Screenshot a, b and c into `test-results/corteo/` (never committed).
+  5. For each defect, fix it in EZ files with one commit each (`EV-22: fix …`, `EV-23: fix …`, `EV-24: fix …`), and rerun that card's verify commands.
+- Done when: a, b and c work in Spanish, or each defect is fixed or recorded under EZ: blockers; EZ: results has the screenshot paths and what was found.
+- Verify: `npx tsc -b`; `npm run verify:components`; `npm run verify:i18n`; the three cards' own verifies.
+- Commit: the fixes as above, then `EV-33: record the music UI checked in a real browser`.
+- Out of scope: new UI; the server PNG and the relay button (D15); committing the Playwright script.
+
+### EV-25 and EV-12 again (EZ)
+The cards above, unchanged, except that the editor runs on port 5201 (`CORTEO_PORT=5201`), EV-33 has already installed the packs, and the outcome goes in the EZ table. If the media is not in `~/corteo-media`, set the row `blocked` with the same reason.
+
+### EV-34 · Replay the corteo skill the way a host would (ED)
+- Needs: none.
+- Read: all of `skills/corteo/SKILL.md`, `scripts/corteo-skill.verify.mjs`, and `scripts/corteo-acceptance.verify.mjs` (the strings the skill must keep).
+- Do: in `~/corteo-dsh` (WSL, Node 24), set up a scratch area:
+
+  ```bash
+  T=$(mktemp -d)
+  export CORTEO_STORE_DIR=$T/library CORTEO_EXPORT_DIR=$T/exports CORTEO_MEDIA_INBOX=$T/inbox CC_RENDER_GL=swangle
+  CORTEO=~/corteo-dsh/scripts/corteo
+  ```
+
+  Run every bash block of the skill top to bottom from a copy of the skill in which `~/corteo-exports` becomes `$T/exports` and `~/corteo/scripts/corteo` becomes `$CORTEO`. Never edit the skill itself for that substitution.
+
+  Skip these and say so: the curl install; `. ~/corteo/corteo.env` and `$CORTEO_OCC` (there is no curl install here); `npm run corteo:local`; the MCP, `delegate` and brain blocks (they need a server or the harness); and `host install` (it writes to the real HOME).
+
+  For each block record pass or fail. For renders also record the ffprobe size and duration, using `FFPROBE="$(node -p "require('@ffprobe-installer/ffprobe').path")"`.
+
+  When a command fails: if the skill text is wrong (a flag, a JSON path, a file name), fix the text (the code wins) and rerun the block. If the code is wrong, record it under ED: blockers with the command and the error, and do not change code.
+- Done when: every runnable block has a pass or fail line in ED: results, every text fix is committed, and `$T` is deleted.
+- Verify: `node scripts/corteo-skill.verify.mjs`; `node scripts/corteo-acceptance.verify.mjs`; `node scripts/no-claudia.verify.mjs`.
+- Commit: `EV-34: every runnable recipe in the corteo skill replayed, and the text fixed where it was wrong`.
+- Out of scope: code changes; `bot/skills/*`; the README.
+
+### Kickoff prompts
+
+Qoder:
+
+```text
+You are the Qoder agent on corteo, track EQ and the integrator: docs/plans/07-evolution.md › "Finishing in three tracks".
+
+Where you work
+- Only in ~/corteo, branch cursor/video-editor-mvp-d191. If your IDE runs on Windows, run every git, npm and node command inside WSL: wsl.exe -e bash -lc 'source ~/.nvm/nvm.sh && cd ~/corteo && <command>' (AGENTS.md › Environment). Never run git or npm from Windows on a \\wsl$ path.
+- Read AGENTS.md, then docs/plans/07-evolution.md (Decisions made, Hard rules, Night loop, "Finishing in three tracks" and the cards it names), then the "Evolution night (EV)" table in docs/plans/PROGRESS.md. That table is yours.
+
+Your cards, in order: EV-29, EV-30, then EV-31 once the EZ and ED tables are finished, then EV-27, then EV-32. If EV-27 is doing when you start, the previous agent left it half done: finish it first.
+
+Boundaries
+- ZCode works in ~/corteo-zcode (branch ev-zcode) and DeepSeek Harness in ~/corteo-dsh (branch ev-dsh) at the same time. Do not edit their folders or branches before EV-31. Follow them with git show ev-zcode:docs/plans/PROGRESS.md and git show ev-dsh:docs/plans/PROGRESS.md.
+- Until EV-31, leave skills/corteo/SKILL.md and the music UI files alone (the track section lists them).
+- No questions to Carlos. One card at a time: set it doing, implement, run its verify commands, at most three attempts per error, stage by path, commit with the card's message and its row set to done or blocked in the same commit.
+- You are the only one who pushes, and only in EV-32.
+```
+
+ZCode:
+
+```text
+You are the ZCode agent on corteo, track EZ: docs/plans/07-evolution.md › "Finishing in three tracks". Your job is the music UI seen in a real browser, then the two live proofs that need Carlos's media.
+
+Where you work
+- Only in ~/corteo-zcode, branch ev-zcode. If your IDE runs on Windows, run every git, npm and node command inside WSL: wsl.exe -e bash -lc 'source ~/.nvm/nvm.sh && cd ~/corteo-zcode && <command>' (AGENTS.md › Environment). Never run git or npm from Windows on a \\wsl$ path.
+- Read AGENTS.md, then docs/plans/07-evolution.md (Decisions made, Hard rules, "Finishing in three tracks", and the cards EV-22 to EV-25, EV-12 and EV-33), then your table "EV track · ZCode (EZ)" in docs/plans/PROGRESS.md.
+
+Your cards, in order: EV-33, then EV-25 and EV-12. Each of the last two runs only if its media is in ~/corteo-media; otherwise mark it blocked.
+
+Boundaries
+- Qoder works in ~/corteo and DeepSeek Harness in ~/corteo-dsh at the same time. Never edit those folders, never merge, never push.
+- Your files: src/components/inspector/, src/components/timeline/, src/audio/intelligence/, src/i18n/dict/en/components.ts, timeline.ts and audio.ts, src/i18n/dict/es/index.ts, the verify:components line of package.json, and your EZ section of PROGRESS.md. Register new verifies in verify:components only. Never touch the main task table or the EV table.
+- Your editor: CORTEO_PORT=5201 npm run corteo:local in its own terminal, with scratch libraries through CORTEO_STORE_DIR. Never run npm run brain or npm run harness. Stop your editor before your last commit.
+- No questions to Carlos. One card at a time: set it doing, implement, run its verify commands, at most three attempts per error, stage by path, commit with the card's message and its row set to done or blocked in the same commit.
+- When your table has no todo or doing row, write a three-line summary at the top of your section, commit it, and stop.
+```
+
+DeepSeek Harness:
+
+```text
+You are the DeepSeek Harness agent on corteo, track ED: docs/plans/07-evolution.md › "Finishing in three tracks". Your job is EV-34: replay every runnable recipe in skills/corteo/SKILL.md and fix the text where it is wrong.
+
+Where you work
+- Only in ~/corteo-dsh, branch ev-dsh, inside WSL: cd ~/corteo-dsh && source ~/.nvm/nvm.sh && nvm use 24 (node -v must print v24).
+- Read AGENTS.md, then docs/plans/07-evolution.md (Decisions made, Hard rules, "Finishing in three tracks", card EV-34), then your table "EV track · DeepSeek Harness (ED)" in docs/plans/PROGRESS.md.
+
+Boundaries
+- Qoder works in ~/corteo and ZCode in ~/corteo-zcode at the same time. Never edit those folders, never merge, never push.
+- You run on DeepSeek Harness. Never run npm run brain, brain:stop, harness, harness:install, or anything else that stops or restarts dsh.
+- Your files: skills/corteo/SKILL.md and your ED section of PROGRESS.md. Never change code: a code fault goes under ED: blockers.
+- No questions to Carlos. Set EV-34 to doing, do it, run its verify commands, at most three attempts per error, stage by path, and commit with the card's message and the row set to done or blocked in the same commit.
+- Then write a three-line summary at the top of your section, commit it, and stop.
+```
