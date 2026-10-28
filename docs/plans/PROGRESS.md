@@ -68,7 +68,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P2-1 | Ken Burns | done | |
 | L-09 | Music reactions + tools | done | L-06, L-08, P2-1 |
 | L-10 | Caption motion `latido` | done | L-06 |
-| L-11 | Music UI: inspector section, timeline map, song dialog | blocked (EV-22, EV-23, EV-24 i18n gate) | L-09 |
+| L-11 | Music UI: inspector section, timeline map, song dialog | done | L-09 |
 | L-12 | `escuchar-cancion` skill + MCP prompt | done | L-09, P1-6 |
 | L-13 | Listening end-to-end proof | blocked (no song) | L-11, L-12 |
 | P2-2 | Captions: verso/coro, ASS/VTT import | todo | |
@@ -846,7 +846,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-09 | `occ song-film`: place | done | EV-04, EV-08 |
 | EV-10 | `occ song-film`: animate and render | done | EV-09, EV-06 (soft) |
 | EV-11 | Shorts: `reviewEs` before the batch | done | EV-03 (soft) |
-| EV-12 | Shorts, live on a talking video | blocked | EV-11 |
+| EV-12 | Shorts, live on a talking video | blocked (no talking video in `~/corteo-media`) | EV-11 |
 | EV-13 | Brain aliases and the lane probe | done | EV-00 (soft) |
 | EV-14 | Alias router with 429 failover | done | EV-13 |
 | EV-15 | `npm run brain:serve` | done | EV-14 |
@@ -859,13 +859,13 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-22 | L-11 part 1: Reaccionar a la música | done | EV-00 (soft) |
 | EV-23 | L-11 part 2: Mapa musical | done | EV-00 (soft) |
 | EV-24 | L-11 part 3: Mapa de la canción | done | EV-00 (soft) |
-| EV-25 | L-13: listening end to end on a real song | blocked | EV-21 (soft), EV-22 (soft), EV-23 (soft), EV-24 (soft) |
+| EV-25 | L-13: listening end to end on a real song | blocked (no song in `~/corteo-media`) | EV-21 (soft), EV-22 (soft), EV-23 (soft), EV-24 (soft) |
 | EV-26 | `EVOLUTION=PASS` acceptance script | done | EV-05 (soft), EV-10 (soft), EV-11 (soft), EV-14 (soft), EV-18 (soft), EV-19 (soft) |
 | EV-27 | README Estado for what the night wired | todo | EV-31 |
 | EV-28 | The ten Italian keys, so `npm test` runs to the end | done | |
 | EV-29 | Close EV-22, EV-23 and EV-24 now that `verify:i18n` passes | done | EV-28 |
 | EV-30 | The first full `npm test` since C-12 | done | EV-29 |
-| EV-31 | Merge the ZCode and DeepSeek Harness tracks | todo | EV-30, EZ and ED tables finished |
+| EV-31 | Merge the ZCode and DeepSeek Harness tracks | done | EV-30, EZ and ED tables finished |
 | EV-32 | Final gates, publish, report | todo | EV-31, EV-27 (soft) |
 
 ### EV: results
@@ -926,6 +926,8 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 - EV-29: after EV-28, all three cards' Verify lists are green: tsc exit 0; `music-reaction-section.verify.tsx`, `music-map-strip.verify.tsx` and `song-map-dialog.verify.tsx` each exit 0 with their Spanish-controls/map/optional-evidence lines; `npm run verify:components` exit 0; `npm run verify:i18n` exit 0 (check-i18n 161 UI files, 2643 entries); both registration gates exit 0 (719 verify files). Rows EV-22, EV-23 and EV-24 set to done. L-11 stays blocked until EV-31 (card out of scope); the browser proof is EV-33.
 
 - EV-30: tsc exit 0; `npm run lint` exit 0 (209 warnings, 0 errors); `npm run build` exit 0 (upstream's chunk-size warning only). Run 1 of `CC_RENDER_GL=swangle npm test` stopped in `pretest` at `verify:skills`: `plugin-skills.verify.ts` still expected the pre-EV-21 skill list and rejected the new `escuchar-cancion` directory; that is the night's failure and `EV-21: fix the bundled-skill list the full gate found` adds it (bb5a24f). `npx tsx src/agent/skills/plugin-skills.verify.ts` and `npm run verify:skills` then passed. Run 2 reached every segment: `✗ 1/242 segments FAILED in 362.4s`; 241 segments green, and the one failure is `verify-registration.verify.mjs` reading `package.json` with two new verify names (`src/audio/listen/songMeasurement.verify.ts`, `server/music-listen/relay-route.verify.ts`) that were not in git's index at that moment. Those are another session's uncommitted, in-flight changes that appeared in this checkout during the run; once they were staged the same gate passes (`all 721 tracked verify files are registered`, exit 0). No segment failed on committed tree code. EV-32 reruns the whole gate on the merged tree, after which this row's "green suite" claim can be made for the final tree.
+
+- EV-31: the tree was cleaned for the merges (the foreign staged work from the EV-30 blocker was banked to `/home/carlos/corteo-ez-leftovers-20261028.patch` and a named stash), leaving only the known untracked leftovers. `git merge --no-ff ev-dsh -m "EV-31: merge the DeepSeek Harness track"` → "Merge made by the 'ort' strategy", no conflicts: `docs/plans/07-evolution.md` +18, `docs/plans/PROGRESS.md` +35, `documentation/CORTEO_INSTALL.md` +101/-24, `skills/corteo/SKILL.md` 14 changed. `git merge --no-ff ev-zcode -m "EV-31: merge the ZCode track"` → "Auto-merging docs/plans/PROGRESS.md", "Merge made by the 'ort' strategy", no conflicts: `docs/plans/PROGRESS.md` +18/-4, `src/i18n/dict/es/index.ts` +4 (Tempo, Compás, Energía from a6c11a8). EZ and ED closed their tables with every row done or blocked. Carried into the main tables above: L-11 `done`, L-13 stays `blocked` (EV-25 blocked: no song in `~/corteo-media`), EV-12 blocked for the same reason (no talking video). The track tables keep their own rows: EV-33 blocked on EV-22 to EV-24's browser half, EV-34 and EV-35 done, EV-36 todo. EV-30 postponed no EZ or ED fix: its only code fix (bb5a24f) was EQ's own. Verify on the merged tree: `npx tsc -b` exit 0; `npm run lint` exit 0 (209 warnings, 0 errors); `npm run verify:i18n` exit 0; `npm run verify:components` exit 0; `node scripts/corteo-skill.verify.mjs` ok; `node scripts/corteo-acceptance.verify.mjs` ok; both registration gates exit 0 (719 verify files, all reachable from `npm test`). The EV-30 registration blocker does not reproduce: the merged `package.json` and the tracked verify files agree.
 
 ### EV: blockers
 - EV-25: `find /home/carlos/corteo-media -maxdepth 1` could not find a song because the directory does not exist. Checked the configured default directory for wav, mp3, m4a and flac; no editor or downloads were started. A real song in that directory unblocks the proof. Screenshots are also skipped while EV-22 and EV-24 are blocked.
