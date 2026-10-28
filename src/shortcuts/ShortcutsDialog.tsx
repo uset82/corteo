@@ -6,7 +6,9 @@ import { Icon } from '../components/icons';
 import {
   effectiveCatalog, subscribeKeymap, isCustomized, customizedCount,
   setBinding, resetBinding, resetAllBindings, chordFromEvent, findConflicts,
+  activePresetId, setPreset,
 } from './keymap';
+import { PRESET_BY_ID, SHORTCUT_PRESETS } from './presets';
 
 interface ShortcutsDialogProps {
   onClose: () => void;
@@ -29,6 +31,8 @@ export function ShortcutsDialog({ onClose }: ShortcutsDialogProps) {
   const [, bump] = useState(0);
   const [capturingId, setCapturingId] = useState<string | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
+  const [presetId, setPresetId] = useState(activePresetId());
+  const preset = PRESET_BY_ID[presetId];
   useEffect(() => subscribeKeymap(() => bump((n) => n + 1)), []);
 
   // Escape closes the dialog (only when not mid-capture — capture handles its own Escape).
@@ -87,6 +91,25 @@ export function ShortcutsDialog({ onClose }: ShortcutsDialogProps) {
           <button type="button" onClick={onClose} title={t('关闭')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.textDim, padding: 4, display: 'grid' }}>
             <Icon name="x" size={16} />
           </button>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: `0.5px solid ${theme.border}` }}>
+          <label htmlFor="cc-shortcut-preset" style={{ fontSize: 11, color: theme.textDim }}>{t('键位预设')}</label>
+          <select
+            id="cc-shortcut-preset"
+            value={presetId}
+            onChange={(e) => { setPreset(e.target.value); setPresetId(e.target.value); }}
+            style={{
+              fontSize: 11.5, color: theme.text, background: theme.bg, cursor: 'pointer',
+              border: `0.5px solid ${theme.border}`, borderRadius: 6, padding: '3px 6px',
+            }}
+          >
+            {SHORTCUT_PRESETS.map((option) => (
+              <option key={option.id} value={option.id}>{t(option.labelKey)}</option>
+            ))}
+          </select>
+          {preset?.descriptionKey && (
+            <span style={{ flex: 1, fontSize: 11, color: theme.textDim, lineHeight: 1.4 }}>{t(preset.descriptionKey)}</span>
+          )}
         </div>
         <div style={{ overflowY: 'auto', padding: '8px 12px 16px' }}>
           {SHORTCUT_GROUPS.map((g) => {
