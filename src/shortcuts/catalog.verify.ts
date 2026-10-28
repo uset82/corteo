@@ -4,9 +4,11 @@ import assert from 'node:assert';
 import { SHORTCUT_CATALOG, SHORTCUT_BY_ID } from './catalog';
 import { matchShortcut, normalizeKey, parseBindingAlts, parseChord } from './match';
 
-assert.strictEqual(SHORTCUT_CATALOG.length, 56);
+assert.strictEqual(SHORTCUT_CATALOG.length, 57);
 assert.ok(SHORTCUT_BY_ID['play-pause']);
 assert.ok(SHORTCUT_BY_ID['shuttle-back']);
+// P2-6: the rate-stretch tool ships unbound and the Premiere preset keys it to R.
+assert.strictEqual(SHORTCUT_BY_ID['interaction-mode-rate-stretch'].keys, '');
 
 const space = parseChord('Space');
 assert.ok(space);

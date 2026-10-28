@@ -75,7 +75,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P2-3 | Duplicate detector | todo | |
 | P2-4 | HEVC export + presets | done | |
 | P2-5 | Countdown timecode | done | |
-| P2-6 | Premiere shortcut preset | todo | |
+| P2-6 | Premiere shortcut preset | done (C, Y, R and T; ripple and rolling edit do not exist, so B and N stay unbound) | |
 | P3-1 | Pinned yt-dlp sync | todo | |
 | P3-2 | Platform import route + `import_from_platform` | todo | P3-1 |
 | P3-3 | Source credits + `creditos.txt` | todo | P3-2 |
@@ -84,7 +84,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P4-2 | `render_variant_previews` | todo | P4-1 |
 | P4-3 | "Comparar versiones" dialog | todo | P4-2 |
 | P5-1 | Full Spanish dictionary | done (all modules translated; the brand.ts fold-in is left) | |
-| P5-2 | i18n coverage + placeholder gate | todo | P5-1 |
+| P5-2 | i18n coverage + placeholder gate | done (coverage, placeholders, one wording per key; allowlist empty) | P5-1 |
 | P5-3 | Untranslated-text scan | blocked (scan done; raw strings listed) | P5-2 |
 | P6-1 | Bot end-to-end proof + screenshots | todo | every task above is `done` or `blocked` |
 | P7-1 | EffectCraft titles sidecar | optional | P6-1 |
@@ -1096,3 +1096,37 @@ Branch `p5-workbuddy` in `~/corteo-zcode`. Every module of `src/i18n/dict/en/` n
 - Gates after every module: `tsc -b`, `node scripts/check-i18n.mjs` (161 UI files, 2,643 English entries), `locale.verify.ts`, `it/settingsCoverage.verify.ts`, `it/mediaCoverage.verify.ts` and `settings/transcription-language.verify.ts`, plus a local check that no new file duplicates a `base`/`brand` key, that no key is missing from its `en/` module, that placeholders match, and that no file passes 500 lines. All green, every time.
 - Not verified: the Spanish in a browser. No editor starts from the Windows side of the share — same blocker as EV-33 — so the wording was checked as data, not seen on screen.
 - Nothing is pushed. The branch is merged later.
+
+### P5-2 · the gate
+
+`scripts/i18n-es-gate.mjs` (238 lines, tracked once `.gitignore` re-includes it) is imported by `scripts/check-i18n.mjs`, so `npm run verify:i18n` — and therefore `npm test` — fails on any of four rules: Spanish coverage of every `en/` key, matching `{placeholders}`, one wording per key across all es sources, and a commented allowlist that is **empty**.
+
+- The assembly is read from `es/index.ts` (`base` plus the `Object.assign` order) **and then `es/brand.ts` over it**, because `dictRegistry.ts` spreads brand last. Reading only `index.ts` reported 103 "missing" keys that `es/brand.ts` had carried all along; measuring properly is what showed P5-1 was already complete, and no key needed translating.
+- Rule 1 has one carve-out: a key that is not Chinese (product names, `HTTP {status}`, the Spanish strings `en/shorts.ts` uses as keys) only has to resolve and stay free of Chinese. Demanding a *different* Spanish value for an already-Spanish key would be wrong, and that carve-out is why the allowlist stayed empty.
+- One real defect, 15 keys: `es/index.ts` `base` and `es/brand.ts` carried the same key in two wordings — Title Case in base (`Nuevo Proyecto`, `Configuración`), sentence case in brand (`Nuevo proyecto`, `Ajustes`). `Object.assign` picked one silently. Base now carries brand's copy, which is the wording the app already showed, so nothing changed on screen, and the B-9 decision (settings is "Ajustes") now lives in both files instead of one.
+- Proof: `node scripts/check-i18n.mjs` green — `i18n 校验通过：161 个 UI 文件，2643 个英文词条，2681 个西语词条` — plus the four `tsx` verifies of `verify:i18n`. Then each rule was broken on purpose and undone:
+  - coverage — `'缩放时间轴'` deleted from `es/timeline.ts` → `es 词典：西语缺少词条：en/timeline.ts · "缩放时间轴"`
+  - placeholders — `{n}` dropped from `'puntos de seguimiento válidos'` → `es 词典：西语占位符与英文不一致：en/timeline.ts · "{n} 个有效跟踪点"（英文 {n} / 西语 无）`
+  - one wording — `base` back to `'Nuevo Proyecto'` → `es 词典：同一词条有两种西语："新建工程" · es/index.ts "Nuevo Proyecto" ≠ es/brand.ts "Nuevo proyecto"`
+- `npm run verify:i18n` cannot run end to end from the Windows side of the share: `npm` puts `node_modules/.bin` on PATH, those shims are the WSL ones, and `tsx` comes back "not recognized". Pre-existing, not caused by this change — the five commands were run one by one (`node node_modules/tsx/dist/cli.mjs --tsconfig tsconfig.app.json <file>`), all green.
+- Left for P5-3: the brand fold-in. `es/brand.ts` still re-states 15 keys that `es/index.ts` also defines, which `AGENTS.md` › UI text discourages; the gate now makes the two copies agree instead of letting `Object.assign` decide silently.
+
+### P2-6 · the Premiere Pro preset
+
+`src/shortcuts/presets.ts` holds the presets; `keymap.ts` applies the active one **under** the user's own rebindings, and `ShortcutsDialog.tsx` picks it with a `<select>` and shows the preset's one-line description. There is still one catalog and one matcher — a preset is only a set of key overrides, so "default" means "no overrides" and the factory preset is byte-for-byte what it was.
+
+| Premiere key | Bound to | Why |
+| --- | --- | --- |
+| C | `interaction-mode-blade` | Premiere's razor is a click-to-cut *tool*, and that is the blade. The playhead cut that had C moves to Premiere's Add Edit, `Mod + K`, rather than becoming unreachable. |
+| Y | `interaction-mode-slip` | Moved off `U`. `select-after` sat on Y, so it steps aside to `Shift + Y` **inside the preset only**. |
+| R | `interaction-mode-rate-stretch` | The tool already existed — `EditMode`, the drag commit, the toolbar button and a handler in `useEditorActions` — but it had **no catalog row**, so the keyboard could never reach it. Registered with `keys: ''`; `nudge-right` keeps `Shift + R`. |
+| T | `interaction-mode-trim` | Premiere's trim tool. Trim lived on N, and N belongs to rolling edit, so moving it frees N without leaving trim keyboard-less. |
+| B | **unbound** | The editor has no ripple edit tool. |
+| N | **unbound** | The editor has no rolling edit tool. |
+
+- No tool was invented. B and N are genuinely unbound, and the preset says so in its own description in the dialog, in Chinese, English and Spanish, so the gap is visible to the person who picks it.
+- Kept as they were: J/K/L, I/O, Q/W, V and P.
+- The default preset is untouched: no catalog key changed, and the new rate-stretch row ships unbound, so it cannot fire and the dialog hides it (it filters rows with an empty binding).
+- Verifies extended rather than added, so no registration was needed: `keymap.verify.ts` asserts the preset exists, every Premiere key reaches its action, B and N are unbound, the default preset is unchanged, a manual rebinding still wins and reset falls back to the preset, and `findConflicts` finds no two actions sharing a key inside the preset. `catalog.verify.ts` moves 56 → 57 actions and pins the new row as unbound.
+- Gates: `tsc -b --force` clean, the four `verify:shortcuts` files green, `node scripts/check-i18n.mjs` green (`161 个 UI 文件，2646 个英文词条，2684 个西语词条` — three new keys, English in `en/settings.ts`, Spanish in `es/settings-2.ts`).
+- **Not tried by hand**: the editor cannot be opened from the Windows side of the share, so the picker, the remapped keys and the description were checked as data, not seen on screen.

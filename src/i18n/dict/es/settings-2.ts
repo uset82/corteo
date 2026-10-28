@@ -232,6 +232,9 @@ export default {
   '按下按键… (Esc)': 'Pulsa las teclas… (Esc)',
   '已被占用：': 'ya lo usa: ',
   '仍要绑定': 'Asignar igualmente',
+  '键位预设': 'Preset de atajos',
+  'Premiere Pro 预设': 'Preset de Premiere Pro',
+  'C 刀片、Y 滑移、R 变速、T 修剪；编辑器没有波纹编辑和滚动编辑，B 和 N 未绑定。': 'C cuchilla, Y deslizar, R ajuste de velocidad, T recorte. La edición de rizo y la edición rodada aún no existen, así que B y N quedan sin asignar.',
 
   // MediaCleanupDialog
   '列出所有工程都不引用的上传文件': 'Subidas que ningún proyecto referencia',

@@ -7,7 +7,7 @@ import { shortcutAllowedForSurface, shortcutSurfaceFromTarget } from './shortcut
 export type ShortcutHandler = (ctx: { shift: boolean; alt: boolean; mod: boolean }) => void;
 
 /**
- * Global keydown dispatcher for the default preset.
+ * Global keydown dispatcher for the active preset (default or Premiere Pro).
  * Keyboard matching is only an input adapter. Every surface dispatches through
  * the same action registry, so toolbar/menu/shortcut behavior cannot drift.
  */
