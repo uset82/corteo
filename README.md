@@ -127,11 +127,22 @@ this README and `PROGRESS.md` disagree, `PROGRESS.md` wins.
 - A token-protected MCP server with more than 120 editing tools, usable by MCP clients on the same machine (Codex, Claude Code, Qoder and others).
 - Free models in the built-in chat through [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) and the [Our Free Model](https://github.com/Ebony-Vinyl/dsh-our-free-model) plugin. `npm run harness:install`, `npm run harness` and `npm run harness:doctor` install it, start it and print the URL and key; the Spanish steps are in [`README.es.md`](README.es.md#modelos-gratis-con-deepseek-harness) and the long guide is [`docs/harness.md`](docs/harness.md). The default model is `nvidia/nemotron-3-ultra-550b-a55b:free`, the lane that completed a real cut. `OPENCHATCUT_PROVIDERS=off` limits the editor to DeepSeek Harness, Ollama and LM Studio. The harness chat can also edit the timeline over MCP.
 
+**Added by the evolution night (2026-10-28)**, each with its test and, where there was one, its live run:
+
+- **Host profiles**: `install.sh --host-profile grok|muse|claude-duet` puts the skill, the media inbox and the export folder where each bot looks for them (EV-01, EV-02).
+- **Phone to MP4**: `occ inbox --host grok --json` picks up the clip the bot left in its inbox, imports it into a project and returns the `attachPath` to send back over the chat (EV-05).
+- **Song film**: `occ song-film --audio song.mp3 --to 30s --json` cuts on downbeats, animates each shot and renders a vertical MP4; a real run came out 1080x1920 and 30 s (EV-09, EV-10).
+- **Shorts with a review pass**: `reviewEs` scores and cuts the word ranges before the batch; it needs the editor tab open (`npm run editor-host`) (EV-11).
+- **The free brain**: `npm run brain` starts the router with the `grok`, `muse` and `claude-duet` aliases; the `delegate` tool spreads work across them, the editor sees them at `http://127.0.0.1:18899/v1` and the door for any IDE is `http://127.0.0.1:18890/v1`. Proven live on this machine (EV-13 to EV-20).
+- **The installer starts the brain**: the `CORTEO_BRAIN` step reports `CORTEO_BRAIN=ok`, `failed` or `skipped` (EV-17).
+- **Music in the UI**: the inspector's "Reaccionar a la música" section, the timeline's "Mapa musical" and the song badge's "Mapa de la canción" pass their tests; the real-browser pass is still pending (EV-22 to EV-24, EV-29).
+
 **Not there yet:**
 
 - The interface opens in Spanish, but only part of it is translated: untranslated strings show in English. English is complete and Chinese is the source language; Italian and Russian are also partial.
 - Generation tools — images, voice, video, music — need their own paid API keys and stay off until configured.
 - Any bot installs corteo on its own Linux VM with `curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/install.sh | bash`, then `npm run corteo:local` and `npm run corteo -- ...`. The skill is [`skills/corteo/SKILL.md`](skills/corteo/SKILL.md). The Cloudflare tunnel is optional.
+- The end-to-end listen on a real song (L-13) and a real-browser pass over the music UI (EV-33) are still pending: there is no song in `~/corteo-media` and no browser check was run.
 - Ken Burns, duplicate detection and countdown live on a separate development branch and are not in `main` yet.
 
 ## Requirements

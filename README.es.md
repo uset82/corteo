@@ -37,17 +37,26 @@ Las funciones vienen todas de OpenChatCut:
 
 Y una cosa nueva: el chat del editor funciona con modelos gratis a través de [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) y el plugin [Our Free Model](https://github.com/Ebony-Vinyl/dsh-our-free-model). Sus modelos salen en el menú de modelos del chat. El de por defecto es `nvidia/nemotron-3-ultra-550b-a55b:free`: de los que llamaron bien a la herramienta de corte, es el que de verdad cortó un clip. El chat del propio harness también puede editar la línea de tiempo por MCP. Cómo arrancarlo: [Modelos gratis con DeepSeek Harness](#modelos-gratis-con-deepseek-harness). La guía larga está en [`docs/harness.md`](docs/harness.md).
 
+La noche de evolución del 28 de octubre añadió esto, cada cosa con su prueba y, cuando hubo, con su prueba en vivo:
+
+- **Perfiles de host**: `install.sh --host-profile grok|muse|claude-duet` deja el skill, la bandeja de medios y la carpeta de exportaciones donde los busca cada bot (EV-01, EV-02).
+- **Del teléfono al MP4**: `occ inbox --host grok --json` recoge el clip que el bot dejó en su bandeja, lo importa a un proyecto y devuelve el `attachPath` para mandarlo de vuelta por el chat (EV-05).
+- **Película de una canción**: `occ song-film --audio cancion.mp3 --to 30s --json` corta por downbeats, anima cada plano y renderiza un MP4 vertical; un ejemplo real salió 1080x1920 y 30 s (EV-09, EV-10).
+- **Shorts con revisión**: `reviewEs` puntúa y corta los rangos de palabras antes del lote; necesita la pestaña del editor abierta con `npm run editor-host` (EV-11).
+- **El cerebro gratis**: `npm run brain` levanta el router con los alias `grok`, `muse` y `claude-duet`; el tool `delegate` reparte el trabajo entre ellos, el editor los ve en `http://127.0.0.1:18899/v1` y la puerta para cualquier IDE es `http://127.0.0.1:18890/v1`. Se probó en vivo en esta máquina (EV-13 a EV-20).
+- **El instalador enciende el cerebro**: el paso `CORTEO_BRAIN` deja `CORTEO_BRAIN=ok`, `failed` o `skipped` en el reporte (EV-17).
+- **La música en la interfaz**: el inspector tiene la sección «Reaccionar a la música», la línea de tiempo el «Mapa musical» y la insignia de la canción el «Mapa de la canción». Sus pruebas pasan; verlo en un navegador real quedó pendiente (EV-22 a EV-24, EV-29).
+
 Con dos salvedades:
 
 - La interfaz arranca en español, pero solo unos 200 de sus 2.520 textos están traducidos: la página de proyectos, la barra superior y lo primero que se ve del chat. El resto sale en inglés.
-- Con `OPENCHATCUT_PROVIDERS=off` (el alias `corteo` y `npm run start:corteo`) el chat solo usa DeepSeek Harness, Ollama y LM Studio. Las rutas de generación, de stock y de transcripción en la nube responden 403, y esos ajustes no se muestran. El skill `videoclip-musical` sigue pendiente (P1-6).
+- Con `OPENCHATCUT_PROVIDERS=off` (el alias `corteo` y `npm run start:corteo`) el chat solo usa DeepSeek Harness, Ollama y LM Studio. Las rutas de generación, de stock y de transcripción en la nube responden 403, y esos ajustes no se muestran.
 
 ### Lo que falta
 
 | Qué | Tareas |
 |---|---|
-| Skill `videoclip-musical` para el bot | P1-6 |
-| «El bot escucha la canción»: ritmo, secciones, emoción y coros, para que los efectos y movimientos sigan la música | L-01 a L-13 |
+| «El bot escucha la canción»: L-01 a L-12 ya están; quedan la prueba de punta a punta con una canción real y ver la interfaz musical en el navegador | L-13, EV-33 |
 | Ken Burns, subtítulos de verso y coro, importar ASS/VTT, detector de tomas repetidas, exportación HEVC, cuenta regresiva, atajos de Premiere | P2-1 a P2-6 |
 | Importar desde YouTube, Vimeo o Bilibili con sus créditos (yt-dlp) | P3-1 a P3-4 |
 | Varias versiones de un videoclip y la vista «Comparar versiones» | P4-1 a P4-3 |
