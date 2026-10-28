@@ -76,7 +76,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P2-4 | HEVC export + presets | done | |
 | P2-5 | Countdown timecode | done | |
 | P2-6 | Premiere shortcut preset | done (C, Y, R and T; ripple and rolling edit do not exist, so B and N stay unbound) | |
-| P3-1 | Pinned yt-dlp sync | todo | |
+| P3-1 | Pinned yt-dlp sync | done (pinned 2026.10.26; the first run downloads and checks the sha256, the second is a verified no-op, `--update` re-pins) | |
 | P3-2 | Platform import route + `import_from_platform` | todo | P3-1 |
 | P3-3 | Source credits + `creditos.txt` | todo | P3-2 |
 | P3-4 | "Importar desde enlace" dialog | todo | P3-2 |
@@ -376,6 +376,16 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Plan: Plan 1 › Phase 3 (yt-dlp).
 - Files: new `scripts/sync-yt-dlp.mjs` (model it on `scripts/sync-whisper-cli.mjs`; add a `.gitignore` exception), `package.json` (`sync:yt-dlp`, `predev`), `.gitignore` (`vendor/`).
 - Done when: `npm run sync:yt-dlp` downloads the pinned binary, checks its SHA-256, and is a no-op the second time.
+
+`scripts/sync-yt-dlp.mjs` provisions `vendor/yt-dlp/<platform>/yt-dlp[.exe]` from the official GitHub release, pinned to `2026.10.26` for win32-x64, darwin-x64/arm64, linux-x64 and linux-arm64. The size and sha256 are checked before anything is written, and the bytes land only after the digest matches.
+
+- The skip path is a verification, not `existsSync()`: a provenance record (`yt-dlp.provenance.json`) must still match the pin, the bytes must still hash to the recorded digest, and `yt-dlp --version` must print the pinned version. A record from another release, a 17-byte placeholder, a non-executable file or bytes replaced after install all re-provision.
+- `npm run sync:yt-dlp -- --update` asks the GitHub API for the latest release, rewrites the `VERSION` and `PLATFORMS` constants in the script itself (`rewritePins`, byte-for-byte a no-op when the pin already matches) and installs that build. A release missing one of the five standalone assets, or missing its sha256 digest, fails loudly instead of pinning a partial table.
+- `OPENCHATCUT_YTDLP` replaces the download with a local binary (recorded as `source: override`, still held to the size floor, the executable bit, the digest and `--version`).
+- Wiring: `sync:yt-dlp` in `package.json` and run from `predev`, `vendor/` in `.gitignore`; `/scripts/*` is ignored, so the script needs its own `!/scripts/sync-yt-dlp.mjs` exception (`!/scripts/*.verify.mjs` already covers the verify).
+- Verifies: `scripts/sync-yt-dlp.verify.mjs` — the pin table is complete, a download is judged on size then digest before it is written, `--version` must run and name the pin, a GitHub payload either becomes a full table or throws, `rewritePins` is idempotent and replaces only the two constants, and every provisioning record is checked (stale version, other asset, placeholder, non-executable, digest drift, probe failure, override).
+- Proof on linux-x64: the first run downloaded `yt-dlp_linux` (41,166,968 bytes, sha256 `767b…`), the second printed `verified` with no download, and the binary reported `2026.10.26`.
+- Gates: `node scripts/sync-yt-dlp.verify.mjs`, `scripts/verify-registration.verify.mjs` (731 files) and `scripts/verify-gate-coverage.verify.mjs` (731) green.
 
 ### P3-2 · Platform import route + `import_from_platform`
 - Plan: Plan 1 › Phase 3 (route).
