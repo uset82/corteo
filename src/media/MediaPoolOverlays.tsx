@@ -313,21 +313,19 @@ function RelinkRow({ asset, onRelink }: { asset: MediaAsset; onRelink: (id: stri
 }
 
 interface PoolImportDialogsProps {
-  mobileUpload: boolean;
-  linkImport: boolean;
+  dialog: 'mobile' | 'link' | null;
   fps: number;
-  onCloseMobile: () => void;
-  onCloseLink: () => void;
+  onClose: () => void;
   onImportMobile: (record: MobileUploadRecord) => Promise<void>;
   onAddAsset: (asset: MediaAsset) => void;
 }
 
 /** The two ways a file enters the pool without a picker: a phone upload and a URL. */
-export function PoolImportDialogs({ mobileUpload, linkImport, fps, onCloseMobile, onCloseLink, onImportMobile, onAddAsset }: PoolImportDialogsProps) {
+export function PoolImportDialogs({ dialog, fps, onClose, onImportMobile, onAddAsset }: PoolImportDialogsProps) {
   return (
     <>
-      {mobileUpload && <MobileUploadDialog onClose={onCloseMobile} onImport={onImportMobile} />}
-      {linkImport && <ImportFromLinkDialog fps={fps} onAddAsset={onAddAsset} onClose={onCloseLink} />}
+      {dialog === 'mobile' && <MobileUploadDialog onClose={onClose} onImport={onImportMobile} />}
+      {dialog === 'link' && <ImportFromLinkDialog fps={fps} onAddAsset={onAddAsset} onClose={onClose} />}
     </>
   );
 }

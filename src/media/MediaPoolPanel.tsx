@@ -110,8 +110,7 @@ export function MediaPoolPanel({
   const [assetDeleteState, setAssetDeleteState] = useState<MediaAssetDeleteState | null>(null);
   const [semanticResults, setSemanticResults] = useState<SemanticMatch[] | null>(null);
   const [semanticOpenRequest, setSemanticOpenRequest] = useState(0);
-  const [mobileUploadOpen, setMobileUploadOpen] = useState(false);
-  const [linkImportOpen, setLinkImportOpen] = useState(false);
+  const [poolDialog, setPoolDialog] = useState<'mobile' | 'link' | null>(null);
   const { transcriptEntries, viewerAsset, openTranscriptViewer, closeTranscriptViewer, stepViewer } = useTranscriptViewer(assets);
   const relink = useMediaPoolRelink({
     assets,
@@ -370,8 +369,8 @@ export function MediaPoolPanel({
         onPickFolder={canPickDirectory ? () => void pickDirectory(currentFolderId) : undefined}
         onWatchFolder={canWatchDirectory ? () => void startWatch() : undefined} onStopWatch={() => void stopWatch()}
         watchingFolder={activeWatch?.directoryName ?? null} watchBusy={watchBusy}
-        onMobileUpload={(restoreFocus) => { modalFocus.remember(restoreFocus); setMobileUploadOpen(true); }}
-        onImportFromLink={(restoreFocus) => { modalFocus.remember(restoreFocus); setLinkImportOpen(true); }}
+        onMobileUpload={(restoreFocus) => { modalFocus.remember(restoreFocus); setPoolDialog('mobile'); }}
+        onImportFromLink={(restoreFocus) => { modalFocus.remember(restoreFocus); setPoolDialog('link'); }}
         onAddSolid={() => onAddSolid?.()}
         onCreateFolder={createFolder}
         onViewChange={() => setView(toggleMediaView)}
@@ -457,7 +456,7 @@ export function MediaPoolPanel({
           currentFolderId, view, sort, type, setPosition: setBlankMenuPos,
           paste: onPasteAssets, setSelected,
           openSemanticSearch: () => setSemanticOpenRequest((value) => value + 1),
-          openMobileUpload: () => setMobileUploadOpen(true),
+          openMobileUpload: () => setPoolDialog('mobile'),
           inputRef, createFolder: () => createFolder(() => undefined),
           setView, setSort, setType,
         }}
@@ -494,7 +493,7 @@ export function MediaPoolPanel({
         onPickFolder={relinkFromFolder}
         onRelink={startRelink}
       />
-      <PoolImportDialogs mobileUpload={mobileUploadOpen} linkImport={linkImportOpen} fps={fps} onCloseMobile={() => { setMobileUploadOpen(false); modalFocus.restore(); }} onCloseLink={() => { setLinkImportOpen(false); modalFocus.restore(); }} onImportMobile={onImportMobile} onAddAsset={onAddAsset} />
+      <PoolImportDialogs dialog={poolDialog} fps={fps} onClose={() => { setPoolDialog(null); modalFocus.restore(); }} onImportMobile={onImportMobile} onAddAsset={onAddAsset} />
     </div>
   );
 }
