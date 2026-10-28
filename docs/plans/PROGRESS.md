@@ -953,6 +953,10 @@ None yet.
 ## EV track · DeepSeek Harness (ED)
 Folder `~/corteo-dsh`, branch `ev-dsh`. Plan 7 › "Finishing in three tracks". Only DeepSeek Harness edits this section.
 
+**ED (2026-10-28):** EV-34 is done; the 10 runnable bash blocks and the two server-free prose recipes in `skills/corteo/SKILL.md` were replayed on a scratch library and every render was probed.
+Four wrong texts were fixed (id one-liners, `placed.startFrame`, `--apply` scope, `edit_track` message); no code fault was found.
+The three verifies pass, the row is `done`, and the scratch directory was deleted.
+
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
 | EV-34 | Replay `skills/corteo/SKILL.md` the way a host would | done | |
