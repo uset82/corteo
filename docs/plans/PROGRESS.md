@@ -960,6 +960,8 @@ The three verifies pass, the row is `done`, and the scratch directory was delete
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
 | EV-34 | Replay `skills/corteo/SKILL.md` the way a host would | done | |
+| EV-35 | The install guide says what `install.sh` does now | todo | EV-34 |
+| EV-36 | The bot template learns the inbox and the song film | todo | EV-35 (soft) |
 
 ### ED: results
 
