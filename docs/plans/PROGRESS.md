@@ -72,7 +72,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | L-12 | `escuchar-cancion` skill + MCP prompt | done | L-09, P1-6 |
 | L-13 | Listening end-to-end proof | blocked (no song) | L-11, L-12 |
 | P2-2 | Captions: verso/coro, ASS/VTT import | todo | |
-| P2-3 | Duplicate detector | todo | |
+| P2-3 | Duplicate detector | done | |
 | P2-4 | HEVC export + presets | done | |
 | P2-5 | Countdown timecode | done | |
 | P2-6 | Premiere shortcut preset | todo | |
@@ -459,6 +459,7 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-28 · EV · Terra ran EV-00 to EV-26 alone. The rest finishes in three tracks at once, one git worktree each: Qoder (`~/corteo`, the EV table, the merge and the only push), ZCode (`~/corteo-zcode`, branch `ev-zcode`, the EZ table), DeepSeek Harness (`~/corteo-dsh`, branch `ev-dsh`, the ED table). Reason: Carlos's call after Terra stopped.
 - 2026-10-28 · EV-28 · The ten Italian keys missing since C-12 went in at setup, before the tracks branched: the gap kept `verify:i18n` red for all three tracks and kept `npm test` from ever reaching `test:serial`.
 - 2026-10-28 · EV · If `sync-publish.sh` stops only on failures EV-30 recorded as pre-existing, the work goes to the GitHub branch `ev-evolution` instead of `main`.
+- 2026-10-28 · P2-3 · The detector reuses `sourceContentHash` for exact copies and one 9x8 gray ffmpeg frame per sample for 64-bit dHashes (10/50/90% of the clip's own duration; images one frame); the in-process cache is keyed by content hash, so a rename does not resample. The dialog batches `pool.removeAsset` (keep the first copy) or `remove` (later reused-range clip) under the Spanish undo label "Quitar duplicados"; `find_duplicate_media` stays read-only and server-direct. Reason: no second frame sampler, and one removal is one undo step.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.

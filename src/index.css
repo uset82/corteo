@@ -941,6 +941,14 @@ button, input, select { font: inherit; }
 .cc-modal button { padding:6px 12px; border:0.5px solid var(--cc-border); border-radius:5px; background:var(--cc-hover); color:var(--cc-text); cursor:pointer; }
 .cc-modal button.primary { border-color:var(--cc-accent); background:var(--cc-accent); color:var(--cc-on-accent); }
 .cc-modal button.danger { border-color:var(--cc-danger); background:var(--cc-danger); color:var(--cc-on-accent); }
+.cc-media-duplicates-dialog { width:min(720px, calc(100vw - 32px)); max-height:min(82vh, 760px); overflow:auto; }
+.cc-media-duplicates-head { display:flex; align-items:center; justify-content:space-between; }
+.cc-media-duplicates-list { display:flex; flex-direction:column; gap:10px; }
+.cc-media-duplicates-group { display:flex; flex-direction:column; gap:6px; padding-top:8px; border-top:0.5px solid var(--cc-border); }
+.cc-media-duplicates-item { display:flex; align-items:center; gap:8px; }
+.cc-media-duplicates-item img, .cc-media-duplicates-thumb { width:80px; height:45px; object-fit:cover; border-radius:3px; background:var(--cc-inset); }
+.cc-media-duplicates-item > div { flex:1; display:flex; flex-direction:column; gap:2px; }
+.cc-media-duplicates-item span, .cc-media-duplicates-note { color:var(--cc-text-muted); font-size:11px; }
 
 /* Instant tooltip (toolbar): The native title has ~1s browser inherent delay, and it appears immediately when hovering here.
    The data-tip carries the copy and pops it downwards (the toolbar is at the top of the timeline panel); use -r to right-align the text near the right edge to prevent overflow.

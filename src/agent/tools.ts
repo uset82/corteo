@@ -56,6 +56,7 @@ import { PROJECT_TOOL_NAMES, PROJECT_TOOL_SCHEMAS } from './tools/schemas/projec
 import { UPLOAD_TOOL_NAMES, UPLOAD_TOOL_SCHEMAS } from './tools/schemas/upload-tools';
 import { FRICTION_TOOL_NAMES, FRICTION_TOOL_SCHEMAS } from './tools/schemas/friction-tools';
 import { READ_PROJECT_TOOL_NAMES, READ_PROJECT_TOOL_SCHEMAS } from './tools/schemas/read-project-tools';
+import { DUPLICATE_TOOL_NAMES, DUPLICATE_TOOL_SCHEMAS } from './tools/schemas/duplicate-tools';
 import { MG_CODE_TOOL_NAMES, MG_CODE_TOOL_SCHEMAS } from './tools/schemas/mg-code-tools';
 import { PLUGIN_SKILL_TOOL_NAMES, PLUGIN_SKILL_TOOL_SCHEMAS } from './tools/schemas/plugin-skill-tools';
 import { RUN_CODE_TOOL_NAMES, RUN_CODE_TOOL_SCHEMAS } from './tools/schemas/run-code-tools';
@@ -192,6 +193,8 @@ export const TOOL_SCHEMAS: AgentToolSchema[] = [
   ...FRICTION_TOOL_SCHEMAS,
   // Project overview.
   ...READ_PROJECT_TOOL_SCHEMAS,
+  // Media duplicate detector: SHA-256 copies + 10/50/90% dHash frames + reused source ranges.
+  ...DUPLICATE_TOOL_SCHEMAS,
   // Inline JSX → MG asset
   ...MG_CODE_TOOL_SCHEMAS,
   // Load 26 built-in SKILL.md on demand (load_skill · progressive disclosure)
@@ -310,6 +313,7 @@ const EXECUTOR_GROUPS: ReadonlyArray<readonly [ReadonlySet<string>, ToolExecutor
   [UPLOAD_TOOL_NAMES, async () => (await import('./tools/upload-tools')).execUploadTool],
   [FRICTION_TOOL_NAMES, async () => (await import('./tools/friction-tools')).execFrictionTool],
   [READ_PROJECT_TOOL_NAMES, async () => (await import('./tools/read-project-tools')).execReadProjectTool],
+  [DUPLICATE_TOOL_NAMES, async () => (await import('./tools/duplicate-tools')).execDuplicateTool],
   [MG_CODE_TOOL_NAMES, async () => (await import('./tools/mg-code-tools')).execMgCodeTool],
   [PLUGIN_SKILL_TOOL_NAMES, async () => (await import('./tools/plugin-skill-tools')).execPluginSkillTool],
   [RUN_CODE_TOOL_NAMES, async () => (await import('./tools/run-code-tools')).execRunCodeTool],
