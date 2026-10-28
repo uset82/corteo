@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "host": "muse",
+  "displayName": "corteo",
+  "skillDest": "~/.config/muse/skills/corteo/SKILL.md",
+  "mediaInbox": "~/corteo-inbox/muse",
+  "exportDir": "~/corteo-exports",
+  "renderGl": "swangle",
+  "providers": "off",
+  "locale": "es",
+  "defaultShort": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30
+  },
+  "mcpUrl": "http://127.0.0.1:5199/api/external-mcp/mcp",
+  "brainUrl": "http://127.0.0.1:18890/v1",
+  "brainAliases": [
+    "corteo-edit",
+    "corteo-draft",
+    "corteo-fast"
+  ]
+}
