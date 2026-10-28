@@ -1,5 +1,5 @@
 import type { TranscriptWord } from '../transcript/types';
-import { parseSubtitleFile } from '../captions/subtitleImport';
+import { parseSubtitles } from '../captions/subtitles';
 import { kindOfDescriptor, type MediaKind } from './mediaProbe';
 
 export type ExternalFileTarget =
@@ -34,7 +34,7 @@ export function parseDroppedCaptions(name: string, text: string, dropStartMs: nu
   let timed: TranscriptWord[] = [];
   if (target?.type === 'caption' && target.format !== 'txt') {
     // SRT/VTT/ASS share the subtitle importer, so karaoke timings survive a drop.
-    try { timed = parseSubtitleFile(name, text).words; } catch { timed = []; }
+    try { timed = parseSubtitles(name, text); } catch { timed = []; }
   }
   if (timed.length) {
     const offset = Math.max(0, dropStartMs) - timed[0]!.start;

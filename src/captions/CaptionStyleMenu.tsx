@@ -3,7 +3,7 @@
 // Actions and presets/names/busy states are all here. The name is input inline, without window.prompt (Electron does not support it).
 // Exception for the error line: it is also written by the "Turn on captions" button outside the menu (there is no text script for this track), so it is passed in by Timeline.
 import { useEffect, useState } from 'react';
-import { CAPTION_STYLES } from './styles';
+import { CAPTION_STYLES, type CaptionStyle } from './styles';
 import { buildTranslation } from './translate';
 import type { CaptionsData, CaptionTemplate } from './types';
 import { deleteCaptionPreset, listCaptionPresets, saveCaptionPreset, type CaptionPreset } from './presetStore';
@@ -110,13 +110,18 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
     } finally { setBusy(false); }
   };
 
-  const backToParent = onBack ?? onClose;
-  const styleRow = (style: (typeof CAPTION_STYLES)[number]) => (
+  const styleButton = (style: CaptionStyle) => (
     <button type="button" key={style.id} className={current?.template === style.id ? 'active' : ''} onClick={() => applyStyle(style.id)}>
       <span className="cc-caption-style-swatch" style={{ background: style.highlightBackground ?? '#292929', color: style.highlightBackground ? style.highlightColor : style.color, fontFamily: style.fontFamily, WebkitTextStroke: style.strokeWidth ? `${Math.min(1, style.strokeWidth)}px ${style.strokeColor}` : undefined }}>Aa</span>
       <span>{t(style.labelZh)}</span>
     </button>
   );
+  // The Videoclip group leads the list — the two styles a song edit switches
+  // between — and everything else keeps its catalog order below it.
+  const videoclip = CAPTION_STYLES.filter((style) => style.group === 'videoclip');
+  const rest = CAPTION_STYLES.filter((style) => style.group !== 'videoclip');
+
+  const backToParent = onBack ?? onClose;
   if (translateOpen) return (
     <div className="cc-caption-style-menu" style={{ position: 'fixed', left: pos.left, top: pos.top }} onPointerDown={(e) => e.stopPropagation()}>
       <MenuDrillHeader title={t('翻译')} onBack={() => initialTranslateOpen ? backToParent() : setTranslateOpen(false)} />
@@ -132,9 +137,13 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
     <div className="cc-caption-style-menu" style={{ position: 'fixed', left: pos.left, top: pos.top }} onPointerDown={(e) => e.stopPropagation()}>
       <MenuDrillHeader title={t('字幕样式')} onBack={backToParent} />
       <div className="cc-caption-style-list">
-        {CAPTION_STYLES.filter((style) => style.id !== 'verso' && style.id !== 'coro').map(styleRow)}
-        <div className="cc-caption-style-title" style={{ marginTop: 4 }}>{t('视频歌词')}</div>
-        {CAPTION_STYLES.filter((style) => style.id === 'verso' || style.id === 'coro').map(styleRow)}
+        {videoclip.length > 0 && (
+          <>
+            <div className="cc-caption-style-title">{t('音乐视频')}</div>
+            {videoclip.map(styleButton)}
+          </>
+        )}
+        {rest.map(styleButton)}
         {presets.length > 0 && (
           <>
             <div className="cc-caption-style-title" style={{ marginTop: 4 }}>{t('我的样式')}</div>

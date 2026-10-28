@@ -42,4 +42,53 @@ assert.deepEqual(parseAss(REORDERED).map((word) => word.text), ['Reordered line'
 
 assert.throws(() => parseAss('[Events]\nFormat: Layer, Start, End, Text\n'), /ASS 文件中没有有效字幕/);
 
+// Uppercase \K is the same tag; several tags in one block leave the last one in charge.
+{
+  const words = parseAss([
+    '[Events]',
+    'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
+    'Dialogue: 0,0:00:01.00,0:00:02.00,Default,,0,0,0,,{\\K20}up{\\k10\\k30}per',
+  ].join('\n'));
+  // Syllables without a space between them are one word, as the pager needs.
+  assert.deepEqual(words.map((word) => [word.text, word.start, word.end]), [['upper', 1000, 1500]]);
+}
+
+// A karaoke run longer than its cue is scaled to fit; the words never pass the cue end.
+{
+  const words = parseAss([
+    '[Events]',
+    'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
+    'Dialogue: 0,0:00:00.00,0:00:01.00,Default,,0,0,0,,{\\k100}a {\\k100}b',
+  ].join('\n'));
+  assert.deepEqual(words.map((word) => word.text), ['a', 'b']);
+  assert.equal(words[0]!.start, 0);
+  assert.equal(words[1]!.start, 500);
+  assert.equal(words[1]!.end, 1000, 'overrunning karaoke is scaled into the cue');
+}
+
+// Text before the first tag keeps a slice of the cue even when the karaoke run
+// already fills it: it weighs one average syllable, so the line is halved.
+{
+  const words = parseAss([
+    '[Events]',
+    'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
+    'Dialogue: 0,0:00:00.00,0:00:01.00,Default,,0,0,0,,Lead {\\k100}word',
+  ].join('\n'));
+  assert.deepEqual(words.map((word) => [word.text, word.start, word.end]), [['Lead', 0, 400], ['word', 500, 1000]]);
+}
+
+// Without a Format: line the v4+ column order applies (Start, End, … Text last).
+{
+  const words = parseAss('[Events]\nDialogue: 0,0:00:02.00,0:00:03.00,Default,,0,0,0,,plain line');
+  assert.deepEqual(words.map((word) => [word.text, word.start, word.end]), [['plain line', 2000, 3000]]);
+}
+
+// Bad stamps and backwards ranges are dropped, not turned into zero-length words.
+assert.throws(() => parseAss([
+  '[Events]',
+  'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
+  'Dialogue: 0,0:00:99.00,0:00:99.50,Default,,0,0,0,,{\\k10}bad',
+  'Dialogue: 0,0:00:03.00,0:00:02.00,Default,,0,0,0,,{\\k10}backwards',
+].join('\n')), /ASS 文件中没有有效字幕/);
+
 console.log('ass.check: ok');

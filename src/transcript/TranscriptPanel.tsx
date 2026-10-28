@@ -177,7 +177,7 @@ export function TranscriptPanel({
             if (file) onImportSrt(file);
           }}
         />
-        <button type="button" className="cc-tx-btn" title={t('导入字幕（SRT / ASS / VTT）')} onClick={() => srtInputRef.current?.click()}>
+        <button type="button" className="cc-tx-btn" title={t('导入字幕（SRT/ASS/VTT）')} onClick={() => srtInputRef.current?.click()}>
           <Icon name="upload" size={13} />{t('导入字幕')}
         </button>
         <button

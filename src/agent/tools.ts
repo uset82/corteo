@@ -81,6 +81,10 @@ import {
   TIMELINE_IMPORT_TOOL_NAMES,
   TIMELINE_IMPORT_TOOL_SCHEMAS,
 } from './tools/schemas/timeline-import-tools';
+import {
+  SUBTITLES_TOOL_NAMES,
+  SUBTITLES_TOOL_SCHEMAS,
+} from './tools/schemas/subtitles-tools';
 import { withProgressTargets } from './tools/schemas/progress';
 import {
   AGENT_RUNTIME_TOOL_NAMES,
@@ -121,6 +125,8 @@ export const TOOL_SCHEMAS: AgentToolSchema[] = [
   ...STOCK_TOOL_SCHEMAS,
   // Word-level caption overrides: hide or replace words and force line breaks.
   ...CAPTIONS_TOOL_SCHEMAS,
+  // Subtitle files on disk (SRT, ASS karaoke, VTT) → a manual caption track.
+  ...SUBTITLES_TOOL_SCHEMAS,
   // Auto-avoid captions that cover the speaker's face (visual geometry).
   ...CAPTION_AVOIDANCE_TOOL_SCHEMAS,
   // Place overlay graphics in the geometry safe zone (avoid covering the speaker).
@@ -275,6 +281,11 @@ const EXECUTOR_GROUPS: ReadonlyArray<readonly [ReadonlySet<string>, ToolExecutor
   [DESIGN_TOOL_NAMES, async () => (await import('./tools/design-tools')).execDesignTool],
   [STOCK_TOOL_NAMES, async () => (await import('./tools/stock-tools')).execStockTool],
   [CAPTIONS_TOOL_NAMES, async () => (await import('./tools/captions-tools')).execCaptionsTool],
+  [SUBTITLES_TOOL_NAMES, async () => {
+    const { execImportSubtitlesTool } = await import('./tools/subtitles-tools');
+    // Its fourth parameter is the host reader, not the harness context.
+    return (name, args, ctx) => execImportSubtitlesTool(name, args, ctx);
+  }],
   [CAPTION_AVOIDANCE_TOOL_NAMES, async () => (await import('./tools/caption-avoidance-tools')).execCaptionAvoidanceTool],
   [PLACE_GRAPHICS_TOOL_NAMES, async () => (await import('./tools/placement-tools')).execPlaceGraphicsTool],
   [SHADER_TOOL_NAMES, async () => (await import('./tools/shader-tools')).execShaderTool],

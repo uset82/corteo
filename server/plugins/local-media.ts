@@ -8,6 +8,7 @@
 // treats an empty setting as "trust whoever installed this app", but a page
 // load carries no operating-system folder grant, so an empty allowlist refuses
 // instead of exposing every path on the machine.
+import { readFile, stat } from 'node:fs/promises';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin } from 'vite';
 import { isAgentLocalMediaRequest } from '../../shared/agent-local-media.ts';
@@ -16,15 +17,18 @@ import {
   normalizeDirectoryImportHashes,
 } from '../../shared/directory-import.ts';
 import { browseLocalMedia } from '../agent-local-media.ts';
-import { agentImportRootsConfigured, importAgentPaths } from '../local-path-import.ts';
+import { agentImportRootsConfigured, importAgentPaths, resolveAgentMediaPath } from '../local-path-import.ts';
 import { projectStoreHttpAuthorized } from '../project-store-http-auth.ts';
 import { UploadTooLargeError } from '../r2.ts';
 import { readBody, sendError, sendJson } from './upload-route-http.ts';
 
 export const LOCAL_MEDIA_BROWSE_PATH = '/api/local-media/browse';
 export const LOCAL_MEDIA_IMPORT_PATH = '/api/local-media/import';
+export const LOCAL_MEDIA_TEXT_PATH = '/api/local-media/text';
 
 const MAX_IMPORT_PATHS = 100;
+/** A subtitle file is text: refuse anything that would blow up a tool result. */
+const MAX_TEXT_BYTES = 2 * 1024 * 1024;
 /** A browse request is tiny, but an import carries the pool's whole content-hash
  *  list for dedup, which outgrows the 64 KiB upload default on a large project. */
 const MAX_JSON_BYTES = 2 * 1024 * 1024;
@@ -124,6 +128,36 @@ async function handleImport(req: IncomingMessage, res: ServerResponse): Promise<
   }
 }
 
+async function handleReadText(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (req.method !== 'POST') {
+    req.resume();
+    sendError(res, 405, 'method not allowed — use POST');
+    return;
+  }
+  if (!authorized(req, res) || !allowlisted(req, res)) return;
+  try {
+    const body = await readJsonObject(req);
+    const path = typeof body.path === 'string' ? body.path.trim() : '';
+    if (!path) {
+      sendError(res, 400, 'path is required');
+      return;
+    }
+    const resolved = await resolveAgentMediaPath(path);
+    const info = await stat(resolved);
+    if (!info.isFile()) {
+      sendError(res, 400, 'path is not a file');
+      return;
+    }
+    if (info.size > MAX_TEXT_BYTES) {
+      sendError(res, 413, `file is larger than ${MAX_TEXT_BYTES} bytes`);
+      return;
+    }
+    sendJson(res, 200, { path: resolved, text: await readFile(resolved, 'utf8') });
+  } catch (error) {
+    sendBodyError(res, error);
+  }
+}
+
 /** Vite ignores a rejected middleware promise, so turn handler bugs into a 500
  *  instead of an unhandled rejection that stalls the request. */
 function serve(
@@ -142,6 +176,7 @@ export function localMediaPlugin(): Plugin {
     configureServer(server) {
       server.middlewares.use(LOCAL_MEDIA_BROWSE_PATH, (req, res) => serve(handleBrowse, req, res));
       server.middlewares.use(LOCAL_MEDIA_IMPORT_PATH, (req, res) => serve(handleImport, req, res));
+      server.middlewares.use(LOCAL_MEDIA_TEXT_PATH, (req, res) => serve(handleReadText, req, res));
     },
   };
 }

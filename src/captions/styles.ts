@@ -47,12 +47,14 @@ export interface CaptionStyle {
   background?: string;
   /** Opacity applied to the configured caption background only. */
   backgroundOpacity?: number;
+  /** Optional UI grouping: the style menu shows this group under its own title. */
+  group?: 'videoclip';
 }
 
 // The first 9 presets follow PRD §4.17 (bundle only evidences "Bubble Pop" —
-// preset values are server-side); the other 12 presets are custom extensions.
-// `verso`/`coro` are the videoclip pair for sung lyrics (verse vs. chorus).
-// labelZh/hint are local UX.
+// preset values are server-side); the other 14 presets are custom extensions.
+// verso and coro are the Videoclip group: the two styles a song edit switches
+// between, quiet on the verse and loud on the chorus. labelZh/hint are local UX.
 export const CAPTION_STYLES: CaptionStyle[] = [
   { id: 'plain', label: 'Plain', labelZh: '简洁白字', hint: '白字无底，适合口播', fontFamily: 'Inter', fontSize: .042, fontWeight: 400, color: '#fff', highlightColor: '#fff', strokeColor: '#000', strokeWidth: 0, textShadow: 'none' },
   { id: 'black-bar', label: 'Subtitle Bar', labelZh: '黑底白字', hint: '整句黑底条，经典字幕（默认）', fontFamily: 'Noto Sans SC', fontSize: .04, fontWeight: 700, color: '#fff', highlightColor: '#fff', strokeColor: '#000', strokeWidth: 0, textShadow: 'none', wholeLine: true, background: '#000000c9' },
@@ -76,10 +78,8 @@ export const CAPTION_STYLES: CaptionStyle[] = [
   { id: 'product', label: 'Product Beam', labelZh: '产品绿标', hint: '青白字 + 荧光绿', fontFamily: 'Sora', fontSize: .038, fontWeight: 800, color: '#F7FFF9', highlightColor: '#071007', highlightBackground: '#A3FF12', strokeColor: '#000', strokeWidth: 0, textShadow: 'none' },
   { id: 'signal', label: 'Signal Flux', labelZh: '信号青', hint: '科技风青绿高亮', fontFamily: 'Unbounded', fontSize: .034, fontWeight: 800, color: '#EAFBFF', highlightColor: '#061016', highlightBackground: '#4DFFDF', strokeColor: '#000', strokeWidth: 0, textShadow: '0 0 6px #4dffdf2e,0 3px 10px #000b', textTransform: 'uppercase' },
   { id: 'deyi-card', label: 'Deyi Card', labelZh: '得意黑', hint: '中文展示字体', fontFamily: 'Smiley Sans', fontSize: .042, fontWeight: 400, color: '#fff', highlightColor: '#fff', strokeColor: '#000', strokeWidth: 0, textShadow: 'none' },
-  // Videoclip pair: verse reads quietly, chorus hits harder. Both keep the
-  // karaoke highlight so imported word timings are visible.
-  { id: 'verso', label: 'Verse', labelZh: '主歌', hint: '白字衬线，安静地跟歌词', fontFamily: 'Newsreader', fontSize: .04, fontWeight: 500, color: '#FDFBF7', highlightColor: '#F2C14E', strokeColor: '#0B0B0B', strokeWidth: .5, textShadow: '0 2px 8px #0009' },
-  { id: 'coro', label: 'Chorus', labelZh: '副歌', hint: '大字全大写，副歌顶出来', fontFamily: 'Inter Tight', fontSize: .062, fontWeight: 900, color: '#FFFDF8', highlightColor: '#FFFFFF', highlightBackground: '#FF3B5C', strokeColor: '#12080A', strokeWidth: 2, textShadow: '0 3px 10px #000b', textTransform: 'uppercase', wordsPerPage: 3 },
+  { id: 'verso', label: 'Verso', labelZh: '主歌', hint: '主歌：小号衬线，当前词提亮', fontFamily: 'Newsreader', fontSize: .036, fontWeight: 500, color: '#EFE9DE', highlightColor: '#FFE9A8', strokeColor: '#0009', strokeWidth: .5, textShadow: '0 2px 10px #000b', group: 'videoclip' },
+  { id: 'coro', label: 'Coro', labelZh: '副歌', hint: '副歌：大写粗体，撞色高亮', fontFamily: 'Archivo Black', fontSize: .062, fontWeight: 900, color: '#fff', highlightColor: '#0B0B0F', highlightBackground: '#FFD84A', strokeColor: '#000', strokeWidth: 2, textShadow: '0 3px 12px #000c', textTransform: 'uppercase', group: 'videoclip' },
 ];
 
 export const CAPTION_STYLE_BY_ID = Object.fromEntries(CAPTION_STYLES.map((style) => [style.id, style])) as Record<CaptionTemplate, CaptionStyle>;

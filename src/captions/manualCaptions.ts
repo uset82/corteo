@@ -75,31 +75,6 @@ export function appendManualLane(captions: CaptionsData, items: TimelineItem[]):
   return entryPatch([...entries, newManualEntry(count + 1)]);
 }
 
-/**
- * Imported subtitle cues already carry absolute timeline ms — exactly what a
- * manual lane stores. Import into the first manual lane (creating one when the
- * project has none) so transcript-driven lanes are never overwritten.
- */
-export function importSubtitleCues(
-  captions: CaptionsData,
-  items: TimelineItem[],
-  words: readonly TranscriptWord[],
-  options: { mode?: 'replace' | 'append'; label?: string } = {},
-): Partial<CaptionsData> {
-  const entries = promoteCaptionEntries(captions, items);
-  const existing = entries.find(isManualCaptionEntry);
-  const lane = existing ?? newManualEntry(entries.filter(isManualCaptionEntry).length + 1);
-  const combined = options.mode === 'append' ? [...(lane.words ?? []), ...words] : [...words];
-  const imported: CaptionSourceEntry = {
-    ...lane,
-    ...(options.label ? { label: options.label } : {}),
-    words: identifyManualCues(combined).sort((a, b) => a.start - b.start || a.end - b.end),
-  };
-  const index = entries.findIndex((entry) => entry.id === lane.id);
-  if (index >= 0) return entryPatch(entries.map((entry, at) => (at === index ? imported : entry)));
-  return entryPatch([...entries, imported]);
-}
-
 export function appendDroppedManualCaption(
   captions: CaptionsData,
   items: TimelineItem[],

@@ -9,7 +9,7 @@ import type { TranscriptWord } from '../transcript/types';
 // discarded.
 
 const ASS_TIME = /^(\d+):([0-5]\d):([0-5]\d)[.,](\d{1,3})$/;
-const KARAOKE = /\\(k|kf|ko)(\d+(?:\.\d+)?)/i;
+const KARAOKE = /\\(k|kf|ko)(\d+(?:\.\d+)?)/gi;
 
 function assMs(value: string): number | null {
   const match = value.trim().match(ASS_TIME);
@@ -49,10 +49,11 @@ function atomsOf(raw: string): Atom[] {
     buffer += raw.slice(index, open);
     const close = raw.indexOf('}', open + 1);
     const block = raw.slice(open + 1, close < 0 ? raw.length : close);
-    const karaoke = block.match(KARAOKE);
-    if (karaoke) {
+    // A block may carry more than one tag; the last one owns the text after it.
+    const tags = [...block.matchAll(KARAOKE)];
+    if (tags.length) {
       flush();
-      pendingCs = Number(karaoke[2]) * 10; // ASS stores centiseconds
+      pendingCs = Number(tags[tags.length - 1]![2]) * 10; // ASS stores centiseconds
     }
     index = close < 0 ? raw.length : close + 1;
   }
@@ -89,18 +90,31 @@ interface TimedAtom {
 
 /**
  * Turn the atoms of one dialogue into timed text pieces. Karaoke atoms keep
- * their own duration; untagged text shares whatever time is left over
- * proportionally to its length, so a line never runs past its END stamp.
+ * their own duration; untagged text before the first tag takes the leftover
+ * time, or one average syllable when the run already fills the cue. When the
+ * pieces overrun, the line is scaled down to its END stamp.
  */
 function timedAtoms(atoms: Atom[], start: number, end: number): TimedAtom[] {
-  const karaokeMs = atoms.reduce((sum, atom) => sum + (atom.cs ?? 0), 0);
-  const plainChars = atoms.reduce((sum, atom) => sum + (atom.cs === null ? atom.text.length : 0), 0);
-  const leftover = Math.max(0, end - start - karaokeMs);
-  const perChar = plainChars > 0 ? leftover / plainChars : 0;
+  const span = Math.max(0, end - start);
+  const karaoke = atoms.filter((atom) => atom.cs !== null);
+  const karaokeMs = karaoke.reduce((sum, atom) => sum + (atom.cs ?? 0), 0);
+  const plain = atoms.filter((atom) => atom.cs === null);
+  // Untimed text sits before the first tag and has no duration of its own: it
+  // takes what is left of the cue, or one average syllable when the karaoke run
+  // already fills it, so it keeps a slice instead of collapsing to nothing.
+  const plainMs = plain.length === 0
+    ? 0
+    : span > karaokeMs ? span - karaokeMs : karaokeMs / karaoke.length;
+  const plainChars = plain.reduce((sum, atom) => sum + atom.text.length, 0) || 1;
+  const raw = atoms.map((atom) => atom.cs ?? (plainMs * atom.text.length) / plainChars);
+  // A karaoke run that overruns its cue is scaled to fit; a shorter run is not
+  // stretched, because a gap at the end of a line is authored silence.
+  const total = raw.reduce((sum, duration) => sum + duration, 0);
+  const scale = total > span && total > 0 ? span / total : 1;
   let cursor = start;
-  return atoms.map((atom) => {
-    const duration = atom.cs ?? Math.round(perChar * atom.text.length);
-    const piece = { text: atom.text, start: cursor, end: cursor + duration };
+  return atoms.map((atom, index) => {
+    const duration = Math.max(1, Math.round(raw[index]! * scale));
+    const piece = { text: atom.text, start: cursor, end: Math.min(end, cursor + duration) };
     cursor += duration;
     return piece;
   });

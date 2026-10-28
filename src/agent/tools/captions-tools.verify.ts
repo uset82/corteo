@@ -286,9 +286,9 @@ assert.equal(en.enabled, true);
 assert.equal(en.template, 'netflix', 'enable preset picks the template');
 assert.equal(draft3.getState().captions?.sourceItemId, 'clip', 'enable anchors to the transcribed clip');
 
-// template 无参 → 列全部内建(22 源套系 + 黑底白字默认 + 视频歌词对);应用一个 → 只改 template,保留其它
+// template 无参 → 列全部内建(23 套系,含黑底白字默认);应用一个 → 只改 template,保留其它
 const tlist = await execCaptionsTool('edit_captions', { action: 'template' }, ctx3) as { presets: { id: string }[] };
-assert.equal(tlist.presets.length, 24, 'lists all built-in presets (22 + black-bar + verso/coro)');
+assert.equal(tlist.presets.length, 24, 'lists all built-in presets (21 + black-bar + verso/coro)');
 await execCaptionsTool('edit_captions', { action: 'template', templatePreset: 'bili' }, ctx3);
 assert.equal(draft3.getState().captions?.template, 'bili');
 

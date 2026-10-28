@@ -20,6 +20,7 @@ import { TRACK_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/track-tools.js
 import { TRANSCRIPT_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/transcript-tools.js';
 import { WATERMARK_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/watermark-tools.js';
 import { TIMELINE_IMPORT_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/timeline-import-tools.js';
+import { SUBTITLES_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/subtitles-tools.js';
 import { BEAT_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/beat-tools.js';
 import { MUSIC_INTELLIGENCE_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/music-intelligence-tools.js';
 import { DUPLICATE_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/duplicate-tools.js';
@@ -50,6 +51,7 @@ const OFFLINE_SCHEMA_GROUPS = [
   TRACK_TOOL_SCHEMAS,
   SCRIPT_TOOL_SCHEMAS,
   CAPTIONS_TOOL_SCHEMAS,
+  SUBTITLES_TOOL_SCHEMAS,
   WATERMARK_TOOL_SCHEMAS,
   MARKERS_TOOL_SCHEMAS,
   READ_PROJECT_TOOL_SCHEMAS,

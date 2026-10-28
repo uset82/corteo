@@ -1,4 +1,4 @@
-import { useEffect, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { PlayerRef } from '@remotion/player';
 import type { MediaAsset, TimelineItem, TrackId } from '../editor/types';
 import { useT } from '../i18n/locale';
@@ -6,6 +6,8 @@ import { trackTitle, type TranscriptTrackOption } from '../transcript/trackOptio
 import { msToFrame } from '../transcript/types';
 import { CaptionsControls } from './CaptionsControls';
 import { newManualCaptions } from './manualCaptions';
+import { subtitleTrackName, withSubtitleLane } from './subtitleImport';
+import { parseSubtitles } from './subtitles';
 import { buildTranslation } from './translate';
 import type { CaptionsData } from './types';
 
@@ -18,11 +20,15 @@ interface Props {
   captionTracks: Array<TranscriptTrackOption & { captions: CaptionsData | null }>;
   onSetCaptions: (captions: CaptionsData | null, track?: TrackId) => void;
   onUpdateCaptions: (patch: Partial<CaptionsData>, track?: TrackId) => void;
+  /** A subtitle file with no caption track to land on gets a track of its own. */
+  onCreateCaptionTrack: (captions: CaptionsData, opts?: { name?: string; order?: number }) => TrackId;
 }
 
 export function CaptionsPanel(props: Props) {
-  const { playerRef, fps, items, assets = [], captionTracks, onSetCaptions, onUpdateCaptions } = props;
+  const { playerRef, fps, items, assets = [], captionTracks, onSetCaptions, onUpdateCaptions, onCreateCaptionTrack } = props;
+  const t = useT();
   const [captionTrack, setCaptionTrack] = useState<TrackId | null>(captionTracks[0]?.id ?? null);
+  const fileInput = useRef<HTMLInputElement>(null);
   const captions = captionTracks.find((option) => option.id === captionTrack)?.captions ?? null;
   useEffect(() => {
     if (!captionTrack || !captionTracks.some((option) => option.id === captionTrack)) setCaptionTrack(captionTracks[0]?.id ?? null);
@@ -30,12 +36,39 @@ export function CaptionsPanel(props: Props) {
   const update = (patch: Partial<CaptionsData>) => onUpdateCaptions(patch, captionTrack ?? undefined);
   const set = (next: CaptionsData | null) => onSetCaptions(next, captionTrack ?? undefined);
   const translation = useCaptionTranslation(captions, items, fps, update);
+  // SRT, ASS and VTT: the parser is chosen from the extension, and the file adds
+  // a lane to the selected caption track (or brings its own track when there is none).
+  const importSubtitles = async (file: File) => {
+    try {
+      const words = parseSubtitles(file.name, await file.text());
+      const plan = withSubtitleLane(captions, items, file.name, words);
+      if (captionTrack) set(plan.captions);
+      else onCreateCaptionTrack(plan.captions, { name: subtitleTrackName(file.name) });
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      window.alert(`${t('字幕导入失败')}：${t(detail)}`);
+    }
+  };
   return (
     <div className="cc-captions-workspace">
       <div className="cc-captions-context">
         <CaptionTrackBar options={captionTracks} track={captionTrack} onChange={setCaptionTrack} />
+        <button type="button" className="cc-cap-btn sm" onClick={() => fileInput.current?.click()}>
+          {t('导入字幕（SRT/ASS/VTT）')}
+        </button>
+        <input
+          ref={fileInput}
+          type="file"
+          accept=".srt,.ass,.ssa,.vtt"
+          hidden
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = '';
+            if (file) void importSubtitles(file);
+          }}
+        />
       </div>
-      <CaptionsControls captionTrackId={captionTrack ?? undefined} captions={captions} assets={assets} sourceVariants={(captions?.sourceItemId ? items.find((item) => item.id === captions.sourceItemId)?.variants : undefined) ?? []} items={items} fps={fps} onSeekMs={(ms) => playerRef.current?.seekTo(msToFrame(ms, fps))} onCreateManual={() => set(newManualCaptions())} onSetCaptions={(next) => set(next)} getPlayheadMs={() => ((playerRef.current?.getCurrentFrame() ?? 0) / fps) * 1000} onUpdate={update} onRemove={() => set(null)} onTranslate={translation.run} translating={translation.running} translateError={translation.error} />
+      <CaptionsControls captionTrackId={captionTrack ?? undefined} captions={captions} assets={assets} sourceVariants={(captions?.sourceItemId ? items.find((item) => item.id === captions.sourceItemId)?.variants : undefined) ?? []} items={items} fps={fps} onSeekMs={(ms) => playerRef.current?.seekTo(msToFrame(ms, fps))} onCreateManual={() => set(newManualCaptions())} getPlayheadMs={() => ((playerRef.current?.getCurrentFrame() ?? 0) / fps) * 1000} onUpdate={update} onRemove={() => set(null)} onTranslate={translation.run} translating={translation.running} translateError={translation.error} />
     </div>
   );
 }

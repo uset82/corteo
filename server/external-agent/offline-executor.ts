@@ -127,6 +127,13 @@ export async function executeOfflineTool(
   if (name === 'read_transcript') return execReadTranscript(args, ctx);
   if (name === 'find_transcript') return execFindTranscript(args, ctx);
   if (name === 'import_timeline') return execTimelineImportTool(name, args, ctx);
+  if (name === 'import_subtitles') {
+    const [{ execImportSubtitlesTool }, { readLocalSubtitleFile }] = await Promise.all([
+      import('../../src/agent/tools/subtitles-tools.js'),
+      import('./offline-subtitles.ts'),
+    ]);
+    return execImportSubtitlesTool(name, args, ctx, { readTextFile: readLocalSubtitleFile });
+  }
   if (name === 'detect_beats') {
     const [{ runBeatTool }, { analyzeLocalBeats }] = await Promise.all([
       import('../../src/agent/tools/beat-tools.js'),

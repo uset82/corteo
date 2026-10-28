@@ -43,10 +43,11 @@ This skill is the order of operations, not a second engine: every step calls an 
 
 ## 4. Karaoke captions
 
-- `edit_captions` with `action: enable` and a preset: `tiktok`, `bubble-pop` or `submagic` for vertical, `netflix`, `plain` or `black-bar` for a cinema look.
+- `edit_captions` with `action: enable` and a preset: `verso` for the verses and `coro` for the chorus (the Videoclip pair: quiet serif against big caps), `tiktok`, `bubble-pop` or `submagic` for vertical, `netflix`, `plain` or `black-bar` for a cinema look.
 - `motionPreset`: `karaoke-pulse` highlights word by word, `pop` and `word-pop` accent entries, `none` keeps a clean lyric video.
+- When the user brings their own subtitles or lyrics file, `import_subtitles` takes an absolute path (SRT, ASS/SSA or VTT, picked from the extension) and puts it on a caption track. ASS karaoke lines keep their per-syllable timings, so the words light up one by one; a file without karaoke gives one caption per cue. Do not transcribe the song again just to get the words back.
 - `emphasize_keywords` marks numbers, names and shouted words in the accent colour. Call it after the captions exist; it writes per-word overrides in one step.
-- `read_captions` before exporting. Subtitle-file import does not exist yet: when the user brings an ASS or VTT file, say so and transcribe or paste the lines instead.
+- `read_captions` before exporting.
 
 ## 5. Versions to compare
 
@@ -63,4 +64,4 @@ This skill is the order of operations, not a second engine: every step calls an 
 
 ## Gaps to state honestly
 
-- Caption motion `latido`, subtitle import, variant previews and HEVC export are later tasks; say they are not built instead of improvising a substitute.
+- Caption motion `latido`, variant previews and HEVC export are later tasks; say they are not built instead of improvising a substitute.

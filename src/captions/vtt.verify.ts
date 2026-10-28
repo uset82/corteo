@@ -31,7 +31,13 @@ assert.equal(words[3]!.end, 8000);
 const SHORT = 'WEBVTT\n\n00:10.000 --> 00:12.500\nShort stamps\n';
 assert.deepEqual(parseVtt(SHORT), [{ text: 'Short stamps', start: 10_000, end: 12_500 }]);
 
+// Payload lines are joined and entities decoded; tags never leak into the text.
+const MULTI = 'WEBVTT\n\n00:00:04.000 --> 00:00:06.250\n<v Ana>Hola</v> &amp; adiós\nSegunda\nlínea\n';
+assert.deepEqual(parseVtt(MULTI), [{ text: 'Hola & adiós Segunda línea', start: 4000, end: 6250 }]);
+
 // A cue that ends before it starts is dropped; a file with none left throws.
 assert.throws(() => parseVtt('WEBVTT\n\n00:05.000 --> 00:04.000\nnope\n'), /VTT 文件中没有有效字幕/);
+assert.throws(() => parseVtt('WEBVTT\n\nNOTE solo notas\nsin pistas\n'), /VTT 文件中没有有效字幕/);
+assert.throws(() => parseVtt('no es un vtt'), /VTT 文件中没有有效字幕/);
 
 console.log('vtt.check: ok');
