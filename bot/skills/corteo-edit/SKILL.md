@@ -91,6 +91,33 @@ music does not add silence. Resolutions are `480p`, `720p`, `1080p`, `4k`.
 On a box with no GPU, prefix `CC_RENDER_GL=swangle`. If the render is killed for
 memory, run it again with `OPENCHATCUT_RENDER_CONCURRENCY=1`.
 
+## From a phone to an MP4
+
+A photo or a video the person sends lands in the host inbox, not in the chat.
+The newest one becomes a vertical MP4 in one call:
+
+```bash
+. ~/corteo/corteo.env
+"$CORTEO_OCC" inbox --host grok --json
+```
+
+Send `attachPath` back in the same chat; it is the absolute path of the render.
+`"$CORTEO_OCC" host show grok --json` prints `mediaInbox` if the person asks
+where to put the file. The output is 720p on the host's short 9:16 profile
+unless you pass `--resolution`.
+
+## A song and its lyrics into a film
+
+```bash
+. ~/corteo/corteo.env
+"$CORTEO_OCC" song-film --audio /absolute/path/song.wav --to 30s --json
+```
+
+`--lyrics-text` takes lyrics the person pasted; otherwise the command reads a
+`.lrc` or `.txt` beside the audio, then the local transcript. `--stills` takes
+comma-separated absolute image paths. Render 15 to 30 seconds first and the
+full song when the person asks. Send the returned `attachPath`.
+
 ## Where files go
 
 | What | Where |
