@@ -16,5 +16,43 @@
     "web": 3080,
     "forward": 18899
   },
-  "forwardPortRange": 10
+  "forwardPortRange": 10,
+  "brain": {
+    "routerPort": 18890,
+    "probeIntervalMinutes": 360,
+    "probeTimeoutMs": 30000,
+    "candidates": [
+      "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "liquid/lfm-2.5-2.6b:free",
+      "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "nvidia/nemotron-3.5-super-vl:free",
+      "kilo-auto/free",
+      "cohere/north-mini-code:free",
+      "dots-studio/dots-3-note-preview:free",
+      "nvidia/nemotron-3.5-lightning:free",
+      "openrouter/free"
+    ],
+    "aliases": {
+      "corteo-edit": {
+        "order": "listed",
+        "lanes": [
+          "nvidia/nemotron-3-ultra-550b-a55b:free",
+          "nvidia/nemotron-3.5-super-vl:free",
+          "kilo-auto/free",
+          "cohere/north-mini-code:free",
+          "nvidia/nemotron-3.5-lightning:free"
+        ],
+        "firstByteTimeoutMs": 90000
+      },
+      "corteo-draft": {
+        "order": "latency",
+        "needsProse": true,
+        "firstByteTimeoutMs": 60000
+      },
+      "corteo-fast": {
+        "order": "latency",
+        "firstByteTimeoutMs": 20000
+      }
+    }
+  }
 }

@@ -844,7 +844,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-10 | `occ song-film`: animate and render | done | EV-09, EV-06 (soft) |
 | EV-11 | Shorts: `reviewEs` before the batch | done | EV-03 (soft) |
 | EV-12 | Shorts, live on a talking video | blocked | EV-11 |
-| EV-13 | Brain aliases and the lane probe | todo | EV-00 (soft) |
+| EV-13 | Brain aliases and the lane probe | done | EV-00 (soft) |
 | EV-14 | Alias router with 429 failover | todo | EV-13 |
 | EV-15 | `npm run brain:serve` | todo | EV-14 |
 | EV-16 | `npm run brain`: boot, no browser, no pasted key | todo | EV-15 |
@@ -886,6 +886,8 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 - EV-10: tsc, song-film.verify, verify:cli and skill guard passed. Live result (temporary output removed): {"ok":true,"stage":"rendered","projectId":"4eccf6e4-2d74-4e8d-b300-d339ccf54681","audioItemId":"item_9a3f05e7-bab1-4e67-9f71-4da468528fb7","bpm":120.1,"lyricsSource":"txt","lines":[{"text":"primera línea","startMs":2000,"endMs":6000},{"text":"segunda línea","startMs":6000,"endMs":10000},{"text":"tercera línea","startMs":10000,"endMs":16000},{"text":"cuarta línea","startMs":16000,"endMs":20000},{"text":"quinta línea","startMs":20000,"endMs":23966.666666666668},{"text":"sexta línea","startMs":23966.666666666668,"endMs":30000}],"cutGrid":"downbeat","cuts":[0,60,240,300,540,779,900],"keyframedItems":12,"kenBurns":{"applied":6,"skipped":false},"reactions":{"applied":false,"reason":"music analysis is unavailable until the model pack(s) are installed"},"render":{"bytes":8250126,"durationSeconds":30,"frames":900,"dryRun":false}}. ffprobe: 1080x1920, one audio stream, 30.016 s; wall 49 s. The existing Ken Burns generator writes x or y only for pan directions; in/out intentionally write scale alone, so the verify checks pan axes when a pan is selected.
 
 - EV-11: tsc, shorts-host-flow.verify, shorts-tools.verify, verify:agent-tools, verify:skills, catalog generation/check, skill guard and registration gates passed. The host-flow fixture scores and cuts three exact word ranges into 1080x1920 sequences.
+
+- EV-13: ladder.verify, probe.verify, doctor.verify and both registration gates passed. The probe stores lane status and latency in private brain.json, with no forward key.
 
 ### EV: blockers
 - EV-12: no talking video in /home/carlos/corteo-media. Checked talk.mp4, talk.mov, talk.mkv and talk.webm; none exists. No speech was synthesized and no server was started. A talking video of at least two minutes at one of those paths unblocks the live run.
