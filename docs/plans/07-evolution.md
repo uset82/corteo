@@ -830,3 +830,21 @@ Boundaries
 - No questions to Carlos. Set EV-34 to doing, do it, run its verify commands, at most three attempts per error, stage by path, and commit with the card's message and the row set to done or blocked in the same commit.
 - Then write a three-line summary at the top of your section, commit it, and stop.
 ```
+
+### EV-35 · The install guide says what `install.sh` does now (ED)
+- Needs: EV-34.
+- Read: `documentation/CORTEO_INSTALL.md`, `install.sh` (`usage`, `print_dry_run`, `write_report`, `start_brain`, `install_host_profile`), `scripts/install.verify.mjs`, `scripts/no-claudia.verify.mjs` (this file may keep only `~/claudia`, `claudia.service` and `/home/you/claudia`).
+- Do: run `bash install.sh --help`, `bash install.sh --dry-run --json`, `bash install.sh --dry-run --host-profile muse` and `bash install.sh --dry-run --no-brain` (dry runs write nothing). Update the guide so every flag in `--help` and every key the report prints is described, including `--host-profile`, `--no-brain`, `CORTEO_HOST_PROFILE`, `CORTEO_SKILL_PATH`, `CORTEO_MEDIA_INBOX`, `CORTEO_EXPORT_DIR`, `CORTEO_BRAIN`, `CORTEO_BRAIN_STEP` and `CORTEO_BRAIN_URL`, and that the self-test prints `CORTEO_SELF_TEST=pass` in lowercase. The code wins: a statement the code contradicts is rewritten, and only what you ran or read in the code goes in. Keep the guide's language and style.
+- Done when: every `--help` flag and every report key appears in the guide.
+- Verify: `node scripts/no-claudia.verify.mjs`; `npm run verify:install`.
+- Commit: `EV-35: the install guide says what install.sh does now`.
+- Out of scope: `install.sh` itself; running a real install; the README (Qoder's).
+
+### EV-36 · The bot template learns the inbox and the song film (ED)
+- Needs: EV-35 (soft).
+- Read: `bot/README.md` (the budgets: ≤6 KB per skill, single-quoted shell examples, no tokens or private paths), `bot/skills/corteo-edit/SKILL.md`, `scripts/build-bot-recipe.mjs`, `skills/corteo/SKILL.md` sections "Del teléfono al MP4" and "Película de una canción".
+- Do: add to `bot/skills/corteo-edit/SKILL.md` the two shortest recipes in its own voice and command shape (`. ~/corteo/corteo.env` then `"$CORTEO_OCC"`): the inbox round trip (`"$CORTEO_OCC" inbox --host grok --json`, send `attachPath` back) and the song film (`"$CORTEO_OCC" song-film --audio … --to 30s --json`, render 15 to 30 seconds first). Replay each command once in a scratch library with `~/corteo-dsh/scripts/corteo` standing in for `$CORTEO_OCC` (`CORTEO_STORE_DIR`, `CORTEO_EXPORT_DIR`, `CORTEO_MEDIA_INBOX` in a `mktemp -d` folder, `CC_RENDER_GL=swangle`) and record the result. Then `npm run build:bot-recipe` and commit the regenerated `bot/dist/recipe.json`. If the file goes over 6 KB, shorten other prose in that skill; never drop a recipe that was already there.
+- Done when: `npm run verify:bot-recipe` passes and both commands ran in the replay.
+- Verify: `npm run verify:bot-recipe`; `node scripts/bot-rehearsal.verify.mjs`; `node scripts/no-claudia.verify.mjs`.
+- Commit: `EV-36: the bot template learns the inbox and the song film`.
+- Out of scope: `bot/skills/corteo-setup/SKILL.md` (its blocks are replayed by `scripts/bot-rehearsal.sh`); the other bot skills; code.

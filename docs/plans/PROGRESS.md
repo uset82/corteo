@@ -958,11 +958,44 @@ None yet.
 ## EV track · DeepSeek Harness (ED)
 Folder `~/corteo-dsh`, branch `ev-dsh`. Plan 7 › "Finishing in three tracks". Only DeepSeek Harness edits this section.
 
+**ED (2026-10-28):** EV-34 is done; the 10 runnable bash blocks and the two server-free prose recipes in `skills/corteo/SKILL.md` were replayed on a scratch library and every render was probed.
+Four wrong texts were fixed (id one-liners, `placed.startFrame`, `--apply` scope, `edit_track` message); no code fault was found.
+The three verifies pass, the row is `done`, and the scratch directory was deleted.
+
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
-| EV-34 | Replay `skills/corteo/SKILL.md` the way a host would | todo | |
+| EV-34 | Replay `skills/corteo/SKILL.md` the way a host would | done | |
+| EV-35 | The install guide says what `install.sh` does now | done | EV-34 |
+| EV-36 | The bot template learns the inbox and the song film | todo | EV-35 (soft) |
 
 ### ED: results
+
+- EV-35 (2026-10-28): ran `bash install.sh --help`, `bash install.sh --dry-run --json`, `bash install.sh --dry-run --host-profile muse` and `bash install.sh --dry-run --no-brain` from `~/corteo-dsh`; the dry runs created nothing. `documentation/CORTEO_INSTALL.md` now lists all 17 `--help` flags, the `CORTEO_HOST_PROFILE`/`CORTEO_BRAIN` inputs, the 22 full-report keys plus `CORTEO_MCP_TOKEN`, the brain keys (`CORTEO_BRAIN=ok|failed|skipped`, `CORTEO_BRAIN_STEP`, `CORTEO_BRAIN_URL`), the host keys (`CORTEO_SKILL_PATH`, `CORTEO_MEDIA_INBOX`, `CORTEO_EXPORT_DIR`), the dry-run keys (`CORTEO_OS`, `CORTEO_NODE_SYSTEM`, `CORTEO_NODE_TARGET`, `CORTEO_REF`, `CORTEO_START`, `CORTEO_WITH_DESKTOP`, `CORTEO_SKIP_SYSTEM_DEPS`, `CORTEO_PORT_STATE`, `CORTEO_SERVICE`, `CORTEO_LEGACY_DIR`, `CORTEO_LEGACY_ACTION`) and the uninstall dry-run keys (`CORTEO_ACTION`, `CORTEO_PURGE`); the self-test is documented as lowercase `pass`. A check extracted 17 flags from `--help` and 36 `report CORTEO_*` names from `install.sh` and found all of them in the guide. Verify: `node scripts/no-claudia.verify.mjs` ok; `npm run verify:install` ok (22 report keys, self-test shape, side-effect-free dry run, `--json` object, JSON failure).
+- Run 2026-10-28 in `~/corteo-dsh` (branch `ev-dsh`), Node v24.22.1. The replay copy replaced `~/corteo-exports` with `$T/exports` and both `~/corteo/scripts/corteo` and `$HOME/corteo/scripts/corteo` with `$CORTEO=~/corteo-dsh/scripts/corteo` (the bash blocks write the wrapper as `$HOME/...`). Scratch: `CORTEO_STORE_DIR=$T/library CORTEO_EXPORT_DIR=$T/exports CORTEO_MEDIA_INBOX=$T/inbox CC_RENDER_GL=swangle`; no editor server, no brain. `$T` deleted.
+- Bash blocks, in document order:
+  - block-01 One name: PASS 11 s (`CORTEO=...` and `--help`; `CORTEO_OCC` and the env source skipped).
+  - block-02 Install: SKIP, as the card says (curl install, `. ~/corteo/corteo.env` and `$CORTEO_OCC`; there is no curl install here).
+  - block-03 Start: SKIP (`npm run corteo:local` starts the editor; card).
+  - block-04 Verbs: PASS 158 s. Every line ran; `ASSET_ID`/`ITEM_ID` were filled from a `Night bus` project, the split used a second clip at frame 0 and an audio clip was added for `--to-audio`. Renders: 1920x1080, 6.016 s (`--from 0 --to 6s`) and 1920x1080, 6.016 s (`--to-audio`).
+  - block-05 id one-liners: PASS after the text fix below. The first attempt, with the text as committed, failed with `Error: Cannot find module 'import.json'`; with `./import.json` the three commands print the asset id, the placed item id and the split id. (The second run's driver compared with bare paths and failed its own check; the retry in the same scratch passed.)
+  - block-06 edit_track: PASS 11 s (an object and a JSON string both create a track).
+  - block-07 text: PASS 4 s.
+  - block-08 MCP: SKIP (needs the editor server; card).
+  - block-09 Receta rápida: PASS 48 s; `rapida.mp4` 1920x1080, 2.005 s (the song is 2 s).
+  - block-10 Video musical: PASS 144 s; `musical.mp4` 1920x1080, 6.016 s; `musical-4k.mp4` 3840x2160, 1.003 s. `detect_beats` returned `bpm` 112.2, `confidence` 3.09 and 12 `beats`.
+  - block-11 Lyric video: PASS 26 s; `lyric.mp4` 1920x1080, 2.005 s.
+  - block-12 Short vertical: PASS 91 s; `short-cover.mp4` and `short-blur.mp4` are both 1080x1920, 3.000 s; `remotion/frame-bars.mjs` cover and blur pass (top and bottom are picture, not black bars or the checkerboard).
+  - block-13 Motion title: PASS 31 s; `titulo.mp4` 1920x1080, 2.000 s.
+  - The `json` delegate example is not a bash block and needs the brain: SKIP. The skill has no `host install` block.
+- Prose recipes that need no server:
+  - `Del teléfono al MP4`: PASS. `host show grok --json` gave `mediaInbox`; `inbox --host grok --json` on a 3 s 1280x720 clip returned `attachPath` and a 720x1280 MP4.
+  - `Película de una canción`: PASS. `song-film --audio ... --to 6s --stills ... --lyrics-text ... --json` returned `ok`, `lyricsSource: pasted` and `cutGrid: downbeat`, and a 1080x1920, 6.016 s MP4 with audio (the example's 30 s was shortened to the scratch song).
+- Text fixed in `skills/corteo/SKILL.md` (code wins):
+  1. The id one-liners passed bare `import.json`/`place.json`/`split.json` to `require`, which searches `node_modules`; they now pass `./import.json`, and the prose says why.
+  2. A `placed` result has `startFrame`, not `fromFrame`; fixed.
+  3. `Writes need --apply` was false for `project new`, which ran without it; it now says edits.
+  4. The `edit_track` error quote was `/json must be string`; the code says `json must be a JSON object string`.
+- Verify: `node scripts/corteo-skill.verify.mjs` ok; `node scripts/corteo-acceptance.verify.mjs` ok; `node scripts/no-claudia.verify.mjs` ok (2599 tracked files).
 
 ### ED: blockers
 None yet.
