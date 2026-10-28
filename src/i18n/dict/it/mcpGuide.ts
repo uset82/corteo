@@ -37,4 +37,17 @@ export default {
   '连接 corteo': 'Connetti corteo',
   '把下面的配置交给 corteo。她从这台电脑以外编辑这个工程。编辑器的域名必须写进 hosting.egressDomains。':
     'Dai a corteo la configurazione qui sotto, così modifica questo progetto da fuori da questo PC. Il dominio dell’editor deve essere in hosting.egressDomains.',
+  // The "connect a bot" card (en/mcpGuide.ts).
+  '连接一个 bot': 'Collega un bot',
+  '一次安装，之后它自己驱动 corteo。': 'Una sola installazione, poi guida corteo da solo.',
+  'MCP 地址': 'URL MCP',
+  '复制地址': 'Copia URL',
+  '复制命令': 'Copia comando',
+  '令牌文件': 'File del token',
+  '机器人读这个文件，不要把内容贴进对话。': 'Il bot legge questo file; non incollarne il contenuto in una chat.',
+  '安装命令': 'Comando di installazione',
+  '把下面的片段交给 bot；它只带环境变量名，没有令牌。':
+    'Passa al bot il frammento qui sotto: contiene i nomi delle variabili d’ambiente, non il token.',
+  '导出与取帧工具需要一个已注册的编辑器标签页：在终端运行 npm run editor-host。':
+    'Gli strumenti di esportazione e di estrazione dei fotogrammi richiedono una scheda dell’editor registrata: esegui npm run editor-host in un terminale.',
 } as Record<string, string>;
