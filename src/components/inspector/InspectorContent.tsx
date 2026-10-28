@@ -13,6 +13,7 @@ import { FadeControl, IsolateVoiceControl, SpeedControl, TextControl, Transition
 import { BackgroundFillControl, EffectsControl, FilterControl, SectionLabel } from './InspectorVisualControls';
 import type { InspectorPanelProps } from './InspectorTypes';
 import { InspectorSlipControl } from './InspectorSlipControl';
+import { MusicReactionSection } from './MusicReactionSection';
 import { groupInspectorPropSchema } from './inspectorPropSchemaLayout';
 
 export type InspectorTab = 'basic' | 'video' | 'audio' | 'animation';
@@ -229,6 +230,7 @@ function AnimationTab({ panel, item }: InspectorContentProps) {
         focalPointY: isMixed(panel, (entry) => entry.zoom?.focalPointY ?? 0.5),
       }} onChange={panel.onItemZoomChange} getLocalFrame={() => Math.max(0, Math.min(item.durationInFrames - 1, panel.getPlayhead() - item.startFrame))} fps={panel.fps} onSetKeyframe={panel.onSetReframeKeyframe} onRemoveKeyframe={panel.onRemoveReframeKeyframe} /></>}
       {stillsOnly && panel.onApplyKenBurns && <><SectionLabel>{t('Ken Burns 效果')}</SectionLabel><div className="cc-insp-kb-grid">{KEN_BURNS_MENU_ORDER.map((direction) => <button key={direction} type="button" className="cc-insp-kb-btn" onClick={() => panel.onApplyKenBurns?.(direction)}>{t(KEN_BURNS_LABEL_KEYS[direction])}</button>)}</div></>}
+      {visual && panel.musicReaction && <MusicReactionSection {...panel.musicReaction} targets={panel.selectedItems} />}
       {visual && panel.selectedItems.length === 1 && <><SectionLabel>{t('转场')}</SectionLabel><TransitionControl transition={panel.transition} fps={panel.fps} onAdd={panel.onAddTransition} onSet={panel.onSetTransition} onRemove={panel.onRemoveTransition} audioMode={false} previewStatus={panel.selectedPreviewStatuses?.find((status) => status.kind === 'transition' && status.targetId === panel.transition?.id)} /></>}
       {item.kind === 'audio' && panel.selectedItems.length === 1 && <><SectionLabel>{t('音频转场')}</SectionLabel><TransitionControl transition={panel.transition} fps={panel.fps} onAdd={panel.onAddTransition} onSet={panel.onSetTransition} onRemove={panel.onRemoveTransition} audioMode /></>}
       <SectionLabel onReset={() => panel.onItemFadeChange({ fadeInFrames: 0, fadeOutFrames: 0 })} resetDisabled={(item.fadeInFrames ?? 0) === 0 && (item.fadeOutFrames ?? 0) === 0 && !isMixed(panel, (entry) => [entry.fadeInFrames ?? 0, entry.fadeOutFrames ?? 0])}>{t('淡入淡出')}</SectionLabel>

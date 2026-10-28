@@ -18,6 +18,8 @@ import type { FlexCropEdge } from '../../editor/flexCrop';
 import type { KenBurnsDirection } from '../../editor/kenBurns';
 import type { SelectedCaptionInspector } from '../../captions/captionSelection';
 import type { CaptionsData } from '../../captions/types';
+import type { AgentContext } from '../../agent/context';
+import type { MediaAsset } from '../../editor/types';
 
 export interface FadePatch {
   fadeInFrames?: number;
@@ -64,6 +66,7 @@ export interface InspectorPanelProps {
   onItemZoomChange: (patch: Partial<ZoomEffect> | null) => void;
   /** Stills only: write a timed move (scale/x/y keyframes) in one undo step. */
   onApplyKenBurns?: (direction: KenBurnsDirection) => void;
+  musicReaction?: { ctx: AgentContext; items: readonly TimelineItem[]; assets: readonly MediaAsset[] };
   onItemEffectsChange: (effects: ClipEffect[]) => void;
   selectedPreviewStatuses?: readonly SelectedPreviewStatus[];
   onItemSpeedChange?: (rate: number) => void;

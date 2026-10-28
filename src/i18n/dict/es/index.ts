@@ -1,6 +1,28 @@
 // Spanish UI translations - complete corteo translation
 // Chinese text is the key, Spanish is the value
 export default {
+  '音乐反应标题': 'Reaccionar a la música',
+  '音乐反应脉冲': 'Pulso',
+  '音乐反应冲击': 'Golpe',
+  '音乐反应震动': 'Temblor',
+  '音乐反应闪光': 'Destello',
+  '音乐反应呼吸': 'Respirar',
+  '音乐节奏 Ken Burns': 'Ken Burns al ritmo',
+  '音乐反应时机': 'Momento',
+  '音乐时机节拍': 'Pulsos',
+  '音乐时机小节': 'Compases',
+  '音乐时机重音': 'Acentos',
+  '音乐时机高潮': 'Caídas',
+  '音乐时机段落': 'Secciones',
+  '音乐时机能量': 'Energía',
+  '音乐反应强度': 'Intensidad',
+  '音乐反应应用': 'Aplicar',
+  '音乐反应移除': 'Quitar',
+  '音乐反应能量': 'Energía musical',
+  '时间线没有歌曲': 'No hay canción en la línea de tiempo',
+  '请先分析歌曲媒体徽章': 'Analiza la canción primero (insignia de la canción en Medios)',
+  '音乐反应完成': 'Reacción musical actualizada.',
+  '音乐反应未更改': 'No se cambió ninguna reacción. Revisa la canción, el momento y las pistas bloqueadas.',
   // Dashboard
   '· 我的工程': '· Mis Proyectos',
   '工程': 'Proyectos',

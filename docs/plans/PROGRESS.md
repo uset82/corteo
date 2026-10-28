@@ -905,6 +905,9 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 
 - EV-21 (L-12): tsc, lint (0 errors), verify:skills, verify:mcp, catalog generation/check, both registration gates and affected verifies passed. The MCP prompt was tested through a real session; bundled skill count is 33.
 
+- EV-22: implementation, Spanish static rendering, one-batch apply, tsc, lint (0 errors), verify:components, both registration gates and 55 affected verifies passed. The listed test path in the card is .tsx in the checkout, not .ts. The i18n source-key check and locale.verify passed before the baseline Italian coverage failure.
+
 ### EV: blockers
+- EV-22: `npm run verify:i18n` exits 1 at `src/i18n/dict/it/settingsCoverage.verify.ts`: Italian settings dictionary is missing the same 10 bot-connection keys recorded at EV-00 (AssertionError, expected empty array). Ran the component suite and source-key check; no change to the pre-existing Italian dictionary was made, as the repository instructions prohibit fixing a test that failed before this card. Adding those Italian translations and rerunning verify:i18n would unblock the card. The implemented UI is retained for review; the card is blocked because its required gate is not green.
 - EV-12: no talking video in /home/carlos/corteo-media. Checked talk.mp4, talk.mov, talk.mkv and talk.webm; none exists. No speech was synthesized and no server was started. A talking video of at least two minutes at one of those paths unblocks the live run.
 - EV-00 baseline: CC_RENDER_GL=swangle npm test exited 1 in src/i18n/dict/it/settingsCoverage.verify.ts: Italian settings dictionary is missing 10 keys for the bot connection UI (AssertionError, expected empty array). This predates EV changes; no fix attempted per card scope. Adding the missing Italian translations would unblock the gate. The serial chain stopped at that assertion and printed no segment summary.
