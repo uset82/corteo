@@ -19,36 +19,10 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const DOWNLOAD_TIMEOUT_MS = 20 * 60_000;
 const MEDIA_EXTENSIONS = new Set(['.mp4', '.mkv', '.webm', '.mov', '.m4a', '.mp3', '.wav', '.opus', '.flac', '.aac', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg']);
 
-export const PLATFORM_HOSTS = new Set([
-  'youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtu.be',
-  'vimeo.com', 'www.vimeo.com',
-  'bilibili.com', 'www.bilibili.com', 'b23.tv', 'www.b23.tv',
-]);
+import { platformTarget } from '../shared/platform-import.ts';
 
-export interface PlatformTarget {
-  readonly url: string;
-  readonly host: string;
-}
-
-/** Parse and allowlist a platform page before anything is downloaded. */
-export function platformTarget(raw: unknown): PlatformTarget {
-  if (typeof raw !== 'string' || !raw.trim()) throw new Error('url is required');
-  let parsed: URL;
-  try {
-    parsed = new URL(raw.trim());
-  } catch {
-    throw new Error('url must be an absolute http(s) URL');
-  }
-  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    throw new Error('url must be an absolute http(s) URL');
-  }
-  if (parsed.username || parsed.password) throw new Error('url must not carry credentials');
-  const host = parsed.hostname.toLowerCase();
-  if (!PLATFORM_HOSTS.has(host)) {
-    throw new Error(`unsupported platform host ${host}; use YouTube, Vimeo or Bilibili`);
-  }
-  return { url: parsed.toString(), host };
-}
+export { PLATFORM_HOSTS, platformTarget } from '../shared/platform-import.ts';
+export type { PlatformTarget } from '../shared/platform-import.ts';
 
 export function ytDlpBinary(explicit = process.env.OPENCHATCUT_YTDLP): string {
   if (explicit && existsSync(explicit)) return explicit;

@@ -371,6 +371,7 @@ export function MediaPoolPanel({
         onWatchFolder={canWatchDirectory ? () => void startWatch() : undefined} onStopWatch={() => void stopWatch()}
         watchingFolder={activeWatch?.directoryName ?? null} watchBusy={watchBusy}
         onMobileUpload={(restoreFocus) => { modalFocus.remember(restoreFocus); setMobileUploadOpen(true); }}
+        fps={fps} onAddAsset={onAddAsset}
         onAddSolid={() => onAddSolid?.()}
         onCreateFolder={createFolder}
         onViewChange={() => setView(toggleMediaView)}

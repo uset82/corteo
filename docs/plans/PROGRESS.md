@@ -79,7 +79,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P3-1 | Pinned yt-dlp sync | done | |
 | P3-2 | Platform import route + `import_from_platform` | done | P3-1 |
 | P3-3 | Source credits + `creditos.txt` | done | P3-2 |
-| P3-4 | "Importar desde enlace" dialog | todo | P3-2 |
+| P3-4 | "Importar desde enlace" dialog | done | P3-2 |
 | P4-1 | Variants model + tools | done | |
 | P4-2 | `render_variant_previews` | done | P4-1 |
 | P4-3 | "Comparar versiones" dialog | todo | P4-2 |
@@ -467,6 +467,7 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-28 · P3-1 · yt-dlp is pinned to `2026.10.26` with the release asset size and SHA-256 for linux x64/arm64, Windows x64 and macOS; `npm run sync:yt-dlp` downloads to the ignored `vendor/yt-dlp/<platform>/`, verifies before installing, writes provenance and is a 0.2 s no-op on the second run. `predev` provisions it. Downloaded binary: `yt-dlp --version` reports 2026.10.26.
 - 2026-10-28 · P3-2 · `POST /api/import-platform` accepts only YouTube / youtu.be / Vimeo / Bilibili / b23.tv, downloads with the pinned yt-dlp using `-f bv*+ba/b -S res,fps`, supports a section and `YTDLP_COOKIES_FILE`, streams NDJSON progress, then imports through the normal directory-import chain (ffprobe, hash, duplicate skip). `import_from_platform` reports that progress through `onToolProgress` and adds one pool asset. Progress is not a generation job yet, so `track_progress` does not poll it; the fake-yt-dlp regression covers allowlist, progress and import without network.
 - 2026-10-28 · P3-3 · `MediaAsset.source` is optional (old projects load unchanged). `import_from_platform` stores title/uploader/page URL/license; `download_media` accepts an optional `source` object with those fields plus lyricLine/searchQuery. A "Créditos" item in the media-pool menu lists only attributed assets and downloads `creditos.txt` from the browser. No new MCP tool was added: the plan only asks for the list and file.
+- 2026-10-28 · P3-4 · The media-pool actions menu opens an "Importar desde enlace" dialog. Platform pages stream progress from `/api/import-platform`; direct file URLs go to `/api/import-url`; both end by adding one pool asset locally. The allowlist moved to `shared/platform-import.ts` so the dialog and route cannot drift.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.

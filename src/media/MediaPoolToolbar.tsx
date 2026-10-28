@@ -20,6 +20,7 @@ import { mediaViewToggleLabel } from './mediaView';
 import { DirectoryImportActions } from './DirectoryImportActions';
 import { MediaDuplicatesContext, MediaDuplicatesDialog } from './MediaDuplicatesDialog';
 import { MediaCreditsDialog } from './MediaCreditsDialog';
+import { MediaImportLinkDialog } from './MediaImportLinkDialog';
 
 export type MediaToolbarMenu = 'sort' | 'filter' | 'actions' | null;
 const SORT_OPTIONS = [['newest', '最新导入'], ['name', '名称 A–Z'], ['duration', '时长']] as const;
@@ -47,6 +48,8 @@ interface MediaPoolToolbarProps {
   watchingFolder: string | null;
   watchBusy: boolean;
   onMobileUpload: (restoreFocus: () => void) => void;
+  fps: number;
+  onAddAsset: (asset: MediaAsset) => void;
   onAddSolid: () => void;
   onCreateFolder: (restoreFocus: () => void) => void;
   onViewChange: () => void;
@@ -201,6 +204,7 @@ function ActionsMenu(props: MenuProps) {
   const duplicates = useContext(MediaDuplicatesContext);
   const [duplicatesOpen, setDuplicatesOpen] = useState(false);
   const [creditsOpen, setCreditsOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
   const open = props.menu === 'actions';
   const run = (action: () => void, restoreFocus = false) => {
     action();
@@ -214,6 +218,7 @@ function ActionsMenu(props: MenuProps) {
     <button onClick={() => runModal(props.onMobileUpload)}><Icon name="qrCode" size={15} />{t('手机传素材')}</button>
     {duplicates && <button onClick={() => runModal(() => setDuplicatesOpen(true))}><Icon name="copy" size={15} />{t('Detectar duplicados')}</button>}
     <button onClick={() => runModal(() => setCreditsOpen(true))}><Icon name="bookOpen" size={15} />{t('Créditos')}</button>
+    <button onClick={() => runModal(() => setLinkOpen(true))}><Icon name="cloud" size={15} />{t('Importar desde enlace')}</button>
     {props.canAddSolid && <button onClick={() => run(props.onAddSolid, true)}><span className="cc-media-solid-icon">{t('色')}</span>{t('添加纯色')}</button>}
     <button onClick={() => runModal(props.onCreateFolder)}><Icon name="folderPlus" size={16} />{t('新建文件夹')}</button>
     <DirectoryImportActions
@@ -242,6 +247,7 @@ function ActionsMenu(props: MenuProps) {
         />
       )}
       {creditsOpen && <MediaCreditsDialog assets={props.assets} onClose={() => setCreditsOpen(false)} />}
+      {linkOpen && <MediaImportLinkDialog assets={props.assets} fps={props.fps} onAddAsset={props.onAddAsset} onClose={() => setLinkOpen(false)} />}
     </div>
   );
 }
