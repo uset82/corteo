@@ -9,6 +9,7 @@ import { TIMELINE_TOOL_NAMES, TIMELINE_TOOL_SCHEMAS } from './tools/schemas/time
 import { VARIANT_TOOL_NAMES, VARIANT_TOOL_SCHEMAS } from './tools/schemas/variant-tools';
 import { VARIANT_PREVIEW_TOOL_NAMES, VARIANT_PREVIEW_TOOL_SCHEMAS } from './tools/schemas/variant-preview-tools';
 import { SUBTITLE_TOOL_NAMES, SUBTITLE_TOOL_SCHEMAS } from './tools/schemas/subtitle-tools';
+import { PLATFORM_IMPORT_TOOL_NAMES, PLATFORM_IMPORT_TOOL_SCHEMAS } from './tools/schemas/platform-import-tools';
 import { SCRIPT_TOOL_NAMES, SCRIPT_TOOL_SCHEMAS } from './tools/schemas/script-tools';
 import { FRAMES_TOOL_NAMES, FRAMES_TOOL_SCHEMAS } from './tools/schemas/frames-tool';
 import { SCENE_DETECTION_TOOL_NAMES, SCENE_DETECTION_TOOL_SCHEMAS } from './tools/schemas/scene-detection-tools';
@@ -106,6 +107,8 @@ export const TOOL_SCHEMAS: AgentToolSchema[] = [
   ...VARIANT_PREVIEW_TOOL_SCHEMAS,
   // Plan 1 Phase 2: SRT/ASS/VTT import with karaoke word timing.
   ...SUBTITLE_TOOL_SCHEMAS,
+  // Plan 1 Phase 3: platform page import through the pinned yt-dlp.
+  ...PLATFORM_IMPORT_TOOL_SCHEMAS,
   // dynamic track management + stable ids (edit_track)
   ...TRACK_TOOL_SCHEMAS,
   // project media-pool organization (manage_media_pool)
@@ -275,6 +278,7 @@ const EXECUTOR_GROUPS: ReadonlyArray<readonly [ReadonlySet<string>, ToolExecutor
   [VARIANT_TOOL_NAMES, async () => (await import('./tools/variant-tools')).execVariantTool],
   [VARIANT_PREVIEW_TOOL_NAMES, async () => (await import('./tools/variant-preview-tools')).execVariantPreviewTool],
   [SUBTITLE_TOOL_NAMES, async () => (await import('./tools/subtitle-tools')).execSubtitleTool],
+  [PLATFORM_IMPORT_TOOL_NAMES, async () => (await import('./tools/platform-import-tools')).execPlatformImportTool],
   [TRACK_TOOL_NAMES, async () => (await import('./tools/track-tools')).execTrackTool],
   [MEDIA_POOL_TOOL_NAMES, async () => (await import('./tools/media-pool-tools')).execMediaPoolTool],
   [SCRIPT_TOOL_NAMES, async () => (await import('./tools/script-tools')).execScriptTool],

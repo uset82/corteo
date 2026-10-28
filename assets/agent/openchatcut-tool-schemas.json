@@ -980,6 +980,36 @@
       }
     },
     {
+      "name": "import_from_platform",
+      "description": "Import a YouTube, Vimeo or Bilibili video page into the media pool using the pinned yt-dlp. Real operation: downloads the highest-quality video/audio and streams download progress. Optional startSeconds/endSeconds download only that section; name overrides the asset title. Non-allowlisted hosts are rejected. Use download_media for a direct media file URL.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Platform page URL (youtube.com, youtu.be, vimeo.com, bilibili.com, b23.tv)."
+          },
+          "startSeconds": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Download only from this second (optional)."
+          },
+          "endSeconds": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Download only to this second; must be greater than startSeconds."
+          },
+          "name": {
+            "type": "string",
+            "description": "Optional asset name; defaults to the platform title."
+          }
+        },
+        "required": [
+          "url"
+        ]
+      }
+    },
+    {
       "name": "edit_track",
       "description": "Manage tracks. Actions: list | create | update | delete | tighten | reorder_items. Tracks have stable ids plus C1/C2/V1/A1 aliases that may renumber after insertion. create accepts json as an object or a JSON string, with trackType video/audio/caption and optional count/order/name/role/audioRouting. Each caption track owns independent caption data. update changes order/hidden/muted/locked/name/role/audioRouting — locked freezes the lane. delete removes empty tracks only. tighten closes gaps between media clips. reorder_items packs clips on one track in the given item id order (json.itemIds or json.orderedIds array), starting at the earliest startFrame of that set.",
       "input_schema": {

@@ -36,6 +36,7 @@ This skill is the order of operations, not a second engine: every step calls an 
 
 - One shot or still per line, not per word. The cuts follow the beat map, not the punctuation.
 - Import first: `browse_local_media` for an absolute path, `import_assets` for a list, `import_folder` for a directory. Check each import with `probe_media`; `finalize_uploaded_asset` is only for files the user uploads through the widget.
+- For a YouTube, Vimeo or Bilibili page, use `import_from_platform`; it streams progress and accepts an optional section start/end.
 - `search_media` searches the current pool. `search_stock_media` is hidden when providers are off.
 - `set_aspect_ratio` before framing. `auto_reframe` a moving clip when the canvas ratio differs, so the subject survives the crop. Stills land with their own duration and are trimmed with `set_item_timing` or `split_item`.
 - Titles and line cards: `add_motion_graphic` for a template, `create_motion_graphic_from_code` for a custom one. Keep them on a track above the visuals and `place_graphics_in_safe_zone` so they clear faces.

@@ -77,7 +77,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P2-5 | Countdown timecode | done | |
 | P2-6 | Premiere shortcut preset | done | |
 | P3-1 | Pinned yt-dlp sync | done | |
-| P3-2 | Platform import route + `import_from_platform` | todo | P3-1 |
+| P3-2 | Platform import route + `import_from_platform` | done | P3-1 |
 | P3-3 | Source credits + `creditos.txt` | todo | P3-2 |
 | P3-4 | "Importar desde enlace" dialog | todo | P3-2 |
 | P4-1 | Variants model + tools | done | |
@@ -465,6 +465,7 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-28 · P2-2 · ASS `\k`/`\kf`/`\ko` became word-level timing (last word extends to the Dialogue end), and ASS imports default to the new `verso` style with `word` pacing so the karaoke highlight is visible; SRT/VTT keep the existing black-bar default. The UI import button and `import_subtitles` share `parseSubtitles`, which creates one caption track in one undo batch. Videoclip groups `verso`/`coro` in the style menu.
 - 2026-10-28 · P2-6 · The Premiere Pro preset is a selectable keymap overlay: C blade, Y slip, R rate stretch, T trim, split moved to Mod+K so C can be the razor; B and N stay unbound because corteo has no ripple/rolling edit modes yet. Manual rebindings still win over the preset. This reuses the implementation from the earlier `p2-6-workbuddy` commit (`587f1e7`).
 - 2026-10-28 · P3-1 · yt-dlp is pinned to `2026.10.26` with the release asset size and SHA-256 for linux x64/arm64, Windows x64 and macOS; `npm run sync:yt-dlp` downloads to the ignored `vendor/yt-dlp/<platform>/`, verifies before installing, writes provenance and is a 0.2 s no-op on the second run. `predev` provisions it. Downloaded binary: `yt-dlp --version` reports 2026.10.26.
+- 2026-10-28 · P3-2 · `POST /api/import-platform` accepts only YouTube / youtu.be / Vimeo / Bilibili / b23.tv, downloads with the pinned yt-dlp using `-f bv*+ba/b -S res,fps`, supports a section and `YTDLP_COOKIES_FILE`, streams NDJSON progress, then imports through the normal directory-import chain (ffprobe, hash, duplicate skip). `import_from_platform` reports that progress through `onToolProgress` and adds one pool asset. Progress is not a generation job yet, so `track_progress` does not poll it; the fake-yt-dlp regression covers allowlist, progress and import without network.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.

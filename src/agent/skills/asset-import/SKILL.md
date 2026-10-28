@@ -17,6 +17,8 @@ The agent cannot read the user's filesystem. If the user gives you a `/Users/...
 
 Use `download_media` with a single URL or a batch array. The server fetches, stores under `/media/uploads/`, and registers pool assets. Prefer this for stock/web media the user pointed at. After download, the asset behaves like any other media-pool asset.
 
+For a YouTube, Vimeo or Bilibili page, use `import_from_platform` instead: the pinned yt-dlp extracts the highest-quality stream, streams download progress, and accepts `startSeconds`/`endSeconds` for a section. Non-allowlisted hosts are rejected; direct media file URLs still use `download_media`.
+
 ## Path 3 — external host transfer
 
 Call `import_media` with `{"action":"create_session", "assetType":..., "filename":..., "contentType":..., "size":...}`. It returns one short-lived upload slot bound to the current project, session, asset identity, basename, `POST`, MIME type, and exact byte count. A host-side script may upload to that exact URL with the declared headers. The agent sandbox cannot reach the user's localhost, so do not attempt the transfer from `run_code`.
