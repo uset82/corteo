@@ -12,6 +12,7 @@ const READ_ONLY_TOOL_NAMES = new Set([
   'music_reaction_plan',
   'search_catalog',
   'read_agent_artifact', 'browse_local_media', 'score_moments', 'calibrate_scores', 'write_social_copy',
+  'find_duplicate_media',
   'list_scheduled_publishes', 'score_performance',
 ]);
 
@@ -78,6 +79,8 @@ const SERVER_DIRECT_READ_TOOL_NAMES: Record<string, true> = {
   listen_to_song: true,
   // Read-only reaction plan: cached analysis plus the BGM clip mapping.
   music_reaction_plan: true,
+  // Exact hashes + ffmpeg dHash frames read the project's uploads; nothing is written.
+  find_duplicate_media: true,
 };
 
 const SERVER_DIRECT_EDIT_TOOL_NAMES: Record<string, true> = {

@@ -32,6 +32,15 @@ const base: Record<string, string> = {
   '速度': 'Tempo',
   '拍号': 'Compás',
   '能量': 'Energía',
+  '歌曲地图音量': 'Volumen',
+  '歌曲地图测量中': 'midiendo…',
+  '歌曲地图测量失败': 'No se pudo medir el audio de esta canción.',
+  '歌曲地图真实听感': 'Oído real',
+  '歌曲地图真实耳朵': 'Escuchar con oído real',
+  '歌曲地图正在听': 'Escuchando con oído real…',
+  '歌曲地图未开启真实耳朵': 'El oído real está apagado en este servidor.',
+  '歌曲地图文件不可达': 'El servidor no encuentra el archivo de esta canción.',
+  '歌曲地图真实耳朵失败': 'El oído real no pudo escuchar esta canción.',
   '音乐地图显示': 'Mapa musical',
   '音乐反应标题': 'Reaccionar a la música',
   '音乐反应脉冲': 'Pulso',
@@ -55,6 +64,8 @@ const base: Record<string, string> = {
   '请先分析歌曲媒体徽章': 'Analiza la canción primero (insignia de la canción en Medios)',
   '音乐反应完成': 'Reacción musical actualizada.',
   '音乐反应未更改': 'No se cambió ninguna reacción. Revisa la canción, el momento y las pistas bloqueadas.',
+  // Music analysis badge, popover and song map (src/audio/intelligence/*).
+  // The inspector tab strip the music reaction section lives in.
   // Dashboard
   '· 我的工程': '· Mis Proyectos',
   '工程': 'Proyectos',
@@ -117,7 +128,7 @@ const base: Record<string, string> = {
   
   // Timeline
   '时间轴': 'Línea de Tiempo',
-  '视频': 'Video',
+  '视频': 'Vídeo',
   '音频': 'Audio',
   '字幕': 'Subtítulos',
   '轨道': 'Pista',

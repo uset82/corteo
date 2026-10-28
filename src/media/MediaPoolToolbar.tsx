@@ -3,6 +3,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  useContext,
   type CSSProperties,
   type ReactNode,
   type RefObject,
@@ -17,6 +18,7 @@ import type { SemanticMatch } from './semantic-search/types';
 import type { MediaSortKey, MediaTypeFilter } from './mediaPoolFilter';
 import { mediaViewToggleLabel } from './mediaView';
 import { DirectoryImportActions } from './DirectoryImportActions';
+import { MediaDuplicatesContext, MediaDuplicatesDialog } from './MediaDuplicatesDialog';
 
 export type MediaToolbarMenu = 'sort' | 'filter' | 'actions' | null;
 const SORT_OPTIONS = [['newest', '最新导入'], ['name', '名称 A–Z'], ['duration', '时长']] as const;
@@ -195,6 +197,8 @@ function FilterMenu(props: MenuProps) {
 
 function ActionsMenu(props: MenuProps) {
   const t = useT();
+  const duplicates = useContext(MediaDuplicatesContext);
+  const [duplicatesOpen, setDuplicatesOpen] = useState(false);
   const open = props.menu === 'actions';
   const run = (action: () => void, restoreFocus = false) => {
     action();
@@ -206,6 +210,7 @@ function ActionsMenu(props: MenuProps) {
   };
   const popover = open && <div ref={props.lifecycle.menuRef} role="dialog" aria-label={t('更多操作')} className="cc-media-popover cc-media-actions-menu cc-media-toolbar-menu-fixed" style={props.lifecycle.actionsStyle}>
     <button onClick={() => runModal(props.onMobileUpload)}><Icon name="qrCode" size={15} />{t('手机传素材')}</button>
+    {duplicates && <button onClick={() => runModal(() => setDuplicatesOpen(true))}><Icon name="copy" size={15} />{t('Detectar duplicados')}</button>}
     {props.canAddSolid && <button onClick={() => run(props.onAddSolid, true)}><span className="cc-media-solid-icon">{t('色')}</span>{t('添加纯色')}</button>}
     <button onClick={() => runModal(props.onCreateFolder)}><Icon name="folderPlus" size={16} />{t('新建文件夹')}</button>
     <DirectoryImportActions
@@ -222,6 +227,17 @@ function ActionsMenu(props: MenuProps) {
     <div className="cc-media-menu-anchor">
       <button className={`cc-media-icon cc-tip cc-tip-r${open ? ' active' : ''}`} aria-label={t('更多操作')} data-tip={t('更多操作')} aria-haspopup="dialog" aria-expanded={open} onClick={(event) => props.lifecycle.toggle('actions', event.currentTarget)}><Icon name="more" size={19} /></button>
       {portalToolbarPopover(popover)}
+      {duplicatesOpen && duplicates && (
+        <MediaDuplicatesDialog
+          assets={props.assets}
+          items={duplicates.items}
+          fps={duplicates.fps}
+          onJumpToMediaItem={duplicates.onJumpToMediaItem}
+          onRemoveDuplicateMediaAssets={duplicates.onRemoveDuplicateMediaAssets}
+          onRemoveDuplicateMediaItems={duplicates.onRemoveDuplicateMediaItems}
+          onClose={() => setDuplicatesOpen(false)}
+        />
+      )}
     </div>
   );
 }

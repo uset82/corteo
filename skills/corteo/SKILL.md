@@ -71,7 +71,7 @@ For MCP hosts without a shell: `import_asset` → `edit_item` (audio) → `detec
 
 ## Vídeo largo a shorts
 
-Ask one question: "¿Para qué plataforma, cuántos clips, de qué duración y en qué idioma los quieres?" Start `npm run corteo:local` and `npm run editor-host -- --project <id>` on the VM. Over MCP: `target_project` → `transcribe_track` locally → `score_moments { count: 3, minSeconds, maxSeconds }` → show `reviewEs` and wait for yes → `make_shorts { ranges: <the three startWord/endWord ranges from score_moments>, ratio: '9:16' }`. Preview the first with `occ render --timeline <sequenceId> --resolution 480p --to 15s`, then render the batch at 1080p.
+Ask one question: "¿Para qué plataforma, cuántos clips, de qué duración y en qué idioma los quieres?" Start `npm run corteo:local` and `npm run editor-host -- --project <id>` on the VM (add `--base http://127.0.0.1:${CORTEO_PORT:-5199}` when `CORTEO_PORT` is not the default). Over MCP: `target_project` → `transcribe_track` locally → `score_moments { count: 3, minSeconds, maxSeconds }` → show `reviewEs` and wait for yes → `make_shorts { ranges: <the three startWord/endWord ranges from score_moments>, ratio: '9:16' }`. Preview the first with `occ render --timeline <sequenceId> --resolution 480p --to 15s`, then render the batch at 1080p.
 
 ## Start
 

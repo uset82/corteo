@@ -20,7 +20,7 @@ import {
   subscribeAutoMusicAnalysis,
 } from './preferences';
 import type { MusicAnalysis, MusicSectionRole, MusicTag, MusicTagKind } from './types';
-import { SongMapButton, SongMapDialog } from './SongMapDialog';
+import { SongMapButton, SongMapDialogPanel } from './SongMapDialog';
 import { requestMusicAnalysisPackRefresh, type MusicAnalysisCardState } from './useMusicAnalysisCards';
 import './music-analysis.css';
 
@@ -279,7 +279,7 @@ function MusicAnalysisPopover({ asset, state, panelRef, position, onClose }: Mus
         <button type="button" className="cc-music-analysis-close" aria-label={t('关闭')} onClick={onClose}><Icon name="x" size={15} /></button>
       </header>
       {showMap && state.state === 'ready'
-        ? <SongMapDialog analysis={state.analysis} asset={asset} onClose={() => setShowMap(false)} />
+        ? <SongMapDialogPanel analysis={state.analysis} asset={asset} onClose={() => setShowMap(false)} />
         : <AnalysisContent state={state} />}
       {state.state === 'ready' && state.modelPacksAvailable === false && (
         <p className="cc-music-analysis-state">{t('已显示缓存结果；重新分析需要先安装模型包。')}</p>

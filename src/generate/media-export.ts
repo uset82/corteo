@@ -3,7 +3,7 @@ import type { ProjectDoc, TimelineState } from '../editor/types';
 
 export interface SubmitMediaExportArgs {
   format: 'video' | 'audio';
-  codec?: 'h264' | 'vp8' | 'mp3' | 'wav';
+  codec?: 'h264' | 'h265' | 'vp8' | 'mp3' | 'wav';
   name?: string;
   startFrame?: number;
   endFrameExclusive?: number;
@@ -20,7 +20,7 @@ export interface SubmitMediaExportArgs {
 export interface MediaExportResult {
   status: 'completed';
   format: 'video' | 'audio';
-  codec: 'h264' | 'vp8' | 'mp3' | 'wav';
+  codec: 'h264' | 'h265' | 'vp8' | 'mp3' | 'wav';
   name: string;
   sizeBytes: number;
   startFrame?: number;
@@ -64,7 +64,7 @@ export async function submitMediaExport(
   timelineId: string,
 ): Promise<MediaExportResult> {
   const codec = args.codec ?? (args.format === 'video' ? 'h264' : 'mp3');
-  const ext = codec === 'h264' ? 'mp4' : codec === 'vp8' ? 'webm' : codec;
+  const ext = codec === 'h264' || codec === 'h265' ? 'mp4' : codec === 'vp8' ? 'webm' : codec;
   const selected = project.timelines.find((timeline) => timeline.id === timelineId);
   if (!selected) throw new Error(`timeline not found: ${timelineId}`);
   const geometry = applyExportGeometry(selected, { fps: args.fps, resolution: args.resolution });

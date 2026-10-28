@@ -23,6 +23,7 @@ import { TIMELINE_IMPORT_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/time
 import { SUBTITLES_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/subtitles-tools.js';
 import { BEAT_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/beat-tools.js';
 import { MUSIC_INTELLIGENCE_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/music-intelligence-tools.js';
+import { DUPLICATE_TOOL_SCHEMAS } from '../../src/agent/tools/schemas/duplicate-tools.js';
 
 const OFFLINE_TOOL_DESCRIPTIONS: Record<string, string> = {
   begin_edit_session: 'Start an offline server draft. approvalMode must be auto; open the editor URL for manual approval.',
@@ -57,6 +58,7 @@ const OFFLINE_SCHEMA_GROUPS = [
   TRANSCRIPT_TOOL_SCHEMAS,
   TIMELINE_IMPORT_TOOL_SCHEMAS,
   BEAT_TOOL_SCHEMAS,
+  DUPLICATE_TOOL_SCHEMAS,
 ] as const;
 
 function serverDirectSchemas(): ExternalRegisteredTool[] {

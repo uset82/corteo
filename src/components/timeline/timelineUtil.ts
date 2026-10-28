@@ -210,6 +210,74 @@ export function fmtClock(frames: number, fps: number): string {
   return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
 }
 
+export type TimecodeMode = 'elapsed' | 'remaining';
+
+/** Persisted toolbar timecode mode; storage can throw and must never break the app. */
+const TIMECODE_MODE_KEY = 'cc.timecodeMode';
+const timecodeModeListeners = new Set<() => void>();
+
+function storedTimecodeMode(): TimecodeMode {
+  try {
+    return localStorage.getItem(TIMECODE_MODE_KEY) === 'remaining' ? 'remaining' : 'elapsed';
+  } catch {
+    return 'elapsed';
+  }
+}
+
+let timecodeMode: TimecodeMode = storedTimecodeMode();
+
+export function getTimecodeMode(): TimecodeMode {
+  return timecodeMode;
+}
+
+export function setTimecodeMode(next: TimecodeMode): void {
+  if (next === timecodeMode) return;
+  timecodeMode = next;
+  try {
+    localStorage.setItem(TIMECODE_MODE_KEY, next);
+  } catch {
+    // Private mode or a full quota: the in-memory mode still toggles.
+  }
+  for (const listener of timecodeModeListeners) listener();
+}
+
+/** Flip the mode and return the new one, so the painter can repaint immediately. */
+export function toggleTimecodeMode(): TimecodeMode {
+  setTimecodeMode(timecodeMode === 'elapsed' ? 'remaining' : 'elapsed');
+  return timecodeMode;
+}
+
+export function subscribeTimecodeMode(listener: () => void): () => void {
+  timecodeModeListeners.add(listener);
+  return () => {
+    timecodeModeListeners.delete(listener);
+  };
+}
+
+/**
+ * Toolbar timecode. `elapsed` is the exact pair the toolbar has always shown.
+ * `remaining` counts down to the end as `-hh:mm:ss:ff`; it clamps at zero and
+ * carries no minus there.
+ */
+export function formatTimecode(
+  frame: number,
+  total: number,
+  fps: number,
+  mode: TimecodeMode,
+): string {
+  const safeFps = Number.isFinite(fps) && fps > 0 ? fps : 30;
+  const safeTotal = Math.max(0, Math.round(total));
+  if (mode === 'remaining') {
+    const clamped = Math.max(0, Math.min(Math.round(frame), safeTotal));
+    const remaining = safeTotal - clamped;
+    const seconds = Math.floor(remaining / safeFps);
+    const framesField = Math.floor(remaining - seconds * safeFps);
+    const text = `${fmtClock(remaining, safeFps)}:${String(framesField).padStart(2, '0')}`;
+    return remaining > 0 ? `-${text}` : text;
+  }
+  return `${fmt(Math.max(0, frame), safeFps)} / ${fmt(safeTotal, safeFps)}`;
+}
+
 /** pick major tick step (seconds) so labels stay readable at current zoom */
 export function rulerMajorSeconds(pxPerFrame: number, fps: number): number {
   // finer steps so zoomed-in timelines get sub-second / few-second marks

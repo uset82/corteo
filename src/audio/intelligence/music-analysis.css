@@ -215,3 +215,13 @@
   .cc-music-analysis-trigger[data-state="running"] .cc-music-analysis-dot { animation: none; }
   .cc-music-analysis-switch::after { transition: none; }
 }
+.cc-song-map h3,
+.cc-song-map h4 { margin: 10px 0 4px; color: var(--cc-text); font-size: 11px; font-weight: 600; }
+.cc-song-map h3 { margin: 0; font-size: 12px; }
+.cc-song-map p { margin: 4px 0; color: var(--cc-text-muted); font-size: 10.5px; }
+.cc-song-map svg { margin-top: 6px; border-radius: 4px; }
+.cc-song-map-ear { margin-top: 8px; padding-top: 8px; border-top: 0.5px solid var(--cc-border); }
+.cc-song-map-ear p { margin: 0 0 6px; }
+.cc-song-map-badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 9.5px; font-weight: 600; }
+.cc-song-map-badge.verified { background: var(--cc-accent); color: var(--cc-on-accent); }
+.cc-song-map-badge.unverified { background: var(--cc-panel, #2a2f36); color: var(--cc-text-dim); }

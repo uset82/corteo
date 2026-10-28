@@ -112,6 +112,10 @@ export async function executeOfflineTool(
     return execServerMusicTool(name, args, ctx);
   }
   if (name === 'read_agent_artifact') return execAgentRuntimeTool(name, args, ctx);
+  if (name === 'find_duplicate_media') {
+    const { findDuplicateMediaForContext } = await import('../media-duplicates-tool.js');
+    return findDuplicateMediaForContext(args, ctx);
+  }
   if (CORE_DATA_TOOL_NAMES.has(name)) return execCoreDataTool(name, args, ctx);
   if (name === 'manage_timelines') return execTimelineTool(name, args, ctx);
   if (name === 'edit_track') return execTrackTool(name, args, ctx);

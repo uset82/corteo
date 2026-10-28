@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { CallbackListener, PlayerRef } from '@remotion/player';
 import { loadTimelineView, saveTimelineView } from '../../persist/sessionPrefs';
-import { HEADER_W, fmt, fmtClock } from './timelineUtil';
+import { HEADER_W, fmtClock, formatTimecode, getTimecodeMode } from './timelineUtil';
 
 export interface AudibleAudioItem {
   /** Timeline start frame of the audio item. */
@@ -146,14 +146,14 @@ export function usePlayheadPaint({ playerRef, projectId, timelineId, fps, total,
     if (forceTc || now - lastTcPaintRef.current > 80) {
       lastTcPaintRef.current = now;
       const f = Math.round(timecodePreviewFrameRef.current ?? current);
-      if (toolbarTimecodeRef.current) toolbarTimecodeRef.current.textContent = `${fmt(f, fps)} / ${fmt(total, fps)}`;
+      if (toolbarTimecodeRef.current) toolbarTimecodeRef.current.textContent = formatTimecode(f, total, fps, getTimecodeMode());
       if (rulerTimecodeRef.current) rulerTimecodeRef.current.textContent = fmtClock(f, fps);
     }
   };
   const setTimecodePreviewFrame = (frame: number | null) => {
     timecodePreviewFrameRef.current = frame;
     const f = Math.round(frame ?? playheadRef.current);
-    if (toolbarTimecodeRef.current) toolbarTimecodeRef.current.textContent = `${fmt(f, fps)} / ${fmt(total, fps)}`;
+    if (toolbarTimecodeRef.current) toolbarTimecodeRef.current.textContent = formatTimecode(f, total, fps, getTimecodeMode());
     if (rulerTimecodeRef.current) rulerTimecodeRef.current.textContent = fmtClock(f, fps);
   };
   const paintPlayheadRef = useRef(paintPlayhead);

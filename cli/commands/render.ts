@@ -18,7 +18,7 @@ const FLAGS = [
 ] as const;
 
 const FORMATS = ['video', 'audio'] as const;
-const CODECS = ['h264', 'vp8', 'prores', 'mp3', 'wav'] as const;
+const CODECS = ['h264', 'h265', 'vp8', 'prores', 'mp3', 'wav'] as const;
 const RESOLUTIONS = ['480p', '720p', '1080p', '4k'] as const;
 
 function oneOf<T extends string>(value: string, allowed: readonly T[], flag: string): T {

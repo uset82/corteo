@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import * as ort from 'onnxruntime-web/webgpu';
 import ortJsepWasmUrl from '../../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm?url';
+import ortJsepMjsUrl from '../../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.mjs?url';
 import {
   BEAT_THIS_BORDER_FRAMES,
   BEAT_THIS_CHUNK_FRAMES,
@@ -26,7 +27,7 @@ const MAX_SAMPLES = BEAT_THIS_SAMPLE_RATE * 60 * 60;
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 
 ort.env.logLevel = 'error';
-ort.env.wasm.wasmPaths = { wasm: ortJsepWasmUrl };
+ort.env.wasm.wasmPaths = { mjs: ortJsepMjsUrl, wasm: ortJsepWasmUrl };
 
 type Backend = 'webgpu' | 'wasm';
 type AnalyzeRequest = { readonly id: number; readonly type: 'analyze'; readonly backend: Backend; readonly samples: Float32Array };

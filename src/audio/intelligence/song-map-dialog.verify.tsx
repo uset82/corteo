@@ -27,4 +27,28 @@ assert.equal(renderToStaticMarkup(<SongMapButton analysis={null} onOpen={() => u
 assert.match(renderToStaticMarkup(<SongMapButton analysis={analysis} onOpen={() => undefined} />), /Mapa de la canción/);
 const verified = renderToStaticMarkup(<SongMapDialog analysis={analysis} onClose={() => undefined} relay={{ ...relay, audioTokens: 8, status: 'verificado' }} />);
 assert.match(verified, /Escuchado de verdad/);
-console.log('song-map-dialog.verify: Spanish sections, map and optional listening evidence passed');
+assert.match(verified, /cc-song-map-badge verified/);
+
+// The measured numbers: a name for the key, a dB value for the loudness, and an
+// honest "measuring" while the browser still works on the audio.
+const measured = renderToStaticMarkup(<SongMapDialog analysis={analysis} onClose={() => undefined}
+  tonalKey={{ tonic: 'A', mode: 'minor', confidence: 0.8 }} loudness={{ busy: false, db: -18.2 }} />);
+assert.match(measured, /Tonalidad: A menor/);
+assert.match(measured, /Volumen: -18\.2 dB/);
+assert.match(renderToStaticMarkup(<SongMapDialog analysis={analysis} onClose={() => undefined} loudness={{ busy: true, db: null }} />), /Volumen: midiendo…/);
+assert.match(renderToStaticMarkup(<SongMapDialog analysis={analysis} onClose={() => undefined} loudness={{ busy: false, db: null }} measureError="No se pudo medir el audio de esta canción." />), /Volumen: —/);
+assert.match(renderToStaticMarkup(<SongMapDialog analysis={analysis} onClose={() => undefined} measureError="No se pudo medir el audio de esta canción." />), /No se pudo medir el audio de esta canción\./);
+
+// The real ear only shows its button when the server says the relay is switched on.
+const withEar = renderToStaticMarkup(<SongMapDialog analysis={analysis} onClose={() => undefined} relayState={{ available: true, busy: false, error: null }} />);
+assert.match(withEar, /Escuchar con oído real/);
+assert.match(withEar, /Oído real/);
+assert.doesNotMatch(renderToStaticMarkup(<SongMapDialog analysis={analysis} onClose={() => undefined} relayState={{ available: false, busy: false, error: 'El oído real está apagado en este servidor.' }} />), /<button[^>]*>Escuchar/);
+assert.match(renderToStaticMarkup(<SongMapDialog analysis={analysis} onClose={() => undefined} relayState={{ available: true, busy: false, error: 'El oído real no pudo escuchar esta canción.' }} />), /El oído real no pudo escuchar esta canción\./);
+const busyEar = renderToStaticMarkup(<SongMapDialog analysis={analysis} onClose={() => undefined} relayState={{ available: true, busy: true, error: null }} />);
+assert.match(busyEar, /Escuchando con oído real…/);
+assert.match(busyEar, /<button[^>]*disabled/);
+
+assert.doesNotMatch(renderToStaticMarkup(<SongMapDialog analysis={analysis} onClose={() => undefined} relayState={{ available: false, busy: false, error: null }} />), /Oído real/);
+
+console.log('song-map-dialog.verify: Spanish sections, map, optional listening evidence and the quiet real ear passed');

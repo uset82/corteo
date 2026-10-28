@@ -27,6 +27,7 @@ import { assemblyAiUploadPlugin } from "./assemblyai-upload.ts";
 import { transcriptionPlugin } from "./transcription.ts";
 import { extractFramesPlugin } from "./extract-frames.ts";
 import { sceneDetectionPlugin } from "./scene-detection.ts";
+import { mediaDuplicatesPlugin } from './media-duplicates.ts';
 import { autoGradePlugin } from "./auto-grade.ts";
 import { mediaPreviewPlugin } from "./media-preview.ts";
 import { isolateVoicePlugin } from "./isolate-voice.ts";
@@ -109,6 +110,7 @@ export function serverPlugins(options: { projectStoreHttp?: boolean } = {}): Plu
     transcriptionPlugin(transcriptionOptions()),
     extractFramesPlugin(),
     sceneDetectionPlugin(),
+    mediaDuplicatesPlugin(),
     autoGradePlugin(),
     mediaPreviewPlugin(),
     isolateVoicePlugin(),

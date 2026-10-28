@@ -29,7 +29,7 @@ const ENCODER_REFUSED = /encoder configuration .* is not supported|VideoEncoder 
 
 export type BrowserVideoCodec = 'h264' | 'vp8';
 /** Server mezzanine codecs are accepted on the route planner, then forced off the browser path. */
-export type PlannedVideoCodec = BrowserVideoCodec | 'prores';
+export type PlannedVideoCodec = BrowserVideoCodec | 'prores' | 'h265';
 
 type WebRendererModule = Pick<typeof import('@remotion/web-renderer'), 'canRenderMediaOnWeb' | 'renderMediaOnWeb'>;
 
@@ -128,8 +128,12 @@ async function loadBrowserRenderConfig(
   options: BrowserExportOptions,
 ): Promise<BrowserRenderConfig | Extract<BrowserExportAttempt, { status: 'unsupported' }>> {
   const { state, codec, resolution, videoBitrate, signal } = options;
-  if (codec === 'prores') {
-    return { status: 'unsupported', reason: 'ProRes 母带仅支持本机渲染', issues: ['codec=prores'] };
+  if (codec === 'prores' || codec === 'h265') {
+    return {
+      status: 'unsupported',
+      reason: codec === 'h265' ? 'HEVC 仅支持本机渲染' : 'ProRes 母带仅支持本机渲染',
+      issues: [`codec=${codec}`],
+    };
   }
   const { width, height, scale } = browserScaledExportDimensions(state, resolution);
   const container = codec === 'h264' ? 'mp4' : 'webm';
@@ -173,7 +177,7 @@ async function loadBrowserRenderConfig(
 function staticBrowserBlocker(
   options: BrowserExportOptions,
 ): Extract<BrowserExportAttempt, { status: 'unsupported' }> | null {
-  if (options.codec === 'prores') {
+  if (options.codec === 'prores' || options.codec === 'h265') {
     return {
       status: 'unsupported',
       reason: 'ProRes 母带仅支持本机渲染',
@@ -196,7 +200,7 @@ async function isBrowserEncodingPowerEfficient(
   config: BrowserRenderConfig,
 ): Promise<boolean | undefined> {
   const capabilities = globalThis.navigator?.mediaCapabilities;
-  if (!capabilities?.encodingInfo || options.codec === 'prores') return undefined;
+  if (!capabilities?.encodingInfo || options.codec === 'prores' || options.codec === 'h265') return undefined;
   const { width, height } = config;
   const bitrate = browserEncoderBitrate(options.codec, width, height, config.videoBitrate);
   try {
@@ -238,7 +242,7 @@ async function executeBrowserRender(
 ): Promise<Extract<BrowserExportAttempt, { status: 'rendered' }>> {
   const { state, project, timelineId, codec, signal, onProgress } = options;
   // Invariant: loadBrowserRenderConfig rejected prores before any render config existed.
-  if (codec === 'prores') throw new Error('prores must be rejected by loadBrowserRenderConfig');
+  if (codec === 'prores' || codec === 'h265') throw new Error(`${codec} must be rejected by loadBrowserRenderConfig`);
   const props: TimelineCompositionProps = { state, project, timelineId, transparent: false, browserRenderer: true };
   try {
     const { TimelineComposition } = await (options.loadComposition ?? (() => import('../editor/TimelineComposition')))();
