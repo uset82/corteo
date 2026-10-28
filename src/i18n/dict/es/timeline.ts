@@ -18,6 +18,8 @@ export default {
   '字': 'A',
   // ── TimelineToolbar.tsx ──
   '新建序列': 'Nueva secuencia',
+  '已用时间：点击切换为剩余时间': 'Tiempo transcurrido: haz clic para ver el tiempo restante',
+  '剩余时间：点击切换为已用时间': 'Tiempo restante: haz clic para ver el tiempo transcurrido',
   '新建轨道': 'Nueva pista',
   '视频轨道': 'Pista de vídeo',
   '音频 / 音乐轨道': 'Pista de audio / música',

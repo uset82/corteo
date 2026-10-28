@@ -111,6 +111,9 @@ MODEL-OPT-PLAN.md
 # Stable regressions are *.verify.* by convention (see the *.check.* rule
 # above), so they are never local-only.
 !/scripts/*.verify.mjs
+# P5-2: the Spanish half of the i18n gate. check-i18n.mjs imports it, so it has
+# to be tracked; `/scripts/*` above would otherwise swallow it silently.
+!/scripts/i18n-es-gate.mjs
 
 # Local marketing assets and drafts
 /marketing/

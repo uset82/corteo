@@ -15,6 +15,7 @@ import {
   h264HardwareSupportsDimensions,
   SOFTWARE_H264_PROFILE,
 } from './performance.mjs';
+import { hevcEncoderUnavailable, retagHvc1, transcodeHevc } from './hevc-tag.mjs';
 import { compensateAacEncoderDelay, remotionFfRunner, rendersRemotionAacTrack } from './aac-encoder-delay.mjs';
 import { renderDirectHardware } from './direct-hardware.mjs';
 import { assertMaterializedRenderSnapshot, normalizeH264Profile } from './render-contract.mjs';
@@ -209,6 +210,7 @@ async function renderMediaOptimized(options) {
   });
 }
 
+
 /**
  * Render a timeline state to video or audio at outputLocation.
  * @param {object} args
@@ -216,11 +218,12 @@ async function renderMediaOptimized(options) {
  * @param {import('../src/editor/types').ProjectDoc} [args.project]
  * @param {string} [args.timelineId]
  * @param {string} args.outputLocation  absolute output path
- * @param {'h264'|'vp8'|'prores'|'mp3'|'wav'} [args.codec]
+ * @param {'h264'|'h265'|'vp8'|'prores'|'mp3'|'wav'} [args.codec]
  * @param {[number, number]} [args.frameRange] inclusive Remotion frame range
  * @param {number} [args.videoBitrate] video bitrate in bits per second
  * @param {{id:string,label:string,hardware:boolean,transport:'server'}} [args.h264Profile]
  * @param {string} [args.vaapiDevice]
+ * @param {string} [args.ffmpegBinary] ffmpeg used for the HEVC hvc1 tag and the x265 fallback
  * @param {(progress: number) => void} [args.onProgress]  0..1
  * @param {AbortSignal} [args.signal]
  */
@@ -236,6 +239,7 @@ export async function renderTimeline({
   videoBitrate,
   h264Profile,
   vaapiDevice,
+  ffmpegBinary,
   signal,
 }) {
   if (!state || typeof state !== 'object' || !Array.isArray(state.items)) {
@@ -254,41 +258,56 @@ export async function renderTimeline({
   const proresOptions = codec === 'prores'
     ? { proResProfile: 'hq', imageFormat: 'png' }
     : {};
-  const rendered = await withAbortableCompositionSelection({
-    signal,
-    selectionOptions: {
-      serveUrl,
-      id: COMPOSITION_ID,
-      inputProps,
-      binariesDirectory: binariesDirectory(),
-      browserExecutable: browserExecutable(),
-      timeoutInMilliseconds: renderTimeoutInMilliseconds(),
-    },
-    run: (composition, browser) => renderMediaOptimized({
-      serveUrl,
-      composition,
-      codec,
-      frameRange,
-      inputProps,
-      outputLocation,
-      h264Profile,
-      vaapiDevice,
-      scale: scale && Number.isFinite(scale) && scale > 0 ? scale : 1,
-      videoBitrate: codec === 'prores'
-        ? undefined
-        : Number.isFinite(videoBitrate) && videoBitrate > 0
-          ? `${Math.round(videoBitrate / 1000)}k`
-          : undefined,
-      ...proresOptions,
-      chromiumOptions: { gl: resolveRenderGlBackend() },
-      browserExecutable: browserExecutable(),
-      puppeteerInstance: browser,
-      onProgress: onProgress ? ({ progress }) => onProgress(progress) : undefined,
-      cancelSignal,
-      abortSignal: signal,
-      timeoutInMilliseconds: renderTimeoutInMilliseconds(),
-    }),
+  const selectionOptions = {
+    serveUrl,
+    id: COMPOSITION_ID,
+    inputProps,
+    binariesDirectory: binariesDirectory(),
+    browserExecutable: browserExecutable(),
+    timeoutInMilliseconds: renderTimeoutInMilliseconds(),
+  };
+  const renderAttempt = (composition, browser, attemptCodec, attemptOutput) => renderMediaOptimized({
+    serveUrl,
+    composition,
+    codec: attemptCodec,
+    frameRange,
+    inputProps,
+    outputLocation: attemptOutput,
+    h264Profile,
+    vaapiDevice,
+    scale: scale && Number.isFinite(scale) && scale > 0 ? scale : 1,
+    videoBitrate: attemptCodec === 'prores'
+      ? undefined
+      : Number.isFinite(videoBitrate) && videoBitrate > 0
+        ? `${Math.round(videoBitrate / 1000)}k`
+        : undefined,
+    ...(attemptCodec === 'prores' ? proresOptions : {}),
+    chromiumOptions: { gl: resolveRenderGlBackend() },
+    browserExecutable: browserExecutable(),
+    puppeteerInstance: browser,
+    onProgress: onProgress ? ({ progress }) => onProgress(progress) : undefined,
+    cancelSignal,
+    abortSignal: signal,
+    timeoutInMilliseconds: renderTimeoutInMilliseconds(),
   });
+  let rendered;
+  try {
+    rendered = await withAbortableCompositionSelection({
+      signal,
+      selectionOptions,
+      run: (composition, browser) => renderAttempt(composition, browser, codec, outputLocation),
+    });
+  } catch (error) {
+    if (codec !== 'h265' || !hevcEncoderUnavailable(error)) throw error;
+    const h264Fallback = `${outputLocation}.h264-fallback.mp4`;
+    rendered = await withAbortableCompositionSelection({
+      signal,
+      selectionOptions,
+      run: (composition, browser) => renderAttempt(composition, browser, 'h264', h264Fallback),
+    });
+    await transcodeHevc(h264Fallback, outputLocation, ffmpegBinary, videoBitrate);
+  }
+  if (codec === 'h265') await retagHvc1(outputLocation, ffmpegBinary);
   signal?.throwIfAborted();
   return {
     outputLocation,

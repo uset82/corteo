@@ -75,6 +75,7 @@ export async function renderExportPlan(
       frameRange: plan.frameRange,
       scale: plan.scale,
       videoBitrate: plan.videoBitrate,
+      ffmpegBinary: ffmpegBin(),
       ...await h264RenderOptions(plan.media.codec),
       onProgress: createRenderProgress(update, plan.totalFrames, plan.retimeFps ? 84 : 90),
       signal,

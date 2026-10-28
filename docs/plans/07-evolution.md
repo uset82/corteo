@@ -863,3 +863,13 @@ Boundaries
 - Verify: `npx tsc -b`; `npx tsx cli/song-film.verify.ts`; `npm run verify:cli`; `npm run verify:music-intelligence`; `npm run verify:affected -- <the files you changed>`; the registration gates if you add a verify.
 - Commit: `EV-37: occ song-film exits when it is done`.
 - Out of scope: the MCP server's warm workers; model packs; anything outside `server/music-listen/` and `cli/`.
+
+### EV-38 · The skill's MCP blocks, replayed against a running editor (ED)
+- Needs: EV-34.
+- Why: EV-34 skipped every block that needs a server. A host that speaks MCP follows those blocks word for word.
+- Read: `skills/corteo/SKILL.md` (the MCP section, `## El cerebro: modelos gratis`, `## Del teléfono al MP4`, `## Vídeo largo a shorts`), AGENTS.md › MCP smoke test.
+- Do: in `~/corteo-dsh` (WSL, Node 24), `T=$(mktemp -d)`; start your own editor: `CORTEO_PORT=5202 CORTEO_STORE_DIR=$T/library nohup npm run corteo:local > $T/editor.log 2>&1 &` and wait until `http://127.0.0.1:5202/` answers. Run every MCP block of the skill against port 5202, the token read with `CORTEO_PORT=5202 ~/corteo-dsh/scripts/corteo mcp token --show` into a variable (never printed, never written to a file): the handshake, `tools/list` (record the count and that `delegate` is listed), `openchatcut_status`, and the `delegate` example. The brain is stopped and you must not start it, so `delegate` must answer `brain_unavailable`; check the skill tells a host to do the step itself in that case. For `## Vídeo largo a shorts`, only check that every tool it names appears in `tools/list` (it also needs `npm run editor-host` and a talking video: skip the run). Record pass or fail per block. A wrong command, flag or JSON path in the skill → fix the text (the code wins) and rerun; a code fault → ED: blockers, no code change. Stop your editor (`kill` its process group) and delete `$T` before committing.
+- Done when: every server block has a pass or fail line in ED: results and the text fixes are committed.
+- Verify: `node scripts/corteo-skill.verify.mjs`; `node scripts/corteo-acceptance.verify.mjs`; `node scripts/no-claudia.verify.mjs`.
+- Commit: `EV-38: the corteo skill's MCP blocks replayed against a running editor`.
+- Out of scope: starting the brain or the harness; code changes; `bot/skills/*`.

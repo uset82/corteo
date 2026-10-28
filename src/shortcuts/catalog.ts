@@ -1,4 +1,4 @@
-// Default keyboard preset with 56 actions. The UI can show Chinese via labelZh.
+// Default keyboard preset with 57 actions. The UI can show Chinese via labelZh.
 
 export type ShortcutGroup =
   | 'ai'
@@ -53,6 +53,10 @@ export const SHORTCUT_CATALOG: ShortcutAction[] = [
   { id: 'interaction-mode-selection', label: 'Selection Mode', labelZh: '选择模式', group: 'edit', keys: 'V' },
   { id: 'interaction-mode-trim', label: 'Trim Edit Mode', labelZh: '修剪模式', group: 'edit', keys: 'N' },
   { id: 'interaction-mode-slip', label: 'Slip Edit Mode', labelZh: '滑移模式', group: 'edit', keys: 'U' },
+  // Registered without a factory key: useEditorActions already handles this id, but
+  // the catalog never listed it, so the tool was unreachable by keyboard. The
+  // Premiere Pro preset is what puts it on R (P2-6).
+  { id: 'interaction-mode-rate-stretch', label: 'Rate Stretch Tool', labelZh: '变速模式', group: 'edit', keys: '' },
   { id: 'interaction-mode-blade', label: 'Blade Edit Mode', labelZh: '刀片模式', group: 'edit', keys: 'B' },
   { id: 'interaction-mode-pen', label: 'Pen Edit Mode', labelZh: '钢笔模式', group: 'edit', keys: 'P' },
   { id: 'nudge-left', label: 'Nudge left 1 / 5 frames', labelZh: '左移 1/5 帧', group: 'edit', keys: 'E / Shift + E' },

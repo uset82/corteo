@@ -451,6 +451,9 @@ export default {
   '按下按键… (Esc)': 'Press keys… (Esc)',
   '已被占用：': 'is already used by: ',
   '仍要绑定': 'Bind anyway',
+  '键位预设': 'Keymap preset',
+  'Premiere Pro 预设': 'Premiere Pro preset',
+  'C 刀片、Y 滑移、R 变速、T 修剪；编辑器没有波纹编辑和滚动编辑，B 和 N 未绑定。': 'C blade, Y slip, R rate stretch, T trim. Ripple and rolling edit do not exist yet, so B and N are unbound.',
 
   // ── MediaCleanupDialog ──
   '清理素材': 'Clean Up Media',

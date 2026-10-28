@@ -17,6 +17,8 @@ export default {
   '字': 'C',
   // ── TimelineToolbar.tsx ──
   '新建序列': 'New sequence',
+  '已用时间：点击切换为剩余时间': 'Elapsed time: click to show the time remaining',
+  '剩余时间：点击切换为已用时间': 'Time remaining: click to show the elapsed time',
   '新建轨道': 'New track',
   '视频轨道': 'Video track',
   '音频 / 音乐轨道': 'Audio / music track',

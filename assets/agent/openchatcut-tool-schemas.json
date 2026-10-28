@@ -2216,11 +2216,12 @@
             "type": "string",
             "enum": [
               "h264",
+              "h265",
               "vp8",
               "mp3",
               "wav"
             ],
-            "description": "Video: h264 (default) or vp8. Audio: mp3 (default) or wav."
+            "description": "Video: h264 (default), h265 (HEVC, server-only, hvc1-tagged MP4) or vp8. Audio: mp3 (default) or wav."
           },
           "subtitleFormat": {
             "type": "string",
@@ -3522,11 +3523,12 @@
             "type": "string",
             "enum": [
               "h264",
+              "h265",
               "vp8",
               "mp3",
               "wav"
             ],
-            "description": "Video: h264 (default) or vp8. Audio: mp3 (default) or wav."
+            "description": "Video: h264 (default), h265 (HEVC, server-only, hvc1-tagged MP4) or vp8. Audio: mp3 (default) or wav."
           },
           "resolution": {
             "type": "string",

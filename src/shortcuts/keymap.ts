@@ -4,8 +4,10 @@
 // pure of React so both can share it (a tiny listener store drives re-renders).
 import { SHORTCUT_CATALOG, type ShortcutAction } from './catalog';
 import { parseBindingAlts, normalizeKey, type ParsedChord } from './match';
+import { DEFAULT_PRESET_ID, PRESET_BY_ID } from './presets';
 
 const LS_KEY = 'cc.keymap.v1';
+const LS_PRESET_KEY = 'cc.keymap.preset.v1';
 type UserKeymap = Record<string, string>; // actionId → override binding string
 
 function readLS(): UserKeymap {
@@ -30,7 +32,17 @@ function writeLS(m: UserKeymap): void {
   try { if (typeof localStorage !== 'undefined') localStorage.setItem(LS_KEY, JSON.stringify(m)); } catch { /* private mode / quota */ }
 }
 
+function readPresetLS(): string {
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(LS_PRESET_KEY) : null;
+    return raw && PRESET_BY_ID[raw] ? raw : DEFAULT_PRESET_ID;
+  } catch {
+    return DEFAULT_PRESET_ID;
+  }
+}
+
 let userKeymap: UserKeymap = readLS();
+let activePreset: string = readPresetLS();
 let cache: ShortcutAction[] | null = null;
 const listeners = new Set<() => void>();
 
@@ -45,10 +57,29 @@ export function subscribeKeymap(fn: () => void): () => void {
   return () => { listeners.delete(fn); };
 }
 
-/** The catalog with user overrides applied (memoized until a binding changes). */
+/** The preset chosen in the shortcuts dialog; survives reloads. */
+export function activePresetId(): string { return activePreset; }
+
+/** Switch preset. Manual rebindings are kept and still win over the preset. */
+export function setPreset(id: string): void {
+  if (!PRESET_BY_ID[id] || id === activePreset) return;
+  activePreset = id;
+  try { if (typeof localStorage !== 'undefined') localStorage.setItem(LS_PRESET_KEY, id); } catch { /* private mode / quota */ }
+  invalidate();
+}
+
+/** The catalog with the active preset and then the user overrides applied (memoized
+ *  until either changes). The preset is the baseline, so a manual rebinding still
+ *  wins and resetBinding falls back to the preset's key, not the factory one. */
 export function effectiveCatalog(): ShortcutAction[] {
   if (!cache) {
-    cache = SHORTCUT_CATALOG.map((a) => (a.id in userKeymap ? { ...a, keys: userKeymap[a.id]! } : a));
+    const preset = PRESET_BY_ID[activePreset]?.bindings ?? {};
+    cache = SHORTCUT_CATALOG.map((a) => {
+      const keys = a.id in userKeymap
+        ? userKeymap[a.id]!
+        : (a.id in preset ? preset[a.id]! : a.keys);
+      return keys === a.keys ? a : { ...a, keys };
+    });
   }
   return cache;
 }

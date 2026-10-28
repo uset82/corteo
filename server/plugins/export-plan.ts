@@ -22,7 +22,7 @@ export type ExportRequest = {
   timelineId?: unknown;
   operationId?: unknown;
   format?: 'video' | 'audio';
-  codec?: 'h264' | 'vp8' | 'prores' | 'mp3' | 'wav';
+  codec?: 'h264' | 'h265' | 'vp8' | 'prores' | 'mp3' | 'wav';
   name?: string;
   startFrame?: number;
   endFrameExclusive?: number;
@@ -40,6 +40,8 @@ export type ExportTimeline = {
 
 export const EXPORT_MEDIA = {
   h264: { codec: 'h264', ext: 'mp4', mime: 'video/mp4' },
+  /** HEVC in MP4, tagged hvc1 so Apple players accept it. Server-only. */
+  h265: { codec: 'h265', ext: 'mp4', mime: 'video/mp4' },
   vp8: { codec: 'vp8', ext: 'webm', mime: 'video/webm' },
   /** Mezzanine master: ProRes 422 HQ (Remotion proResProfile hq). Server-only. */
   prores: { codec: 'prores', ext: 'mov', mime: 'video/quicktime' },
@@ -154,7 +156,7 @@ export function planExport(body: ExportRequest | null): ExportPlan {
     throw new ExportRequestError('format must be video or audio');
   }
   if (body?.codec !== undefined && !Object.hasOwn(EXPORT_MEDIA, body.codec)) {
-    throw new ExportRequestError('codec must be h264, vp8, prores, mp3, or wav');
+    throw new ExportRequestError('codec must be h264, h265, vp8, prores, mp3, or wav');
   }
   if (body?.name !== undefined && typeof body.name !== 'string') throw new ExportRequestError('name must be a string');
   if ([body?.startSeconds, body?.endSeconds].some((value) => value !== undefined && (typeof value !== 'number' || !Number.isFinite(value)))) {
@@ -177,8 +179,8 @@ export function planExport(body: ExportRequest | null): ExportPlan {
   const frameRange = normalizeFrameRange(totalFrames, startFrame, endFrame);
   const frames = frameRange ? frameRange[1] - frameRange[0] + 1 : totalFrames;
   const media = EXPORT_MEDIA[codec];
-  // ProRes is mezzanine-only: no fps retime pass (that path is H.264/VP8).
-  const retimeFps = format === 'video' && codec !== 'prores'
+  // ProRes and HEVC are server-only paths; their fps filter is not wired.
+  const retimeFps = format === 'video' && (codec === 'h264' || codec === 'vp8')
     && body?.fps !== undefined && body.fps !== fps
     ? body.fps
     : undefined;

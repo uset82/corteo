@@ -73,9 +73,9 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | L-13 | Listening end-to-end proof | blocked (no song) | L-11, L-12 |
 | P2-2 | Captions: verso/coro, ASS/VTT import | todo | |
 | P2-3 | Duplicate detector | todo | |
-| P2-4 | HEVC export + presets | todo | |
-| P2-5 | Countdown timecode | todo | |
-| P2-6 | Premiere shortcut preset | todo | |
+| P2-4 | HEVC export + presets | done | |
+| P2-5 | Countdown timecode | done | |
+| P2-6 | Premiere shortcut preset | done (C, Y, R and T; ripple and rolling edit do not exist, so B and N stay unbound) | |
 | P3-1 | Pinned yt-dlp sync | todo | |
 | P3-2 | Platform import route + `import_from_platform` | todo | P3-1 |
 | P3-3 | Source credits + `creditos.txt` | todo | P3-2 |
@@ -84,7 +84,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P4-2 | `render_variant_previews` | todo | P4-1 |
 | P4-3 | "Comparar versiones" dialog | todo | P4-2 |
 | P5-1 | Full Spanish dictionary | done (all modules translated; the brand.ts fold-in is left) | |
-| P5-2 | i18n coverage + placeholder gate | todo | P5-1 |
+| P5-2 | i18n coverage + placeholder gate | done (coverage, placeholders, one wording per key; allowlist empty) | P5-1 |
 | P5-3 | Untranslated-text scan | blocked (scan done; raw strings listed) | P5-2 |
 | P6-1 | Bot end-to-end proof + screenshots | todo | every task above is `done` or `blocked` |
 | P7-1 | EffectCraft titles sidecar | optional | P6-1 |
@@ -1012,9 +1012,9 @@ One real defect was fixed on the way (a6c11a8: Tempo, Compás, Energía); nothin
 ## EV track · DeepSeek Harness (ED)
 Folder `~/corteo-dsh`, branch `ev-dsh`. Plan 7 › "Finishing in three tracks". Only DeepSeek Harness edits this section.
 
-**ED (2026-10-28):** EV-34, EV-35, EV-36 and EV-37 are done: the corteo skill's recipes were replayed, `documentation/CORTEO_INSTALL.md` now describes every installer flag and report key, the bot's `corteo-edit` skill carries the inbox and song-film recipes with a regenerated `bot/dist/recipe.json`, and `occ song-film` exits when it is done.
-EV-37 found no pending music request: the warm workers' piped stderr and IPC kept the CLI alive, so the host unrefs all three handles while idle and `occ` disposes it after the command; the 15 s command exits 0 in 33.7 s, 0.28 s after its JSON, and the extended `cli/song-film.verify.ts` proves a pending fake host cannot keep the CLI alive.
-The earlier six verifies and the EV-37 verifies pass (`npx tsc -b`, `cli/song-film.verify.ts`, `verify:cli`, `verify:music-intelligence`, 10 affected verifies), all four rows are `done`, the EV-36 blocker is resolved, and the scratch directories were deleted.
+**ED (2026-10-28):** EV-34 to EV-38 are done: the corteo skill's recipes and MCP blocks were replayed (the MCP blocks against an editor on port 5202), `documentation/CORTEO_INSTALL.md` now describes every installer flag and report key, the bot's `corteo-edit` skill carries the inbox and song-film recipes with a regenerated `bot/dist/recipe.json`, and `occ song-film` exits when it is done.
+EV-38 passed the handshake, tools/list (53 headless, 144 with editor-host, `delegate` listed), `openchatcut_status`, the `delegate` example (`brain_unavailable`, with the skill's do-it-yourself line), the phone block and all four shorts tool names; the only text fix was the editor-host `--base` note for a non-default `CORTEO_PORT`.
+The skill, acceptance, no-claudia and earlier EV-34 to EV-37 verifies pass, all five rows are `done`, the EV-36 blocker is resolved, and the editor, editor-host and scratch libraries are gone.
 
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
@@ -1022,9 +1022,19 @@ The earlier six verifies and the EV-37 verifies pass (`npx tsc -b`, `cli/song-fi
 | EV-35 | The install guide says what `install.sh` does now | done | EV-34 |
 | EV-36 | The bot template learns the inbox and the song film | done | EV-35 (soft) |
 | EV-37 | `occ song-film` exits when it is done | done | EV-36 |
+| EV-38 | The skill's MCP blocks, replayed against a running editor | done | EV-34 |
 
 ### ED: results
 
+- EV-38 (2026-10-28): started my own editor with `CORTEO_PORT=5202` and `CORTEO_STORE_DIR` in a `mktemp -d`; `http://127.0.0.1:5202/` answered after 25 s. Every MCP block passed against it (the token was read into a variable only, never printed or written):
+  - MCP handshake (the skill's exact block): PASS, HTTP 200 with `mcp-session-id`, `protocolVersion` 2025-03-26, server `openchatcut`; `mcp token` prints one line that is the token file, and `--show` prints only the 43-character token (it does not contain the path). An unauthenticated POST gets 403 `{"error":"invalid request origin"}`. A session that sends only `initialize` (no `notifications/initialized`) still answers `tools/list` 200.
+  - `tools/list`: PASS, 53 tools headless; `delegate` and `openchatcut_status` are listed, as are `apply_ken_burns` and all seven names of the song-film MCP order (`import_asset`, `edit_item`, `detect_beats`, `listen_to_song`, `apply_ken_burns`, `music_reaction_plan`, `apply_music_reaction`).
+  - `openchatcut_status`: PASS, `availableToolTier=server-direct`, `toolCount=53`.
+  - `delegate` example: PASS, `{ok:false,error:"brain_unavailable",reason:"router_down",tried:[]}`; the skill tells the host to do the step itself in that case ("If the brain is unavailable, do that step yourself").
+  - `Del teléfono al MP4`: PASS; `host show grok --json` gave `mediaInbox` equal to the scratch inbox; `inbox --host grok --json` returned `attachPath` and a 720x1280, 3.000 s MP4.
+  - `Vídeo largo a shorts`: PASS after starting `npm run editor-host -- --base http://127.0.0.1:5202 --project <id>`; `tools/list` grew from 53 to 144 and contains `target_project`, `transcribe_track`, `score_moments` and `make_shorts`; status then reads `availableToolTier=browser`, `toolCount=144`.
+- Text fixed in `skills/corteo/SKILL.md`: the shorts prerequisite now says to add `--base http://127.0.0.1:${CORTEO_PORT:-5199}` to `editor-host` when `CORTEO_PORT` is not the default (without it the 5202 replay would have opened 5199). No other command, flag or JSON path disagreed with the code.
+- Verify: `node scripts/corteo-skill.verify.mjs` ok; `node scripts/corteo-acceptance.verify.mjs` ok; `node scripts/no-claudia.verify.mjs` ok (2616 tracked files). The editor and editor-host were stopped by their process groups, port 5202 is free, and the scratch directory was deleted.
 - EV-37 (2026-10-28): reproduced the 15 s hang with both packs present (`HOME=/tmp/l11-home`; the shared cache currently lacks the rhythm pack): the command wrote its JSON and a valid 1080x1920, 15.019 s MP4 at 43 s, then stayed alive with two `server/music-listen/inference-worker.ts` children until killed at 15 minutes. Temporary debug (reverted) showed every music request settled (`rhythm id=1`, `clap id=1,2`, `pending=0`); the handles active after `runCommand` were four Sockets, the two warm workers' IPC channels and piped stderr. Fix: `WorkerChannel` now refs the child, its IPC channel and its stderr for a request and unrefs all three when `pending` empties; `close()` keeps the child and a bounded timer ref'd while it exits (otherwise Node drained the loop and exited 13); `cli/main.ts` disposes the default host after `run()` through a lazy import guarded by the new `server/music-listen/loaded.ts`; `setDefaultMusicInferenceForTest` is the verify seam. `cli/song-film.verify.ts` now runs a fake pending host with a real worker child: the CLI exits under 10 s (the test times out with `ETIMEDOUT` when the dispose is temporarily disabled, so it is not vacuous). Wall time: 15 s command exit 0 in 33.67 s, 0.28 s after the JSON file; 6 s command exit 0 in 20 s. Verify: `npx tsc -b`; `npx tsx cli/song-film.verify.ts`; `npm run verify:cli`; `npm run verify:music-intelligence`; `npm run verify:affected -- cli/main.ts cli/song-film.verify.ts server/music-listen/inference.ts server/music-listen/loaded.ts` (10 verifies); `npm run lint` 0 errors. Scratch libraries deleted.
 - EV-35 (2026-10-28): ran `bash install.sh --help`, `bash install.sh --dry-run --json`, `bash install.sh --dry-run --host-profile muse` and `bash install.sh --dry-run --no-brain` from `~/corteo-dsh`; the dry runs created nothing. `documentation/CORTEO_INSTALL.md` now lists all 17 `--help` flags, the `CORTEO_HOST_PROFILE`/`CORTEO_BRAIN` inputs, the 22 full-report keys plus `CORTEO_MCP_TOKEN`, the brain keys (`CORTEO_BRAIN=ok|failed|skipped`, `CORTEO_BRAIN_STEP`, `CORTEO_BRAIN_URL`), the host keys (`CORTEO_SKILL_PATH`, `CORTEO_MEDIA_INBOX`, `CORTEO_EXPORT_DIR`), the dry-run keys (`CORTEO_OS`, `CORTEO_NODE_SYSTEM`, `CORTEO_NODE_TARGET`, `CORTEO_REF`, `CORTEO_START`, `CORTEO_WITH_DESKTOP`, `CORTEO_SKIP_SYSTEM_DEPS`, `CORTEO_PORT_STATE`, `CORTEO_SERVICE`, `CORTEO_LEGACY_DIR`, `CORTEO_LEGACY_ACTION`) and the uninstall dry-run keys (`CORTEO_ACTION`, `CORTEO_PURGE`); the self-test is documented as lowercase `pass`. A check extracted 17 flags from `--help` and 36 `report CORTEO_*` names from `install.sh` and found all of them in the guide. Verify: `node scripts/no-claudia.verify.mjs` ok; `npm run verify:install` ok (22 report keys, self-test shape, side-effect-free dry run, `--json` object, JSON failure).
 - EV-36 (2026-10-28): added `## From a phone to an MP4` (`"$CORTEO_OCC" inbox --host grok --json`, send `attachPath`) and `## A song and its lyrics into a film` (`"$CORTEO_OCC" song-film --audio /absolute/path/song.wav --to 30s --json`, `--lyrics-text`/`--stills`, render 15 to 30 seconds first) to `bot/skills/corteo-edit/SKILL.md`, in its own voice with `. ~/corteo/corteo.env` first. The body is 5657 B of the 6144 B budget. Replay in scratch libraries, with `~/corteo-dsh/scripts/corteo` standing in for `$CORTEO_OCC` and the scratch `CORTEO_STORE_DIR`/`CORTEO_EXPORT_DIR`/`CORTEO_MEDIA_INBOX`: `inbox --host grok --json` returned `attachPath` and a 720x1280, 3.000 s MP4; `song-film --audio <6 s wav> --to 6s --stills a.png,b.png --json` exited 0 in 27 s with a 1080x1920, 6.016 s MP4 with audio. A 15 s song-film run wrote a valid 1080x1920, 15.019 s MP4 but its CLI did not exit; see ED: blockers. Regenerated `bot/dist/recipe.json`. Verify: `npm run verify:bot-recipe` ok (4 skills, recipe current), `node scripts/bot-rehearsal.verify.mjs` ok, `node scripts/no-claudia.verify.mjs` ok. The `. ~/corteo/corteo.env` line was not sourced (no curl install here); the scratch env replaced it.
@@ -1086,3 +1096,37 @@ Branch `p5-workbuddy` in `~/corteo-zcode`. Every module of `src/i18n/dict/en/` n
 - Gates after every module: `tsc -b`, `node scripts/check-i18n.mjs` (161 UI files, 2,643 English entries), `locale.verify.ts`, `it/settingsCoverage.verify.ts`, `it/mediaCoverage.verify.ts` and `settings/transcription-language.verify.ts`, plus a local check that no new file duplicates a `base`/`brand` key, that no key is missing from its `en/` module, that placeholders match, and that no file passes 500 lines. All green, every time.
 - Not verified: the Spanish in a browser. No editor starts from the Windows side of the share — same blocker as EV-33 — so the wording was checked as data, not seen on screen.
 - Nothing is pushed. The branch is merged later.
+
+### P5-2 · the gate
+
+`scripts/i18n-es-gate.mjs` (238 lines, tracked once `.gitignore` re-includes it) is imported by `scripts/check-i18n.mjs`, so `npm run verify:i18n` — and therefore `npm test` — fails on any of four rules: Spanish coverage of every `en/` key, matching `{placeholders}`, one wording per key across all es sources, and a commented allowlist that is **empty**.
+
+- The assembly is read from `es/index.ts` (`base` plus the `Object.assign` order) **and then `es/brand.ts` over it**, because `dictRegistry.ts` spreads brand last. Reading only `index.ts` reported 103 "missing" keys that `es/brand.ts` had carried all along; measuring properly is what showed P5-1 was already complete, and no key needed translating.
+- Rule 1 has one carve-out: a key that is not Chinese (product names, `HTTP {status}`, the Spanish strings `en/shorts.ts` uses as keys) only has to resolve and stay free of Chinese. Demanding a *different* Spanish value for an already-Spanish key would be wrong, and that carve-out is why the allowlist stayed empty.
+- One real defect, 15 keys: `es/index.ts` `base` and `es/brand.ts` carried the same key in two wordings — Title Case in base (`Nuevo Proyecto`, `Configuración`), sentence case in brand (`Nuevo proyecto`, `Ajustes`). `Object.assign` picked one silently. Base now carries brand's copy, which is the wording the app already showed, so nothing changed on screen, and the B-9 decision (settings is "Ajustes") now lives in both files instead of one.
+- Proof: `node scripts/check-i18n.mjs` green — `i18n 校验通过：161 个 UI 文件，2643 个英文词条，2681 个西语词条` — plus the four `tsx` verifies of `verify:i18n`. Then each rule was broken on purpose and undone:
+  - coverage — `'缩放时间轴'` deleted from `es/timeline.ts` → `es 词典：西语缺少词条：en/timeline.ts · "缩放时间轴"`
+  - placeholders — `{n}` dropped from `'puntos de seguimiento válidos'` → `es 词典：西语占位符与英文不一致：en/timeline.ts · "{n} 个有效跟踪点"（英文 {n} / 西语 无）`
+  - one wording — `base` back to `'Nuevo Proyecto'` → `es 词典：同一词条有两种西语："新建工程" · es/index.ts "Nuevo Proyecto" ≠ es/brand.ts "Nuevo proyecto"`
+- `npm run verify:i18n` cannot run end to end from the Windows side of the share: `npm` puts `node_modules/.bin` on PATH, those shims are the WSL ones, and `tsx` comes back "not recognized". Pre-existing, not caused by this change — the five commands were run one by one (`node node_modules/tsx/dist/cli.mjs --tsconfig tsconfig.app.json <file>`), all green.
+- Left for P5-3: the brand fold-in. `es/brand.ts` still re-states 15 keys that `es/index.ts` also defines, which `AGENTS.md` › UI text discourages; the gate now makes the two copies agree instead of letting `Object.assign` decide silently.
+
+### P2-6 · the Premiere Pro preset
+
+`src/shortcuts/presets.ts` holds the presets; `keymap.ts` applies the active one **under** the user's own rebindings, and `ShortcutsDialog.tsx` picks it with a `<select>` and shows the preset's one-line description. There is still one catalog and one matcher — a preset is only a set of key overrides, so "default" means "no overrides" and the factory preset is byte-for-byte what it was.
+
+| Premiere key | Bound to | Why |
+| --- | --- | --- |
+| C | `interaction-mode-blade` | Premiere's razor is a click-to-cut *tool*, and that is the blade. The playhead cut that had C moves to Premiere's Add Edit, `Mod + K`, rather than becoming unreachable. |
+| Y | `interaction-mode-slip` | Moved off `U`. `select-after` sat on Y, so it steps aside to `Shift + Y` **inside the preset only**. |
+| R | `interaction-mode-rate-stretch` | The tool already existed — `EditMode`, the drag commit, the toolbar button and a handler in `useEditorActions` — but it had **no catalog row**, so the keyboard could never reach it. Registered with `keys: ''`; `nudge-right` keeps `Shift + R`. |
+| T | `interaction-mode-trim` | Premiere's trim tool. Trim lived on N, and N belongs to rolling edit, so moving it frees N without leaving trim keyboard-less. |
+| B | **unbound** | The editor has no ripple edit tool. |
+| N | **unbound** | The editor has no rolling edit tool. |
+
+- No tool was invented. B and N are genuinely unbound, and the preset says so in its own description in the dialog, in Chinese, English and Spanish, so the gap is visible to the person who picks it.
+- Kept as they were: J/K/L, I/O, Q/W, V and P.
+- The default preset is untouched: no catalog key changed, and the new rate-stretch row ships unbound, so it cannot fire and the dialog hides it (it filters rows with an empty binding).
+- Verifies extended rather than added, so no registration was needed: `keymap.verify.ts` asserts the preset exists, every Premiere key reaches its action, B and N are unbound, the default preset is unchanged, a manual rebinding still wins and reset falls back to the preset, and `findConflicts` finds no two actions sharing a key inside the preset. `catalog.verify.ts` moves 56 → 57 actions and pins the new row as unbound.
+- Gates: `tsc -b --force` clean, the four `verify:shortcuts` files green, `node scripts/check-i18n.mjs` green (`161 个 UI 文件，2646 个英文词条，2684 个西语词条` — three new keys, English in `en/settings.ts`, Spanish in `es/settings-2.ts`).
+- **Not tried by hand**: the editor cannot be opened from the Windows side of the share, so the picker, the remapped keys and the description were checked as data, not seen on screen.

@@ -44,6 +44,12 @@ export default {
   // Parameter line
   '编码': 'Códec',
   '格式 / 编码': 'Formato / códec',
+  '预置': 'Preajustes',
+  'YouTube 1080p H.264 预设': 'YouTube 1080p H.264',
+  'Videoclip 4K HEVC 预设': 'Videoclip 4K HEVC',
+  'MP4 (H.265 / HEVC)': 'MP4 (H.265 / HEVC)',
+  'MP4 · HEVC (H.265)': 'MP4 · HEVC (H.265)',
+  'HEVC 只在本机渲染；文件带有 hvc1 标记，Apple 播放器可直接播放。': 'HEVC solo se renderiza en este equipo; el archivo lleva la etiqueta hvc1 para que los reproductores de Apple lo acepten.',
   '画质策略': 'Política de calidad',
   '均衡': 'Equilibrada',
   '画质优先': 'Calidad primero',
