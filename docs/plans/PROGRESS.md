@@ -856,14 +856,14 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-19 | The IDE door | done | EV-14, EV-03 (soft) |
 | EV-20 | The brain, live on this machine | done | EV-16, EV-18, EV-17 (soft) |
 | EV-21 | L-12: `escuchar-cancion` skill and MCP prompt | done | EV-00 (soft) |
-| EV-22 | L-11 part 1: Reaccionar a la música | blocked | EV-00 (soft) |
-| EV-23 | L-11 part 2: Mapa musical | blocked | EV-00 (soft) |
-| EV-24 | L-11 part 3: Mapa de la canción | blocked | EV-00 (soft) |
+| EV-22 | L-11 part 1: Reaccionar a la música | done | EV-00 (soft) |
+| EV-23 | L-11 part 2: Mapa musical | done | EV-00 (soft) |
+| EV-24 | L-11 part 3: Mapa de la canción | done | EV-00 (soft) |
 | EV-25 | L-13: listening end to end on a real song | blocked | EV-21 (soft), EV-22 (soft), EV-23 (soft), EV-24 (soft) |
 | EV-26 | `EVOLUTION=PASS` acceptance script | done | EV-05 (soft), EV-10 (soft), EV-11 (soft), EV-14 (soft), EV-18 (soft), EV-19 (soft) |
 | EV-27 | README Estado for what the night wired | todo | EV-31 |
 | EV-28 | The ten Italian keys, so `npm test` runs to the end | done | |
-| EV-29 | Close EV-22, EV-23 and EV-24 now that `verify:i18n` passes | todo | EV-28 |
+| EV-29 | Close EV-22, EV-23 and EV-24 now that `verify:i18n` passes | done | EV-28 |
 | EV-30 | The first full `npm test` since C-12 | todo | EV-29 |
 | EV-31 | Merge the ZCode and DeepSeek Harness tracks | todo | EV-30, EZ and ED tables finished |
 | EV-32 | Final gates, publish, report | todo | EV-31, EV-27 (soft) |
@@ -923,12 +923,14 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 
 - EV-28: the ten "Conectar un bot" keys went into `src/i18n/dict/it/mcpGuide.ts`. `npm run verify:i18n` passed: check-i18n (161 UI files, 2643 English entries), locale.verify, settingsCoverage.verify (443 settings keys and 169 settings data keys), it mediaCoverage.verify and transcription-language.verify. `pretest` no longer stops at Italian coverage, so EV-30 can reach `test:serial`.
 
+- EV-29: after EV-28, all three cards' Verify lists are green: tsc exit 0; `music-reaction-section.verify.tsx`, `music-map-strip.verify.tsx` and `song-map-dialog.verify.tsx` each exit 0 with their Spanish-controls/map/optional-evidence lines; `npm run verify:components` exit 0; `npm run verify:i18n` exit 0 (check-i18n 161 UI files, 2643 entries); both registration gates exit 0 (719 verify files). Rows EV-22, EV-23 and EV-24 set to done. L-11 stays blocked until EV-31 (card out of scope); the browser proof is EV-33.
+
 ### EV: blockers
 - EV-25: `find /home/carlos/corteo-media -maxdepth 1` could not find a song because the directory does not exist. Checked the configured default directory for wav, mp3, m4a and flac; no editor or downloads were started. A real song in that directory unblocks the proof. Screenshots are also skipped while EV-22 and EV-24 are blocked.
 
-- EV-24: `npm run verify:i18n` exited 1 at `src/i18n/dict/it/settingsCoverage.verify.ts`, on the same 10 missing Italian bot-connection keys as EV-00. The source-key check passed; adding those pre-existing Italian translations and rerunning the gate unblocks the card. The implementation is retained for review.
-- EV-23: `npm run verify:i18n` exited 1 at `src/i18n/dict/it/settingsCoverage.verify.ts`, the same 10 missing Italian bot-connection keys documented for EV-00 and EV-22. The source-key check passed and no pre-existing translations were changed; adding the Italian entries and rerunning the gate unblocks this card.
-- EV-22: `npm run verify:i18n` exits 1 at `src/i18n/dict/it/settingsCoverage.verify.ts`: Italian settings dictionary is missing the same 10 bot-connection keys recorded at EV-00 (AssertionError, expected empty array). Ran the component suite and source-key check; no change to the pre-existing Italian dictionary was made, as the repository instructions prohibit fixing a test that failed before this card. Adding those Italian translations and rerunning verify:i18n would unblock the card. The implemented UI is retained for review; the card is blocked because its required gate is not green.
+- EV-24: `npm run verify:i18n` exited 1 at `src/i18n/dict/it/settingsCoverage.verify.ts`, on the same 10 missing Italian bot-connection keys as EV-00. The source-key check passed; adding those pre-existing Italian translations and rerunning the gate unblocks the card. The implementation is retained for review. Resolved 2026-10-28 by EV-28, closed by EV-29.
+- EV-23: `npm run verify:i18n` exited 1 at `src/i18n/dict/it/settingsCoverage.verify.ts`, the same 10 missing Italian bot-connection keys documented for EV-00 and EV-22. The source-key check passed and no pre-existing translations were changed; adding the Italian entries and rerunning the gate unblocks this card. Resolved 2026-10-28 by EV-28, closed by EV-29.
+- EV-22: `npm run verify:i18n` exits 1 at `src/i18n/dict/it/settingsCoverage.verify.ts`: Italian settings dictionary is missing the same 10 bot-connection keys recorded at EV-00 (AssertionError, expected empty array). Ran the component suite and source-key check; no change to the pre-existing Italian dictionary was made, as the repository instructions prohibit fixing a test that failed before this card. Adding those Italian translations and rerunning verify:i18n would unblock the card. The implemented UI is retained for review; the card is blocked because its required gate is not green. Resolved 2026-10-28 by EV-28, closed by EV-29.
 - EV-12: no talking video in /home/carlos/corteo-media. Checked talk.mp4, talk.mov, talk.mkv and talk.webm; none exists. No speech was synthesized and no server was started. A talking video of at least two minutes at one of those paths unblocks the live run.
 - EV-00 baseline: CC_RENDER_GL=swangle npm test exited 1 in src/i18n/dict/it/settingsCoverage.verify.ts: Italian settings dictionary is missing 10 keys for the bot connection UI (AssertionError, expected empty array). This predates EV changes; no fix attempted per card scope. Adding the missing Italian translations would unblock the gate. The serial chain stopped at that assertion and printed no segment summary. Resolved 2026-10-28 by EV-28.
 
