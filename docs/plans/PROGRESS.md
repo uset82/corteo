@@ -843,7 +843,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-09 | `occ song-film`: place | done | EV-04, EV-08 |
 | EV-10 | `occ song-film`: animate and render | done | EV-09, EV-06 (soft) |
 | EV-11 | Shorts: `reviewEs` before the batch | done | EV-03 (soft) |
-| EV-12 | Shorts, live on a talking video | todo | EV-11 |
+| EV-12 | Shorts, live on a talking video | blocked | EV-11 |
 | EV-13 | Brain aliases and the lane probe | todo | EV-00 (soft) |
 | EV-14 | Alias router with 429 failover | todo | EV-13 |
 | EV-15 | `npm run brain:serve` | todo | EV-14 |
@@ -888,4 +888,5 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 - EV-11: tsc, shorts-host-flow.verify, shorts-tools.verify, verify:agent-tools, verify:skills, catalog generation/check, skill guard and registration gates passed. The host-flow fixture scores and cuts three exact word ranges into 1080x1920 sequences.
 
 ### EV: blockers
+- EV-12: no talking video in /home/carlos/corteo-media. Checked talk.mp4, talk.mov, talk.mkv and talk.webm; none exists. No speech was synthesized and no server was started. A talking video of at least two minutes at one of those paths unblocks the live run.
 - EV-00 baseline: CC_RENDER_GL=swangle npm test exited 1 in src/i18n/dict/it/settingsCoverage.verify.ts: Italian settings dictionary is missing 10 keys for the bot connection UI (AssertionError, expected empty array). This predates EV changes; no fix attempted per card scope. Adding the missing Italian translations would unblock the gate. The serial chain stopped at that assertion and printed no segment summary.
