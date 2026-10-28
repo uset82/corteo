@@ -108,7 +108,7 @@ const ROUTING_GROUPS: readonly RoutingGroup[] = [
   {
     requestKeywords: ['import', 'upload', 'download', 'media', 'asset', 'stock', '素材', '导入', '上传', '下载', '媒体', '版权'],
     tools: [
-      'search_media', 'manage_media_pool', 'download_media', 'push_asset', 'import_url_asset',
+      'search_media', 'manage_media_pool', 'download_media', 'import_from_platform', 'push_asset', 'import_url_asset',
       'search_stock_media', 'edit_asset', 'import_media', 'finalize_uploaded_asset',
       'request_asset_download', 'probe_media',
       'browse_local_media', 'import_asset', 'import_assets', 'import_folder',

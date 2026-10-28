@@ -28,11 +28,28 @@ export interface SourceClockMetadata {
   dropFrame: boolean;
 }
 
+/** Where an imported asset came from, for the credits list (créditos.txt). */
+export interface MediaSourceCredit {
+  /** Platform or stock source name (YouTube, Vimeo, Pexels…). */
+  provider?: string;
+  title?: string;
+  uploader?: string;
+  /** Canonical page URL, not the media file URL. */
+  pageUrl?: string;
+  license?: string;
+  /** Lyric line used to find a song, when the asset was imported by lyric search. */
+  lyricLine?: string;
+  /** Search query the asset was picked from, when it came from a search. */
+  searchQuery?: string;
+}
+
 export interface MediaAsset extends TranscriptCarrier {
   id: string;
   name: string;
   /** Immutable filename captured from the source before internal UUID renaming. */
   readonly sourceFilename?: string;
+  /** Where this asset came from, shown in the credits list. */
+  source?: MediaSourceCredit;
   /** Desktop-only absolute source path used for NLE relinking; absent on web/mobile/generated media. */
   readonly originalFilePath?: string;
   kind: MediaAssetKind;

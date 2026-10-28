@@ -8,6 +8,9 @@ import { AssetExportButton } from './AssetExportButton';
 import { folderPath } from './mediaPoolFormat';
 import { AssetMenuDestinations } from './AssetMenuDestinations';
 import type { MediaSortKey, MediaTypeFilter } from './mediaPoolFilter';
+import { MobileUploadDialog } from './MobileUploadDialog';
+import type { MobileUploadRecord } from './mobileUploadApi';
+import { ImportFromLinkDialog } from './ImportFromLinkDialog';
 
 interface AssetMenuPortalProps {
   asset?: MediaAsset;
@@ -306,5 +309,25 @@ function RelinkRow({ asset, onRelink }: { asset: MediaAsset; onRelink: (id: stri
       <span style={{ flex: 1, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{asset.name}</span>
       <button type="button" className="primary" onClick={() => onRelink(asset.id)} style={{ flexShrink: 0 }}>{t('重新链接文件')}</button>
     </div>
+  );
+}
+
+interface PoolImportDialogsProps {
+  mobileUpload: boolean;
+  linkImport: boolean;
+  fps: number;
+  onCloseMobile: () => void;
+  onCloseLink: () => void;
+  onImportMobile: (record: MobileUploadRecord) => Promise<void>;
+  onAddAsset: (asset: MediaAsset) => void;
+}
+
+/** The two ways a file enters the pool without a picker: a phone upload and a URL. */
+export function PoolImportDialogs({ mobileUpload, linkImport, fps, onCloseMobile, onCloseLink, onImportMobile, onAddAsset }: PoolImportDialogsProps) {
+  return (
+    <>
+      {mobileUpload && <MobileUploadDialog onClose={onCloseMobile} onImport={onImportMobile} />}
+      {linkImport && <ImportFromLinkDialog fps={fps} onAddAsset={onAddAsset} onClose={onCloseLink} />}
+    </>
   );
 }

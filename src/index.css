@@ -949,6 +949,21 @@ button, input, select { font: inherit; }
 .cc-media-duplicates-item img, .cc-media-duplicates-thumb { width:80px; height:45px; object-fit:cover; border-radius:3px; background:var(--cc-inset); }
 .cc-media-duplicates-item > div { flex:1; display:flex; flex-direction:column; gap:2px; }
 .cc-media-duplicates-item span, .cc-media-duplicates-note { color:var(--cc-text-muted); font-size:11px; }
+.cc-media-credits-dialog { width:min(560px, calc(100vw - 32px)); max-height:min(82vh, 760px); overflow:auto; }
+.cc-media-credits-head { display:flex; align-items:center; justify-content:space-between; }
+.cc-media-credits-list { display:flex; flex-direction:column; gap:10px; margin:0; padding-left:18px; }
+.cc-media-credits-item { display:flex; flex-direction:column; gap:2px; }
+.cc-media-credits-item span, .cc-media-credits-note { color:var(--cc-text-muted); font-size:11px; }
+.cc-media-credits-item a { color:var(--cc-accent); font-size:11px; word-break:break-all; }
+.cc-media-credits-actions { display:flex; justify-content:flex-end; gap:8px; }
+.cc-import-link-dialog { width:min(420px, calc(100vw - 32px)); }
+.cc-import-link-head { display:flex; align-items:center; justify-content:space-between; }
+.cc-import-link-field { display:flex; flex-direction:column; gap:4px; color:var(--cc-text-muted); font-size:11px; }
+.cc-import-link-range { display:flex; gap:8px; }
+.cc-import-link-range .cc-import-link-field { flex:1; }
+.cc-import-link-note { margin:0; color:var(--cc-text-muted); font-size:11px; }
+.cc-import-link-error { margin:0; color:var(--cc-danger); font-size:11px; }
+.cc-import-link-actions { display:flex; justify-content:flex-end; gap:8px; }
 
 /* Instant tooltip (toolbar): The native title has ~1s browser inherent delay, and it appears immediately when hovering here.
    The data-tip carries the copy and pops it downwards (the toolbar is at the top of the timeline panel); use -r to right-align the text near the right edge to prevent overflow.

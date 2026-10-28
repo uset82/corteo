@@ -45,6 +45,26 @@ export function ffprobeBin(): string {
 }
 
 /**
+ * yt-dlp used by /api/import-platform. Provisioned by scripts/sync-yt-dlp.mjs
+ * into vendor/yt-dlp/<platform>/ (gitignored, not shipped in public/), with
+ * OPENCHATCUT_YTDLP as the override for a self-updated or custom build.
+ */
+export function ytDlpBin(): string {
+  const override = process.env.OPENCHATCUT_YTDLP;
+  if (override) return override;
+  const suffix = process.platform === 'win32' ? '.exe' : '';
+  const relative = join('yt-dlp', `${process.platform}-${process.arch}`, `yt-dlp${suffix}`);
+  const candidates = [
+    join(import.meta.dirname, '..', 'vendor', relative),
+    join(process.resourcesPath ?? '', 'vendor', relative),
+  ];
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+  return candidates[0]!;
+}
+
+/**
  * whisper.cpp CLI used by the desktop native-ASR worker (Metal/CPU). Dev and
  * packaged builds resolve from public/whisper-cli/<platform>/ (provisioned by
  * scripts/sync-whisper-cli.mjs and shipped through extraResources); an

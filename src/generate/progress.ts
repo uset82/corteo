@@ -1,4 +1,4 @@
-import type { MediaAsset, TimelineState } from '../editor/types';
+import type { MediaAsset, MediaSourceCredit, TimelineState } from '../editor/types';
 import { isComplete, type JobReportBase } from '../agent/progress/job-model';
 
 export interface TrackGenerationProgressArgs {
@@ -15,6 +15,8 @@ export interface GenerationJobResult {
   durationSeconds?: number;
   width?: number;
   height?: number;
+  sizeBytes?: number;
+  source?: MediaSourceCredit;
 }
 
 export interface GenerationJobReport extends JobReportBase<'queued' | 'running' | 'succeeded' | 'failed' | 'not_found'> {
@@ -42,6 +44,7 @@ export interface GenerationJobReport extends JobReportBase<'queued' | 'running' 
   };
   result?: GenerationJobResult;
   results?: GenerationJobResult[];
+  code?: string;
   pendingDownloadUrl?: string;
 }
 
@@ -79,6 +82,7 @@ export async function trackGenerationProgress(
         durationInFrames: Math.max(1, Math.round(result.durationSeconds * state.fps)),
         width: result.width,
         height: result.height,
+        source: result.source,
       };
       completedAssets.push(asset);
       existing.add(asset.id);

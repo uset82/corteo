@@ -2530,6 +2530,68 @@
             ],
             "description": "Asset type override; auto-detected from Content-Type / URL extension when omitted."
           },
+          "source": {
+            "type": "object",
+            "description": "Where this media came from, kept for the credits list (créditos.txt).",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "uploader": {
+                "type": "string"
+              },
+              "pageUrl": {
+                "type": "string",
+                "description": "Canonical source page, not the file URL."
+              },
+              "license": {
+                "type": "string"
+              },
+              "lyricLine": {
+                "type": "string",
+                "description": "Lyric line the song was found with, if any."
+              },
+              "searchQuery": {
+                "type": "string",
+                "description": "Search query the asset was picked from, if any."
+              }
+            }
+          },
+          "projectId": {
+            "type": "string",
+            "description": "Ignored because OpenChatCut uses the active project."
+          }
+        },
+        "required": [
+          "url"
+        ]
+      }
+    },
+    {
+      "name": "import_from_platform",
+      "description": "Download a video from YouTube, Vimeo or Bilibili with the pinned yt-dlp and add it to the media pool. For platform links only (watch/short/bilibili URLs); a direct file URL belongs in download_media. startSeconds/endSeconds fetch just that section of the source. The download is a generation job: a long video may return pending with a jobId — follow it with track_progress (target generation). The result carries the platform credit fields (title, uploader, page URL, license).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Public YouTube, Vimeo or Bilibili link."
+          },
+          "name": {
+            "type": "string",
+            "description": "Override display name; defaults to the platform title."
+          },
+          "startSeconds": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Download only the section starting here."
+          },
+          "endSeconds": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Download only up to here; must be greater than startSeconds."
+          },
           "projectId": {
             "type": "string",
             "description": "Ignored because OpenChatCut uses the active project."

@@ -18,6 +18,16 @@ export interface GenerationResult {
   /** Provider license record id for the generated track (also archived as a
    * `.license.json` sidecar beside the audio file). */
   licenseId?: string;
+  /** Where imported media came from, for the credits list (créditos.txt). */
+  source?: {
+    provider?: string;
+    title?: string;
+    uploader?: string;
+    pageUrl?: string;
+    license?: string;
+    lyricLine?: string;
+    searchQuery?: string;
+  };
   sizeBytes?: number;
   codec?: string;
   encoder?: H264EncoderProfile;

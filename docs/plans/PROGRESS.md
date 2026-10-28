@@ -77,9 +77,9 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P2-5 | Countdown timecode | done | |
 | P2-6 | Premiere shortcut preset | done (C, Y, R and T; ripple and rolling edit do not exist, so B and N stay unbound) | |
 | P3-1 | Pinned yt-dlp sync | done (pinned 2026.10.26; the first run downloads and checks the sha256, the second is a verified no-op, `--update` re-pins) | |
-| P3-2 | Platform import route + `import_from_platform` | todo | P3-1 |
-| P3-3 | Source credits + `creditos.txt` | todo | P3-2 |
-| P3-4 | "Importar desde enlace" dialog | todo | P3-2 |
+| P3-2 | Platform import route + `import_from_platform` | done (yt-dlp job behind the allowlist; the verify uses a fake binary, no real download was made) | P3-1 |
+| P3-3 | Source credits + `creditos.txt` | done (a `source` on the asset, the dialog copies and downloads; not seen in a browser) | P3-2 |
+| P3-4 | "Importar desde enlace" dialog | done (platform job or direct URL, live progress; not seen in a browser) | P3-2 |
 | P4-1 | Variants model + tools | todo | |
 | P4-2 | `render_variant_previews` | todo | P4-1 |
 | P4-3 | "Comparar versiones" dialog | todo | P4-2 |
@@ -387,17 +387,38 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Proof on linux-x64: the first run downloaded `yt-dlp_linux` (41,166,968 bytes, sha256 `767b…`), the second printed `verified` with no download, and the binary reported `2026.10.26`.
 - Gates: `node scripts/sync-yt-dlp.verify.mjs`, `scripts/verify-registration.verify.mjs` (731 files) and `scripts/verify-gate-coverage.verify.mjs` (731) green.
 
-### P3-2 · Platform import route + `import_from_platform`
+### P3-2 · Platform import route + `import_from_platform` — done
 - Plan: Plan 1 › Phase 3 (route).
-- Files: new `server/plugins/platform-import.ts` + verify (fake yt-dlp binary, no network in tests), registered in `server/plugins/index.ts`; new tool `import_from_platform`.
-- Done when: a YouTube URL imports into the media pool with progress, and non-allowlisted hosts are rejected.
+- Files: `server/plugins/platform-import.ts` (426 lines) and `shared/platform-urls.ts`, registered in `server/plugins/index.ts`; `server/plugins/platform-import.verify.ts`; tool `import_from_platform` in `src/agent/tools/stock-tools.ts` and its schema.
+- The route is `POST /api/import-platform` and only accepts an allowlisted host: youtube.com, youtu.be, vimeo.com, bilibili.com and b23.tv, subdomains included, http/https only (`platformHostOf`). Anything else is a 400 `platform_unallowed` before a binary is even looked up — an arbitrary URL handed to a downloader on the user's machine is the hole this route exists to avoid.
+- The download is a generation job, not a held request: `createGenerationJob` with `provider: 'yt-dlp'`, `toolName: 'import_from_platform'`, `expectedResultCount: 1`, and the route answers 202 `{ok, platform, jobId}`. Both the dialog and the agent follow it through `/generate/progress`.
+- yt-dlp is invoked as `--no-playlist --no-simulate --newline --progress -f 'bv*+ba/b' -S res,fps --merge-output-format mp4`, with `--download-sections '*start-end'` when the body carries a range, `--cookies` from `YTDLP_COOKIES_FILE`, `--ffmpeg-location` when an absolute ffmpeg is known, and `--` before the URL so a leading `-` cannot become an option. Progress lines (`[download]  12.3%`) move the job from 5% to 90%, the probe owns the last 5%.
+- The file lands in a scratch directory inside `/media/uploads` first and is renamed into place only after `probeImportedFile` accepts it; a failed download, a timeout (45 min) or a file ffprobe cannot read leaves no half-written `.mp4` for the preview to explain, and the scratch directory is removed in `finally`.
+- Credits come from the tab-separated line printed by `--print after_move:%(filepath)s\t%(title)s\t%(uploader)s\t%(webpage_url)s\t%(license)s`, parsed backwards from the last absolute path inside the scratch dir; a missing title/uploader/license is `NA` and becomes `undefined`. If yt-dlp prints no usable line, the one file in the scratch dir is used and the asset keeps only the URL.
+- The tool `import_from_platform` takes `{url, name?, startSeconds?, endSeconds?}`, refuses a non-platform host itself with the same message, and returns the job id so the agent waits on the same progress endpoint.
+- Verify: `npx tsx server/plugins/platform-import.verify.ts` — an injected fake runner, no network. It asserts the allowlist (a plain `example.com` and a lookalike `youtube.com.evil.tld` are rejected), the argv for whole video and range, progress parsing, report parsing (missing fields, `NA`, a path outside the scratch dir), the full success path (rename, probe, hash, source credit), and the failure paths (missing binary, non-zero exit, timeout, empty download, unreadable media).
+- `assets/agent/openchatcut-tool-schemas.json` was regenerated (`npm run generate:server-tool-catalog`); `npm run verify:server-tool-catalog` and `server/agent-runs/tool-policy.verify.ts` are green.
+- Limitation: no real download was attempted. The binary is provisioned (P3-1) but the sandbox has no route to YouTube, so the route's success path is proven against the fake runner only.
 
-### P3-3 · Source credits + `creditos.txt`
+### P3-3 · Source credits + `creditos.txt` — done
 - Plan: Plan 1 › Phase 3 (credits).
+- Files: `src/editor/mediaTypes.ts` (`MediaAsset.source`), `src/media/mediaCredits.ts`, `src/media/MediaCreditsDialog.tsx`, `src/media/MediaPoolToolbar.tsx`, dictionaries.
+- `MediaAsset.source?: MediaSourceCredit` is `{provider?, title?, uploader?, pageUrl?, license?, lyricLine?, searchQuery?}`. Platform imports and `download_media` fill it; it rides `GenerationResult` → `GenerationJobResult` → `trackGenerationProgress`, so an asset imported by the agent keeps its credit.
+- `mediaCreditEntries(assets)` is a pure function: drops assets with no `source`, drops fields that are blank after trimming, names the entry by title before filename, and de-duplicates by `pageUrl` when there is one, otherwise by name+provider+uploader — the same video imported twice is one credit. An asset whose `source` has only blank fields is not credited at all.
+- `creditsText(entries, generatedAt?)` renders the file: a `素材来源 · corteo` title, the ISO date when one is passed, then one numbered block per entry (author, source = provider — page URL, license, lyric line, search query), and a closing note when there is nothing to credit. No JSON, no trailing blank line — it is a text file a person reads.
+- The dialog (`素材来源` in the media pool's actions menu) lists the same entries, links only http(s) URLs, copies the whole text with a 1.5 s `已复制`, and downloads it as `creditos.txt` through the existing `downloadBlob` helper. Escape closes it.
+- Verify: `npx tsx src/media/mediaCredits.verify.ts`, registered in `verify:production-contracts`. It asserts the skip rules, title-over-filename, blank-field dropping, both dedupe keys, the exact `creditos.txt` body for a fixed date, the no-date and empty-pool variants.
+- Limitation: the dialog was typechecked and its helper verified, but no editor starts from this side of the share, so the menu entry and the download were never clicked in a browser.
 
-### P3-4 · "Importar desde enlace" dialog
+### P3-4 · "Importar desde enlace" dialog — done
 - Plan: Plan 1 › Phase 3 (UI).
-- Files: `src/media/MediaPoolToolbar.tsx`, a new dialog; direct file URLs go to `/api/import-url` (`server/plugins/upload-routes.ts`).
+- Files: `src/media/ImportFromLinkDialog.tsx`, `src/media/MediaPoolToolbar.tsx`, `src/media/MediaPoolOverlays.tsx` (`PoolImportDialogs`), `src/media/MediaPoolPanel.tsx`, `src/index.css`, dictionaries.
+- One dialog, two paths. An allowlisted platform link posts to `/api/import-platform` and polls `/generate/progress` (`action:'wait'`, 20 s slices, 30 s agent deadline is why the poll is sliced) with a percent readout; anything else that is http(s) posts to `/api/import-url` and becomes an asset from the server-measured `probe` (duration, width, height), named by the `name` field when given.
+- The form validates the scheme (`请输入有效的 http(s) 链接`), and a platform range must end after it starts (`结束时间必须大于开始时间`). The name is optional and falls back to the platform title, then the filename. Range fields only show for platform links; the two hints under the link field say which path will be taken.
+- A job that ends `failed` surfaces `report.error ?? report.code ?? 下载失败`; a job that ends with no result reports `下载完成但没有可用的素材`; a vanished job says so rather than spinning forever.
+- The dialog is rendered by `PoolImportDialogs` in `MediaPoolOverlays.tsx` together with the phone-upload dialog, because two more dialog renders pushed `MediaPoolPanel.tsx` past the 500-line gate. Focus restoration stays with the panel's `modalFocus`.
+- Verify: `npx tsc -b` clean, `npm run verify:i18n` green (new `素材来源`, `从链接导入`, `导入`, `链接`, `名称（可选）`, `从（秒）`, `到（秒）` and the error strings are in both dictionaries), gate coverage green at 733 verify files.
+- Limitation: never opened in a browser. The dialog's behaviour is read from the code and gated by types, not observed.
 
 ### P4-1 · Variants model + tools
 - Plan: Plan 1 › Phase 4.

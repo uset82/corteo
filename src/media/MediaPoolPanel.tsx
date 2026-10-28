@@ -9,9 +9,8 @@ import { folderPath } from './mediaPoolFormat';
 import { MediaPoolToolbar, type MediaToolbarMenu } from './MediaPoolToolbar';
 import type { SemanticMatch } from './semantic-search/types';
 import { filterMediaAssets, type MediaSortKey, type MediaTypeFilter } from './mediaPoolFilter';
-import { MobileUploadDialog } from './MobileUploadDialog';
 import type { MobileUploadRecord } from './mobileUploadApi';
-import { MissingMediaBanner, MusicModelsNotice, RelinkAllDialog } from './MediaPoolOverlays';
+import { MissingMediaBanner, MusicModelsNotice, PoolImportDialogs, RelinkAllDialog } from './MediaPoolOverlays';
 import {
   MediaPoolDialogs,
   type MediaAssetDeleteState,
@@ -112,6 +111,7 @@ export function MediaPoolPanel({
   const [semanticResults, setSemanticResults] = useState<SemanticMatch[] | null>(null);
   const [semanticOpenRequest, setSemanticOpenRequest] = useState(0);
   const [mobileUploadOpen, setMobileUploadOpen] = useState(false);
+  const [linkImportOpen, setLinkImportOpen] = useState(false);
   const { transcriptEntries, viewerAsset, openTranscriptViewer, closeTranscriptViewer, stepViewer } = useTranscriptViewer(assets);
   const relink = useMediaPoolRelink({
     assets,
@@ -371,6 +371,7 @@ export function MediaPoolPanel({
         onWatchFolder={canWatchDirectory ? () => void startWatch() : undefined} onStopWatch={() => void stopWatch()}
         watchingFolder={activeWatch?.directoryName ?? null} watchBusy={watchBusy}
         onMobileUpload={(restoreFocus) => { modalFocus.remember(restoreFocus); setMobileUploadOpen(true); }}
+        onImportFromLink={(restoreFocus) => { modalFocus.remember(restoreFocus); setLinkImportOpen(true); }}
         onAddSolid={() => onAddSolid?.()}
         onCreateFolder={createFolder}
         onViewChange={() => setView(toggleMediaView)}
@@ -493,7 +494,7 @@ export function MediaPoolPanel({
         onPickFolder={relinkFromFolder}
         onRelink={startRelink}
       />
-      {mobileUploadOpen && <MobileUploadDialog onClose={() => { setMobileUploadOpen(false); modalFocus.restore(); }} onImport={onImportMobile} />}
+      <PoolImportDialogs mobileUpload={mobileUploadOpen} linkImport={linkImportOpen} fps={fps} onCloseMobile={() => { setMobileUploadOpen(false); modalFocus.restore(); }} onCloseLink={() => { setLinkImportOpen(false); modalFocus.restore(); }} onImportMobile={onImportMobile} onAddAsset={onAddAsset} />
     </div>
   );
 }

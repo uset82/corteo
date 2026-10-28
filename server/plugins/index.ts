@@ -28,6 +28,7 @@ import { transcriptionPlugin } from "./transcription.ts";
 import { extractFramesPlugin } from "./extract-frames.ts";
 import { sceneDetectionPlugin } from "./scene-detection.ts";
 import { mediaDuplicatesPlugin } from './media-duplicates.ts';
+import { platformImportPlugin } from './platform-import.ts';
 import { autoGradePlugin } from "./auto-grade.ts";
 import { mediaPreviewPlugin } from "./media-preview.ts";
 import { isolateVoicePlugin } from "./isolate-voice.ts";
@@ -111,6 +112,7 @@ export function serverPlugins(options: { projectStoreHttp?: boolean } = {}): Plu
     extractFramesPlugin(),
     sceneDetectionPlugin(),
     mediaDuplicatesPlugin(),
+    platformImportPlugin(),
     autoGradePlugin(),
     mediaPreviewPlugin(),
     isolateVoicePlugin(),

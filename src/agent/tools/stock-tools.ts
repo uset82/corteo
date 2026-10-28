@@ -1,7 +1,9 @@
 export { STOCK_TOOL_SCHEMAS, STOCK_TOOL_NAMES } from './schemas/stock-tools';
 import type { AgentContext } from '../context';
-import type { MediaAsset } from '../../editor/types';
+import type { MediaAsset, MediaSourceCredit } from '../../editor/types';
 import { safeSourceFilename } from '../../media/sourceFilename';
+import { isPlatformUrl } from '../../../shared/platform-urls';
+import { trackGenerationProgress } from '../../generate/progress';
 import { fallbackDuration, isHttpUrl, nameFromUrl, probeUrl, sniffKind, type PoolKind } from './stock-url-utils';
 import type { ProbeResult } from '../../../shared/media-probe';
 
@@ -139,6 +141,16 @@ export async function serialBatch(
   return results;
 }
 
+/** Keep only non-empty credit fields; an absent source stays absent on the asset. */
+function cleanCredit(source: MediaSourceCredit | undefined): MediaSourceCredit | undefined {
+  if (!source) return undefined;
+  const credit: MediaSourceCredit = {};
+  for (const [key, value] of Object.entries(source)) {
+    if (typeof value === 'string' && value.trim()) credit[key as keyof MediaSourceCredit] = value.trim();
+  }
+  return Object.keys(credit).length ? credit : undefined;
+}
+
 async function registerMediaUrl(
   url: string,
   opts: {
@@ -150,6 +162,7 @@ async function registerMediaUrl(
     height?: number;
     properties?: unknown;
     forceRemote?: boolean;
+    source?: MediaSourceCredit;
   },
   ctx: AgentContext,
 ): Promise<BatchRow> {
@@ -223,6 +236,7 @@ async function registerMediaUrl(
     durationInFrames,
     width: typeof opts.width === 'number' && opts.width > 0 ? opts.width : undefined,
     height: typeof opts.height === 'number' && opts.height > 0 ? opts.height : undefined,
+    source: cleanCredit(opts.source),
   };
 
   if (kind === 'motion-graphic' && Array.isArray(opts.properties)) {
@@ -255,8 +269,72 @@ async function execDownloadMedia(args: Args, ctx: AgentContext): Promise<unknown
 
   const batchName = urls.length === 1 && typeof args.name === 'string' ? args.name : undefined;
   const type = typeof args.type === 'string' ? args.type : undefined;
+  const source = args.source && typeof args.source === 'object' ? args.source as MediaSourceCredit : undefined;
 
-  return batchEnvelope(await serialBatch(urls, (url) => registerMediaUrl(url, { name: batchName, type }, ctx)));
+  return batchEnvelope(await serialBatch(urls, (url) => registerMediaUrl(url, { name: batchName, type, source }, ctx)));
+}
+
+interface PlatformSubmission {
+  ok?: boolean;
+  jobId?: string;
+  code?: string;
+  error?: string;
+}
+
+/**
+ * Platform links go through the pinned yt-dlp route, which runs the download
+ * as a generation job. A well-behaved wrapper waits for that job and adds the
+ * asset; when the wait window closes first the row stays pending with the
+ * jobId so track_progress can finish the story.
+ */
+async function execImportFromPlatform(args: Args, ctx: AgentContext): Promise<unknown> {
+  const url = String(args.url ?? '').trim();
+  if (!isPlatformUrl(url)) {
+    return {
+      success: false,
+      url,
+      error: 'url must be a YouTube, Vimeo or Bilibili link; use download_media for a direct file URL',
+    };
+  }
+  let submission: PlatformSubmission;
+  try {
+    const response = await fetch('/api/import-platform', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url,
+        name: typeof args.name === 'string' ? args.name : undefined,
+        startSeconds: typeof args.startSeconds === 'number' ? args.startSeconds : undefined,
+        endSeconds: typeof args.endSeconds === 'number' ? args.endSeconds : undefined,
+      }),
+    });
+    submission = await response.json().catch(() => ({})) as PlatformSubmission;
+    if (!response.ok || !submission.jobId) {
+      return { success: false, url, code: submission.code, error: submission.error ?? `import-platform status ${response.status}` };
+    }
+  } catch (error) {
+    return { success: false, url, error: error instanceof Error ? error.message : 'import-platform request failed' };
+  }
+  const { reports, completedAssets } = await trackGenerationProgress(
+    { action: 'wait', jobIds: [submission.jobId], timeoutSeconds: 900 },
+    ctx.getState(),
+  );
+  const report = reports[0];
+  const asset = completedAssets[0];
+  if (report?.status === 'succeeded' && asset) {
+    ctx.commands.addAsset(asset);
+    return {
+      success: true, assetId: asset.id, name: asset.name, type: asset.kind,
+      src: asset.src, local: true, source: asset.source, probe: report.result,
+    };
+  }
+  if (report?.status === 'failed') {
+    return { success: false, url, code: report.code, error: report.error ?? 'platform download failed' };
+  }
+  return {
+    success: false, pending: true, jobId: submission.jobId, url,
+    error: 'the platform download is still running; follow the jobId with track_progress (target generation)',
+  };
 }
 
 async function execPushAsset(args: Args, ctx: AgentContext): Promise<unknown> {
@@ -357,6 +435,7 @@ async function execSearchStockMedia(args: Args): Promise<unknown> {
 
 export async function execStockTool(name: string, args: Args, ctx: AgentContext): Promise<unknown> {
   if (name === 'download_media') return execDownloadMedia(args, ctx);
+  if (name === 'import_from_platform') return execImportFromPlatform(args, ctx);
   if (name === 'push_asset') return execPushAsset(args, ctx);
   if (name === 'import_url_asset') return execImportUrlAsset(args, ctx);
   if (name === 'search_stock_media') return execSearchStockMedia(args);

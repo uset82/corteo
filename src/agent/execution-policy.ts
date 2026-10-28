@@ -44,7 +44,7 @@ const READ_TOOLS = new Set([
   'analyze_scene_quality', 'report_user_friction', 'get_editor_url',
 ]);
 const PERSISTENT_LOCAL_TOOLS = new Set([
-  'download_media', 'push_asset', 'import_url_asset', 'import_media',
+  'download_media', 'import_from_platform', 'push_asset', 'import_url_asset', 'import_media',
   'import_asset', 'import_assets', 'import_folder',
   'finalize_uploaded_asset', 'install_skill', 'run_skill_script',
   'manage_skill', 'manage_template', 'manage_versions', 'manage_project',
