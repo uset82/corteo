@@ -853,7 +853,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-19 | The IDE door | done | EV-14, EV-03 (soft) |
 | EV-20 | The brain, live on this machine | done | EV-16, EV-18, EV-17 (soft) |
 | EV-21 | L-12: `escuchar-cancion` skill and MCP prompt | done | EV-00 (soft) |
-| EV-22 | L-11 part 1: Reaccionar a la música | todo | EV-00 (soft) |
+| EV-22 | L-11 part 1: Reaccionar a la música | blocked | EV-00 (soft) |
 | EV-23 | L-11 part 2: Mapa musical | blocked | EV-00 (soft) |
 | EV-24 | L-11 part 3: Mapa de la canción | todo | EV-00 (soft) |
 | EV-25 | L-13: listening end to end on a real song | todo | EV-21 (soft), EV-22 (soft), EV-23 (soft), EV-24 (soft) |
