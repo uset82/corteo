@@ -1,5 +1,7 @@
 # Progress
 
+**Evolution night (2026-10-28):** for this run, ChatGPT Terra executes only the `Evolution night (EV)` table at the end of this file, top to bottom, following `docs/plans/07-evolution.md` and its night loop, and does not pick any other `todo` row (P2-2 to P2-6, P3-*, P4-*, P5-*, P6-1, P7-1, P1-7 and C-14 stay as they are). C-13 shows `doing` from an earlier session; it is not part of this run, so leave it. L-11, L-12 and L-13 are carried out by EV-21 to EV-25, which set those rows `done` in their own commits.
+
 The single place for task status. Plans: `docs/plans/01-editor-claudia.md` (Plan 1), `docs/plans/02-claudia-escucha.md` (Plan 2), `docs/plans/03-deepseek-harness.md` (Plan 3), `docs/plans/04-claudia-brand.md` (Plan 4), `docs/plans/05-claudia-portable.md` (P-CL), `docs/plans/06-claudia-polish.md` (P-CL-13 to P-CL-17), `docs/plans/05-opus-parity.md` and `docs/plans/06-opus-parity.md` (Plan 6). Rules and the work loop: `AGENTS.md`.
 
 **Picking the next task:** if a task is `doing`, a previous session stopped in the middle of it: resume it first. Otherwise go down the table and take the first task whose status is `todo` and whose "Needs" are all `done`. Change its status to `doing`, finish it, set `done`, and commit this file together with the work.
@@ -440,6 +442,20 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-26 · L-07 · The relay reads `.env.corteo` (Plan 5's current name; `npm run start:corteo` loads it with `--env-file-if-exists`) rather than the card's older `.env.claudia`. The relay settings are process env, not keystore entries, so they never appear in the settings UI or travel to the browser.
 - 2026-10-26 · L-08 · A keyframed filter channel overrides its static `filters` value, the same rule the transform properties already follow, and the background fill multiplies those per-frame values. Reason: a flash or breathing reaction has to move both copies of the picture or the letterboxed background would stay frozen while the clip pulses. The four channels are kept out of the inspector's transform slider list because the Filters section already owns those values; showing them twice would give two controls for one number.
 - 2026-10-27 · deploy · `wrangler.jsonc` on `main` now publishes the editor UI as Workers static assets (`cloudflare/worker.js` + `./dist`), not the tunnel proxy. The live worker at `corteo.uset82.workers.dev` was already serving static assets — the `_headers` values only `cloudflare/build.mjs` writes came back on every response — but the assets themselves predate the rename, and `editor.uset82.com` answers `000`, so a deploy from `main` as it stood would have replaced a working site with a 502. The proxy worker and `tunnel.yml` stay in the tree as the optional browser path. Reason: the config described a deployment nobody was running.
+- 2026-10-28 · EV · The user-facing name is corteo. Do not rename the product back to Claudia. `OPENCHATCUT_*`, `occ` and the OpenChatCut credits stay as they are.
+- 2026-10-28 · EV · Host profiles exist for `grok`, `muse` and `claude-duet`: same editor, same skill text. A profile is data: skill dest, media inbox, export dir, `render_gl=swangle`, `providers=off`, locale `es`, default short `1080x1920@30`, MCP URL, brain URL.
+- 2026-10-28 · EV · Delivery is both: the MP4 in `~/corteo-exports` and a path the host can attach in chat.
+- 2026-10-28 · EV · Lyric priority: text the person pasted, then a `.txt` or `.lrc` beside the audio file, then the local transcript.
+- 2026-10-28 · EV · The brain is DeepSeek Harness plus the pinned Our Free Model plugin (`config/harness.json`). It does not replace `server/agent-runs/`; `dsh --profile acp` stays unused.
+- 2026-10-28 · EV · The installer also installs and starts the brain. If that step fails, the video self-test still passes; the failure is its own named step, `brain`.
+- 2026-10-28 · EV · Apps see three model aliases: `corteo-edit`, `corteo-draft`, `corteo-fast`. Raw lane ids stay inside the router.
+- 2026-10-28 · EV · `corteo-edit` may draft arguments only for split, text titles and social copy. It cannot render, publish, delete or open an edit session; the host applies the JSON with a real tool.
+- 2026-10-28 · EV · `delegate` is one MCP tool (alias, kind, schema, input excerpt, max tokens). It answers JSON plus lane and latency, or `brain_unavailable`, with at most one validator round trip.
+- 2026-10-28 · EV · On HTTP 429 or a timeout, the router tries the next lane that passed the last probe; with none left it returns `brain_unavailable`.
+- 2026-10-28 · EV · Anonymous free lanes only: no plugin account login, no EAC, no LAN forward, no public MCP, no paid provider inside the editor.
+- 2026-10-28 · EV · The MCP token, `.env.corteo` and the whole project JSON are never sent to a lane.
+- 2026-10-28 · EV · Carlos chose: the plan files are committed locally before the night and pushed only at its end; Terra may download the music packs `rhythm-lite` and `music-semantics-lite` for L-13; the bot path goes first in the EV table.
+- 2026-10-28 · EV · The planning decisions D1 to D19 (host profile files and skill paths, the song film as an `occ` composition, `apply_ken_burns` headless, shorts kept in the browser tier with a Spanish review, the brain process and router on `127.0.0.1:18890`, `delegate` as an MCP control tool, the editor linked through `/api/keys`, local pnpm, `CORTEO_E2E_MEDIA_DIR`, soft needs) are in `docs/plans/07-evolution.md` › Decisions made.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.
@@ -803,3 +819,49 @@ dependency (rule 2 needs the card to name it) or switching the feature to image-
 search over the vision model that already exists. See the card note in `06-opus-parity.md`.
 Known gap: the per-word emphasis rule and its channel are unit-tested, but **no exported frame
 has been compared in pixels**; a render on a machine with Chromium closes it.
+
+---
+
+## Evolution night (EV)
+
+Plan: `docs/plans/07-evolution.md` (Plan 7). Executor: ChatGPT Terra. Picking rule: top to bottom, the first `todo` whose Needs are `done`. A need marked `(soft)` may also be `blocked`; a `blocked` hard need blocks the card at once (Plan 7, D19). The card text, the verify commands and the commit messages are in the plan.
+
+### EV night report
+Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit shas, the `npm test` exit line, and the push result.
+
+| ID | Task | Status | Needs |
+|----|------|--------|-------|
+| EV-00 | Baseline before the first change | todo | |
+| EV-01 | Host profiles are data (grok, muse, claude-duet) | todo | EV-00 (soft) |
+| EV-02 | Installer `--host-profile` | todo | EV-01 |
+| EV-03 | Skill: one name, the real install, size, delivery | todo | EV-02 (soft) |
+| EV-04 | One render function for every MP4 verb | todo | EV-00 (soft) |
+| EV-05 | Phone round trip: `occ inbox` | todo | EV-01, EV-04 |
+| EV-06 | `apply_ken_burns` runs headless | todo | EV-00 (soft) |
+| EV-07 | Lyrics in: paste, file beside the song, transcript | todo | EV-00 (soft) |
+| EV-08 | Song-film plan (pure) | todo | EV-07 |
+| EV-09 | `occ song-film`: place | todo | EV-04, EV-08 |
+| EV-10 | `occ song-film`: animate and render | todo | EV-09, EV-06 (soft) |
+| EV-11 | Shorts: `reviewEs` before the batch | todo | EV-03 (soft) |
+| EV-12 | Shorts, live on a talking video | todo | EV-11 |
+| EV-13 | Brain aliases and the lane probe | todo | EV-00 (soft) |
+| EV-14 | Alias router with 429 failover | todo | EV-13 |
+| EV-15 | `npm run brain:serve` | todo | EV-14 |
+| EV-16 | `npm run brain`: boot, no browser, no pasted key | todo | EV-15 |
+| EV-17 | Installer starts the brain (`brain` step) | todo | EV-16, EV-02 (soft) |
+| EV-18 | `delegate` MCP tool | todo | EV-14 |
+| EV-19 | The IDE door | todo | EV-14, EV-03 (soft) |
+| EV-20 | The brain, live on this machine | todo | EV-16, EV-18, EV-17 (soft) |
+| EV-21 | L-12: `escuchar-cancion` skill and MCP prompt | todo | EV-00 (soft) |
+| EV-22 | L-11 part 1: Reaccionar a la música | todo | EV-00 (soft) |
+| EV-23 | L-11 part 2: Mapa musical | todo | EV-00 (soft) |
+| EV-24 | L-11 part 3: Mapa de la canción | todo | EV-00 (soft) |
+| EV-25 | L-13: listening end to end on a real song | todo | EV-21 (soft), EV-22 (soft), EV-23 (soft), EV-24 (soft) |
+| EV-26 | `EVOLUTION=PASS` acceptance script | todo | EV-05 (soft), EV-10 (soft), EV-11 (soft), EV-14 (soft), EV-18 (soft), EV-19 (soft) |
+| EV-27 | README Estado for what the night wired | todo | EV-26 (soft) |
+
+### EV: results
+Each card appends its outputs here: commands, JSON, ffprobe values, wall times. Never a token or a key.
+
+### EV: blockers
+None yet.
