@@ -831,7 +831,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
-| EV-00 | Baseline before the first change | todo | |
+| EV-00 | Baseline before the first change | done | |
 | EV-01 | Host profiles are data (grok, muse, claude-duet) | todo | EV-00 (soft) |
 | EV-02 | Installer `--host-profile` | todo | EV-01 |
 | EV-03 | Skill: one name, the real install, size, delivery | todo | EV-02 (soft) |
@@ -863,5 +863,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 ### EV: results
 Each card appends its outputs here: commands, JSON, ffprobe values, wall times. Never a token or a key.
 
+- EV-00: baseline at 7cc7315; Node v24.22.1; tsc exit 0; lint exit 0 (204 warnings, 0 errors); npm test exit 1 at Italian settings coverage (see blocker). Chrome shell has VERSION and linux64; ffprobe: /home/carlos/corteo/node_modules/@ffprobe-installer/linux-x64/ffprobe; pnpm: /mnt/c/Users/carlos/AppData/Roaming/npm/pnpm; dsh 0.2.1-rc.2; port 5199 HTTP 000. Both github and origin remotes exist. no-claudia.verify exit 0.
+
 ### EV: blockers
-None yet.
+- EV-00 baseline: CC_RENDER_GL=swangle npm test exited 1 in src/i18n/dict/it/settingsCoverage.verify.ts: Italian settings dictionary is missing 10 keys for the bot connection UI (AssertionError, expected empty array). This predates EV changes; no fix attempted per card scope. Adding the missing Italian translations would unblock the gate. The serial chain stopped at that assertion and printed no segment summary.
