@@ -937,6 +937,10 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 ## EV track · ZCode (EZ)
 Folder `~/corteo-zcode`, branch `ev-zcode`, editor port 5201. Plan 7 › "Finishing in three tracks". Only ZCode edits this section.
 
+**EZ closed 2026-10-28.** EV-33 is blocked: the music UI code is verified from the Windows side of the share, but no editor can start here to see it in a browser.  
+EV-25 and EV-12 are blocked: `~/corteo-media` does not exist, so there is no song and no talking video.  
+One real defect was fixed on the way (a6c11a8: Tempo, Compás, Energía); nothing is pushed, and EQ's EV-31 merge carries these rows over.
+
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
 | EV-33 | The music UI in a real browser (EV-22 to EV-24) | blocked | |
