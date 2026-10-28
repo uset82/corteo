@@ -850,7 +850,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-16 | `npm run brain`: boot, no browser, no pasted key | done | EV-15 |
 | EV-17 | Installer starts the brain (`brain` step) | done | EV-16, EV-02 (soft) |
 | EV-18 | `delegate` MCP tool | done | EV-14 |
-| EV-19 | The IDE door | todo | EV-14, EV-03 (soft) |
+| EV-19 | The IDE door | done | EV-14, EV-03 (soft) |
 | EV-20 | The brain, live on this machine | todo | EV-16, EV-18, EV-17 (soft) |
 | EV-21 | L-12: `escuchar-cancion` skill and MCP prompt | todo | EV-00 (soft) |
 | EV-22 | L-11 part 1: Reaccionar a la música | todo | EV-00 (soft) |
@@ -898,6 +898,8 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 - EV-17: bash syntax, verify:install and verify:affected passed; --no-brain dry run reported CORTEO_BRAIN=skipped.
 
 - EV-18: tsc, lint (0 errors), delegate.verify, verify:mcp, catalog generation/check, skill guard, both registration gates and 20 affected verifies passed. The stub router exercised validation, retries, failover errors and secret checks; MCP tests confirmed both exposure modes without project binding. Catalog unchanged.
+
+- EV-19: ide-door.verify, skill guard, both registration gates and two affected verifies passed. The router binds loopback; tracked text contains neither the installed forward key nor profile MCP tokens.
 
 ### EV: blockers
 - EV-12: no talking video in /home/carlos/corteo-media. Checked talk.mp4, talk.mov, talk.mkv and talk.webm; none exists. No speech was synthesized and no server was started. A talking video of at least two minutes at one of those paths unblocks the live run.

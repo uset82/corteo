@@ -10,12 +10,30 @@ línea de tiempo por MCP. Todo queda en loopback; no hay cuentas ni claves de pa
 |-------|-------|----------|
 | `dsh` (DeepSeek Harness) | `http://127.0.0.1:3080` | Chat propio del harness y cliente MCP hacia corteo |
 | plugin Our Free Model | `http://127.0.0.1:18899–18909/v1` | Puerta OpenAI-compatible con las lanes gratis, protegida por clave |
+| router del cerebro | `http://127.0.0.1:18890/v1` | Tres alias y cambio de lane cuando una falla |
 | corteo | `http://localhost:5199` (o el puerto de tu `npm run dev`) | Consume esa puerta como proveedor `openai-compatible` |
 | parche MCP | `config/harness/corteo-mcp.cordis.yml` | Mete las herramientas de corteo en el chat del harness |
 
 El home del harness es `~/.corteo-harness` (se puede cambiar con `--home` o
 `CORTEO_HARNESS_HOME`). Los pines —versión de `dsh`, tag y commit del plugin,
 puertos— viven una sola vez en `config/harness.json`.
+
+## La puerta para cualquier app (IDE)
+
+Configura la URL base `http://127.0.0.1:18890/v1` en la aplicación de esta máquina:
+
+- `corteo-edit`: borradores de argumentos de edición.
+- `corteo-draft`: borradores de texto con una lane que produce prosa.
+- `corteo-fast`: la lane disponible más rápida.
+
+La clave es la del reenvío del plugin. Léela en una terminal con `npm run harness:doctor -- --show-key` y pégala en los ajustes del IDE, nunca en un chat. La puerta escucha solo en loopback: no usa túnel y no se puede acceder desde otro ordenador.
+
+`npm run brain` arranca el cerebro; `npm run brain:status` consulta su estado y `npm run brain:stop` lo detiene. Por ejemplo, consulta los alias sin imprimir la clave:
+
+```bash
+KEY=$(node -p 'require(process.env.HOME + "/.corteo-harness/our-free-model/settings.json").forwardKey')
+curl -s -H "Authorization: Bearer $KEY" http://127.0.0.1:18890/v1/models
+```
 
 ## Antes de empezar
 

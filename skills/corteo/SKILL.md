@@ -14,6 +14,8 @@ description: >
 
 `corteo-edit` drafts edit arguments, `corteo-draft` drafts prose, and `corteo-fast` picks the fastest available lane. Call the MCP control tool `delegate` with `alias`, `kind`, `input`, an optional JSON `schema` and `maxTokens`; `tool_args` also needs `tool` and uses `corteo-edit`. It returns checked `json`, `lane`, `latencyMs` and `attempts`, or `brain_unavailable`. The brain drafts; apply its result with a real tool. If the brain is unavailable, do that step yourself. After a reboot, start it again with `npm run brain`.
 
+Other apps on this machine can use the OpenAI-compatible base URL `http://127.0.0.1:18890/v1` with the same three aliases. Read the plugin forward key in a terminal using `npm run harness:doctor -- --show-key` and paste it into the app's settings, never into chat. The door is loopback only: no tunnel or access from another computer. Use `npm run brain:status` to check it and `npm run brain:stop` to stop it.
+
 Example (to be proved live in EV-20):
 
 ```json
