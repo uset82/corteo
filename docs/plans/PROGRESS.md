@@ -1001,6 +1001,7 @@ The earlier six verifies and the EV-37 verifies pass (`npx tsc -b`, `cli/song-fi
 | EV-35 | The install guide says what `install.sh` does now | done | EV-34 |
 | EV-36 | The bot template learns the inbox and the song film | done | EV-35 (soft) |
 | EV-37 | `occ song-film` exits when it is done | done | EV-36 |
+| EV-38 | The skill's MCP blocks, replayed against a running editor | todo | EV-34 |
 
 ### ED: results
 
