@@ -28,8 +28,10 @@ import {
 } from '../../captions/captionSelectionInteraction';
 import type { TimelineProps } from './timelineTypes';
 import { useTimelineController } from './useTimelineController';
+import { useMusicMapVisibility } from './useMusicMapVisibility';
 
 export function Timeline(props: TimelineProps) {
+  const musicMap = useMusicMapVisibility(props.projectId, (props.state as { id?: string }).id);
   const {
     state, commands, playerRef, onRecordVoiceover, onReviewItem, onDropExternalFiles,
     selectedCaptions, onSelectCaption, onMarqueeCaptionSelect,
@@ -80,6 +82,7 @@ export function Timeline(props: TimelineProps) {
       {/* marker note editor (click a pin → note popup) */}
       {editing && <MarkerEditor editing={editing} fps={state.fps} commands={commands} onClose={() => setEditMarker(null)} />}
       <TimelineToolbar
+        musicMapVisible={musicMap.visible} onToggleMusicMap={musicMap.toggle}
         state={state} commands={commands}
         editMode={editMode}
         placeMode={placeMode} setPlaceMode={setPlaceMode}
@@ -215,6 +218,7 @@ The playhead line/triangle is pointerEvents:none, click it to click the ruler - 
                   onPasteCue={pasteCaptionClipboard}
                   onDelete={(laneId, index) => trackCaptions && commands.updateCaptions(removeManualCue(trackCaptions, laneId, index), trackId)} /> : <TrackLane
                   trackId={trackId} indexes={indexes} state={state} commands={commands} pointer={pointer}
+                  musicMapVisible={musicMap.visible}
                   editMode={editMode} pickMode={pickMode} locked={locked} hidden={hidden} muted={config.muted ?? false}
                   px={px} rowHeight={rowHeightOf(trackId)} visibleWindow={visibleWindow}
                   pinnedItemIds={pinnedItemIds}

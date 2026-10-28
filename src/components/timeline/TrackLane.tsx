@@ -2,7 +2,7 @@
 // Blade/pen/reference picking dispatched by editMode), audio waveform, effect marker, pen transparency keyframe
 // Overlay, library asset drag and drop (fx/lut/zoom/transition drop clip, sound/template drop track), transition seam mark.
 // The pointer machine (drag/penDrag, etc.) is provided by useTimelinePointer and is passed in through the pointer prop.
-import { type Dispatch, type RefObject, type SetStateAction, useMemo } from 'react';
+import { Fragment, type Dispatch, type RefObject, type SetStateAction, useMemo } from 'react';
 import { theme, themeAlpha } from '../../theme';
 import { Icon } from '../icons';
 import {
@@ -25,6 +25,7 @@ import {
   type EditMode, type TimelineFrameWindow, type TimelineIndexes,
 } from './timelineUtil';
 import { ClipMediaLayers } from './ClipMediaLayers';
+import { MusicMapStrip } from './MusicMapStrip';
 import { isPreviewable } from '../../media/clipPreview';
 import { canDropMediaAsset, hasCompatibleMediaDrag, parseMediaAssetDrag } from '../../media/drag';
 import type { useTimelinePointer } from './useTimelinePointer';
@@ -101,6 +102,7 @@ function ClipEffectBadges({
 }
 
 interface TrackLaneProps {
+  musicMapVisible: boolean;
   trackId: TrackId;
   indexes: TimelineIndexes;
   state: TimelineState;
@@ -131,6 +133,7 @@ interface TrackLaneProps {
 }
 
 export function TrackLane({
+  musicMapVisible,
   trackId, state, commands, pointer, editMode, pickMode, locked, hidden, muted, px, rowHeight,
   visibleWindow, pinnedItemIds, selectionMovePreview, indexes, libDropTarget, setLibDropTarget,
   applyLibraryToClip, applyLibraryToTrack, rippleOnDrop, overwriteOnDrop,
@@ -287,8 +290,8 @@ export function TrackLane({
         if (editMode === 'slip' && !canSlip) clipTitle = t('此类型没有可滑移的源区间');
         else if (audioMuted) clipTitle = `${it.name} · ${t('轨道已静音')}`;
         return (
+          <Fragment key={it.id}>
           <div
-            key={it.id}
             className={`cc-timeline-clip${selected ? ' is-selected' : ''}${isLibOver ? ' is-library-over' : ''}${audioMuted ? ' is-audio-muted' : ''}`}
             data-timeline-clip
             title={clipTitle}
@@ -359,7 +362,7 @@ export function TrackLane({
               }
             }}
             style={{
-              position: 'absolute', left: Math.max(0, start) * px, top: 4, height: rowHeight - 8, width: dur * px,
+              position: 'absolute', left: Math.max(0, start) * px, top: 4, height: rowHeight - (musicMapVisible && it.kind === 'audio' ? 26 : 8), width: dur * px,
               background: CLIP_COLOR[it.kind] ?? theme.clipMg,
               // The video thumbnail frame bar is drawn by ClipMediaLayers (CSS background cannot load mp4); the image still uses itself as the background
               backgroundImage: it.kind === 'image' && it.src ? `linear-gradient(90deg, transparent 0%, rgba(0,0,0,.4) 78%), url(${it.src})` : undefined,
@@ -460,6 +463,8 @@ export function TrackLane({
             {showHandles && <div onPointerDown={(e) => startDrag(e, it.id, 'trim-right', it.startFrame, it.durationInFrames, it.track, it.srcInFrame ?? 0)}
               style={{ position: 'absolute', right: 0, top: 0, width: 8, height: '100%', cursor: 'ew-resize', background: editMode === 'trim' || editMode === 'rate-stretch' ? themeAlpha.accent(0.5) : selected ? themeAlpha.shadow(0.25) : 'transparent' }} />}
           </div>
+          {it.kind === 'audio' && <MusicMapStrip visible={musicMapVisible} item={{ ...it, srcInFrame: renderSrcIn, playbackRate: renderPlaybackRate, durationInFrames: dur }} assets={state.assets ?? []} fps={state.fps} px={px} left={Math.max(0, start) * px} top={rowHeight - 20} />}
+          </Fragment>
         );
       })}
       {/* transition badges at each cut on this track */}

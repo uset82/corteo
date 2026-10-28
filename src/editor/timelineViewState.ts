@@ -3,6 +3,7 @@ export interface TimelineViewState {
   zoom: number;
   scrollLeft: number;
   trackScale: number;
+  musicMapVisible?: boolean;
 }
 
 export interface TimelineViewStorage {
@@ -37,6 +38,8 @@ export function normalizeTimelineViewState(
     zoom: finiteAtLeast(raw.zoom, 0.01, fallback.zoom),
     scrollLeft: finiteAtLeast(raw.scrollLeft, 0, fallback.scrollLeft),
     trackScale: finiteAtLeast(raw.trackScale, 0.01, fallback.trackScale),
+    ...(typeof raw.musicMapVisible === 'boolean' ? { musicMapVisible: raw.musicMapVisible }
+      : typeof fallback.musicMapVisible === 'boolean' ? { musicMapVisible: fallback.musicMapVisible } : {}),
   };
 }
 

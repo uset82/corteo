@@ -59,6 +59,9 @@ assert.equal(switchedBackToA?.playhead, 120);
 assert.equal(switchedBackToA?.zoom, 2.25);
 assert.equal(switchedBackToA?.scrollLeft, 640);
 assert.equal(switchedBackToA?.trackScale, 1.4);
+saveTimelineViewState(storage, 'project-a', 'timeline-b', { musicMapVisible: true });
+assert.equal(loadTimelineViewState(storage, 'project-a', 'timeline-b')?.musicMapVisible, true);
+assert.equal(loadTimelineViewState(storage, 'project-a', 'timeline-a')?.musicMapVisible, undefined);
 
 // Independent writers (playhead paint and zoom/scroll controller) merge without flattening the other fields.
 saveTimelineViewState(storage, 'project-a', 'timeline-a', { playhead: 144 });

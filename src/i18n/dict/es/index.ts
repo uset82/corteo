@@ -1,6 +1,7 @@
 // Spanish UI translations - complete corteo translation
 // Chinese text is the key, Spanish is the value
 export default {
+  '音乐地图显示': 'Mapa musical',
   '音乐反应标题': 'Reaccionar a la música',
   '音乐反应脉冲': 'Pulso',
   '音乐反应冲击': 'Golpe',

@@ -2,6 +2,7 @@
 // Source: src/components/timeline/*(Timeline/Toolbar/TrackHead/TrackLane/ClipContextMenu/
 // MarkerEditor/TimelineRuler/TimelineTabs/libraryDropActions).
 export default {
+  '音乐地图显示': 'Music map',
   // ── Timeline.tsx ──
   '该轨道还没有可用文字稿': 'This track has no usable transcript yet',
   '导出 MG 动画中（ProRes 4444）…': 'Exporting MG animation (ProRes 4444)…',

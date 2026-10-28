@@ -854,7 +854,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-20 | The brain, live on this machine | done | EV-16, EV-18, EV-17 (soft) |
 | EV-21 | L-12: `escuchar-cancion` skill and MCP prompt | done | EV-00 (soft) |
 | EV-22 | L-11 part 1: Reaccionar a la música | todo | EV-00 (soft) |
-| EV-23 | L-11 part 2: Mapa musical | todo | EV-00 (soft) |
+| EV-23 | L-11 part 2: Mapa musical | blocked | EV-00 (soft) |
 | EV-24 | L-11 part 3: Mapa de la canción | todo | EV-00 (soft) |
 | EV-25 | L-13: listening end to end on a real song | todo | EV-21 (soft), EV-22 (soft), EV-23 (soft), EV-24 (soft) |
 | EV-26 | `EVOLUTION=PASS` acceptance script | todo | EV-05 (soft), EV-10 (soft), EV-11 (soft), EV-14 (soft), EV-18 (soft), EV-19 (soft) |
@@ -907,7 +907,10 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 
 - EV-22: implementation, Spanish static rendering, one-batch apply, tsc, lint (0 errors), verify:components, both registration gates and 55 affected verifies passed. The listed test path in the card is .tsx in the checkout, not .ts. The i18n source-key check and locale.verify passed before the baseline Italian coverage failure.
 
+- EV-23: implementation, tsc, lint (0 errors), Spanish section and 2x trim/speed positioning test, view-state persistence test, verify:components, both registration gates and 22 affected verifies passed. The strip and per-timeline toggle are retained for review.
+
 ### EV: blockers
+- EV-23: `npm run verify:i18n` exited 1 at `src/i18n/dict/it/settingsCoverage.verify.ts`, the same 10 missing Italian bot-connection keys documented for EV-00 and EV-22. The source-key check passed and no pre-existing translations were changed; adding the Italian entries and rerunning the gate unblocks this card.
 - EV-22: `npm run verify:i18n` exits 1 at `src/i18n/dict/it/settingsCoverage.verify.ts`: Italian settings dictionary is missing the same 10 bot-connection keys recorded at EV-00 (AssertionError, expected empty array). Ran the component suite and source-key check; no change to the pre-existing Italian dictionary was made, as the repository instructions prohibit fixing a test that failed before this card. Adding those Italian translations and rerunning verify:i18n would unblock the card. The implemented UI is retained for review; the card is blocked because its required gate is not green.
 - EV-12: no talking video in /home/carlos/corteo-media. Checked talk.mp4, talk.mov, talk.mkv and talk.webm; none exists. No speech was synthesized and no server was started. A talking video of at least two minutes at one of those paths unblocks the live run.
 - EV-00 baseline: CC_RENDER_GL=swangle npm test exited 1 in src/i18n/dict/it/settingsCoverage.verify.ts: Italian settings dictionary is missing 10 keys for the bot connection UI (AssertionError, expected empty array). This predates EV changes; no fix attempted per card scope. Adding the missing Italian translations would unblock the gate. The serial chain stopped at that assertion and printed no segment summary.

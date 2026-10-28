@@ -57,6 +57,8 @@ function TimelineMoreControl(props: {
   onScene: (restoreFocus: () => void) => void;
   onTracking: (restoreFocus: () => void) => void;
   onPlaceMode: (mode: 'insert' | 'overwrite') => void;
+  musicMapVisible: boolean;
+  onToggleMusicMap: () => void;
 }) {
   const t = useT();
   const detailsRef = useRef<HTMLDetailsElement>(null);
@@ -81,6 +83,7 @@ function TimelineMoreControl(props: {
     >
       <summary aria-label={t('更多操作')} title={t('更多操作')}><Icon name="more" size={16} /></summary>
       <div className="cc-track-create-menu cc-timeline-more-menu">
+        <button type="button" aria-pressed={props.musicMapVisible} className={props.musicMapVisible ? 'selected' : ''} onClick={(event) => runMenuAction(event, props.onToggleMusicMap)}>{t('音乐地图显示')}</button>
         <button disabled={!props.sceneEnabled} onClick={(event) => runMenuAction(event, () => props.onScene(restoreFocus), false)}>
           <Icon name="sparkles" size={15} />{t('场景检测')}
         </button>
@@ -118,12 +121,14 @@ interface TimelineToolbarProps {
   setZoom: (z: number) => void;
   /** projectFrameRateLock(doc): null while the frame rate can still change */
   frameRateLock: string | null;
+  musicMapVisible: boolean;
+  onToggleMusicMap: () => void;
 }
 
 export function TimelineToolbar({
   state, commands, editMode, placeMode, setPlaceMode, snapping,
   recorder, canRecord, playing, timecodeRef, playheadFrame, total, captionsVisible,
-  zoom, setZoom, frameRateLock,
+  zoom, setZoom, frameRateLock, musicMapVisible, onToggleMusicMap,
 }: TimelineToolbarProps) {
   const t = useT();
   const speedItem = state.items.find((item) => (
@@ -176,6 +181,7 @@ export function TimelineToolbar({
         <TB icon="magnet" title={snapping ? t('磁性吸附：开 (S)') : t('磁性吸附：关 (S)')} active={snapping} onClick={() => invokeAction('snapping', undefined, 'toolbar')} />
         <ToolSep />
         <TimelineMoreControl
+          musicMapVisible={musicMapVisible} onToggleMusicMap={onToggleMusicMap}
           placeMode={placeMode}
           sceneEnabled={!!sceneItem}
           trackingEnabled={!!trackingItem}
