@@ -7,6 +7,11 @@ import {
 
 const PROMPTS: Prompt[] = [
   {
+    name: 'escuchar-y-editar-cancion',
+    description: 'Escuchar una canción y preparar una partitura emocional antes de editar.',
+    arguments: [{ name: 'cancion', description: 'Canción o clip de audio (opcional)', required: false }],
+  },
+  {
     name: 'create-short-video',
     description: '把当前工程剪成节奏紧凑的竖屏短视频（钩子、推进、高潮、收尾）。',
     arguments: [{ name: 'topic', description: '主题/重点（可选）', required: false }],
@@ -39,6 +44,7 @@ const PROMPTS: Prompt[] = [
 ];
 
 const PROMPT_TEXT: Record<string, string> = {
+  'escuchar-y-editar-cancion': 'Escucha {cancion} con listen_to_song y revisa sus dos imágenes. Distingue las mediciones de las interpretaciones y señala cualquier nota del relay sin verificar. Muestra en español una partitura emocional por sección con intensidad, intención visual y una cita de la letra antes de editar. Usa la letra de la persona primero y crea una sola versión.',
   'create-short-video': '请把当前时间线剪成节奏紧凑的竖屏短视频：先梳理素材，确定钩子、推进、高潮和收尾，再执行剪辑、配乐、字幕与发布前检查。主题：{topic}。',
   'transcribe-and-caption': '请转写 {track} 轨道的音频/视频片段并生成字幕；没有音轨的片段跳过即可，完成后汇报哪些片段跳过了。',
   'add-background-music': '请为当前时间线选择并放置合适的背景音乐，标准化到约 -14 LUFS，并确保不与口播冲突。{topic}',
@@ -54,12 +60,14 @@ export function registerMcpPrompts(server: Server): void {
     const topic = typeof args.topic === 'string' ? args.topic.trim() : '';
     const track = typeof args.track === 'string' ? args.track.trim() : '';
     const mood = typeof args.mood === 'string' ? args.mood.trim() : '';
+    const cancion = typeof args.cancion === 'string' ? args.cancion.trim() : '';
     const template = name === 'generate-script'
       ? `请围绕「${topic}」写一段解说词/口播稿：先明确结构（开头钩子、主体要点、结尾行动引导），再规划与素材匹配的分镜。`
       : PROMPT_TEXT[name];
     if (!template) throw new Error(`Unknown prompt ${name}`);
     const text = template
       .replace(/\{topic\}/g, topic || '当前素材')
+      .replace(/\{cancion\}/g, cancion || 'la canción actual')
       .replace(/\{track\}/g, track || 'A1');
     return {
       description: PROMPTS.find((prompt) => prompt.name === name)?.description,

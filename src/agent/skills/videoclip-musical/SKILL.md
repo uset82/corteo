@@ -24,8 +24,9 @@ This skill is the order of operations, not a second engine: every step calls an 
 - `find_transcript` answers when a line is sung. Anchor every line with it; never estimate timings from word counts.
 - When the user brings lyrics, use them verbatim. `manage_transcript` with `action: fix` corrects words without moving timing.
 
-## 2. The beat map
+## 2. Listen to the song
 
+- Call `listen_to_song` and inspect the song map and energy curve. Use the `escuchar-cancion` skill to present the emotional score in Spanish before editing; keep relay claims separate and mark any unverified note.
 - `detect_beats` is the fast, on-device path: BPM, beats and downbeats in source seconds. Trust it at confidence ≥ 2.
 - `analyze_music` adds sections, tags and mood when the user wants them. It runs the installed local packs, refuses to download anything, and reuses its cache unless `force` is set. If packs are missing, report the install path and continue with `detect_beats`.
 - `music_edit_plan` is read-only: show its bounded cut/target summary before changing the timeline. Apply it with `sync_cuts_to_music` for video targets or `sync_images_to_music` for stills, passing the returned `analysisRef`.
@@ -62,5 +63,4 @@ This skill is the order of operations, not a second engine: every step calls an 
 
 ## Gaps to state honestly
 
-- Listening to the song (`listen_to_song`), mood maps and the song map arrive with Plan 2. Today the beat work is `detect_beats` plus `analyze_music`.
 - Caption motion `latido`, subtitle import, variant previews and HEVC export are later tasks; say they are not built instead of improvising a substitute.

@@ -69,7 +69,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | L-09 | Music reactions + tools | done | L-06, L-08, P2-1 |
 | L-10 | Caption motion `latido` | done | L-06 |
 | L-11 | Music UI: inspector section, timeline map, song dialog | todo | L-09 |
-| L-12 | `escuchar-cancion` skill + MCP prompt | todo | L-09, P1-6 |
+| L-12 | `escuchar-cancion` skill + MCP prompt | done | L-09, P1-6 |
 | L-13 | Listening end-to-end proof | todo | L-11, L-12 |
 | P2-2 | Captions: verso/coro, ASS/VTT import | todo | |
 | P2-3 | Duplicate detector | todo | |
@@ -852,7 +852,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-18 | `delegate` MCP tool | done | EV-14 |
 | EV-19 | The IDE door | done | EV-14, EV-03 (soft) |
 | EV-20 | The brain, live on this machine | done | EV-16, EV-18, EV-17 (soft) |
-| EV-21 | L-12: `escuchar-cancion` skill and MCP prompt | todo | EV-00 (soft) |
+| EV-21 | L-12: `escuchar-cancion` skill and MCP prompt | done | EV-00 (soft) |
 | EV-22 | L-11 part 1: Reaccionar a la música | todo | EV-00 (soft) |
 | EV-23 | L-11 part 2: Mapa musical | todo | EV-00 (soft) |
 | EV-24 | L-11 part 3: Mapa de la canción | todo | EV-00 (soft) |
@@ -902,6 +902,8 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 - EV-19: ide-door.verify, skill guard, both registration gates and two affected verifies passed. The router binds loopback; tracked text contains neither the installed forward key nor profile MCP tokens.
 
 - EV-20: live boot exit 0: ok=true, step=null, forwardPort=18899, routerPort=18890, editor=linked, probe=corteo-edit/nvidia/nemotron-3-ultra-550b-a55b:free at 1475 ms. Status: 9 passing lanes; edit first=nvidia/nemotron-3-ultra-550b-a55b:free, draft and fast first=liquid/lfm-2.5-2.6b:free. Doctor passed 5/5 (33 models, masked key). MCP tools/list exposed delegate. Lyric draft: ok, same edit lane, 12213 ms, 1 attempt; three text items applied to scratch project bdd73584-0112-4d63-8cc3-625733245ce7: item_0241b5a8-69dd-4965-b7cb-eb064616fddf, item_392625af-741c-405c-8bf8-b985f7b4ad4b, item_c06454f5-ea22-42d3-a95b-c69a88fe8499. Split draft: ok, same lane, 4325 ms, 1 attempt; applied at frame 60, newItemId=item_77e9794e-883a-41cf-9a00-1f65ee974957. After brain:stop, delegate returned brain_unavailable/router_down, tried=[]; direct fallback placed item_ef25d43c-e83e-44dd-844b-a9b639a5317e. No natural 429 rows observed. Editor keys endpoint: configured=true, base URL http://127.0.0.1:18899/v1. Brain and this card's editor stopped.
+
+- EV-21 (L-12): tsc, lint (0 errors), verify:skills, verify:mcp, catalog generation/check, both registration gates and affected verifies passed. The MCP prompt was tested through a real session; bundled skill count is 33.
 
 ### EV: blockers
 - EV-12: no talking video in /home/carlos/corteo-media. Checked talk.mp4, talk.mov, talk.mkv and talk.webm; none exists. No speech was synthesized and no server was started. A talking video of at least two minutes at one of those paths unblocks the live run.
