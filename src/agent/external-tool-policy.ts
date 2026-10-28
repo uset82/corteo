@@ -39,6 +39,8 @@ const DRAFT_EDIT_TOOL_NAMES = new Set([
   'apply_music_reaction', 'clear_music_reaction',
   'manage_design_style',
   'import_timeline',
+  // Subtitle file → manual caption track: parsing plus the draft's caption commands.
+  'import_subtitles',
   'export_jianying_draft',
   // Local-path media import lands assets in the session's pool; the file copy
   // itself is a library write, reviewed in offline-tool-authorization.ts.
@@ -94,6 +96,9 @@ const SERVER_DIRECT_EDIT_TOOL_NAMES: Record<string, true> = {
   update_watermark: true,
   manage_markers: true,
   import_timeline: true,
+  // Pure parsing plus createCaptionTrack/setCaptions; the file is read by the
+  // host (server in-process here, the local-media route in a browser tab).
+  import_subtitles: true,
   // Reviewed for server-side execution: both run against the draft's EditorCore
   // commands with state/doc only. Their GL catalogs import shaders with Vite's
   // `?raw` suffix, which the CLI host now resolves (cli/raw-hooks.mjs) and the

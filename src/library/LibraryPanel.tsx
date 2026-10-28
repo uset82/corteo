@@ -13,7 +13,6 @@ import type { AudioAsset } from '../audio/library';
 import { FX_EFFECTS, FX_IDS, LUT_EFFECTS, LUT_IDS } from '../gl/fx/effects';
 import { TranscriptPanel, type TranscriptTrackOption } from '../transcript/TranscriptPanel';
 import { CaptionsPanel } from '../captions/CaptionsPanel';
-import { newManualCaptions } from '../captions/manualCaptions';
 import { MediaPoolPanel } from '../media/MediaPoolPanel';
 import { useDirectoryImport } from '../media/useDirectoryImport';
 import { SkillsTabPanel } from './SkillsTabPanel';
@@ -31,7 +30,8 @@ import { isPluginAssetId } from '../plugins/types';
 import { customTransitionUniforms, getCustomTransition } from '../gl/customTransitions';
 import type { ZoomEffect } from '../editor/types';
 import { Icon } from '../components/icons';
-import { parseSrt } from '../captions/srt';
+import { parseSubtitles } from '../captions/subtitles';
+import { subtitleTrackName, withSubtitleLane } from '../captions/subtitleImport';
 
 // Two built-in LUTs implemented with published camera-log transfer functions.
 // They apply through the same pipeline as other effects.
@@ -172,18 +172,19 @@ export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddA
     }
     setMainTab('字幕');
   };
-  const importSrt = async (file: File) => {
+  // One import path for SRT, ASS and VTT: parseSubtitles picks the parser from
+  // the extension, and the file lands on its own manual caption track.
+  const importSubtitles = async (file: File) => {
     try {
-      const words = parseSrt(await file.text());
-      const entryId = `srt_${crypto.randomUUID()}`;
-      onCreateCaptionTrack({
-        ...newManualCaptions(),
-        sourceEntries: [{ id: entryId, itemId: `manual:${entryId}`, label: file.name, words }],
-      }, { name: file.name.replace(/\.srt$/i, '') || file.name });
+      const words = parseSubtitles(file.name, await file.text());
+      onCreateCaptionTrack(
+        withSubtitleLane(null, items, file.name, words).captions,
+        { name: subtitleTrackName(file.name) },
+      );
       setMainTab('字幕');
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
-      window.alert(`${t('SRT 导入失败')}：${t(detail)}`);
+      window.alert(`${t('字幕导入失败')}：${t(detail)}`);
     }
   };
 
@@ -198,10 +199,10 @@ export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddA
       {extensionOpen ? (
         <ExtensionCenter onClose={() => setExtensionOpen(false)} />
       ) : isCaptions ? (
-        <CaptionsPanel playerRef={playerRef} fps={fps} items={items} assets={assets} captionTracks={captionTracks} onSetCaptions={onSetCaptions} onUpdateCaptions={onUpdateCaptions} />
+        <CaptionsPanel playerRef={playerRef} fps={fps} items={items} assets={assets} captionTracks={captionTracks} onSetCaptions={onSetCaptions} onUpdateCaptions={onUpdateCaptions} onCreateCaptionTrack={onCreateCaptionTrack} />
       ) : isTranscript ? (
         <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, borderTop: `0.5px solid ${theme.border}` }}>
-          <TranscriptPanel playerRef={playerRef} fps={fps} items={items} trackOptions={trackOptions} onSetItemTranscript={onSetItemTranscript} onToggleWord={onToggleWord} onCleanScript={onCleanScript} onSetGapCap={onSetGapCap} onSetTranscriptPlayOrder={onSetTranscriptPlayOrder} onReorderTrackItems={onReorderTrackItems} onClearEdits={onClearEdits} onImportSrt={(file) => { void importSrt(file); }} onOpenCaptionStyles={openCaptionStyles} />
+          <TranscriptPanel playerRef={playerRef} fps={fps} items={items} trackOptions={trackOptions} onSetItemTranscript={onSetItemTranscript} onToggleWord={onToggleWord} onCleanScript={onCleanScript} onSetGapCap={onSetGapCap} onSetTranscriptPlayOrder={onSetTranscriptPlayOrder} onReorderTrackItems={onReorderTrackItems} onClearEdits={onClearEdits} onImportSrt={(file) => { void importSubtitles(file); }} onOpenCaptionStyles={openCaptionStyles} />
         </div>
       ) : isSequences ? (
         <div className="cc-sequence-panel">

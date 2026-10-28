@@ -163,4 +163,15 @@ export default {
   '字幕文件没有可用内容': 'El archivo de subtítulos no tiene contenido utilizable',
   '无法创建字幕轨道': 'No se pudo crear la pista de subtítulos',
   '读取字幕文件失败': 'No se pudo leer el archivo de subtítulos',
+  // Importación de subtítulos (SRT/ASS/VTT) y el grupo Videoclip
+  '音乐视频': 'Videoclip',
+  '主歌': 'Verso',
+  '副歌': 'Coro',
+  '主歌：小号衬线，当前词提亮': 'Verso: serif pequeño, la palabra cantada se ilumina',
+  '副歌：大写粗体，撞色高亮': 'Coro: mayúsculas gruesas, realce contrastado',
+  '导入字幕（SRT/ASS/VTT）': 'Importar subtítulos (SRT/ASS/VTT)',
+  '字幕导入失败': 'No se pudieron importar los subtítulos',
+  'ASS 文件中没有有效字幕。': 'El archivo ASS no contiene subtítulos válidos.',
+  'VTT 文件中没有有效字幕。': 'El archivo VTT no contiene subtítulos válidos.',
+  '无法识别的字幕格式（支持 SRT、ASS、VTT）。': 'Formato de subtítulos no reconocido (se admiten SRT, ASS y VTT).',
 } as Record<string, string>;

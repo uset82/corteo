@@ -71,7 +71,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | L-11 | Music UI: inspector section, timeline map, song dialog | done | L-09 |
 | L-12 | `escuchar-cancion` skill + MCP prompt | done | L-09, P1-6 |
 | L-13 | Listening end-to-end proof | blocked (no song) | L-11, L-12 |
-| P2-2 | Captions: verso/coro, ASS/VTT import | todo | |
+| P2-2 | Captions: verso/coro, ASS/VTT import | done (SRT/ASS/VTT import in the panel, the library and `import_subtitles`; the preview and the export were not seen — no editor opens from here) | |
 | P2-3 | Duplicate detector | todo | |
 | P2-4 | HEVC export + presets | todo | |
 | P2-5 | Countdown timecode | todo | |
@@ -1099,3 +1099,19 @@ Branch `p5-workbuddy` in `~/corteo-zcode`. Every module of `src/i18n/dict/en/` n
 - Verifies extended rather than added, so no registration was needed: `keymap.verify.ts` asserts the preset exists, every Premiere key reaches its action, B and N are unbound, the default preset is unchanged, a manual rebinding still wins and reset falls back to the preset, and `findConflicts` finds no two actions sharing a key inside the preset. `catalog.verify.ts` moves 56 → 57 actions and pins the new row as unbound.
 - Gates: `tsc -b --force` clean, the four `verify:shortcuts` files green, `node scripts/check-i18n.mjs` green (`161 个 UI 文件，2646 个英文词条，2684 个西语词条` — three new keys, English in `en/settings.ts`, Spanish in `es/settings-2.ts`).
 - **Not tried by hand**: the editor cannot be opened from the Windows side of the share, so the picker, the remapped keys and the description were checked as data, not seen on screen.
+
+### P2-2 · subtitle import and the Videoclip styles
+
+One import path for three formats: `src/captions/subtitles.ts` picks the parser from the extension (or from an explicit `format`), `ass.ts` and `vtt.ts` are new, and SRT keeps using `parseSrt`. `subtitleImport.ts` turns the parsed words into one manual lane, and the three callers — the panel button, the library import and `import_subtitles` — all go through it, so the lane shape is decided once.
+
+- ASS: `\k`, `\kf`, `\K` and `\ko` are all karaoke tags and all count in centiseconds; the syllables run back to back from the line start. Text before the first tag is kept and weighed like an average syllable, so it keeps a slice of the cue instead of being dropped. Every other override block (`{\b1}`, `{\pos(..)}`, `{\an8}`) is stripped, `\N`/`\n`/`\h` separate words, `Comment:` lines and every section but `[Events]` are ignored, and the `Format:` line decides the column order (the v4+/SSA default when it is missing).
+- A karaoke run longer than its cue is scaled to fit it; a shorter one is **not** stretched. A gap at the end of a line is authored silence, and filling it would drift every word after it.
+- VTT: both `mm:ss.mmm` and `hh:mm:ss.mmm`, cue settings after the end time ignored, `NOTE`/`STYLE`/`REGION` blocks skipped, inline tags and inline timestamps stripped.
+- Refusals are specific and translated: `ASS 文件中没有有效字幕。`, `VTT 文件中没有有效字幕。`, `无法识别的字幕格式（支持 SRT、ASS、VTT）。`
+- Styles: `verso` (quiet serif, the sung word lights up warm) and `coro` (big caps, yellow highlight) carry `group: 'videoclip'`, and the style menu shows them under a `音乐视频 / Videoclip` title ahead of the rest of the catalog, which keeps its order. The grid in the caption panel stays flat.
+- UI: `导入字幕（SRT/ASS/VTT）` in `CaptionsPanel` — a new caption track when the panel has none, another lane on the selected one otherwise — and the library's `importSrt` became `importSubtitles`, the same function with the extension dispatch. There is still one import path, not a second one.
+- `import_subtitles { path, format?, captionTrackId? }` is server-direct (`SERVER_DIRECT_EDIT_TOOL_NAMES`, `offline-tools`, `offline-executor`), so the bot can call it with no editor tab open. The host reads the file — `resolveAgentMediaPath` in-process (the `AGENT_IMPORT_ROOTS` gate, 2 MB cap) or the new `POST /api/local-media/text` route in a browser tab — and the tool only parses and calls `createCaptionTrack`/`setCaptions`, one command each, so an import is one undo step.
+- Verifies: `ass.verify.ts` (all four tags, leading text, override blocks, `\N`, centiseconds, sorting, three malformed inputs), `vtt.verify.ts` (both time forms, cue settings, NOTE/STYLE, inline tags, malformed), `subtitles-tools.verify.ts` (an ASS fixture written to a temp dir → a track named `coro` with `Can/to/Y a/hora` at 1000–5500 ms, a second import into an existing track keeping both lanes, and six refusals that write nothing), `styles.verify.ts` 22 → 24 pinning the group, and `captions-tools.verify.ts` 22 → 24 presets.
+- Gates: `tsc -b` clean; every step of `verify:captions` green; the agent-tools neighbours run one by one (`captions-tools`, `captions-lanes`, `captions-track-order`, `external-tool-policy`, `offline-runtime`, `mcp`, `mcp-tool-exposure`); `node scripts/check-i18n.mjs` green (161 UI files, 2,656 English, 2,694 Spanish — ten new keys in both `captions.ts` files); `generate:server-tool-catalog` then `--check` ("server tool catalog is current"); both registration gates green (722 verify files).
+- **Not checked**: the karaoke in the preview and in the export. The editor cannot be opened from the Windows side of the share, so the card's "Done when" is met in the data — a manual lane whose words carry the ASS timings, which is what the existing SRT import already renders — but nobody has watched it light up. `npm run lint` did not run either: the `oxlint` win32 binding is missing from this checkout (`Cannot find module './oxlint.win32-x64-msvc.node'`).
+- Nothing is pushed.

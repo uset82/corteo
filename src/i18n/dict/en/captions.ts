@@ -175,4 +175,15 @@ export default {
   '字幕文件没有可用内容': 'The caption file has no usable content',
   '无法创建字幕轨道': 'Could not create a caption track',
   '读取字幕文件失败': 'Failed to read the caption file',
+  // Subtitle import (SRT/ASS/VTT) and the Videoclip caption group
+  '音乐视频': 'Music video',
+  '主歌': 'Verse',
+  '副歌': 'Chorus',
+  '主歌：小号衬线，当前词提亮': 'Verse: small serif type, the word being sung lights up',
+  '副歌：大写粗体，撞色高亮': 'Chorus: big caps, clashing highlight',
+  '导入字幕（SRT/ASS/VTT）': 'Import subtitles (SRT/ASS/VTT)',
+  '字幕导入失败': 'Caption import failed',
+  'ASS 文件中没有有效字幕。': 'No valid captions were found in the ASS file.',
+  'VTT 文件中没有有效字幕。': 'No valid captions were found in the VTT file.',
+  '无法识别的字幕格式（支持 SRT、ASS、VTT）。': 'Unrecognized subtitle format (SRT, ASS and VTT are supported).',
 } as Record<string, string>;

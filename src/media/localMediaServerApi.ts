@@ -8,6 +8,7 @@ import type { AgentPathImportRequest, AgentPathImportResult } from '../../shared
 
 const BROWSE_URL = '/api/local-media/browse';
 const IMPORT_URL = '/api/local-media/import';
+const TEXT_URL = '/api/local-media/text';
 
 /**
  * `code` mirrors the desktop IPC error contract (IMPORT_ROOTS_NOT_CONFIGURED,
@@ -46,4 +47,10 @@ export function importAgentPathsOverHttp(
   request: AgentPathImportRequest,
 ): Promise<AgentPathImportResult> {
   return postJson<AgentPathImportResult>(IMPORT_URL, request);
+}
+
+/** Read one local text file (a subtitle file) under the same allowlist: the
+ *  import_subtitles tool needs the bytes, not the media metadata. */
+export function readLocalTextFileOverHttp(path: string): Promise<{ path: string; text: string }> {
+  return postJson<{ path: string; text: string }>(TEXT_URL, { path });
 }
