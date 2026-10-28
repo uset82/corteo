@@ -16,6 +16,7 @@ Usage
   occ timeline items [<project>] [--track <track id>] [--timeline <id>] [--json]
   occ media ls [<project>] [--json]
   occ media import <absolute-path> [--apply] [--json]
+  occ song-film --audio <path> [--lyrics-text <text>] [--stills <paths>] [--to 30s] [--json]
   occ inbox --host <name> [--file <path>] [--resolution 720p] [--to <frame|4s>] [--dry-run] [--json]
   occ host list [--json]
   occ host show <name> [--json]

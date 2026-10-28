@@ -13,6 +13,7 @@ import { runJobCommand } from './commands/job.ts';
 import { runMcpCommand } from './commands/mcp.ts';
 import { runMediaCommand } from './commands/media.ts';
 import { runProjectCommand } from './commands/project.ts';
+import { runSongFilmCommand } from './commands/song-film.ts';
 import { runRenderCommand } from './commands/render.ts';
 import { runTimelineCommand } from './commands/timeline.ts';
 import { runToolsCommand } from './commands/tools.ts';
@@ -53,6 +54,8 @@ async function dispatch(commandLine: CommandLine): Promise<void> {
       return runJobCommand(positionals, commandLine, json);
     case 'mcp':
       return runMcpCommand(positionals, commandLine, json);
+    case 'song-film':
+      return runSongFilmCommand(commandLine, json);
     case 'render':
       return runRenderCommand(subLine(commandLine, positionals), json);
     case 'export':

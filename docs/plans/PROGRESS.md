@@ -840,7 +840,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-06 | `apply_ken_burns` runs headless | done | EV-00 (soft) |
 | EV-07 | Lyrics in: paste, file beside the song, transcript | done | EV-00 (soft) |
 | EV-08 | Song-film plan (pure) | done | EV-07 |
-| EV-09 | `occ song-film`: place | todo | EV-04, EV-08 |
+| EV-09 | `occ song-film`: place | done | EV-04, EV-08 |
 | EV-10 | `occ song-film`: animate and render | todo | EV-09, EV-06 (soft) |
 | EV-11 | Shorts: `reviewEs` before the batch | todo | EV-03 (soft) |
 | EV-12 | Shorts, live on a talking video | todo | EV-11 |
@@ -880,6 +880,8 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 - EV-07: tsc, lyricsInput.verify, verify:music-intelligence and both registration gates passed.
 
 - EV-08: tsc, songFilm.verify, verify:editor and both registration gates passed.
+
+- EV-09: tsc, song-film.verify, verify:cli and registration gates passed. Direct probes showed CLI result paths ops[0].result.timelineDownbeatFrames and ops[0].result.{sections,curves,lyrics.lines}; the session returns the result itself. The synthetic fixture detected downbeats without an accent adjustment.
 
 ### EV: blockers
 - EV-00 baseline: CC_RENDER_GL=swangle npm test exited 1 in src/i18n/dict/it/settingsCoverage.verify.ts: Italian settings dictionary is missing 10 keys for the bot connection UI (AssertionError, expected empty array). This predates EV changes; no fix attempted per card scope. Adding the missing Italian translations would unblock the gate. The serial chain stopped at that assertion and printed no segment summary.
