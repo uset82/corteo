@@ -962,6 +962,7 @@ The six verifies pass (skill, acceptance, no-claudia, install, bot-recipe, bot-r
 | EV-34 | Replay `skills/corteo/SKILL.md` the way a host would | done | |
 | EV-35 | The install guide says what `install.sh` does now | done | EV-34 |
 | EV-36 | The bot template learns the inbox and the song film | done | EV-35 (soft) |
+| EV-37 | `occ song-film` exits when it is done | todo | EV-36 |
 
 ### ED: results
 
