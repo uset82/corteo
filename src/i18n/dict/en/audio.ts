@@ -2,6 +2,14 @@
 // Source: src/audio/* (recorder error message + soundLibrary grouping label).
 // The English name of the group follows the nameEn; usage (library partition) package t(group.name) that comes with soundLibrary.SOUND_GROUPS.
 export default {
+  '歌曲地图标题': 'Song map',
+  '歌曲地图返回': 'Back',
+  '歌曲地图调性': 'Key',
+  '歌曲地图小调': 'minor',
+  '歌曲地图大调': 'major',
+  '歌曲地图歌词': 'Lyrics',
+  '歌曲地图已听': 'Heard for real',
+  '歌曲地图未验证': 'Unverified',
   // recorder.ts
   '此浏览器不支持录音': 'Recording is not supported in this browser',
   '麦克风权限被拒绝': 'Microphone permission denied',

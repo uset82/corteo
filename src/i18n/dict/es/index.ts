@@ -1,6 +1,14 @@
 // Spanish UI translations - complete corteo translation
 // Chinese text is the key, Spanish is the value
 export default {
+  '歌曲地图标题': 'Mapa de la canción',
+  '歌曲地图返回': 'Volver',
+  '歌曲地图调性': 'Tonalidad',
+  '歌曲地图小调': 'menor',
+  '歌曲地图大调': 'mayor',
+  '歌曲地图歌词': 'Letra',
+  '歌曲地图已听': 'Escuchado de verdad',
+  '歌曲地图未验证': 'Sin verificar',
   '音乐地图显示': 'Mapa musical',
   '音乐反应标题': 'Reaccionar a la música',
   '音乐反应脉冲': 'Pulso',
