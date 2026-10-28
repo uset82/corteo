@@ -12,6 +12,7 @@ import review from './review';
 import templatesData from './templates-data';
 import timeline from './timeline';
 import topbar from './topbar';
+import transcript from './transcript';
 
 const base: Record<string, string> = {
   '歌曲地图标题': 'Mapa de la canción',
@@ -272,4 +273,4 @@ const base: Record<string, string> = {
     'Dale a corteo la configuración de abajo para que edite este proyecto desde fuera de este PC. El dominio del editor tiene que estar en hosting.egressDomains.',
 };
 
-export default Object.assign({}, audio, chat, components, editor, exportPanel, media, review, templatesData, timeline, topbar, base) as Record<string, string>;
+export default Object.assign({}, audio, chat, components, editor, exportPanel, media, review, templatesData, timeline, topbar, transcript, base) as Record<string, string>;
