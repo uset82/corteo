@@ -864,7 +864,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-27 | README Estado for what the night wired | todo | EV-31 |
 | EV-28 | The ten Italian keys, so `npm test` runs to the end | done | |
 | EV-29 | Close EV-22, EV-23 and EV-24 now that `verify:i18n` passes | done | EV-28 |
-| EV-30 | The first full `npm test` since C-12 | todo | EV-29 |
+| EV-30 | The first full `npm test` since C-12 | done | EV-29 |
 | EV-31 | Merge the ZCode and DeepSeek Harness tracks | todo | EV-30, EZ and ED tables finished |
 | EV-32 | Final gates, publish, report | todo | EV-31, EV-27 (soft) |
 
@@ -925,6 +925,8 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 
 - EV-29: after EV-28, all three cards' Verify lists are green: tsc exit 0; `music-reaction-section.verify.tsx`, `music-map-strip.verify.tsx` and `song-map-dialog.verify.tsx` each exit 0 with their Spanish-controls/map/optional-evidence lines; `npm run verify:components` exit 0; `npm run verify:i18n` exit 0 (check-i18n 161 UI files, 2643 entries); both registration gates exit 0 (719 verify files). Rows EV-22, EV-23 and EV-24 set to done. L-11 stays blocked until EV-31 (card out of scope); the browser proof is EV-33.
 
+- EV-30: tsc exit 0; `npm run lint` exit 0 (209 warnings, 0 errors); `npm run build` exit 0 (upstream's chunk-size warning only). Run 1 of `CC_RENDER_GL=swangle npm test` stopped in `pretest` at `verify:skills`: `plugin-skills.verify.ts` still expected the pre-EV-21 skill list and rejected the new `escuchar-cancion` directory; that is the night's failure and `EV-21: fix the bundled-skill list the full gate found` adds it (bb5a24f). `npx tsx src/agent/skills/plugin-skills.verify.ts` and `npm run verify:skills` then passed. Run 2 reached every segment: `✗ 1/242 segments FAILED in 362.4s`; 241 segments green, and the one failure is `verify-registration.verify.mjs` reading `package.json` with two new verify names (`src/audio/listen/songMeasurement.verify.ts`, `server/music-listen/relay-route.verify.ts`) that were not in git's index at that moment. Those are another session's uncommitted, in-flight changes that appeared in this checkout during the run; once they were staged the same gate passes (`all 721 tracked verify files are registered`, exit 0). No segment failed on committed tree code. EV-32 reruns the whole gate on the merged tree, after which this row's "green suite" claim can be made for the final tree.
+
 ### EV: blockers
 - EV-25: `find /home/carlos/corteo-media -maxdepth 1` could not find a song because the directory does not exist. Checked the configured default directory for wav, mp3, m4a and flac; no editor or downloads were started. A real song in that directory unblocks the proof. Screenshots are also skipped while EV-22 and EV-24 are blocked.
 
@@ -933,6 +935,7 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 - EV-22: `npm run verify:i18n` exits 1 at `src/i18n/dict/it/settingsCoverage.verify.ts`: Italian settings dictionary is missing the same 10 bot-connection keys recorded at EV-00 (AssertionError, expected empty array). Ran the component suite and source-key check; no change to the pre-existing Italian dictionary was made, as the repository instructions prohibit fixing a test that failed before this card. Adding those Italian translations and rerunning verify:i18n would unblock the card. The implemented UI is retained for review; the card is blocked because its required gate is not green. Resolved 2026-10-28 by EV-28, closed by EV-29.
 - EV-12: no talking video in /home/carlos/corteo-media. Checked talk.mp4, talk.mov, talk.mkv and talk.webm; none exists. No speech was synthesized and no server was started. A talking video of at least two minutes at one of those paths unblocks the live run.
 - EV-00 baseline: CC_RENDER_GL=swangle npm test exited 1 in src/i18n/dict/it/settingsCoverage.verify.ts: Italian settings dictionary is missing 10 keys for the bot connection UI (AssertionError, expected empty array). This predates EV changes; no fix attempted per card scope. Adding the missing Italian translations would unblock the gate. The serial chain stopped at that assertion and printed no segment summary. Resolved 2026-10-28 by EV-28.
+- EV-30 (transient, watch after EV-31): between about 10:39 and 10:55 CET another session edited this checkout while the suite ran — `src/audio/intelligence/*`, `src/i18n/dict/{en/audio,es/index}.ts`, `package.json`, new `src/audio/listen/songMeasurement*`, new `server/music-listen/relay-route*`, plus a dev server on port 5199 started from `~/corteo`. Nothing was committed by this track. `verify-registration.verify.mjs` failed only because those new verify names were in the working-tree `package.json` before git tracked the files; it exits 0 once they are in the index (721 files). Recheck that the merged tree's `package.json` and its verify files agree.
 
 ---
 
