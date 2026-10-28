@@ -1013,3 +1013,33 @@ The three verifies pass, the row is `done`, and the scratch directory was delete
 
 ### ED: blockers
 None yet.
+
+## P5-1 track · WorkBuddy
+
+Branch `p5-workbuddy` in `~/corteo-zcode`. Every module of `src/i18n/dict/en/` now resolves to Spanish: 2,434 keys in 16 new files under `src/i18n/dict/es/`, on top of the 206 entries that already lived in `es/index.ts` (`base`) and the 121 in `es/brand.ts`. `es/index.ts` is an assembly now — `Object.assign({}, …modules, base)` — with `base` spread **last**, so nothing translated before P5-1 changed wording.
+
+| Commit | Module | Keys | File |
+| --- | --- | --- | --- |
+| `ce29ebd` | timeline | 244 | `timeline.ts` |
+| `f1894ba` | media | 211 | `media.ts` |
+| `a1785e5` | components | 296 | `components.ts` |
+| `b8a3845` | exportPanel | 186 | `exportPanel.ts` |
+| `1389592` | chat | 321 | `chat.ts` |
+| `8bbace9` | editor | 25 | `editor.ts` |
+| `880510c` | topbar | 6 | `topbar.ts` |
+| `51853c7` | review | 15 | `review.ts` |
+| `9be9057` | templates-data | 24 | `templates-data.ts` |
+| `68f7271` | audio | 49 | `audio.ts` |
+| `1ea38c0` | transcript | 82 | `transcript.ts` |
+| `c670bf4` | fx | 141 | `fx.ts` |
+| `4522160` | captions | 150 | `captions.ts` |
+| `340809d` | library | 168 | `library.ts` |
+| `8dd4f7b` | settings | 516 | `settings-1.ts` (153), `settings-2.ts` (363) |
+
+- `settings` is the only module that needed splitting: 516 keys do not fit the 500-line gate in one file. The cut follows the page order of the dialog, so `settings-1.ts` holds the shell, the capability groups, the field labels, the routing options and the interface / proxy pages, and `settings-2.ts` holds the Codex, Copilot, Claude Code and Grok accounts, the design style, the shortcuts, the media cleanup, the MCP guide and the local model pages. `es/index.ts` imports them as `settings1` and `settings2`.
+- Vocabulary is Premiere Pro's Spanish: Línea de tiempo, Secuencia, Fotograma clave, Cuchilla, Controles de efectos, plus Clave de croma, Viñeteado, Desvanecido and Matiz for the effect parameters. Sentence case, "tú", and every `{placeholder}` byte-identical to the English.
+- Two labels the duplicate-key check caught, each fixed in its own commit: `931607c` — timeline carried `字` as `S` while the caption tool renders it as an `A`; and `19c3f3e` — library carried `已安装` as `Instaladas`, which read wrong on the model rows in settings, so both are `Instalado` now.
+- Skipped on purpose: nothing. All 2,434 keys have Spanish; the keys `base` and `brand` already carried (the song-map labels, the `音乐反应*` family, `创建会话`, the transcript entry in `settings`, …) were left exactly as they were instead of being duplicated into the new files.
+- Gates after every module: `tsc -b`, `node scripts/check-i18n.mjs` (161 UI files, 2,643 English entries), `locale.verify.ts`, `it/settingsCoverage.verify.ts`, `it/mediaCoverage.verify.ts` and `settings/transcription-language.verify.ts`, plus a local check that no new file duplicates a `base`/`brand` key, that no key is missing from its `en/` module, that placeholders match, and that no file passes 500 lines. All green, every time.
+- Not verified: the Spanish in a browser. No editor starts from the Windows side of the share — same blocker as EV-33 — so the wording was checked as data, not seen on screen.
+- Nothing is pushed. The branch is merged later.
