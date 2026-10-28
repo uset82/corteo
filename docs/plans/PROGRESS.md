@@ -830,7 +830,24 @@ has been compared in pixels**; a render on a machine with Chromium closes it.
 Plan: `docs/plans/07-evolution.md` (Plan 7). Executors: ChatGPT Terra (EV-00 to EV-26), then Qoder for this table; ZCode and DeepSeek Harness work their own tables at the end of this file. Picking rule: top to bottom, the first `todo` whose Needs are `done`. A need marked `(soft)` may also be `blocked`; a `blocked` hard need blocks the card at once (Plan 7, D19). The card text, the verify commands and the commit messages are in the plan.
 
 ### EV night report
-Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit shas, the `npm test` exit line, and the push result.
+
+**Final gates (EV-32).** Run on the merged tree at `49533e2` in a clean worktree (`git worktree add -b ev-publish /tmp/corteo-ev32 49533e2`, `node_modules` symlinked from `~/corteo`) because another session was writing to `~/corteo` while the first in-checkout run sat in `pretest` (EV-32 results line). `npx tsc -b` exit 0. `npm run lint` exit 0: 209 warnings, 0 errors, 2320 files. `npm run build` exit 0: upstream's chunk-size warning only, built in 5.95 s. `CC_RENDER_GL=swangle npm test` exit 0: the pretest chain, then `✓ 242 test segments passed in 236.0s (4 parallel)`, then the posttest chain ending at `extract-audio.verify: no-audio compatibility passed`.
+
+**Done, per table.**
+
+- Qoder (`Evolution night (EV)`): 31 cards, every row except the two blocked below — EV-00 to EV-11, EV-13 to EV-24, EV-26 to EV-32.
+- ZCode (`EV track · ZCode (EZ)`): none. All three of its cards are blocked (below).
+- DeepSeek Harness (`EV track · DeepSeek Harness (ED)`): EV-34 and EV-35 done. EV-36 was added after the track closed (cf3c516) and stays `todo`; it is outside the night's close.
+
+**Blocked, per table.**
+
+- EV-12 (Qoder and EZ): no talking video. `~/corteo-media` does not exist, so `talk.mp4`, `talk.mov`, `talk.mkv` and `talk.webm` are all absent. A talking video of at least two minutes there unblocks the live long-to-shorts run.
+- EV-25 (Qoder and EZ): no song. `~/corteo-media` does not exist, so there is no wav, mp3, m4a or flac to listen to. A song there unblocks the end-to-end listening proof (L-13).
+- EV-33 (EZ): the editor cannot start in that session. `wsl.exe` is refused by the Windows security policy, the Windows side has no Node 24, and the Linux `onnxruntime-node` and `sharp` builds cannot run there. The music UI code is verified from the share; the browser pass and its screenshots are not. A session that can run commands in WSL and open a browser on port 5201 unblocks it.
+
+**Commits.** The night is `7cc7315..HEAD`: 47 commits at this report, `7cc7315` being the EV-00 baseline. Per card: EV-00 2c689c8; EV-01 6947b79; EV-02 045bdc5; EV-03 0fec4d1; EV-04 71f711c; EV-05 941816d; EV-06 19f8cd5; EV-07 1ccf9c9; EV-08 d8aa295; EV-09 d4d9e11; EV-10 7bf8175; EV-11 61f8088; EV-12 29d37ce and 8a97722; EV-13 90d19d5; EV-14 7150ead; EV-15 1984298; EV-16 b931ae2; EV-17 b92b862; EV-18 c4729b7; EV-19 aaef63b; EV-20 28db7ca; EV-21 560795b and bb5a24f; EV-22 4e6c805 (and 3c95fbe, which also carries EV-24's files); EV-23 dc2f5e2; EV-24 d60279d and a6c11a8; EV-25 0962bc4 and 314122b; EV-26 d58ea1e; EV-27 49533e2; EV-28 25a7918; EV-29 4658e3b; EV-30 d27ddcb; EV-31 24d84d4, 4fa8a06 and 449249a; EV-32 the commit that carries this report. Plan-level commits: aa36b17 and cf3c516. Track commits: EV-33 b724785; EV-34 8ca98b9 and 4f2da87; EV-35 7380645; the EZ close 0caa903.
+
+**Push.** `bash scripts/sync-publish.sh` from `/tmp/corteo-ev32` (branch `ev-publish` at this commit) fetches `origin` and `github`, finds both heads already ancestors, runs `CC_RENDER_GL=swangle npm test` again, and pushes HEAD to `github main` and `origin cursor/video-editor-mvp-d191`. The result is recorded in the follow-up `EV: night report, push result` commit, with the `git ls-remote` reading for both refs.
 
 | ID | Task | Status | Needs |
 |----|------|--------|-------|
@@ -866,7 +883,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-29 | Close EV-22, EV-23 and EV-24 now that `verify:i18n` passes | done | EV-28 |
 | EV-30 | The first full `npm test` since C-12 | done | EV-29 |
 | EV-31 | Merge the ZCode and DeepSeek Harness tracks | done | EV-30, EZ and ED tables finished |
-| EV-32 | Final gates, publish, report | todo | EV-31, EV-27 (soft) |
+| EV-32 | Final gates, publish, report | done | EV-31, EV-27 (soft) |
 
 ### EV: results
 Each card appends its outputs here: commands, JSON, ffprobe values, wall times. Never a token or a key.
@@ -930,6 +947,8 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 - EV-31: the tree was cleaned for the merges (the foreign staged work from the EV-30 blocker was banked to `/home/carlos/corteo-ez-leftovers-20261028.patch` and a named stash), leaving only the known untracked leftovers. `git merge --no-ff ev-dsh -m "EV-31: merge the DeepSeek Harness track"` → "Merge made by the 'ort' strategy", no conflicts: `docs/plans/07-evolution.md` +18, `docs/plans/PROGRESS.md` +35, `documentation/CORTEO_INSTALL.md` +101/-24, `skills/corteo/SKILL.md` 14 changed. `git merge --no-ff ev-zcode -m "EV-31: merge the ZCode track"` → "Auto-merging docs/plans/PROGRESS.md", "Merge made by the 'ort' strategy", no conflicts: `docs/plans/PROGRESS.md` +18/-4, `src/i18n/dict/es/index.ts` +4 (Tempo, Compás, Energía from a6c11a8). EZ and ED closed their tables with every row done or blocked. Carried into the main tables above: L-11 `done`, L-13 stays `blocked` (EV-25 blocked: no song in `~/corteo-media`), EV-12 blocked for the same reason (no talking video). The track tables keep their own rows: EV-33 blocked on EV-22 to EV-24's browser half, EV-34 and EV-35 done, EV-36 todo. EV-30 postponed no EZ or ED fix: its only code fix (bb5a24f) was EQ's own. Verify on the merged tree: `npx tsc -b` exit 0; `npm run lint` exit 0 (209 warnings, 0 errors); `npm run verify:i18n` exit 0; `npm run verify:components` exit 0; `node scripts/corteo-skill.verify.mjs` ok; `node scripts/corteo-acceptance.verify.mjs` ok; both registration gates exit 0 (719 verify files, all reachable from `npm test`). The EV-30 registration blocker does not reproduce: the merged `package.json` and the tracked verify files agree.
 
 - EV-27: `README.es.md` (Estado › "Lo que funciona hoy" and "Lo que falta") and `README.md` (Status) now list the night: host profiles and `--host-profile` (EV-01, EV-02), `occ inbox` (EV-05), `occ song-film` (EV-09, EV-10), `reviewEs` with `npm run editor-host` (EV-11), `npm run brain`, the `grok`/`muse`/`claude-duet` aliases, `delegate`, `http://127.0.0.1:18899/v1` for the editor and `http://127.0.0.1:18890/v1` for the IDE door (EV-13 to EV-20, live in EV-20), the installer's `CORTEO_BRAIN` step (EV-17), and the music UI with its tests green and the browser pass pending (EV-22 to EV-24, EV-29; EV-33 blocked). The two stale lines that called `videoclip-musical` pending are gone (P1-6 is done), and "Lo que falta" now names only L-13 and EV-33 for the listening work. `node scripts/no-claudia.verify.mjs` exit 0 (the old name survives only in migration keys and proper nouns; README.es.md 1, README.md 2) and `node scripts/corteo-acceptance.verify.mjs` exit 0.
+
+- EV-32: on the merged tree at `49533e2`: `npx tsc -b` exit 0; `npm run lint` exit 0 (209 warnings, 0 errors, 2320 files); `npm run build` exit 0 (chunk-size warning only, built in 5.95 s); `CC_RENDER_GL=swangle npm test` exit 0, `✓ 242 test segments passed in 236.0s (4 parallel)`, posttest last line `extract-audio.verify: no-audio compatibility passed`. The first run in `~/corteo` was stopped in `pretest`: another session was writing the checkout mid-run (modified `package.json` plus untracked `src/audio/listen/songMeasurement.verify.ts`, `server/music-listen/relay-route.verify.ts` and `src/i18n/dict/es/musicUiCoverage.verify.ts`, the same class as the EV-30 blocker). The gates above ran in a clean worktree (`/tmp/corteo-ev32`, branch `ev-publish`, `node_modules` symlinked) at the exact merged commit, so they measure the tree being published; both remote heads were ancestors of it. The report above and the push result commit carry the details.
 
 ### EV: blockers
 - EV-25: `find /home/carlos/corteo-media -maxdepth 1` could not find a song because the directory does not exist. Checked the configured default directory for wav, mp3, m4a and flac; no editor or downloads were started. A real song in that directory unblocks the proof. Screenshots are also skipped while EV-22 and EV-24 are blocked.
