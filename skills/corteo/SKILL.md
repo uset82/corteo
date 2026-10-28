@@ -88,7 +88,7 @@ It listens only on `http://127.0.0.1:5199` unless you set `CORTEO_PORT`. MCP is 
 
 ## Verbs
 
-Run from any directory. Writes need `--apply`. Without `--apply` the change is thrown away.
+Run from any directory. Edits need `--apply`. Without `--apply` the edit is thrown away.
 
 ```bash
 CORTEO="${CORTEO_OCC:-$HOME/corteo/scripts/corteo}"
@@ -114,15 +114,15 @@ CC_RENDER_GL=swangle "$CORTEO" render --out ~/corteo-exports/night-bus.mp4 --fro
 CC_RENDER_GL=swangle "$CORTEO" render --out ~/corteo-exports/night-bus.mp4 --to-audio --resolution 1080p --quiet
 ```
 
-Read ids from the JSON. `node -e` in this repo is CommonJS, and `process.argv[1]` is the file you pass after the script.
+Read ids from the JSON. `node -e` in this repo is CommonJS, and `process.argv[1]` is the file you pass after the script; prefix a relative path with `./` so `require` reads the file instead of a module name.
 
 ```bash
-node -e 'const j=require(process.argv[1]); process.stdout.write(j.ops[0].result.imported[0].id)' import.json
-node -e 'const j=require(process.argv[1]); process.stdout.write(j.ops[0].result.results[0].placed.itemId)' place.json
-node -e 'const j=require(process.argv[1]); process.stdout.write(j.ops[0].result.newItemId)' split.json
+node -e 'const j=require(process.argv[1]); process.stdout.write(j.ops[0].result.imported[0].id)' ./import.json
+node -e 'const j=require(process.argv[1]); process.stdout.write(j.ops[0].result.results[0].placed.itemId)' ./place.json
+node -e 'const j=require(process.argv[1]); process.stdout.write(j.ops[0].result.newItemId)' ./split.json
 ```
 
-`media import` needs an absolute path. The asset id is `ops[0].result.imported[0].id`. A placed clip id is `ops[0].result.results[0].placed.itemId`. `fromFrame` on that object is where it actually landed. A split's new piece is `ops[0].result.newItemId` (also `newItemIds`). The original id stays the left piece.
+`media import` needs an absolute path. The asset id is `ops[0].result.imported[0].id`. A placed clip id is `ops[0].result.results[0].placed.itemId`. `startFrame` on that object is where it actually landed. A split's new piece is `ops[0].result.newItemId` (also `newItemIds`). The original id stays the left piece.
 
 `render --resolution` is `480p`, `720p`, `1080p`, or `4k`. `--from` and `--to` take a frame number or a time (`2s`). `--to-audio` stops at the end of the last audio clip, so a long video does not run past the song. If you also pass `--to`, that end wins. `item trim CLIP --to 6s` moves that clip's end to 6 seconds (its start stays put). `item fit CLIP --mode cover` fills the frame and crops the overflow, centered. `--mode contain` letterboxes. `--mode fill` stretches. `--background blur` puts a blurred copy behind a contained clip (video or image on V1). `--background color --color '#111111'` paints the bars. No GPU: `CC_RENDER_GL=swangle`. If the render is killed (out of memory), run it again with `OPENCHATCUT_RENDER_CONCURRENCY=1`. Empty areas of a normal MP4 render black, not the preview checkerboard. An alpha export stays transparent.
 
@@ -365,6 +365,6 @@ CC_RENDER_GL=swangle "$CORTEO" render --out "$WORK/titulo.mp4" --to 2s --resolut
 - Render is killed or the machine swaps hard. `OPENCHATCUT_RENDER_CONCURRENCY=1` and a shorter `--to`.
 - `media import` rejects a relative path. Use an absolute path.
 - A command prints a draft and says nothing was committed. Add `--apply`.
-- `edit_track` says `/json must be string`. Pass an object (`"json":{"trackType":"audio"}`) or a string of JSON. Both work.
+- `edit_track` says `json must be a JSON object string`. Pass an object (`"json":{"trackType":"audio"}`) or a string of JSON. Both work.
 - Text ignores `fromFrame` and sits at the end of the clip. Omit `trackId`. The title goes on the overlay. Read `placed.startFrame` and `placed.track`.
 - Audio says `no audio track for placement`. Omit `trackId`. An audio track is created. Or call `edit_track` create as above.
