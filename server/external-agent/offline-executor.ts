@@ -118,6 +118,10 @@ export async function executeOfflineTool(
   }
   if (CORE_DATA_TOOL_NAMES.has(name)) return execCoreDataTool(name, args, ctx);
   if (name === 'manage_timelines') return execTimelineTool(name, args, ctx);
+  if (name === 'import_subtitles') {
+    const { execSubtitleTool } = await import('../../src/agent/tools/subtitle-tools.js');
+    return execSubtitleTool(name, args, ctx);
+  }
   if (name === 'create_variants' || name === 'choose_variant' || name === 'get_variant_choice') {
     const { execVariantTool } = await import('../../src/agent/tools/variant-tools.js');
     return execVariantTool(name, args, ctx);

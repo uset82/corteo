@@ -71,7 +71,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | L-11 | Music UI: inspector section, timeline map, song dialog | done | L-09 |
 | L-12 | `escuchar-cancion` skill + MCP prompt | done | L-09, P1-6 |
 | L-13 | Listening end-to-end proof | blocked (no song) | L-11, L-12 |
-| P2-2 | Captions: verso/coro, ASS/VTT import | todo | |
+| P2-2 | Captions: verso/coro, ASS/VTT import | done | |
 | P2-3 | Duplicate detector | done | |
 | P2-4 | HEVC export + presets | done | |
 | P2-5 | Countdown timecode | done | |
@@ -462,6 +462,7 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-28 · P2-3 · The detector reuses `sourceContentHash` for exact copies and one 9x8 gray ffmpeg frame per sample for 64-bit dHashes (10/50/90% of the clip's own duration; images one frame); the in-process cache is keyed by content hash, so a rename does not resample. The dialog batches `pool.removeAsset` (keep the first copy) or `remove` (later reused-range clip) under the Spanish undo label "Quitar duplicados"; `find_duplicate_media` stays read-only and server-direct. Reason: no second frame sampler, and one removal is one undo step.
 - 2026-10-28 · P4-1 · A version is a sibling timeline with an optional `variant: { groupId, label, note, status }`; `create_variants` uses the same `tl.duplicate` reducer action as `duplicateTimeline`, batched under "Crear versiones". `choose_variant` updates the group statuses and the active sequence in one "Elegir versión" batch; `get_variant_choice` polls the shared draft with an injectable clock (45 s default). Old projects load unchanged because the tag is optional. Previews and the comparison dialog stay in P4-2/P4-3.
 - 2026-10-28 · P4-2 · `render_variant_previews` renders every version at 480p (864x486 for 16:9) through the existing Remotion pipeline and export permit, stages files before replacing them, writes `manifest.json` under the profile's `variant-previews/<groupId>/` and serves it from `/api/variant-previews`. The tool is a real operation (approval-gated, browser-tier, no headless server-direct path); the comparison dialog stays P4-3.
+- 2026-10-28 · P2-2 · ASS `\k`/`\kf`/`\ko` became word-level timing (last word extends to the Dialogue end), and ASS imports default to the new `verso` style with `word` pacing so the karaoke highlight is visible; SRT/VTT keep the existing black-bar default. The UI import button and `import_subtitles` share `parseSubtitles`, which creates one caption track in one undo batch. Videoclip groups `verso`/`coro` in the style menu.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.

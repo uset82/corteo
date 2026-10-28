@@ -46,7 +46,7 @@ This skill is the order of operations, not a second engine: every step calls an 
 - `edit_captions` with `action: enable` and a preset: `tiktok`, `bubble-pop` or `submagic` for vertical, `netflix`, `plain` or `black-bar` for a cinema look.
 - `motionPreset`: `karaoke-pulse` highlights word by word, `pop` and `word-pop` accent entries, `none` keeps a clean lyric video.
 - `emphasize_keywords` marks numbers, names and shouted words in the accent colour. Call it after the captions exist; it writes per-word overrides in one step.
-- `read_captions` before exporting. Subtitle-file import does not exist yet: when the user brings an ASS or VTT file, say so and transcribe or paste the lines instead.
+- `read_captions` before exporting. Import SRT, ASS or VTT with `import_subtitles`; ASS `\k`/`\kf`/`\ko` tags become word-level timing. The `verso` and `coro` styles live in the Videoclip group of the caption-style menu.
 
 ## 5. Versions to compare
 
@@ -64,4 +64,4 @@ This skill is the order of operations, not a second engine: every step calls an 
 
 ## Gaps to state honestly
 
-- Caption motion `latido`, subtitle import and the variant comparison dialog are later tasks; say they are not built instead of improvising a substitute.
+- The variant comparison dialog is a later task; say it is not built instead of improvising a substitute.

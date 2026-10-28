@@ -437,7 +437,7 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
         const id = uid('track');
         dispatch({
           type: 'batch',
-          label: 'Create caption track',
+          label: 'Crear pista de subtítulos',
           actions: [
             { type: 'track.create', track: { id, kind: 'caption', name: opts?.name }, order: opts?.order },
             { type: 'setCaptions', captions, track: id },
@@ -458,7 +458,7 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
         const id = uid('track');
         dispatch({
           type: 'batch',
-          label: 'Create caption track',
+          label: 'Crear pista de subtítulos',
           actions: [
             { type: 'track.create', track: { id, kind: 'caption' } },
             { type: 'setCaptions', captions, track: id },

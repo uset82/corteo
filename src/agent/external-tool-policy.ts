@@ -47,6 +47,8 @@ const DRAFT_EDIT_TOOL_NAMES = new Set([
   'detect_beats',
   // Plan 1 Phase 4: sibling sequence copies and their status tags, through the draft's commands.
   'create_variants', 'choose_variant',
+  // Plan 1 Phase 2: subtitle parsing plus one caption-track command batch, no media IO.
+  'import_subtitles',
 ]);
 
 const SERVER_DIRECT_READ_TOOL_NAMES: Record<string, true> = {
@@ -133,6 +135,8 @@ const SERVER_DIRECT_EDIT_TOOL_NAMES: Record<string, true> = {
   // Variants: duplicate sibling timelines and tag/status changes, no media IO.
   create_variants: true,
   choose_variant: true,
+  // Subtitle import goes through the draft's caption-track command.
+  import_subtitles: true,
 };
 
 const SERVER_DIRECT_BROWSER_ACTIONS: Record<string, true> = {

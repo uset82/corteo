@@ -28,7 +28,7 @@ interface TranscriptPanelProps {
   onSetTranscriptPlayOrder: (id: string, playOrder: number[] | null) => void;
   onReorderTrackItems: (track: TrackId, orderedIds: string[]) => void;
   onClearEdits: (id: string) => void;
-  onImportSrt: (file: File) => void;
+  onImportSubtitles: (file: File) => void;
   onOpenCaptionStyles?: (sourceItemIds: string[]) => void;
 }
 
@@ -37,7 +37,7 @@ const MANY_CLIPS = 10;
 export function TranscriptPanel({
   playerRef, fps, items, trackOptions,
   onSetItemTranscript, onToggleWord, onCleanScript, onSetGapCap, onSetTranscriptPlayOrder, onReorderTrackItems, onClearEdits,
-  onImportSrt, onOpenCaptionStyles,
+  onImportSubtitles, onOpenCaptionStyles,
 }: TranscriptPanelProps) {
   const t = useT();
   const { status, error, progressNote, runMany, reset } = useTranscript();
@@ -61,7 +61,7 @@ export function TranscriptPanel({
   // selection mode (transcript-selected): drag-select words → structured reference
   const pickMode = useSelectionRefMode();
   const bodyRef = useRef<HTMLDivElement>(null);
-  const srtInputRef = useRef<HTMLInputElement>(null);
+  const subtitleInputRef = useRef<HTMLInputElement>(null);
 
   // Keep selection valid when project tracks change.
   useEffect(() => {
@@ -167,17 +167,17 @@ export function TranscriptPanel({
           <Icon name="pencil" size={13} />{t('编辑')}
         </button>
         <input
-          ref={srtInputRef}
+          ref={subtitleInputRef}
           type="file"
-          accept=".srt,application/x-subrip,text/plain"
+          accept=".srt,.ass,.ssa,.vtt,application/x-subrip,text/plain"
           hidden
           onChange={(event) => {
             const file = event.currentTarget.files?.[0];
             event.currentTarget.value = '';
-            if (file) onImportSrt(file);
+            if (file) onImportSubtitles(file);
           }}
         />
-        <button type="button" className="cc-tx-btn" title={t('导入 SRT')} onClick={() => srtInputRef.current?.click()}>
+        <button type="button" className="cc-tx-btn" title={t('导入字幕 (SRT/ASS/VTT)')} onClick={() => subtitleInputRef.current?.click()}>
           <Icon name="upload" size={13} />{t('导入 SRT')}
         </button>
         <button

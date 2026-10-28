@@ -951,6 +951,35 @@
       }
     },
     {
+      "name": "import_subtitles",
+      "description": "Import SRT, ASS/SSA or WebVTT subtitles into a new caption track on the active sequence. ASS karaoke tags (\\k, \\kf, \\ko) become word-level timing, so the verse/chorus styles light up word by word in preview and export. One undo step. Pass the file content as text; format is inferred when omitted.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The subtitle file text (SRT, ASS/SSA or VTT)."
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "srt",
+              "ass",
+              "vtt"
+            ],
+            "description": "Explicit format; inferred from the content when omitted."
+          },
+          "name": {
+            "type": "string",
+            "description": "Caption track name (default \"Subtítulos\")."
+          }
+        },
+        "required": [
+          "content"
+        ]
+      }
+    },
+    {
       "name": "edit_track",
       "description": "Manage tracks. Actions: list | create | update | delete | tighten | reorder_items. Tracks have stable ids plus C1/C2/V1/A1 aliases that may renumber after insertion. create accepts json as an object or a JSON string, with trackType video/audio/caption and optional count/order/name/role/audioRouting. Each caption track owns independent caption data. update changes order/hidden/muted/locked/name/role/audioRouting — locked freezes the lane. delete removes empty tracks only. tighten closes gaps between media clips. reorder_items packs clips on one track in the given item id order (json.itemIds or json.orderedIds array), starting at the earliest startFrame of that set.",
       "input_schema": {

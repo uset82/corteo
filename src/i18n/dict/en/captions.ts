@@ -70,6 +70,7 @@ export default {
   // CaptionsControls — Style/Rhythm
   '样式外观': 'Style',
   '字幕样式': 'Caption styles',
+  'Videoclip': 'Videoclip',
   '显示节奏': 'Pacing',
   '按句/短语': 'By sentence/phrase',
   '一次显示一句话，适合纪录片口播': 'One sentence at a time — suits documentary voiceover',

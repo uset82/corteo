@@ -17,6 +17,9 @@ import { MenuDrillHeader } from '../components/timeline/MenuDrillHeader';
 
 const CAPTION_LANGS = ['English', '日本語', '한국어', 'Español', 'Français', 'Deutsch', 'Português'];
 
+/** The two music-video presets are grouped under "Videoclip" (Plan 1 Phase 2). */
+const VIDEOCLIP_TEMPLATES = new Set<CaptionTemplate>(['verso', 'coro']);
+
 interface CaptionStyleMenuProps {
   state: TimelineState;
   commands: EditorCommands;
@@ -122,18 +125,19 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
     </div>
   );
 
+  const renderStyle = (style: (typeof CAPTION_STYLES)[number]) => (
+    <button type="button" key={style.id} className={current?.template === style.id ? 'active' : ''} onClick={() => applyStyle(style.id)}>
+      <span className="cc-caption-style-swatch" style={{ background: style.highlightBackground ?? '#292929', color: style.highlightBackground ? style.highlightColor : style.color, fontFamily: style.fontFamily, WebkitTextStroke: style.strokeWidth ? `${Math.min(1, style.strokeWidth)}px ${style.strokeColor}` : undefined }}>Aa</span>
+      <span>{t(style.labelZh)}</span>
+    </button>
+  );
   return (
     <div className="cc-caption-style-menu" style={{ position: 'fixed', left: pos.left, top: pos.top }} onPointerDown={(e) => e.stopPropagation()}>
       <MenuDrillHeader title={t('字幕样式')} onBack={backToParent} />
       <div className="cc-caption-style-list">
-        {CAPTION_STYLES.map((style) => {
-          return (
-            <button type="button" key={style.id} className={current?.template === style.id ? 'active' : ''} onClick={() => applyStyle(style.id)}>
-              <span className="cc-caption-style-swatch" style={{ background: style.highlightBackground ?? '#292929', color: style.highlightBackground ? style.highlightColor : style.color, fontFamily: style.fontFamily, WebkitTextStroke: style.strokeWidth ? `${Math.min(1, style.strokeWidth)}px ${style.strokeColor}` : undefined }}>Aa</span>
-              <span>{t(style.labelZh)}</span>
-            </button>
-          );
-        })}
+        {CAPTION_STYLES.filter((style) => !VIDEOCLIP_TEMPLATES.has(style.id)).map(renderStyle)}
+        <div className="cc-caption-style-title">{t('Videoclip')}</div>
+        {CAPTION_STYLES.filter((style) => VIDEOCLIP_TEMPLATES.has(style.id)).map(renderStyle)}
         {presets.length > 0 && (
           <>
             <div className="cc-caption-style-title" style={{ marginTop: 4 }}>{t('我的样式')}</div>

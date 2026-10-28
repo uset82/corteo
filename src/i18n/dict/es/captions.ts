@@ -68,6 +68,7 @@ export default {
   '字幕已关闭，预览/导出都不会烧录。再点「显示」或勾选即可恢复。': 'Los subtítulos están desactivados: ni la previsualización ni la exportación los grabarán. Pulsa «Mostrar» o marca la casilla para recuperarlos.',
   // CaptionsControls — style and pacing
   '样式外观': 'Estilo',
+  'Videoclip': 'Videoclip',
   '显示节奏': 'Ritmo de aparición',
   '按句/短语': 'Por frase',
   '一次显示一句话，适合纪录片口播': 'Una frase a la vez: va bien para locución documental',
