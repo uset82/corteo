@@ -72,7 +72,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | L-12 | `escuchar-cancion` skill + MCP prompt | done | L-09, P1-6 |
 | L-13 | Listening end-to-end proof | blocked (no song) | L-11, L-12 |
 | P2-2 | Captions: verso/coro, ASS/VTT import | todo | |
-| P2-3 | Duplicate detector | todo | |
+| P2-3 | Duplicate detector | done | |
 | P2-4 | HEVC export + presets | done | |
 | P2-5 | Countdown timecode | done | |
 | P2-6 | Premiere shortcut preset | done (C, Y, R and T; ripple and rolling edit do not exist, so B and N stay unbound) | |
@@ -475,6 +475,7 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-28 · P5-3 · The scan ran on 5205 because 13bc836's worktree server still held 5203; a text scan is read-only, so a second port was better than stopping another session's server.
 - 2026-10-28 · P5-3 · The four missing skill summaries were added to both dictionaries, not turned into data: `SkillsTabPanel` already calls `t(skill.summary)` and the keys are the catalog's Chinese `summary` strings, so the dictionary was the only gap.
 - 2026-10-28 · P5-3 · The scan script stays outside the repo (`/tmp/p53-scan.cjs`): as a `test:serial` verify it would always skip, because it needs a live editor, a seeded store and the Playwright browser that the chain does not provide. The static es coverage gate of P5-2 is the in-repo guard.
+- 2026-10-28 · P2-3 · The detector reuses `sourceContentHash` for exact copies and one 9x8 gray ffmpeg frame per sample for 64-bit dHashes (10/50/90% of the clip's own duration; images one frame); the in-process cache is keyed by content hash, so a rename does not resample. The dialog batches `pool.removeAsset` (keep the first copy) or `remove` (later reused-range clip) under the Spanish undo label "Quitar duplicados"; `find_duplicate_media` stays read-only and server-direct. Reason: no second frame sampler, and one removal is one undo step.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.
