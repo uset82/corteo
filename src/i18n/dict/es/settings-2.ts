@@ -342,6 +342,12 @@ export default {
   'Whisper Small（约 250MB · 推荐）': 'Whisper Small (unos 250 MB · recomendado)',
   'Whisper Medium（约 1.1GB · 精度最高）': 'Whisper Medium (unos 1,1 GB · máxima precisión)',
   'Whisper Large v3 Turbo（约 1.1GB · 多语言最强）': 'Whisper Large v3 Turbo (unos 1,1 GB · el mejor en varios idiomas)',
+  // Shared model-row metadata from shared/asr-models.ts
+  '中文 / English / Italiano / Русский / Português': 'Chino / Inglés / Italiano / Ruso / Portugués',
+  '约 176MB': 'unos 176 MB',
+  '约 351MB': 'unos 351 MB',
+  '约 1.2GB': 'unos 1,2 GB',
+  '约 1.5GB': 'unos 1,5 GB',
 
   // Downloadable music intelligence model packs
   '本地智能模型': 'Modelos inteligentes locales',

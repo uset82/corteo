@@ -6,6 +6,13 @@ export default {
   '资源库': 'Library',
   '文字稿': 'Transcript',
   '点击把序列作为引用实例加入当前时间线；修改子序列会同步到所有实例。': 'Click a sequence to add it to the current timeline as a linked instance. Changes to a child sequence sync to every instance.',
+  // Sequence list disabled titles (mirror SequenceGraphError codes)
+  '序列引用的时间线不存在：{id}': 'The sequence references a timeline that no longer exists: {id}',
+  '序列帧率不一致：{parent} 为 {parentFps} fps，{child} 为 {childFps} fps': 'Frame rate mismatch: {parent} is {parentFps} fps and {child} is {childFps} fps',
+  '序列存在循环引用：{path}': 'The sequence has a reference cycle: {path}',
+  '序列嵌套超过最大深度 {limit}': 'Sequence nesting exceeds the maximum depth {limit}',
+  '序列渲染图超过最大节点数 {limit}': 'The sequence render graph exceeds the maximum node count {limit}',
+  '时间线 ID 重复：{id}': 'Duplicate timeline ID: {id}',
   'MG 动画': 'Motion Graphics',
   '音效': 'Sound Effects',
   '音频效果': 'Audio FX',

@@ -190,6 +190,7 @@ export default {
   '草稿名称': 'Nombre del borrador',
   '目标草稿库': 'Biblioteca de borradores de destino',
   'CapCut 草稿库': 'Biblioteca de CapCut',
+  'CapCut / 剪映': 'CapCut / JianYing',
   '剪映草稿库': 'Biblioteca de JianYing',
   '剪映 6.0 起草稿文件已加密，本工具生成明文草稿，建议使用剪映 5.9.0 或更早版本打开；CapCut 国际版不受此限制。': 'Desde JianYing 6.0 los borradores van cifrados y esta herramienta los escribe en texto plano, así que usa JianYing 5.9.0 o anterior; la versión internacional CapCut no tiene esta limitación.',
   '草稿已生成': 'Borrador creado',

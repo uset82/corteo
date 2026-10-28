@@ -9,6 +9,13 @@ export default {
   '资源库': 'Biblioteca',
   '文字稿': 'Transcripción',
   '点击把序列作为引用实例加入当前时间线；修改子序列会同步到所有实例。': 'Haz clic en una secuencia para añadirla a la línea de tiempo actual como instancia vinculada. Los cambios en la secuencia hija se sincronizan con todas las instancias.',
+  // Sequence list disabled titles (mirror SequenceGraphError codes)
+  '序列引用的时间线不存在：{id}': 'La secuencia hace referencia a una línea de tiempo que ya no existe: {id}',
+  '序列帧率不一致：{parent} 为 {parentFps} fps，{child} 为 {childFps} fps': 'La velocidad de fotogramas no coincide: {parent} va a {parentFps} fps y {child} a {childFps} fps',
+  '序列存在循环引用：{path}': 'La secuencia tiene un ciclo de referencias: {path}',
+  '序列嵌套超过最大深度 {limit}': 'El anidamiento de secuencias supera la profundidad máxima: {limit}',
+  '序列渲染图超过最大节点数 {limit}': 'El gráfico de la secuencia supera el número máximo de nodos: {limit}',
+  '时间线 ID 重复：{id}': 'Hay dos líneas de tiempo con el mismo ID: {id}',
   'MG 动画': 'Gráficos en movimiento',
   '音效': 'Efectos de sonido',
   '音频效果': 'Efectos de audio',

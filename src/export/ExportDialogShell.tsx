@@ -69,7 +69,7 @@ export function ExportSidebar({ tab, busy, onTabChange }: ExportSidebarProps) {
             disabled={busy}
           >
             <span className="cc-export-tab-icon"><Icon name={entry.icon} size={15} /></span>
-            <span><strong>{t(entry.label)}</strong><small>{entry.summary}</small></span>
+            <span><strong>{t(entry.label)}</strong><small>{t(entry.summary)}</small></span>
           </button>
         ))}
       </div>
