@@ -14,6 +14,8 @@ import {
   type AgentExportMediaPoolPlan,
 } from '../../export/agentExportTracking';
 import type { ExportJobResult, ExportJobSnapshot } from '../../export/exportWorkflowTypes';
+import { variantGroups, variantMembers } from '../../editor/variants';
+import { variantPreviewBody } from '../../export/variantPreviews';
 import type { ProjectDoc } from '../../editor/types';
 
 // ═════════════════════════════════════ ══════════════════════════════════════
@@ -250,6 +252,39 @@ async function submitRenderJob(args: Args, ctx: AgentContext): Promise<unknown> 
   }
 }
 
+function submitFailure(error: unknown): Record<string, unknown> {
+  const failure = exportFailureFrom(error);
+  if (failure) return { error: failure.message, code: failure.code, retryable: failure.retryable };
+  if (error instanceof RenderJobRequestError) return { error: error.responseMessage ?? `render job submit failed (${error.status})` };
+  return { error: error instanceof Error ? error.message : String(error) };
+}
+
+/** P4-2: one 480p background render per version, each from its own frozen snapshot. */
+async function renderVariantPreviews(args: Args, ctx: AgentContext): Promise<unknown> {
+  try {
+    const project = ctx.getDoc();
+    const groupId = String(args.groupId ?? '').trim() || variantGroups(project)[0];
+    if (!groupId) return { error: 'no variant group yet — call create_variants first' };
+    const members = variantMembers(project, groupId);
+    if (!members.length) return { error: `no variant group ${groupId}` };
+    const previews: Array<{ timelineId: string; label: string; renderId: string }> = [];
+    for (const member of members.slice(0, 4)) {
+      const renderId = await submitJob(await variantPreviewBody(project, member));
+      sessionJobs.push({ renderId, timelineId: member.id, saveToMediaPool: false });
+      previews.push({ timelineId: member.id, label: member.variant?.label ?? member.name, renderId });
+    }
+    return {
+      ok: true,
+      groupId,
+      previews,
+      ...(members.length > previews.length ? { skipped: members.length - previews.length, note: 'a compare grid shows at most four versions' } : {}),
+      next: 'The previews render in the background at 480p. The "Comparar versiones" dialog plays each one as it finishes; call track_export with these renderIds to report progress.',
+    };
+  } catch (error) {
+    return submitFailure(error);
+  }
+}
+
 /** Comma separated ids/prefixes → complete list of renderIds. Prefix parses the session submission record; unknown
  *  The token is transparently transmitted to the server as it is (it may be the complete ID obtained elsewhere). Ambiguous prefixes report clarity errors.*/
 function resolveRenderIds(raw: string): { ids: string[] } | { error: string } {
@@ -381,6 +416,8 @@ export async function execExportTool(name: string, args: Args, ctx: AgentContext
       return submitRenderJob(args, ctx);
     case 'track_export':
       return trackExport(args, ctx);
+    case 'render_variant_previews':
+      return renderVariantPreviews(args, ctx);
     case 'read_export_history': {
       const requested = typeof args.limit === 'number' && Number.isFinite(args.limit) ? Math.floor(args.limit) : 20;
       const limit = Math.min(Math.max(requested, 1), 100);

@@ -45,6 +45,17 @@ export const EXPORT_TOOL_SCHEMAS: AgentToolSchema[] = [
     },
   },
   {
+    name: 'render_variant_previews',
+    description:
+      'Render a 480p H.264 preview of every version in a comparison group, one background render per version, without touching the active sequence or My Media. Returns a renderId per version, newest group by default. Used by "Comparar versiones" and by chat when the user asks to see the versions rendered; poll with track_export or let the dialog play them as they finish.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        groupId: { type: 'string', description: 'Comparison group from create_variants. Omit to use the newest group.' },
+      },
+    },
+  },
+  {
     name: 'read_export_history',
     description:
       'List recent finished exports (most recent first): filename, format, codec, size, frame range, and time. Use to remind the user what they have already exported this session and earlier. Read-only; does not export anything.',

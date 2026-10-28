@@ -3713,6 +3713,19 @@
       }
     },
     {
+      "name": "render_variant_previews",
+      "description": "Render a 480p H.264 preview of every version in a comparison group, one background render per version, without touching the active sequence or My Media. Returns a renderId per version, newest group by default. Used by \"Comparar versiones\" and by chat when the user asks to see the versions rendered; poll with track_export or let the dialog play them as they finish.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string",
+            "description": "Comparison group from create_variants. Omit to use the newest group."
+          }
+        }
+      }
+    },
+    {
       "name": "read_export_history",
       "description": "List recent finished exports (most recent first): filename, format, codec, size, frame range, and time. Use to remind the user what they have already exported this session and earlier. Read-only; does not export anything.",
       "input_schema": {
@@ -5185,7 +5198,7 @@
     },
     {
       "name": "get_variant_choice",
-      "description": "Wait for the user to pick a version from a comparison group in the \"Comparar versiones\" dialog. Polls in short slices (20 s max per call) and returns the chosen version, or `pending: true` with the group listing when nobody has picked yet. Call it again to keep waiting; tell the user which dialog to open if it stays pending. Read-only.",
+      "description": "Wait for the user to pick a version from a comparison group in the \"Comparar versiones\" dialog. Polls in short slices (45 s max per call) and returns the chosen version, or `pending: true` with the group listing when nobody has picked yet. Call it again to keep waiting; tell the user which dialog to open if it stays pending. Read-only.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -5196,7 +5209,7 @@
           "timeoutSeconds": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 20,
+            "maximum": 45,
             "description": "How long this call waits. Defaults to 15 s."
           }
         }
@@ -7190,7 +7203,7 @@
     },
     {
       "name": "get_variant_choice",
-      "description": "Wait for the user to pick a version from a comparison group in the \"Comparar versiones\" dialog. Polls in short slices (20 s max per call) and returns the chosen version, or `pending: true` with the group listing when nobody has picked yet. Call it again to keep waiting; tell the user which dialog to open if it stays pending. Read-only.",
+      "description": "Wait for the user to pick a version from a comparison group in the \"Comparar versiones\" dialog. Polls in short slices (45 s max per call) and returns the chosen version, or `pending: true` with the group listing when nobody has picked yet. Call it again to keep waiting; tell the user which dialog to open if it stays pending. Read-only.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -7201,7 +7214,7 @@
           "timeoutSeconds": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 20,
+            "maximum": 45,
             "description": "How long this call waits. Defaults to 15 s."
           }
         }

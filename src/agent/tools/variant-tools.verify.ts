@@ -34,7 +34,7 @@ assert.match(byName.get('create_variants')!.description ?? '', /2-4/);
 const wait = (byName.get('get_variant_choice')!.input_schema.properties?.timeoutSeconds) as
   { minimum?: number; maximum?: number } | undefined;
 assert.equal(wait?.minimum, 1);
-assert.equal(wait?.maximum, 20);
+assert.equal(wait?.maximum, 45);
 const pick = byName.get('choose_variant')!.input_schema.properties ?? {};
 assert.deepEqual(Object.keys(pick).sort(), ['groupId', 'label', 'note', 'timelineId'], 'a version is named by id or label');
 

@@ -133,7 +133,7 @@ const ROUTING_GROUPS: readonly RoutingGroup[] = [
       'variant', 'variants', 'compare versions', 'version comparison', 'two versions',
       '变体', '对比版本', '比较版本', '两个版本', '几个版本',
     ],
-    tools: ['create_variants', 'get_variant_choice', 'choose_variant'],
+    tools: ['create_variants', 'render_variant_previews', 'get_variant_choice', 'choose_variant'],
   },
   {
     requestKeywords: ['project', 'sequence', 'version', 'marker', 'design style', '项目', '工程', '序列', '版本', '标记', '设计风格'],

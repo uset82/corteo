@@ -88,7 +88,7 @@ async function getVariantChoice(args: Args, ctx: AgentContext): Promise<unknown>
   const group = resolveGroup(doc, args.groupId);
   if (typeof group !== 'string') return group;
   const timeout = typeof args.timeoutSeconds === 'number' && Number.isFinite(args.timeoutSeconds)
-    ? Math.min(20, Math.max(1, Math.round(args.timeoutSeconds)))
+    ? Math.min(45, Math.max(1, Math.round(args.timeoutSeconds)))
     : 15;
   const startedAt = Date.now();
   const deadline = startedAt + timeout * 1000;

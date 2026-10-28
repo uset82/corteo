@@ -37,7 +37,7 @@ export const VARIANT_TOOL_SCHEMAS: AgentToolSchema[] = [
     name: 'get_variant_choice',
     description: [
       'Wait for the user to pick a version from a comparison group in the "Comparar versiones" dialog.',
-      'Polls in short slices (20 s max per call) and returns the chosen version, or `pending: true`',
+      'Polls in short slices (45 s max per call) and returns the chosen version, or `pending: true`',
       'with the group listing when nobody has picked yet. Call it again to keep waiting; tell the',
       'user which dialog to open if it stays pending. Read-only.',
     ].join(' '),
@@ -48,7 +48,7 @@ export const VARIANT_TOOL_SCHEMAS: AgentToolSchema[] = [
         timeoutSeconds: {
           type: 'integer',
           minimum: 1,
-          maximum: 20,
+          maximum: 45,
           description: 'How long this call waits. Defaults to 15 s.',
         },
       },

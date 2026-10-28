@@ -81,7 +81,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P3-3 | Source credits + `creditos.txt` | done (a `source` on the asset, the dialog copies and downloads; not seen in a browser) | P3-2 |
 | P3-4 | "Importar desde enlace" dialog | done (platform job or direct URL, live progress; not seen in a browser) | P3-2 |
 | P4-1 | Variants model + tools | done (groups on the doc, three tools wired; the tab badge was typechecked, not seen) | |
-| P4-2 | `render_variant_previews` | todo | P4-1 |
+| P4-2 | `render_variant_previews` | done (one 480p job per version from its own snapshot; verified against a stubbed `/export/job`, no real render) | P4-1 |
 | P4-3 | "Comparar versiones" dialog | todo | P4-2 |
 | P5-1 | Full Spanish dictionary | done (all modules translated; the brand.ts fold-in is left) | |
 | P5-2 | i18n coverage + placeholder gate | done (coverage, placeholders, one wording per key; allowlist empty) | P5-1 |
@@ -428,14 +428,20 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - A version is a sibling sequence tagged `variant: {groupId, label, note?, status}`, stored on the persisted `ProjectDoc.timelines[]`. That is what lets the tab bar, the compare dialog and a waiting `get_variant_choice` read the same document — no separate client store, and no webhook (the plan's `variant.chosen` has no implementation in this tree; the dialog writes through `commands.chooseVariant`).
 - `tl.duplicate` clears any inherited tag: a manual copy is never a comparison option, so `create_variants` is the only path into a group.
 - `create_variants` copies the base 2-4 times (`activate:false`, name `base · label`), default labels A, B, C… then A2…, unique notes cleaned to 160 chars, and allows adding to an existing group. Copy + tag goes through one `batch`, so it is one undo step.
-- `choose_variant` names the version by timeline id (prefix ok) or by case-insensitive label, and `tl.chooseVariant` makes it `chosen`, the siblings `discarded`, the note optional, and — unless the sequence is hidden — the active timeline. `get_variant_choice` polls the doc in 500 ms slices up to 20 s and returns `pending:true` with the group listing when nobody has picked.
+- `choose_variant` names the version by timeline id (prefix ok) or by case-insensitive label, and `tl.chooseVariant` makes it `chosen`, the siblings `discarded`, the note optional, and — unless the sequence is hidden — the active timeline. `get_variant_choice` polls the doc in 500 ms slices up to 45 s and returns `pending:true` with the group listing when nobody has picked.
 - `get_variant_choice` is read-only and deliberately not server-direct (a headless run has nobody to click); `create_variants`/`choose_variant` are draft edits and server-direct, with an explicit branch in `offline-executor.ts`.
 - The sequence tab shows the version label: accent for a candidate, filled for the chosen one, struck through for a discarded one, the note in the tooltip. Typechecked only — the editor was not started here.
 - Verify: `npx tsx src/editor/variants.verify.ts` and `npx tsx src/agent/tools/variant-tools.verify.ts`, both registered in `test:serial`. They cover the label rollover, note/label cleaning, the reducer (active pick, re-pick moves the choice, hidden pick does not steal focus, untagged timeline rejected), the one-batch undo step, the 2..4 clamp and label mismatch, and the pending→chosen path. `npx tsc -b` clean, policy/catalog/offline-mcp/mcp/exposure verifies green, gate coverage green at 735 verify files.
 - Limitation: `storeCommandBuilder.ts` sits at exactly 500 lines; the next change to it must split a responsibility first.
 
-### P4-2 · `render_variant_previews`
+### P4-2 · `render_variant_previews` — done
 - Plan: Plan 1 › Phase 4. 480p server renders of each variant.
+- Files: `src/export/variantPreviews.ts` (what a preview render is), `src/agent/tools/schemas/export-tools.ts`, `src/agent/tools/export-tools.ts`, `src/agent/tool-routing.ts`.
+- One `POST /export/job` per version, each built from `materializeTimelineExport(project, member.id)` — the same frozen-snapshot path `submit_render_job` uses, so the render never depends on which sequence happens to be active. Body: `format:'video'`, `codec:'h264'`, `resolution:'480p'` (already an allowed export size), name `sequence · label`.
+- The group defaults to the newest one; a group larger than four renders the first four and reports `skipped` with a note, because the compare grid is 2x2. Untagged copies are never previewed. Jobs go into the export session registry, so `track_export` with these renderIds (or `latest:false`) reports on them like any export.
+- Class: a **real** tool (one-shot approval) and browser-only — rendering needs the editor's export service, so it is not in the server-direct lists. It adds no draft edit.
+- Verify: `npx tsx src/export/variantPreviews.verify.ts` (registered in `verify:agent-tools`). It asserts the body shape (480p/h264, the version's own timelineId and snapshot, live doc untouched), one POST per member in tab order, untagged copies skipped, the four-version cap, the export registry wiring, the unknown-group and no-group errors, and the policy class. `npx tsc -b`, catalog regeneration, policy/mcp/exposure/export verifies and both registration gates are green.
+- Limitation: no real render was submitted — the verify stubs `/export/job` and the dialog's snapshot read. Whether the server accepts a 480p job end-to-end is only proven by the enum and the existing export path.
 
 ### P4-3 · "Comparar versiones" dialog
 - Plan: Plan 1 › Phase 4. A 2x2 grid of synced players, "Elegir esta versión", the `variant.chosen` event.
