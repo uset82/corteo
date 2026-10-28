@@ -5,6 +5,7 @@ import { CliError, UsageError } from './errors.ts';
 import { writeStderr } from './output.ts';
 import { readProjectDoc, resolveProject } from './store.ts';
 import { resolveH264TargetBitrate } from '../server/media-acceleration.ts';
+import { ffmpegBin } from '../server/media-binaries.ts';
 import { acceptExportSubmission } from '../server/plugins/export-submission.ts';
 import { h264RenderOptions, renderTimeline, setUploadsDirProvider } from '../server/plugins/export-rendering.ts';
 import { uploadDir } from '../server/media-dir.ts';
@@ -15,7 +16,7 @@ export interface RenderFileOptions {
   output: string;
   timelineId?: string;
   format?: 'video' | 'audio';
-  codec?: 'h264' | 'vp8' | 'prores' | 'mp3' | 'wav';
+  codec?: 'h264' | 'h265' | 'vp8' | 'prores' | 'mp3' | 'wav';
   resolution?: '480p' | '720p' | '1080p' | '4k';
   fps?: number;
   bitrate?: number;
@@ -73,7 +74,7 @@ export async function renderProjectToFile(options: RenderFileOptions) {
       await renderTimeline({
         state: plan.state, project: plan.project, timelineId: plan.timelineId,
         outputLocation: partial, codec: plan.media.codec, frameRange: plan.frameRange,
-        scale: plan.scale, videoBitrate: plan.videoBitrate,
+        scale: plan.scale, videoBitrate: plan.videoBitrate, ffmpegBinary: ffmpegBin(),
         ...await h264RenderOptions(plan.media.codec),
         ...(options.quiet ? {} : { onProgress: (progress: number) => {
           writeStderr(`rendering ${Math.round(progress * 100)}%`);

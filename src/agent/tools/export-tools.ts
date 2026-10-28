@@ -213,7 +213,7 @@ async function submitRenderJob(args: Args, ctx: AgentContext): Promise<unknown> 
     const renderId = await submitJob(body);
     sessionJobs.push({ renderId, timelineId, saveToMediaPool: !!savePlan });
     if (projectId) {
-      const codec = format === 'audio' ? 'mp3' : args.codec === 'vp8' ? 'vp8' : 'h264';
+      const codec = format === 'audio' ? 'mp3' : args.codec === 'vp8' ? 'vp8' : args.codec === 'h265' ? 'h265' : 'h264';
       const extension = format === 'audio' && args.codec === 'wav'
         ? 'wav'
         : exportMediaExtension(format, codec);

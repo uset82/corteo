@@ -73,7 +73,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | L-13 | Listening end-to-end proof | blocked (no song) | L-11, L-12 |
 | P2-2 | Captions: verso/coro, ASS/VTT import | todo | |
 | P2-3 | Duplicate detector | todo | |
-| P2-4 | HEVC export + presets | todo | |
+| P2-4 | HEVC export + presets | done | |
 | P2-5 | Countdown timecode | done | |
 | P2-6 | Premiere shortcut preset | todo | |
 | P3-1 | Pinned yt-dlp sync | todo | |

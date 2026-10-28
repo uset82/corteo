@@ -67,7 +67,7 @@ export const EXPORT_FPS = [...EXPORT_FPS_OPTIONS];
 export const EXPORT_RESOLUTION_OPTIONS = Object.keys(EXPORT_RESOLUTIONS) as ExportResolution[];
 export const DEFAULT_INCLUDE_MG = true;
 
-export type ExportVideoCodec = 'h264' | 'vp8' | 'prores';
+export type ExportVideoCodec = 'h264' | 'h265' | 'vp8' | 'prores';
 
 export interface ExportVideoSettings {
   codec: ExportVideoCodec;
@@ -219,7 +219,8 @@ export function useExportDialogModel({ state, project, projectId, projectName, e
   const qualityTag = qualityMode === 'master' ? ` · ${t('画质优先')}` : '';
   const codecLabel = video.codec === 'prores'
     ? 'MOV · ProRes 422 HQ'
-    : video.codec === 'h264' ? 'MP4 · H.264' : 'WebM · VP8';
+    : video.codec === 'h265' ? t('MP4 · HEVC (H.265)')
+      : video.codec === 'h264' ? 'MP4 · H.264' : 'WebM · VP8';
   const rateLabel = video.codec === 'prores'
     ? t('母带')
     : `${(video.resolvedBitrate / 1_000_000).toFixed(1)} Mbps`;

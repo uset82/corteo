@@ -43,7 +43,7 @@ export interface ServerExportContext {
 }
 
 export type ExportFormat = 'video' | 'audio';
-export type ExportCodec = 'h264' | 'vp8' | 'prores' | 'mp3';
+export type ExportCodec = 'h264' | 'h265' | 'vp8' | 'prores' | 'mp3';
 
 function recoveryRecord(
   context: ServerExportContext,
