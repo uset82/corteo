@@ -80,6 +80,7 @@ async function callControlTool(
   args: Record<string, unknown>,
   baseUrl: string,
 ): Promise<unknown | undefined> {
+  if (name === 'delegate') return (await import('../brain/delegate.ts')).delegateTask(args);
   if (name === 'openchatcut_status') return mcpStatus(session);
   if (name === 'list_projects') {
     const projects = await listExternalProjects(args.includeDeleted === true);

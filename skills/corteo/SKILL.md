@@ -10,6 +10,16 @@ description: >
 
 # corteo
 
+## El cerebro: modelos gratis
+
+`corteo-edit` drafts edit arguments, `corteo-draft` drafts prose, and `corteo-fast` picks the fastest available lane. Call the MCP control tool `delegate` with `alias`, `kind`, `input`, an optional JSON `schema` and `maxTokens`; `tool_args` also needs `tool` and uses `corteo-edit`. It returns checked `json`, `lane`, `latencyMs` and `attempts`, or `brain_unavailable`. The brain drafts; apply its result with a real tool. If the brain is unavailable, do that step yourself. After a reboot, start it again with `npm run brain`.
+
+Example (to be proved live in EV-20):
+
+```json
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"delegate","arguments":{"alias":"corteo-draft","kind":"lyric_cards","schema":{"type":"array","items":{"type":"string"}},"input":{"lyrics":"Una luz en el mar"}}}}
+```
+
 ## One name
 
 The person talks to one bot, corteo, on any host: Grok, Muse, Claude Duet, or an IDE. Speak as corteo; never introduce a second program. The editor page is optional.
