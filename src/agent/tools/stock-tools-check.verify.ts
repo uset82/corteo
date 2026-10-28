@@ -11,7 +11,7 @@ import { execStockTool, STOCK_TOOL_NAMES, STOCK_TOOL_SCHEMAS } from './stock-too
 const names = STOCK_TOOL_SCHEMAS.map((t) => t.name).sort();
 assert.deepStrictEqual(
   names,
-  ['download_media', 'import_url_asset', 'push_asset', 'search_stock_media'].sort(),
+  ['download_media', 'import_from_platform', 'import_url_asset', 'push_asset', 'search_stock_media'].sort(),
 );
 for (const n of names) assert.ok(STOCK_TOOL_NAMES.has(n));
 
@@ -31,6 +31,15 @@ const ftp = await execStockTool('import_url_asset', { url: 'ftp://example.com/a.
 assert.ok(ftp.error, 'ftp:// url should be rejected');
 const relative = await execStockTool('import_url_asset', { url: '/local/clip.mp4' }, ctx) as { error?: string };
 assert.ok(relative.error, 'relative path should be rejected');
+
+// import_from_platform rejects a host outside the allowlist before any fetch
+const notPlatform = await execStockTool(
+  'import_from_platform',
+  { url: 'https://example.com/clip.mp4' },
+  ctx,
+) as { success?: boolean; error?: string };
+assert.strictEqual(notPlatform.success, false);
+assert.ok(notPlatform.error?.includes('YouTube'), 'non-platform hosts point back to download_media');
 
 // legacy import_url_asset still returns { ok, asset }
 const imported = await execStockTool(
