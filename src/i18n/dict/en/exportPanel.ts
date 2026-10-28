@@ -197,6 +197,7 @@ export default {
   '草稿名称': 'Draft name',
   '目标草稿库': 'Target draft store',
   'CapCut 草稿库': 'CapCut store',
+  'CapCut / 剪映': 'CapCut / JianYing',
   '剪映草稿库': 'JianYing store',
   '剪映 6.0 起草稿文件已加密，本工具生成明文草稿，建议使用剪映 5.9.0 或更早版本打开；CapCut 国际版不受此限制。': 'Draft files are encrypted since JianYing 6.0 and this tool writes plaintext drafts, so use JianYing 5.9.0 or earlier; the international CapCut is unaffected.',
   '草稿已生成': 'Draft created',

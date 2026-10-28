@@ -85,7 +85,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P4-3 | "Comparar versiones" dialog | done | P4-2 |
 | P5-1 | Full Spanish dictionary | done (all modules translated; the brand.ts fold-in is left) | |
 | P5-2 | i18n coverage + placeholder gate | done | P5-1 |
-| P5-3 | Untranslated-text scan | todo | P5-2 |
+| P5-3 | Untranslated-text scan | done | P5-2 |
 | P6-1 | Bot end-to-end proof + screenshots | todo | every task above is `done` or `blocked` |
 | P7-1 | EffectCraft titles sidecar | optional | P6-1 |
 
@@ -470,6 +470,7 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-28 · P3-4 · The media-pool actions menu opens an "Importar desde enlace" dialog. Platform pages stream progress from `/api/import-platform`; direct file URLs go to `/api/import-url`; both end by adding one pool asset locally. The allowlist moved to `shared/platform-import.ts` so the dialog and route cannot drift.
 - 2026-10-28 · P4-3 · The sequence tabs show "Comparar versiones" when the active sequence belongs to a variant group. The dialog loads the P4-2 manifest (or renders it on demand), plays the 2×2 480p previews muted and synchronised, shows each note/status, and calls `chooseVariant` for "Elegir esta versión". The command now fires the `variant.chosen` CustomEvent (detail `{groupId,timelineId}`), verified with an EventTarget.
 - 2026-10-28 · P5-2 · `scripts/check-i18n.mjs` now reads the assembled Spanish modules (including the legacy `const base` in `es/index.ts`) and fails when any English key has no Spanish entry or when a `{placeholder}` set differs. Current catalog: 2709 English entries, 2747 Spanish entries, 100% coverage, 0 placeholder mismatches.
+- 2026-10-28 · P5-3 · Ran the es-ES Playwright scan on this branch at 1600×1000 against a scratch store (`CORTEO_PORT=5205 CORTEO_STORE_DIR=/tmp/p53-store`): projects, editor, timeline, every inspector tab, all six library tabs, export and all Settings categories, plus the chat. It found only the ten bundled CJK font-family names and the demo template's own English content (`The envelope method explained`, `How to start this week`, `Highlight Color`); no raw UI strings. The scan script stays outside the repo because it needs a live editor, a seeded store and the Playwright browser. Screenshots: `test-results/corteo/p53-*.png` (not committed). Prior raw-string fixes for ASR rows, the CapCut/JianYing header, the downloads tooltip and the sequence-cycle option were reused.
 
 ## Blockers
 Add an entry when a task is `blocked`: task ID, the exact command, the error (a few lines), what you tried, and what would unblock it.

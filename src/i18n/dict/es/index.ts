@@ -117,7 +117,7 @@ const base: Record<string, string> = {
   
   // Timeline
   '时间轴': 'Línea de Tiempo',
-  '视频': 'Video',
+  '视频': 'Vídeo',
   '音频': 'Audio',
   '字幕': 'Subtítulos',
   '轨道': 'Pista',

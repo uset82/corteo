@@ -26,7 +26,7 @@ function ExportMainHeader({ model }: { model: ExportDialogModel }) {
   const activeTab = EXPORT_TABS.find((entry) => entry.key === model.tab) ?? EXPORT_TABS[0];
   return (
     <div className="cc-export-main-header">
-      <div><h3>{t(activeTab.label)}</h3><p>{activeTab.summary}</p></div>
+      <div><h3>{t(activeTab.label)}</h3><p>{t(activeTab.summary)}</p></div>
       <RenderBadge tab={model.tab} renderEngine={model.workflow.renderEngine}
         engine={model.workflow.engineInfo} reason={model.workflow.engineReason} />
     </div>
