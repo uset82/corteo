@@ -53,7 +53,7 @@ This skill is the order of operations, not a second engine: every step calls an 
 - Create 2 to 4 sibling versions of the current sequence with `create_variants`, one label and note each. It returns their timeline ids; edit each version with the existing timeline-targeted tools.
 - Record the version the user picks with `choose_variant`: it becomes the active sequence and `elegida`, the rest `descartada`, in one undo step. Read the group with `get_variant_choice`; `wait: true` waits up to 45 seconds for a choice.
 - Save a milestone before a risky recut: `manage_versions` with `action: save` and a Spanish name. Version history is whole-project history, not the sibling-variant system.
-- Batch 480p preview rendering and the "Comparar versiones" dialog are not built yet: never promise them.
+- Render 480p previews of every version with `render_variant_previews`; it returns playable URLs. The "Comparar versiones" dialog is not built yet: never promise it.
 
 ## 6. Final export and check
 
@@ -64,4 +64,4 @@ This skill is the order of operations, not a second engine: every step calls an 
 
 ## Gaps to state honestly
 
-- Caption motion `latido`, subtitle import and the variant preview renderer/comparison dialog are later tasks; say they are not built instead of improvising a substitute.
+- Caption motion `latido`, subtitle import and the variant comparison dialog are later tasks; say they are not built instead of improvising a substitute.

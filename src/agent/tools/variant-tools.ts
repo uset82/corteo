@@ -29,8 +29,8 @@ export interface VariantChoiceReport {
   timedOut: boolean;
 }
 
-type Group = { groupId: string; timelines: Timeline[] };
-type GroupResult = Group | { error: string };
+export interface VariantGroup { groupId: string; timelines: Timeline[] }
+type GroupResult = VariantGroup | { error: string };
 type ReportResult = VariantChoiceReport | { error: string };
 
 export interface VariantWaitOptions {
@@ -51,7 +51,7 @@ function view(timeline: Timeline, doc: ProjectDoc): VariantView {
   };
 }
 
-function groupFor(doc: ProjectDoc, selector: { groupId?: unknown; timelineId?: unknown }): GroupResult {
+export function findVariantGroup(doc: ProjectDoc, selector: { groupId?: unknown; timelineId?: unknown }): GroupResult {
   let groupId = typeof selector.groupId === 'string' ? selector.groupId.trim() : '';
   if (!groupId && typeof selector.timelineId === 'string' && selector.timelineId.trim()) {
     const timeline = findTimeline(doc, selector.timelineId);
@@ -71,7 +71,7 @@ function groupFor(doc: ProjectDoc, selector: { groupId?: unknown; timelineId?: u
   return { groupId, timelines };
 }
 
-function reportFor(doc: ProjectDoc, group: Group): VariantChoiceReport {
+function reportFor(doc: ProjectDoc, group: VariantGroup): VariantChoiceReport {
   const variants = group.timelines.map((timeline) => view(timeline, doc));
   return {
     ok: true,
@@ -90,7 +90,7 @@ export async function waitForVariantChoice(
   wait: boolean,
   options: VariantWaitOptions = {},
 ): Promise<ReportResult> {
-  const initial = groupFor(ctx.getDoc(), selector);
+  const initial = findVariantGroup(ctx.getDoc(), selector);
   if ('error' in initial) return initial;
   let report = reportFor(ctx.getDoc(), initial);
   if (!wait || report.chosen) return report;
@@ -105,13 +105,13 @@ export async function waitForVariantChoice(
     if (elapsed >= timeoutMs) break;
     await sleep(Math.min(intervalMs, timeoutMs - elapsed));
     const doc = ctx.getDoc();
-    const next = groupFor(doc, selector);
+    const next = findVariantGroup(doc, selector);
     if ('error' in next) return next;
     report = reportFor(doc, next);
     if (report.chosen) return { ...report, waitedMs: now() - started };
   }
   const doc = ctx.getDoc();
-  const finalGroup = groupFor(doc, selector);
+  const finalGroup = findVariantGroup(doc, selector);
   if ('error' in finalGroup) return finalGroup;
   return { ...reportFor(doc, finalGroup), waitedMs: now() - started, timedOut: true };
 }

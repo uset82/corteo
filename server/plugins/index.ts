@@ -10,6 +10,7 @@ import { projectStorePlugin } from "./project-store-plugin.ts";
 import { extensionStorePlugin } from "./extension-store.ts";
 import { exportPlugin } from "./export.ts";
 import { exportQaPlugin } from "./export-qa.ts";
+import { variantPreviewsPlugin } from "./variant-previews.ts";
 import { exportDestinationPlugin } from "./export-destination.ts";
 import { uploadPostPlugin } from "./upload-post.ts";
 import { publishSchedulePlugin } from './publish-schedule.ts';
@@ -98,6 +99,7 @@ export function serverPlugins(options: { projectStoreHttp?: boolean } = {}): Plu
     publishSchedulePlugin(),
     exportMediaSourcesPlugin(),
     exportQaPlugin(),
+    variantPreviewsPlugin(),
     uploadMultipartPlugin(),
     uploadPlugin(),
     mobileUploadPlugin(),
