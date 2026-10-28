@@ -66,7 +66,7 @@ assert.match(html, /role="dialog"/);
 assert.match(html, /aria-label="比较版本"/);
 assert.match(html, /<video[^>]*src="\/media\/uploads\/a\.mp4"/, 'a finished version plays its 480p render');
 assert.equal((html.match(/<video/g) ?? []).length, 2, 'only finished versions mount a player');
-assert.match(html, /Más aire en el coro/, 'Claudia notes travel with the version');
+assert.match(html, /Más aire en el coro/, 'version notes travel with the card');
 assert.match(html, /42%/, 'a rendering version shows its progress');
 assert.match(html, /export_media_not_ready/, 'a failed render says why');
 assert.match(html, /data-timeline="b" data-status="chosen"/);
