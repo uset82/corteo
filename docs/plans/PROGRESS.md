@@ -70,7 +70,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | L-10 | Caption motion `latido` | done | L-06 |
 | L-11 | Music UI: inspector section, timeline map, song dialog | blocked (EV-22, EV-23, EV-24 i18n gate) | L-09 |
 | L-12 | `escuchar-cancion` skill + MCP prompt | done | L-09, P1-6 |
-| L-13 | Listening end-to-end proof | todo | L-11, L-12 |
+| L-13 | Listening end-to-end proof | blocked (no song) | L-11, L-12 |
 | P2-2 | Captions: verso/coro, ASS/VTT import | todo | |
 | P2-3 | Duplicate detector | todo | |
 | P2-4 | HEVC export + presets | todo | |
@@ -856,7 +856,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-22 | L-11 part 1: Reaccionar a la música | blocked | EV-00 (soft) |
 | EV-23 | L-11 part 2: Mapa musical | blocked | EV-00 (soft) |
 | EV-24 | L-11 part 3: Mapa de la canción | blocked | EV-00 (soft) |
-| EV-25 | L-13: listening end to end on a real song | todo | EV-21 (soft), EV-22 (soft), EV-23 (soft), EV-24 (soft) |
+| EV-25 | L-13: listening end to end on a real song | blocked | EV-21 (soft), EV-22 (soft), EV-23 (soft), EV-24 (soft) |
 | EV-26 | `EVOLUTION=PASS` acceptance script | todo | EV-05 (soft), EV-10 (soft), EV-11 (soft), EV-14 (soft), EV-18 (soft), EV-19 (soft) |
 | EV-27 | README Estado for what the night wired | todo | EV-26 (soft) |
 
@@ -911,7 +911,8 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 
 - EV-24: tsc, lint (0 errors), song-map-dialog.verify, verify:components, both registration gates and 13 affected verifies passed. The dialog uses available asset transcripts; tonal key and relay data are optional and the current browser analysis does not supply them. The two new EV-24 files were inadvertently included in the EV-22 progress correction commit 3c95fbe because they were already staged; history was not rewritten.
 
-### EV: blockers
+- EV-25: `find /home/carlos/corteo-media -maxdepth 1` could not find a song because the directory does not exist. Checked the configured default directory for wav, mp3, m4a and flac; no editor or downloads were started. A real song in that directory unblocks the proof. Screenshots are also skipped while EV-22 and EV-24 are blocked.
+
 - EV-24: `npm run verify:i18n` exited 1 at `src/i18n/dict/it/settingsCoverage.verify.ts`, on the same 10 missing Italian bot-connection keys as EV-00. The source-key check passed; adding those pre-existing Italian translations and rerunning the gate unblocks the card. The implementation is retained for review.
 - EV-23: `npm run verify:i18n` exited 1 at `src/i18n/dict/it/settingsCoverage.verify.ts`, the same 10 missing Italian bot-connection keys documented for EV-00 and EV-22. The source-key check passed and no pre-existing translations were changed; adding the Italian entries and rerunning the gate unblocks this card.
 - EV-22: `npm run verify:i18n` exits 1 at `src/i18n/dict/it/settingsCoverage.verify.ts`: Italian settings dictionary is missing the same 10 bot-connection keys recorded at EV-00 (AssertionError, expected empty array). Ran the component suite and source-key check; no change to the pre-existing Italian dictionary was made, as the repository instructions prohibit fixing a test that failed before this card. Adding those Italian translations and rerunning verify:i18n would unblock the card. The implemented UI is retained for review; the card is blocked because its required gate is not green.
