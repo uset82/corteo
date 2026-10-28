@@ -53,13 +53,15 @@ export async function runDoctor({
   env = process.env,
   probe = httpGet,
   log = console.log,
+  step = logStep,
+  done = logDone,
 }) {
   const config = await loadHarnessConfig(root);
   const paths = pathsFor(home ?? homeFrom(config, {}, env), config);
   const web = Number(webPort ?? config.ports.web);
   const firstForward = Number(forwardPort ?? config.ports.forward);
 
-  logStep(`1/${TOTAL} Versiones instaladas frente a config/harness.json`);
+  step(`1/${TOTAL} Versiones instaladas frente a config/harness.json`);
   const installed = await readInstalledDsh(paths.home);
   if (!installed) {
     throw new DoctorError(1, `dsh no está instalado en ${paths.home}.`, 'npm run harness:install');
@@ -76,13 +78,13 @@ export async function runDoctor({
     );
   }
 
-  logStep(`2/${TOTAL} La interfaz web responde en ${web}`);
+  step(`2/${TOTAL} La interfaz web responde en ${web}`);
   const webAnswer = await probe({ port: web });
   if (webAnswer.status === 0) {
     throw new DoctorError(2, `nada responde en http://127.0.0.1:${web}.`, 'npm run harness');
   }
 
-  logStep('3/5 El reenvío está encendido y tiene clave');
+  step('3/5 El reenvío está encendido y tiene clave');
   const settings = await readJson(paths.pluginSettings);
   if (!settings?.forward?.enabled) {
     throw new DoctorError(3, 'el reenvío del plugin está apagado.', 'Enciéndelo en la UI del plugin o vuelve a ejecutar npm run harness');
@@ -94,7 +96,7 @@ export async function runDoctor({
     throw new DoctorError(3, 'no hay forwardKey en los ajustes del plugin.', 'Reinicia el plugin o vuelve a ejecutar npm run harness:install');
   }
 
-  logStep(`4/${TOTAL} El puerto del reenvío contesta con la clave`);
+  step(`4/${TOTAL} El puerto del reenvío contesta con la clave`);
   const port = await findForwardPort({
     start: firstForward,
     range: config.forwardPortRange ?? 10,
@@ -109,7 +111,7 @@ export async function runDoctor({
     );
   }
 
-  logStep(`5/${TOTAL} Los modelos del reenvío`);
+  step(`5/${TOTAL} Los modelos del reenvío`);
   const { models } = await listModels({ port, key: settings.forwardKey, probe });
   if (!models.length) {
     throw new DoctorError(5, `el puerto ${port} no lista modelos.`, 'Espera a que el plugin sondee los canales y reintenta');
@@ -117,7 +119,7 @@ export async function runDoctor({
 
   const key = showKey ? settings.forwardKey : maskSecret(settings.forwardKey);
   log(`    ${models.length} modelos; los primeros: ${models.slice(0, 10).join(', ')}`);
-  logDone('DeepSeek Harness está listo. Pega esto en corteo › Ajustes › DeepSeek Harness:');
+  done('DeepSeek Harness está listo. Pega esto en corteo › Ajustes › DeepSeek Harness:');
   log(`    URL base: http://127.0.0.1:${port}/v1`);
   log(`    Clave:    ${key}`);
   if (!showKey) log('    (clave oculta; para verla: npm run harness:doctor -- --show-key)');

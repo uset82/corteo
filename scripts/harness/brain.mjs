@@ -88,6 +88,8 @@ export async function serveBrain({ config, home, webPort, forwardPort, routerPor
       } finally { closeSync(fd); }
       child.on('error', (error) => { spawnError = error; });
     }
+    await writeBrainState(home, { version: 1, pid: process.pid, dshPid: child?.pid ?? null,
+      webPort: web, forwardPort: null, routerPort: router, startedAt });
     const deadline = Date.now() + 120_000;
     let key = null;
     let port = null;

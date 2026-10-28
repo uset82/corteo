@@ -17,6 +17,8 @@ export async function installHarness({
   home,
   env = process.env,
   probe = httpGet,
+  step = logStep,
+  done = logDone,
 } = {}) {
   const config = await loadHarnessConfig(root);
   const paths = pathsFor(home ?? homeFrom(config, {}, env), config);
@@ -27,7 +29,7 @@ export async function installHarness({
 
   let changed = false;
 
-  logStep(`Comprobando ${config.dsh.package}@${config.dsh.version} en ${paths.runtime}`);
+  step(`Comprobando ${config.dsh.package}@${config.dsh.version} en ${paths.runtime}`);
   if (await readInstalledDsh(paths.home) !== config.dsh.version) {
     command('npm', ['install', '--prefix', paths.runtime, `${config.dsh.package}@${config.dsh.version}`], { env });
     const installed = await readInstalledDsh(paths.home);
@@ -37,10 +39,10 @@ export async function installHarness({
     if (!existsSync(paths.dshBin)) throw new Error(`Falta el binario ${paths.dshBin} después de instalar dsh.`);
     changed = true;
   } else {
-    logStep(`dsh ${config.dsh.version} ya está instalado.`);
+    step(`dsh ${config.dsh.version} ya está instalado.`);
   }
 
-  logStep(`Comprobando el plugin ${config.plugin.name} ${config.plugin.tag}`);
+  step(`Comprobando el plugin ${config.plugin.name} ${config.plugin.tag}`);
   let commit = readVendorCommit(paths.vendor, env);
   if (!commit) {
     if (existsSync(paths.vendor)) {
@@ -57,7 +59,7 @@ export async function installHarness({
     );
   }
 
-  logStep(`Comprobando el plugin en el perfil ${config.profile}`);
+  step(`Comprobando el plugin en el perfil ${config.profile}`);
   const profilePackage = await readJson(resolve(paths.profile, 'package.json'));
   const linked = profilePackage?.dependencies?.[config.plugin.name];
   const wantedLink = `link:${paths.vendor}`;
@@ -68,7 +70,7 @@ export async function installHarness({
     changed = true;
   }
 
-  logStep('Comprobando distribution: managed');
+  step('Comprobando distribution: managed');
   const settings = await readJson(paths.pluginSettings);
   if (settings?.distribution !== 'managed') {
     const web = await probe({ port: config.ports.web });
@@ -83,10 +85,10 @@ export async function installHarness({
   }
 
   if (!changed) {
-    logDone('Nada que hacer: el runtime, el plugin y los ajustes ya coinciden con config/harness.json.');
+    done('Nada que hacer: el runtime, el plugin y los ajustes ya coinciden con config/harness.json.');
     return { changed, home: paths.home };
   }
-  logDone(`DeepSeek Harness listo en ${paths.home}. Siguiente paso: npm run harness`);
+  done(`DeepSeek Harness listo en ${paths.home}. Siguiente paso: npm run harness`);
   return { changed, home: paths.home };
 }
 
