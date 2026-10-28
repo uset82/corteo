@@ -8,6 +8,7 @@ import editor from './editor';
 import exportPanel from './exportPanel';
 import media from './media';
 import review from './review';
+import templatesData from './templates-data';
 import timeline from './timeline';
 import topbar from './topbar';
 
@@ -270,4 +271,4 @@ const base: Record<string, string> = {
     'Dale a corteo la configuración de abajo para que edite este proyecto desde fuera de este PC. El dominio del editor tiene que estar en hosting.egressDomains.',
 };
 
-export default Object.assign({}, chat, components, editor, exportPanel, media, review, timeline, topbar, base) as Record<string, string>;
+export default Object.assign({}, chat, components, editor, exportPanel, media, review, templatesData, timeline, topbar, base) as Record<string, string>;

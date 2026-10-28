@@ -1,0 +1,28 @@
+// Spanish data names for the built-in templates (P5-1). Keys stay the Chinese
+// originals; values keep the template's orientation suffix (16:9 / 9:16).
+export default {
+  '竖屏·重点词弹出': 'Vertical · Palabra clave',
+  '竖屏·大字幕条': 'Vertical · Subtítulo grande',
+  '竖屏·金句卡片': 'Vertical · Tarjeta de cita',
+  '竖屏·姓名条': 'Vertical · Rótulo de nombre',
+  '竖屏·关注引导': 'Vertical · Llamada a seguir',
+  '竖屏·步骤条': 'Vertical · Pasos',
+  '竖屏·数字大字报': 'Vertical · Cifra grande',
+  '竖屏·章节进度': 'Vertical · Progreso de capítulo',
+  '竖屏·价格标签': 'Vertical · Etiqueta de precio',
+  '竖屏·封面大字': 'Vertical · Título de portada',
+  '竖屏·清单勾选': 'Vertical · Lista de comprobación',
+  '竖屏·前后对比条': 'Vertical · Antes / después',
+  '竖屏·便签贴纸': 'Vertical · Nota adhesiva',
+  '竖屏·互动提示': 'Vertical · Invitación a interactuar',
+  '竖屏·期数角标': 'Vertical · Distintivo de episodio',
+  '口播·米色格纹（横）': 'Habla a cámara · Cuadrícula beige (16:9)',
+  '口播·奶咖横线（横）': 'Habla a cámara · Rayas color café (16:9)',
+  '口播·黑板报（横）': 'Habla a cámara · Pizarra (16:9)',
+  '口播·侧栏拼贴（横）': 'Habla a cámara · Collage lateral (16:9)',
+  '口播·便签五五分（竖）': 'Habla a cámara · Nota adhesiva a medias (9:16)',
+  '口播·点阵五五分（竖）': 'Habla a cámara · Puntos a medias (9:16)',
+  '口播·牛皮纸圆窗（竖）': 'Habla a cámara · Papel kraft con ventana (9:16)',
+  '口播·羊皮纸（横）': 'Habla a cámara · Pergamino (16:9)',
+  '口播·奶油拍立得（竖）': 'Habla a cámara · Polaroid crema (9:16)',
+} as Record<string, string>;
