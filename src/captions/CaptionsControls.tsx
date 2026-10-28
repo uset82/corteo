@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { CaptionsData, CaptionPacing, CaptionTemplate } from './types';
 import type { MediaAsset, TimelineItem, TrackId } from '../editor/types';
 import type { TranscriptVariant } from '../transcript/types';
@@ -12,6 +12,8 @@ import { beginCaptionStylePointerDrag } from './captionStyleDrag';
 import { captionTemplatePatch } from './captionTemplatePatch';
 import { CaptionMotionControls } from './CaptionMotionControls';
 import { resolveLatidoBeats } from './latidoBeats';
+import { importSubtitleCues, newManualCaptions } from './manualCaptions';
+import { parseSubtitleFile } from './subtitleImport';
 
 interface CaptionsControlsProps {
   captionTrackId?: TrackId;
@@ -26,6 +28,8 @@ interface CaptionsControlsProps {
   /** Sentence-by-sentence editing: click-to-sentence preview (timeline ms) */
   onSeekMs?: (ms: number) => void;
   onCreateManual: () => void;
+  /** import needs a full CaptionsData when no caption track exists yet */
+  onSetCaptions?: (captions: CaptionsData) => void;
   getPlayheadMs?: () => number;
   onUpdate: (patch: Partial<CaptionsData>) => void;
   /** Completely remove captions (hide and clear overlay status) */
@@ -51,10 +55,13 @@ const TRANSLATE_TO: { id: string; label: string }[] = [
 
 // Independent caption workspace: style, rhythm, manual captions and translation are all edited here.
 export function CaptionsControls({
-  captionTrackId, captions, sourceVariants = [], items, fps, assets = [], onSeekMs, onCreateManual, getPlayheadMs, onUpdate, onRemove, onTranslate, translating, translateError,
+  captionTrackId, captions, sourceVariants = [], items, fps, assets = [], onSeekMs, onCreateManual, onSetCaptions, getPlayheadMs, onUpdate, onRemove, onTranslate, translating, translateError,
 }: CaptionsControlsProps) {
   const t = useT();
   const [bilingualOpen, setBilingualOpen] = useState(!!captions?.bilingual || !!captions?.translation);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importNote, setImportNote] = useState<string | null>(null);
+  const subtitleInput = useRef<HTMLInputElement | null>(null);
   const style = captions ? captionStyleFor(captions.template) : null;
   const pacingMeta = PACINGS.find((p) => p.v === (captions?.pacing ?? 'phrase')) ?? PACINGS[0]!;
   // Translation cues carry absolute timeline ms; re-timing the source leaves
@@ -71,14 +78,76 @@ export function CaptionsControls({
     return 'English';
   }, [captions?.translationLang]);
 
+  const importSubtitleFile = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const { format, words } = parseSubtitleFile(file.name, await file.text());
+      const base = captions ?? newManualCaptions();
+      const patch = importSubtitleCues(base, items, words, { label: file.name.replace(/\.[^.]+$/, '') });
+      if (captions) onUpdate({ ...patch, enabled: true });
+      else onSetCaptions?.({ ...base, ...patch, enabled: true });
+      setImportError(null);
+      setImportNote(t('已导入 {n} 条字幕（{format}）', { n: words.length, format: format.toUpperCase() }));
+    } catch (cause) {
+      setImportNote(null);
+      setImportError(t(cause instanceof Error ? cause.message : String(cause)));
+    }
+  };
+
+  const styleOption = (s: (typeof CAPTION_STYLES)[number]) => {
+    const active = captions?.template === s.id;
+    return (
+      <button
+        key={s.id}
+        type="button"
+        role="option"
+        aria-selected={active}
+        className={`cc-cap-style${active ? ' selected' : ''}`}
+        title={`${t(s.labelZh)} — ${t(s.hint)} · ${t('拖到预览画面任意位置新建字幕')}`}
+        onClick={() => captions && onUpdate(captionTemplatePatch(captions, s.id as CaptionTemplate))}
+        onPointerDown={(event) => {
+          if (!captionTrackId) return;
+          beginCaptionStylePointerDrag(event.nativeEvent, { trackId: captionTrackId, template: s.id });
+        }}
+      >
+        <span
+          className="cc-cap-swatch"
+          style={{
+            color: s.color,
+            background: s.highlightBackground ?? '#1a1a1a',
+            borderColor: s.strokeWidth > 0 ? s.strokeColor : theme.border,
+          }}
+        >
+          {t('字')}
+        </span>
+        <span className="cc-cap-style-name">{t(s.labelZh)}</span>
+      </button>
+    );
+  };
+
   return (
     <div className="cc-cap-panel open standalone">
+      <input
+        ref={subtitleInput}
+        type="file"
+        accept=".srt,.ass,.ssa,.vtt,application/x-subrip,text/vtt,text/plain"
+        hidden
+        onChange={(event) => {
+          const file = event.currentTarget.files?.[0];
+          event.currentTarget.value = '';
+          void importSubtitleFile(file);
+        }}
+      />
       {!captions && (
         <div className="cc-cap-empty">
           <div className="cc-cap-empty-actions">
             <button type="button" className="cc-cap-btn primary" onClick={onCreateManual}>{t('手动添加字幕')}</button>
+            <button type="button" className="cc-cap-btn" onClick={() => subtitleInput.current?.click()}>{t('导入字幕文件…')}</button>
           </div>
           <p className="cc-cap-hint">{t('从文字稿打开「字幕样式」，或在这里手动添加独立字幕。')}</p>
+          <p className="cc-cap-hint">{t('也可导入 SRT / ASS / VTT 字幕文件，词级时间会保留。')}</p>
+          {importNote && <p className="cc-cap-hint">{importNote}</p>}
+          {importError && <div className="cc-cap-error">{importError}</div>}
         </div>
       )}
 
@@ -115,46 +184,31 @@ export function CaptionsControls({
                   {t('移除')}
                 </button>
               )}
+              <button
+                type="button"
+                className="cc-cap-btn sm"
+                title={t('导入字幕（SRT / ASS / VTT）')}
+                onClick={() => { setImportError(null); subtitleInput.current?.click(); }}
+              >
+                {t('导入字幕')}
+              </button>
             </div>
           </div>
           {!captions.enabled && (
             <p className="cc-cap-hint warn">{t('字幕已关闭，预览/导出都不会烧录。再点「显示」或勾选即可恢复。')}</p>
           )}
+          {importNote && <p className="cc-cap-hint">{importNote}</p>}
+          {importError && <div className="cc-cap-error">{importError}</div>}
 
           {/* Style: color block + Chinese name */}
           <div className="cc-cap-field">
             <div className="cc-cap-label">{t('样式外观')}</div>
             <div className="cc-cap-styles" role="listbox" aria-label={t('字幕样式')}>
-              {CAPTION_STYLES.map((s) => {
-                const active = captions.template === s.id;
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    role="option"
-                    aria-selected={active}
-                    className={`cc-cap-style${active ? ' selected' : ''}`}
-                    title={`${t(s.labelZh)} — ${t(s.hint)} · ${t('拖到预览画面任意位置新建字幕')}`}
-                    onClick={() => onUpdate(captionTemplatePatch(captions, s.id as CaptionTemplate))}
-                    onPointerDown={(event) => {
-                      if (!captionTrackId) return;
-                      beginCaptionStylePointerDrag(event.nativeEvent, { trackId: captionTrackId, template: s.id });
-                    }}
-                  >
-                    <span
-                      className="cc-cap-swatch"
-                      style={{
-                        color: s.color,
-                        background: s.highlightBackground ?? '#1a1a1a',
-                        borderColor: s.strokeWidth > 0 ? s.strokeColor : theme.border,
-                      }}
-                    >
-                      {t('字')}
-                    </span>
-                    <span className="cc-cap-style-name">{t(s.labelZh)}</span>
-                  </button>
-                );
-              })}
+              {CAPTION_STYLES.filter((s) => s.id !== 'verso' && s.id !== 'coro').map(styleOption)}
+            </div>
+            <div className="cc-cap-label" style={{ marginTop: 8 }}>{t('视频歌词')}</div>
+            <div className="cc-cap-styles" role="listbox" aria-label={t('视频歌词')}>
+              {CAPTION_STYLES.filter((s) => s.id === 'verso' || s.id === 'coro').map(styleOption)}
             </div>
             {style && <p className="cc-cap-hint">{t(style.labelZh)}：{t(style.hint)} · {t('可拖到预览画面任意位置新建并编辑字幕')}</p>}
           </div>

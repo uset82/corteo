@@ -7,11 +7,13 @@ import { resolveCaptionWords, resolveCaptionWordIndices, resolveCaptionWordRefs,
 import { captionWordOverride } from '../../captions/wordOverrides';
 import { captionStyleFor } from '../../captions/styles';
 import { editCaptions } from './captions-actions';
+import { importSubtitles } from './captions-import';
 import { sourceList } from './captions-sources';
 import { applyCaptionAvoidance } from './caption-avoidance-tools';
 
 // Captions tools: `read_captions` (read-only) + `edit_captions`
-// (ONE tool, 21-action dispatch — see captions-actions.ts). Word overrides
+// (ONE tool, multi-action dispatch — see captions-actions.ts) +
+// `import_subtitles` (SRT/ASS/SSA/VTT → manual lane). Word overrides
 // (display_text), multi-source routing (source_*), and language (language_mode /
 // bilingual) are all edit_captions actions now; the old flat edit_captions and the
 // edit_caption_words / set_caption_sources behavior is folded in.
@@ -105,6 +107,8 @@ export async function execCaptionsTool(name: string, args: Args, ctx: AgentConte
       const automaticCaptionAvoidance = await applyCaptionAvoidance(ctx, { maxSamples: 60 });
       return { ...result, automaticCaptionAvoidance };
     }
+    case 'import_subtitles':
+      return importSubtitles(args, ctx);
     default:
       return undefined;
   }

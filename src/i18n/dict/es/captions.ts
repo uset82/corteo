@@ -29,6 +29,8 @@ export default {
   '产品绿标': 'Verde de producto',
   '信号青': 'Cian de señal',
   '得意黑': 'Smiley Sans',
+  '主歌': 'Estrofa',
+  '副歌': 'Estribillo',
   // One-line description of each caption style (styles.ts hint)
   '白字无底，适合口播': 'Texto blanco sin fondo: ideal para voz',
   '轻阴影，像正片字幕': 'Sombra suave, como los subtítulos de cine',
@@ -51,6 +53,14 @@ export default {
   '青白字 + 荧光绿': 'Blanco frío + verde neón',
   '科技风青绿高亮': 'Realce turquesa tecnológico',
   '中文展示字体': 'Tipografía de titulación china',
+  '白字衬线，安静地跟歌词': 'Serif blanco que acompaña la letra sin gritar',
+  '大字全大写，副歌顶出来': 'Tipo grande en mayúsculas para que el estribillo destaque',
+  '视频歌词': 'Videoclip',
+  '导入字幕文件…': 'Importar archivo de subtítulos…',
+  '导入字幕': 'Importar subtítulos',
+  '导入字幕（SRT / ASS / VTT）': 'Importar subtítulos (SRT / ASS / VTT)',
+  '也可导入 SRT / ASS / VTT 字幕文件，词级时间会保留。': 'También puedes importar archivos SRT / ASS / VTT: se conservan los tiempos por palabra.',
+  '已导入 {n} 条字幕（{format}）': 'Se importaron {n} entradas ({format})',
   // CaptionsControls — header and state
   '收起': 'Contraer',
   '展开': 'Desplegar',

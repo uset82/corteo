@@ -13,7 +13,7 @@ import type { AudioAsset } from '../audio/library';
 import { FX_EFFECTS, FX_IDS, LUT_EFFECTS, LUT_IDS } from '../gl/fx/effects';
 import { TranscriptPanel, type TranscriptTrackOption } from '../transcript/TranscriptPanel';
 import { CaptionsPanel } from '../captions/CaptionsPanel';
-import { newManualCaptions } from '../captions/manualCaptions';
+import { identifyManualCues, newManualCaptions } from '../captions/manualCaptions';
 import { MediaPoolPanel } from '../media/MediaPoolPanel';
 import { MediaDuplicatesProvider } from '../media/MediaDuplicatesDialog';
 import { useDirectoryImport } from '../media/useDirectoryImport';
@@ -32,7 +32,7 @@ import { isPluginAssetId } from '../plugins/types';
 import { customTransitionUniforms, getCustomTransition } from '../gl/customTransitions';
 import type { ZoomEffect } from '../editor/types';
 import { Icon } from '../components/icons';
-import { parseSrt } from '../captions/srt';
+import { parseSubtitleFile } from '../captions/subtitleImport';
 
 // Two built-in LUTs implemented with published camera-log transfer functions.
 // They apply through the same pipeline as other effects.
@@ -202,16 +202,16 @@ export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddA
   };
   const importSrt = async (file: File) => {
     try {
-      const words = parseSrt(await file.text());
+      const { words } = parseSubtitleFile(file.name, await file.text());
       const entryId = `srt_${crypto.randomUUID()}`;
       onCreateCaptionTrack({
         ...newManualCaptions(),
-        sourceEntries: [{ id: entryId, itemId: `manual:${entryId}`, label: file.name, words }],
-      }, { name: file.name.replace(/\.srt$/i, '') || file.name });
+        sourceEntries: [{ id: entryId, itemId: `manual:${entryId}`, label: file.name, words: identifyManualCues(words) }],
+      }, { name: file.name.replace(/\.(?:srt|ass|ssa|vtt)$/i, '') || file.name });
       setMainTab('字幕');
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
-      window.alert(`${t('SRT 导入失败')}：${t(detail)}`);
+      window.alert(`${t('字幕导入失败')}：${t(detail)}`);
     }
   };
 

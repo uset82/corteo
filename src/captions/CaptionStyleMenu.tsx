@@ -111,6 +111,12 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
   };
 
   const backToParent = onBack ?? onClose;
+  const styleRow = (style: (typeof CAPTION_STYLES)[number]) => (
+    <button type="button" key={style.id} className={current?.template === style.id ? 'active' : ''} onClick={() => applyStyle(style.id)}>
+      <span className="cc-caption-style-swatch" style={{ background: style.highlightBackground ?? '#292929', color: style.highlightBackground ? style.highlightColor : style.color, fontFamily: style.fontFamily, WebkitTextStroke: style.strokeWidth ? `${Math.min(1, style.strokeWidth)}px ${style.strokeColor}` : undefined }}>Aa</span>
+      <span>{t(style.labelZh)}</span>
+    </button>
+  );
   if (translateOpen) return (
     <div className="cc-caption-style-menu" style={{ position: 'fixed', left: pos.left, top: pos.top }} onPointerDown={(e) => e.stopPropagation()}>
       <MenuDrillHeader title={t('翻译')} onBack={() => initialTranslateOpen ? backToParent() : setTranslateOpen(false)} />
@@ -126,14 +132,9 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
     <div className="cc-caption-style-menu" style={{ position: 'fixed', left: pos.left, top: pos.top }} onPointerDown={(e) => e.stopPropagation()}>
       <MenuDrillHeader title={t('字幕样式')} onBack={backToParent} />
       <div className="cc-caption-style-list">
-        {CAPTION_STYLES.map((style) => {
-          return (
-            <button type="button" key={style.id} className={current?.template === style.id ? 'active' : ''} onClick={() => applyStyle(style.id)}>
-              <span className="cc-caption-style-swatch" style={{ background: style.highlightBackground ?? '#292929', color: style.highlightBackground ? style.highlightColor : style.color, fontFamily: style.fontFamily, WebkitTextStroke: style.strokeWidth ? `${Math.min(1, style.strokeWidth)}px ${style.strokeColor}` : undefined }}>Aa</span>
-              <span>{t(style.labelZh)}</span>
-            </button>
-          );
-        })}
+        {CAPTION_STYLES.filter((style) => style.id !== 'verso' && style.id !== 'coro').map(styleRow)}
+        <div className="cc-caption-style-title" style={{ marginTop: 4 }}>{t('视频歌词')}</div>
+        {CAPTION_STYLES.filter((style) => style.id === 'verso' || style.id === 'coro').map(styleRow)}
         {presets.length > 0 && (
           <>
             <div className="cc-caption-style-title" style={{ marginTop: 4 }}>{t('我的样式')}</div>

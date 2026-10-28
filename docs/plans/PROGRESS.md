@@ -71,7 +71,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | L-11 | Music UI: inspector section, timeline map, song dialog | done | L-09 |
 | L-12 | `escuchar-cancion` skill + MCP prompt | done | L-09, P1-6 |
 | L-13 | Listening end-to-end proof | blocked (no song) | L-11, L-12 |
-| P2-2 | Captions: verso/coro, ASS/VTT import | todo | |
+| P2-2 | Captions: verso/coro, ASS/VTT import | done (verso/coro templates; ASS `\k` and VTT inline stamps → per-word timing; `import_subtitles`) | |
 | P2-3 | Duplicate detector | done | |
 | P2-4 | HEVC export + presets | done | |
 | P2-5 | Countdown timecode | done | |
@@ -347,9 +347,14 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 
 ### P2-2 · Captions: verso/coro, ASS/VTT import
 - Plan: Plan 1 › Phase 2 (captions).
-- Files: `src/captions/styles.ts`, new `src/captions/ass.ts` and `src/captions/vtt.ts` + verifies, `src/captions/srt.ts`, `src/captions/CaptionStyleMenu.tsx`, `src/captions/CaptionsPanel.tsx`, new tool `import_subtitles`.
-- Done when: importing an ASS file with `\k` tags gives word-timed karaoke in the preview and the export.
-- Verify: `npm run verify:captions`, the new verifies, `npm run verify:agent-tools`.
+- Done 2026-10-28. Two templates join the catalog — `verso` (quiet serif, cream with a gold karaoke highlight) and `coro` (uppercase, heavy, red highlight background) — listed as a "Videoclip" group in `CaptionStyleMenu` and the captions panel; both keep the word highlight so imported timings are visible.
+- New parsers. `src/captions/ass.ts` reads `[Events]` with the `Format:` column map (reordered columns work, and commas beyond the field count are reattached to the free-form Text column), converts `\k`/`\kf`/`\ko` centiseconds into per-syllable timings, merges syllables back into whitespace-delimited words and drops `{…}` override blocks; a dialogue with no karaoke stays one cue, like SRT. `src/captions/vtt.ts` skips NOTE/STYLE/REGION blocks, accepts `mm:ss.mmm` shorthand and turns inline `<timestamp>` runs into per-word timings. `src/captions/subtitleImport.ts` picks the parser by extension and sniffs `WEBVTT`/`[Script Info]`/`[Events]`/`Dialogue:` when the name says nothing; SRT keeps using `parseSrt`.
+- Import paths all land as a manual caption lane (absolute timeline ms, transcript untouched) through `importSubtitleCues` in `manualCaptions.ts`: the captions panel gained "Importar subtítulos" (empty state and action row, with note/error lines), the transcript toolbar and the library accept `.ass/.ssa/.vtt`, and the media-drop path now uses the shared parser so karaoke survives a drag-and-drop. ASS/VTT parse errors are Chinese keys translated at the UI.
+- MCP: new `import_subtitles` tool — `content` required, plus `filename`/`format`, `mode` (`replace`|`append`), `label`, `templatePreset`, `captionTrackId` — wired into `CAPTIONS_TOOL_NAMES`; `assets/agent/openchatcut-tool-schemas.json` regenerated.
+- Files: `src/captions/types.ts`, `src/captions/styles.ts`, new `src/captions/ass.ts`, `src/captions/vtt.ts`, `src/captions/subtitleImport.ts` and their verifies, `src/captions/manualCaptions.ts`, `src/captions/CaptionsControls.tsx`, `src/captions/CaptionsPanel.tsx`, `src/captions/CaptionStyleMenu.tsx`, `src/media/externalFileDrop.ts`, `src/transcript/TranscriptPanel.tsx`, `src/library/LibraryPanel.tsx`, new `src/agent/tools/captions-import.ts` + `import-subtitles.verify.ts`, `src/agent/tools/schemas/captions-tools.ts`, `src/agent/tools/captions-tools.ts`, `src/agent/tools/captions-tools.verify.ts`, `src/captions/styles.verify.ts`, `src/i18n/dict/{en,es}/{captions,transcript}.ts`, `package.json`.
+- Done when: an ASS file with `\k` tags gives word-timed karaoke. The verify imports a three-cue ASS with karaoke into `coro` and reads back the manual lane words at 1000/1200 ms; `ass.verify` pins per-word spans (a syllable's trailing space is not part of the word), `vtt.verify` pins inline stamps, `subtitleImport.verify` pins replace/append and lane order. Player/export need no change: cues are ordinary manual caption words.
+- Verify: `npx tsc -b` 0; `npm run verify:i18n` 0 (162 UI files, 2707 English / 2745 Spanish entries); `npm run verify:captions` 0; `npx tsx src/agent/tools/import-subtitles.verify.ts` 0; `npx tsx src/agent/tools/captions-tools.verify.ts` 0; `npm run verify:server-tool-catalog` 0.
+- Not proved in a browser: the new panel buttons and the Videoclip group were typechecked and unit-verified only.
 
 ### P2-3 · Duplicate detector
 - Plan: Plan 1 › Phase 2 (duplicates).
@@ -468,6 +473,8 @@ Add a line when you choose something the plans leave open: date, task ID, decisi
 - 2026-10-28 · EV · On HTTP 429 or a timeout, the router tries the next lane that passed the last probe; with none left it returns `brain_unavailable`.
 - 2026-10-28 · EV · Anonymous free lanes only: no plugin account login, no EAC, no LAN forward, no public MCP, no paid provider inside the editor.
 - 2026-10-28 · EV · The MCP token, `.env.corteo` and the whole project JSON are never sent to a lane.
+- 2026-10-28 · P2-2 · Imported subtitles become a manual caption lane in absolute timeline ms, never transcript words. Reason: an ASS/VTT file is an authored caption track, so replacing or appending it must not rewrite the audio transcript or its deleted-word edits, and manual lanes already render and export through the existing caption path.
+- 2026-10-28 · P2-2 · In ASS, commas past the `Format:` field count are reattached to the Text column rather than assuming Text is last. Reason: the spec says Text is the only free-form column, so a reordered `Format:` (Text first) would otherwise shift Start/End and drop every dialogue.
 - 2026-10-28 · EV · Carlos chose: the plan files are committed locally before the night and pushed only at its end; Terra may download the music packs `rhythm-lite` and `music-semantics-lite` for L-13; the bot path goes first in the EV table.
 - 2026-10-28 · EV · The planning decisions D1 to D19 (host profile files and skill paths, the song film as an `occ` composition, `apply_ken_burns` headless, shorts kept in the browser tier with a Spanish review, the brain process and router on `127.0.0.1:18890`, `delegate` as an MCP control tool, the editor linked through `/api/keys`, local pnpm, `CORTEO_E2E_MEDIA_DIR`, soft needs) are in `docs/plans/07-evolution.md` › Decisions made.
 - 2026-10-28 · EV · Terra ran EV-00 to EV-26 alone. The rest finishes in three tracks at once, one git worktree each: Qoder (`~/corteo`, the EV table, the merge and the only push), ZCode (`~/corteo-zcode`, branch `ev-zcode`, the EZ table), DeepSeek Harness (`~/corteo-dsh`, branch `ev-dsh`, the ED table). Reason: Carlos's call after Terra stopped.

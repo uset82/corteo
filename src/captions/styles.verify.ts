@@ -2,9 +2,13 @@ import assert from 'node:assert/strict';
 import { CAPTION_STYLES, CAPTION_STYLE_BY_ID } from './styles';
 import { paginate } from './types';
 
-assert.equal(CAPTION_STYLES.length, 22);
-assert.equal(new Set(CAPTION_STYLES.map((style) => style.id)).size, 22);
+assert.equal(CAPTION_STYLES.length, 24);
+assert.equal(new Set(CAPTION_STYLES.map((style) => style.id)).size, 24);
 assert.equal(CAPTION_STYLE_BY_ID['the-french-dispatch'].label, 'The French Dispatch');
+// 视频歌词对:主歌/副歌都在,副歌全大写加高亮
+assert.equal(CAPTION_STYLE_BY_ID.verso.label, 'Verse');
+assert.equal(CAPTION_STYLE_BY_ID.coro.textTransform, 'uppercase');
+assert.ok(CAPTION_STYLE_BY_ID.coro.highlightBackground);
 // 黑底白字默认样式:整句连续渲染(无词间隙/无逐词高亮)+整行黑底
 assert.equal(CAPTION_STYLE_BY_ID['black-bar'].wholeLine, true);
 assert.ok(CAPTION_STYLE_BY_ID['black-bar'].background);

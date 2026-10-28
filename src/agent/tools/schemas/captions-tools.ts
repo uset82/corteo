@@ -24,7 +24,7 @@ export const CAPTIONS_TOOL_SCHEMAS: AgentToolSchema[] = [
       "Manage the captions/subtitles overlay via a single `action`. Read text first only for display_text (use read_captions); every other action is one direct call.\n" +
       "- enable / disable: toggle captions data (enable optionally takes a built-in `preset` name).\n" +
       "- hide_overlay / show_overlay: global captionsHidden flag (toolbar 字幕显示) — hides on-screen caption overlay and text clips without wiping caption data; show_overlay re-enables.\n" +
-      "- template: no arg → list the 21 built-in presets; `templatePreset:\"netflix\"` → apply one (size/position preserved).\n" +
+      "- template: no arg → list the built-in presets; `templatePreset:\"netflix\"` → apply one (size/position preserved). verso/coro are the videoclip pair for sung lyrics.\n" +
       "- style: custom look via `json` — {font|fontFamily,sizePx|fontSizeRatio|fontSize,color,weight|fontWeight,fontStyle,textAlign|align,underline,strike,letterSpacing,lineHeight,strokeColor,strokeWidth,highlightColor,highlightBackground,shadow|shadowStrength,background|backgroundColor,backgroundOpacity,borderRadius,textTransform,displayMode,wordsPerPage,pacing}. Layered over the current template; unmapped fields are reported in `ignored`. sizePx is relative to CANVAS height — on 9:16 vertical (1080×1920) social captions want sizePx ≥ 86 (≈4.5% of height); leave size unset to keep the template default. pacing: 'phrase' (default, readable pages + karaoke highlight) — only use 'word' when the user explicitly wants single-word pop.\n" +
       "- animation: deterministic burn-in motion shared by preview/export; set `motionPreset` to none, fade-up, pop, word-pop, karaoke-pulse or latido. latido pulses the active line on the song's beats: it reads the cached music analysis of the captions' source clip, so run analyze_music/listen_to_song first (or pass json {beatsMs:[timeline ms]}).\n" +
       "- layout: place the whole block via `json` {preset:\"bottom-center|top-center|center|…3×3\", offsetXRatio, offsetYRatio, scale, rotation, opacity}; transforms may also be nested as `{transforms:{scale,rotation,opacity}}`.\n" +
@@ -53,6 +53,28 @@ export const CAPTIONS_TOOL_SCHEMAS: AgentToolSchema[] = [
         captionsItemId: { type: 'string', description: 'Legacy alias for captionTrackId.' },
       },
       required: ['action'],
+    },
+  },
+  {
+    name: 'import_subtitles',
+    description:
+      "Import a subtitle file's text (SRT, ASS/SSA or WebVTT) into a caption track as a manual caption lane. " +
+      "ASS/SSA karaoke tags (\\k/\\kf/\\ko) and WebVTT inline timestamps become per-word timings; plain cues stay one cue per line. " +
+      "Cues are absolute timeline milliseconds, so they render and export exactly like hand-placed manual captions and never modify the transcript. " +
+      "Pass the file text as `content`; `filename` selects the parser by extension (fallback: content sniff).",
+    input_schema: {
+      type: 'object',
+      properties: {
+        content: { type: 'string', description: 'The subtitle file content (UTF-8 text).' },
+        filename: { type: 'string', description: 'Original filename, used for extension-based format detection (e.g. "lyrics.ass"). Defaults to subtitles.<format>.' },
+        format: { type: 'string', enum: ['srt', 'ass', 'ssa', 'vtt'], description: 'Explicit format when no filename is available.' },
+        mode: { type: 'string', enum: ['replace', 'append'], description: 'replace (default) overwrites the target manual lane; append keeps existing cues.' },
+        label: { type: 'string', description: 'Lane label. Defaults to the filename without extension.' },
+        templatePreset: { type: 'string', description: 'Optional built-in caption style to apply on import (e.g. verso, coro).' },
+        captionTrackId: { type: 'string', description: 'Target caption track alias (C1/C2) or stable id. Defaults to C1.' },
+        captionsItemId: { type: 'string', description: 'Legacy alias for captionTrackId.' },
+      },
+      required: ['content'],
     },
   },
 ];

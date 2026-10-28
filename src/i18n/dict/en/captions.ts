@@ -29,6 +29,8 @@ export default {
   '产品绿标': 'Product Green',
   '信号青': 'Signal Cyan',
   '得意黑': 'Smiley Sans',
+  '主歌': 'Verse',
+  '副歌': 'Chorus',
   // One sentence description of caption style (styles.ts hint)
   '白字无底，适合口播': 'White text, no backing — great for voiceover',
   '轻阴影，像正片字幕': 'Soft shadow, like feature-film subtitles',
@@ -51,6 +53,14 @@ export default {
   '青白字 + 荧光绿': 'Cool white type + neon green',
   '科技风青绿高亮': 'Techy teal highlight',
   '中文展示字体': 'Chinese display typeface',
+  '白字衬线，安静地跟歌词': 'White serif that follows the lyrics quietly',
+  '大字全大写，副歌顶出来': 'Big all-caps type that lets the chorus hit',
+  '视频歌词': 'Videoclip',
+  '导入字幕文件…': 'Import subtitle file…',
+  '导入字幕': 'Import subtitles',
+  '导入字幕（SRT / ASS / VTT）': 'Import subtitles (SRT / ASS / VTT)',
+  '也可导入 SRT / ASS / VTT 字幕文件，词级时间会保留。': 'You can also import SRT / ASS / VTT files — word-level timings are preserved.',
+  '已导入 {n} 条字幕（{format}）': 'Imported {n} cues ({format})',
   // CaptionsControls — Panel header/state
   '字幕': 'Captions',
   '收起': 'Collapse',

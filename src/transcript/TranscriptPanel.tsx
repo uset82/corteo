@@ -169,7 +169,7 @@ export function TranscriptPanel({
         <input
           ref={srtInputRef}
           type="file"
-          accept=".srt,application/x-subrip,text/plain"
+          accept=".srt,.ass,.ssa,.vtt,application/x-subrip,text/vtt,text/plain"
           hidden
           onChange={(event) => {
             const file = event.currentTarget.files?.[0];
@@ -177,8 +177,8 @@ export function TranscriptPanel({
             if (file) onImportSrt(file);
           }}
         />
-        <button type="button" className="cc-tx-btn" title={t('导入 SRT')} onClick={() => srtInputRef.current?.click()}>
-          <Icon name="upload" size={13} />{t('导入 SRT')}
+        <button type="button" className="cc-tx-btn" title={t('导入字幕（SRT / ASS / VTT）')} onClick={() => srtInputRef.current?.click()}>
+          <Icon name="upload" size={13} />{t('导入字幕')}
         </button>
         <button
           type="button"
