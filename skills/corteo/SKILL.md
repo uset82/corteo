@@ -4,17 +4,22 @@ description: >
   Use when making or editing a music video, clip, lyric video, title card, or
   animation on this machine. corteo is the local video editor. Install it, start
   it, import media from disk, build a timeline, and export an MP4. Use it even
-  if the user only says "edit this video" or "make a lyric video".
+  if the user only says "edit this video" or "make a lyric video". Turn a long
+  video into vertical shorts, or a song and its lyrics into a lyric film.
 ---
 
 # corteo
 
+## One name
+
+The person talks to one bot, corteo, on any host: Grok, Muse, Claude Duet, or an IDE. Speak as corteo; never introduce a second program. The editor page is optional.
+
 corteo is a local video editor (a fork of OpenChatCut, AGPL v3). It runs on this Linux VM. You drive it from the shell. No API key is required. A browser is not required. The Cloudflare tunnel is optional and is not part of making a video.
 
-The shell prints JSON when you pass `--json`. The wrapper below selects Node 24 and clears `NPM_CONFIG_PREFIX`, so it works in a fresh shell whose `node` is still Node 20.
+The shell prints JSON when you pass `--json`. After an install, source `~/corteo/corteo.env` first. The checkout wrapper selects Node 24 and clears `NPM_CONFIG_PREFIX`.
 
 ```bash
-CORTEO=~/corteo/scripts/corteo
+CORTEO="${CORTEO_OCC:-$HOME/corteo/scripts/corteo}"
 "$CORTEO" --help
 ```
 
@@ -22,17 +27,29 @@ Do not call `npm run corteo` from a Node 20 shell. That crashes with `ERR_UNKNOW
 
 ## Install
 
-On a fresh Debian or Ubuntu box, once. It installs Node 24 if needed, clones the repo to `~/corteo`, and renders a 2 second test MP4. Safe to run again. ffmpeg must already be installed (`apt-get install -y ffmpeg`).
+On a fresh Debian or Ubuntu box, run the installer and its two-second render self-test. ffmpeg must already be installed. The app lands in `~/corteo/app` and the report in `~/corteo/corteo.env`.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/uset82/corteo/main/install.sh | bash -s -- --self-test
+. ~/corteo/corteo.env
+"$CORTEO_OCC" --help
 ```
 
-PASS looks like `CORTEO_SELF_TEST=PASS`. FAIL looks like `CORTEO_SELF_TEST=FAIL` plus a line `self-test step failed: <step>`. The free-model chat harness is optional and is not part of this install.
+Optionally add `--host-profile grok`, `--host-profile muse`, or `--host-profile claude-duet` after `--self-test`. Success reports `CORTEO_SELF_TEST=pass`. Failure reports `CORTEO_STATUS=failed` and `CORTEO_FAILED_STAGE=self-test`, with `[corteo] error: self-test failed at step '<step>'` on stderr.
+
+After a curl install, source the report and use `"$CORTEO_OCC"`. In a developer checkout at `~/corteo`, use `~/corteo/scripts/corteo`; its wrapper selects Node 24 and clears `NPM_CONFIG_PREFIX`.
+
+## Size
+
+For "short", "reel", "story", "TikTok", or "vertical", create the project with `--size 1080x1920 --fps 30`. For "video" without a platform, use `--size 1920x1080 --fps 30`.
+
+## Delivery
+
+Render to `~/corteo-exports/<name>.mp4` or the host profile exportDir, and attach that same absolute path in the chat. Never deliver a relative path.
 
 ## Start
 
-Leave this running when you also want the editor page or MCP. The shell below does not need it for imports, edits, or render.
+The installer starts the editor unless `--no-start` was passed. In a developer checkout, leave the following running when you also want the editor page or MCP. The shell does not need it for imports, edits, or render.
 
 ```bash
 cd ~/corteo
@@ -48,7 +65,7 @@ It listens only on `http://127.0.0.1:5199` unless you set `CORTEO_PORT`. MCP is 
 Run from any directory. Writes need `--apply`. Without `--apply` the change is thrown away.
 
 ```bash
-CORTEO=~/corteo/scripts/corteo
+CORTEO="${CORTEO_OCC:-$HOME/corteo/scripts/corteo}"
 "$CORTEO" --help
 "$CORTEO" project new "Night bus" --size 1920x1080 --fps 30 --json
 "$CORTEO" project list --json
@@ -125,7 +142,7 @@ curl -sS -D - "http://127.0.0.1:${PORT}/api/external-mcp/mcp" \
 A new project, the song and the clips, the clips back to back, a title, a render. Clips longer than the song are trimmed. `render --to-audio` stops the file at the song even if a later clip is still on the timeline.
 
 ```bash
-CORTEO=~/corteo/scripts/corteo
+CORTEO="${CORTEO_OCC:-$HOME/corteo/scripts/corteo}"
 WORK=~/corteo-exports/rapida
 mkdir -p "$WORK"
 ffmpeg -y -hide_banner -loglevel error -f lavfi -i "color=c=0x224466:s=1280x720:d=4:r=30" -t 4 -c:v libx264 -pix_fmt yuv420p "$WORK/clip-a.mp4"
@@ -152,7 +169,7 @@ Clip A is 4 seconds and the song is 2. `--to 2s` cuts A at the song. Clip B stil
 Song, clips cut on the beat when the analysis finds one, a title, a lyric line, fades, 1080p and a short 4K check.
 
 ```bash
-CORTEO=~/corteo/scripts/corteo
+CORTEO="${CORTEO_OCC:-$HOME/corteo/scripts/corteo}"
 WORK=~/corteo-exports/musical
 mkdir -p "$WORK"
 ffmpeg -y -hide_banner -loglevel error -f lavfi -i "color=c=0x1a1a1a:s=640x360:d=3:r=30" -t 3 -c:v libx264 -pix_fmt yuv420p "$WORK/clip-a.mp4"
@@ -230,7 +247,7 @@ Clip B is placed at frame 120 and moved to 90. Removing the right piece of the s
 One song and lines from an `.srt`. The same node block as above builds the text adds. Render the range you care about.
 
 ```bash
-CORTEO=~/corteo/scripts/corteo
+CORTEO="${CORTEO_OCC:-$HOME/corteo/scripts/corteo}"
 WORK=~/corteo-exports/lyric
 mkdir -p "$WORK"
 ffmpeg -y -hide_banner -loglevel error -f lavfi -i "sine=frequency=330:sample_rate=48000:duration=4" -t 4 "$WORK/song.wav"
@@ -268,7 +285,7 @@ CC_RENDER_GL=swangle "$CORTEO" render --out "$WORK/lyric.mp4" --to 2s --resoluti
 A 16:9 clip in a 1080x1920 project. `cover` fills the frame and crops the sides, centered. `contain` with `--background blur` letterboxes on a blurred copy of the same picture. Move the crop with `transform.x` (percent of the canvas width; negative shifts the picture left). A normal render has no checkerboard: empty pixels are black unless you export with alpha.
 
 ```bash
-CORTEO=~/corteo/scripts/corteo
+CORTEO="${CORTEO_OCC:-$HOME/corteo/scripts/corteo}"
 WORK=~/corteo-exports/short
 mkdir -p "$WORK"
 ffmpeg -y -hide_banner -loglevel error -f lavfi -i "color=c=black:s=1920x1080:r=30:d=3,geq=r='X/8':g='Y/4':b=128" -t 3 -c:v libx264 -pix_fmt yuv420p "$WORK/wide.mp4"
@@ -292,7 +309,7 @@ ffprobe should report `1080x1920` for both files. `--resolution 1080p` keeps the
 A title that fades and rises. `keyframes` are item-local frames. `y` is a percent of the canvas height.
 
 ```bash
-CORTEO=~/corteo/scripts/corteo
+CORTEO="${CORTEO_OCC:-$HOME/corteo/scripts/corteo}"
 WORK=~/corteo-exports/titulo
 mkdir -p "$WORK"
 "$CORTEO" project new "Titulo" --size 1920x1080 --fps 30 --json

@@ -834,7 +834,7 @@ Terra fills this in at night-loop step 10: done ids, blocked ids and why, commit
 | EV-00 | Baseline before the first change | done | |
 | EV-01 | Host profiles are data (grok, muse, claude-duet) | done | EV-00 (soft) |
 | EV-02 | Installer `--host-profile` | done | EV-01 |
-| EV-03 | Skill: one name, the real install, size, delivery | todo | EV-02 (soft) |
+| EV-03 | Skill: one name, the real install, size, delivery | done | EV-02 (soft) |
 | EV-04 | One render function for every MP4 verb | todo | EV-00 (soft) |
 | EV-05 | Phone round trip: `occ inbox` | todo | EV-01, EV-04 |
 | EV-06 | `apply_ken_burns` runs headless | todo | EV-00 (soft) |
@@ -868,6 +868,8 @@ Each card appends its outputs here: commands, JSON, ffprobe values, wall times. 
 - EV-01: tsc, host-profile.verify, verify:cli and both registration gates passed. Muse skillDest: /home/carlos/.config/muse/skills/corteo/SKILL.md; mediaInbox: /home/carlos/corteo-inbox/muse. Installs were tested under a temporary HOME.
 
 - EV-02: bash -n and npm run verify:install passed; dry-run printed CORTEO_HOST_PROFILE=claude-duet. No real host installation was run.
+
+- EV-03: skill and acceptance guards, no-claudia and both registration gates passed. Installed command and report paths follow bot/skills/corteo-setup/SKILL.md, whose commands scripts/bot-rehearsal.sh replays.
 
 ### EV: blockers
 - EV-00 baseline: CC_RENDER_GL=swangle npm test exited 1 in src/i18n/dict/it/settingsCoverage.verify.ts: Italian settings dictionary is missing 10 keys for the bot connection UI (AssertionError, expected empty array). This predates EV changes; no fix attempted per card scope. Adding the missing Italian translations would unblock the gate. The serial chain stopped at that assertion and printed no segment summary.
