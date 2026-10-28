@@ -968,6 +968,22 @@ button, input, select { font: inherit; }
 .cc-import-link-error { margin:0; color:var(--cc-danger); font-size:12px; }
 .cc-import-link-done { margin:0; color:var(--cc-success); font-size:12px; }
 .cc-import-link-actions { display:flex; justify-content:flex-end; gap:8px; }
+.cc-variant-compare-dialog { width:min(980px, calc(100vw - 32px)); max-height:min(88vh, 900px); overflow:auto; }
+.cc-variant-compare-head { display:flex; align-items:center; gap:10px; justify-content:space-between; }
+.cc-variant-compare-head > span { color:var(--cc-text-dim); font-size:11px; }
+.cc-variant-compare-note { margin:8px 0; color:var(--cc-text-dim); font-size:12px; }
+.cc-variant-compare-error { margin:8px 0; color:var(--cc-danger); font-size:12px; }
+.cc-variant-compare-empty { display:flex; flex-direction:column; align-items:flex-start; gap:8px; }
+.cc-variant-compare-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+.cc-variant-compare-card { display:flex; flex-direction:column; gap:6px; padding:8px; border:0.5px solid var(--cc-border); border-radius:5px; background:var(--cc-panel-alt); }
+.cc-variant-compare-card.chosen { border-color:var(--cc-accent); }
+.cc-variant-compare-card video { width:100%; aspect-ratio:16/9; background:#000; border-radius:3px; }
+.cc-variant-compare-meta { display:flex; flex-direction:column; gap:2px; font-size:12px; }
+.cc-variant-compare-meta span { color:var(--cc-text-dim); font-size:11px; }
+.cc-variant-compare-transport { display:flex; align-items:center; gap:8px; }
+.cc-variant-compare-transport input { flex:1; }
+.cc-variant-compare-transport > span { color:var(--cc-text-dim); font-size:11px; font-variant-numeric:tabular-nums; }
+.cc-variant-compare-actions { display:flex; justify-content:flex-end; }
 
 /* Instant tooltip (toolbar): The native title has ~1s browser inherent delay, and it appears immediately when hovering here.
    The data-tip carries the copy and pops it downwards (the toolbar is at the top of the timeline panel); use -r to right-align the text near the right edge to prevent overflow.

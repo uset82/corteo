@@ -3,6 +3,7 @@
 import type { EditorCommands } from './storeCommands';
 import type { ProjectDoc } from './projectTypes';
 import type { AtomicAction, ProjectDispatch } from './reducerActions';
+import { announceVariantChosen } from './variantChoice';
 
 const uid = (prefix: string) => `${prefix}_${crypto.randomUUID()}`;
 
@@ -43,6 +44,7 @@ export function createVariantCommands(dispatch: ProjectDispatch, getDoc: () => P
       if (doc.activeTimelineId !== id) actions.push({ type: 'tl.switch', id });
       if (!actions.length) return { ok: true, changed: false, groupId };
       dispatch({ type: 'batch', actions, label: 'Elegir versión' });
+      announceVariantChosen({ groupId, timelineId: id });
       return { ok: true, changed: true, groupId };
     },
   };
