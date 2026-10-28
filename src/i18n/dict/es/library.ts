@@ -87,7 +87,7 @@ export default {
   // Extension center
   '扩展中心': 'Centro de extensiones',
   '发现': 'Descubrir',
-  '已安装': 'Instaladas',
+  '已安装': 'Instalado',
   '创作': 'Crear',
   '全部': 'Todo',
   '发现、管理并分享创意扩展包': 'Descubre, gestiona y comparte paquetes de extensiones creativas',
