@@ -6,6 +6,7 @@ import { parse } from '@babel/parser';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SOURCE_ROOT = path.join(ROOT, 'src');
 const EN_ROOT = path.join(SOURCE_ROOT, 'i18n', 'dict', 'en');
+const ES_ROOT = path.join(SOURCE_ROOT, 'i18n', 'dict', 'es');
 const CJK = /[\u3400-\u9fff]/;
 // Test files (*.verify.ts/tsx, *.check.ts) are exempt: their Chinese literals are
 // assertion messages / CLI output, not user-facing UI copy (see AGENTS.md console.log rule).
@@ -120,8 +121,8 @@ function unwrapExpression(node) {
   return node;
 }
 
-function englishKeys() {
-  const keys = new Set();
+function englishEntries() {
+  const entries = new Map();
   for (const filePath of walk(EN_ROOT).filter((file) => file.endsWith('.ts'))) {
     const { ast } = sourceFile(filePath);
     const declaration = ast.program.body.find((node) => (
@@ -134,10 +135,35 @@ function englishKeys() {
     if (!expression || expression.type !== 'ObjectExpression') continue;
     for (const property of expression.properties) {
       if (property.type !== 'ObjectProperty' || property.computed) continue;
-      if (property.key.type === 'StringLiteral') keys.add(property.key.value);
+      if (property.key.type !== 'StringLiteral') continue;
+      const value = unwrapExpression(property.value);
+      const text = value ? literalText(value) : null;
+      if (text !== null) entries.set(property.key.value, text);
     }
   }
-  return keys;
+  return entries;
+}
+
+/** Every string-keyed pair in the Spanish modules, including the legacy
+ * `const base` object in es/index.ts (spread last, so the assembled dictionary
+ * contains it). Spanish coverage is 100% by P5-2. */
+function spanishEntries() {
+  const entries = new Map();
+  for (const filePath of walk(ES_ROOT).filter((file) => file.endsWith('.ts'))) {
+    const { ast } = sourceFile(filePath);
+    walkAll(ast, (node) => {
+      if (node.type !== 'ObjectProperty' || node.computed) return;
+      if (node.key.type !== 'StringLiteral') return;
+      const value = unwrapExpression(node.value);
+      const text = value ? literalText(value) : null;
+      if (text !== null) entries.set(node.key.value, text);
+    });
+  }
+  return entries;
+}
+
+function placeholders(text) {
+  return [...text.matchAll(/\{[a-zA-Z0-9_]+\}/g)].map((match) => match[0]).sort();
 }
 
 function isInsideTranslation(file, node) {
@@ -308,7 +334,8 @@ function auditUiFile(filePath, keys) {
   return issues;
 }
 
-const keys = englishKeys();
+const english = englishEntries();
+const keys = new Set(english.keys());
 const sourceFiles = walk(SOURCE_ROOT).filter((filePath) => {
   if (!/\.tsx?$/.test(filePath)) return false;
   if (filePath.startsWith(path.join(SOURCE_ROOT, 'i18n'))) return false;
@@ -341,8 +368,24 @@ const uiFiles = walk(SOURCE_ROOT).filter((filePath) => {
   if (relative.startsWith('src/editor/')) return false;
   return !isTestFile(relative);
 });
+const spanish = spanishEntries();
+const missingSpanish = [...english.keys()].filter((key) => !spanish.has(key));
+const coverageIssues = missingSpanish.length
+  ? [`西班牙语词典缺少 ${missingSpanish.length} 条：\n${missingSpanish.slice(0, 80).join('\n')}${missingSpanish.length > 80 ? '\n…' : ''}`]
+  : [];
+const placeholderIssues = [];
+for (const [key, value] of english) {
+  if (!spanish.has(key)) continue;
+  const expected = placeholders(value);
+  const actual = placeholders(spanish.get(key));
+  if (expected.join('|') !== actual.join('|')) {
+    placeholderIssues.push(`占位符不一致：${JSON.stringify(key)} en=[${expected.join(', ')}] es=[${actual.join(', ')}]`);
+  }
+}
 const issues = [
   ...translationIssues,
+  ...coverageIssues,
+  ...placeholderIssues,
   ...uiFiles.flatMap((filePath) => auditUiFile(filePath, keys)),
 ];
 
@@ -352,4 +395,4 @@ if (issues.length > 0) {
   process.exit(1);
 }
 
-console.log(`i18n 校验通过：${uiFiles.length} 个 UI 文件，${keys.size} 个英文词条`);
+console.log(`i18n 校验通过：${uiFiles.length} 个 UI 文件，${keys.size} 个英文词条，${spanish.size} 个西班牙语词条（覆盖率 100%，占位符一致）`);
