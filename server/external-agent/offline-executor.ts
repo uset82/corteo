@@ -118,6 +118,10 @@ export async function executeOfflineTool(
   }
   if (CORE_DATA_TOOL_NAMES.has(name)) return execCoreDataTool(name, args, ctx);
   if (name === 'manage_timelines') return execTimelineTool(name, args, ctx);
+  if (name === 'create_variants' || name === 'choose_variant') {
+    const { execVariantTool } = await import('../../src/agent/tools/variant-tools.js');
+    return execVariantTool(name, args, ctx);
+  }
   if (name === 'edit_track') return execTrackTool(name, args, ctx);
   if (name === 'read_script' || name === 'apply_script') return execScriptTool(name, args, ctx);
   if (name === 'read_captions' || name === 'edit_captions') return execCaptionsTool(name, args, ctx);

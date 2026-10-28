@@ -58,8 +58,10 @@ export function projectReduce(p: ProjectDoc, a: AnyAction): ProjectDoc {
         if (!src) return p;
         // clone verbatim (item ids stay — timelines never share one items[] array,
         // so ids can't collide; retarget swaps the canvas for long→short).
+        // a plain copy is not a comparison option: it starts untagged, so
+        // create_variants is the only path that puts a sequence in a group
         const copy: Timeline = {
-          ...src, id: a.newId, name: a.name, order: maxOrder(p) + 1, selectedId: null, hidden: false,
+          ...src, id: a.newId, name: a.name, order: maxOrder(p) + 1, selectedId: null, hidden: false, variant: undefined,
           ...(a.retarget ? { width: a.retarget.width, height: a.retarget.height, fit: a.retarget.fit ?? src.fit ?? 'contain' } : {}),
         };
         const next = { ...p, timelines: [...p.timelines, copy], activeTimelineId: a.activate === false ? p.activeTimelineId : copy.id };
@@ -84,6 +86,26 @@ export function projectReduce(p: ProjectDoc, a: AnyAction): ProjectDoc {
       }
       case 'tl.setFps':
         return withProjectFrameRate(p, a.fps);
+      case 'tl.setVariant': {
+        if (!p.timelines.some((t) => t.id === a.id)) return p;
+        return {
+          ...p,
+          timelines: p.timelines.map((t) => (t.id === a.id ? { ...t, variant: a.variant ?? undefined } : t)),
+        };
+      }
+      case 'tl.chooseVariant': {
+        const chosen = p.timelines.find((t) => t.id === a.id && t.variant?.groupId === a.groupId);
+        if (!chosen) return p;
+        const note = a.note?.trim();
+        const timelines = p.timelines.map((t) => {
+          if (t.variant?.groupId !== a.groupId) return t;
+          const status = t.id === a.id ? 'chosen' as const : 'discarded' as const;
+          const nextNote = t.id === a.id && note ? note : t.variant.note;
+          return { ...t, variant: { ...t.variant, status, ...(nextNote ? { note: nextNote } : {}) } };
+        });
+        // a hidden sequence cannot be the active one (see tl.setHidden)
+        return { ...p, timelines, activeTimelineId: chosen.hidden ? p.activeTimelineId : a.id };
+      }
       case 'tl.setHidden': {
         // The last visible timeline cannot be hidden.
         const visible = p.timelines.filter((t) => !t.hidden);

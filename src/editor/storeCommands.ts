@@ -20,6 +20,7 @@ import type {
   MediaRelinkResult,
   ProjectDoc,
   TimelineState,
+  TimelineVariant,
   TrackFlags,
   TrackId,
   TrackKind,
@@ -190,7 +191,10 @@ export interface EditorCommands {
   /** make a timeline active (no history step) */
   switchTimeline: (id: string) => void;
   /** copy a timeline (optionally retargeting the canvas for long→short); returns the copy's id */
-  duplicateTimeline: (id: string, opts?: { name?: string; retarget?: { width: number; height: number; fit?: AspectFit }; activate?: boolean }) => string;
+  duplicateTimeline: (id: string, opts?: { name?: string; retarget?: { width: number; height: number; fit?: AspectFit }; activate?: boolean; variant?: TimelineVariant }) => string;
+  /** record the user's pick: that member becomes chosen, its siblings discarded,
+   * and the chosen sequence becomes active */
+  chooseVariant: (groupId: string, id: string, note?: string) => void;
   deleteTimeline: (id: string) => void;
   renameTimeline: (id: string, name: string) => void;
   retargetTimeline: (id: string, width: number, height: number, fit?: AspectFit) => void;

@@ -80,7 +80,7 @@ Statuses: `todo`, `doing`, `done`, `blocked` (see Blockers), `optional` (only if
 | P3-2 | Platform import route + `import_from_platform` | done (yt-dlp job behind the allowlist; the verify uses a fake binary, no real download was made) | P3-1 |
 | P3-3 | Source credits + `creditos.txt` | done (a `source` on the asset, the dialog copies and downloads; not seen in a browser) | P3-2 |
 | P3-4 | "Importar desde enlace" dialog | done (platform job or direct URL, live progress; not seen in a browser) | P3-2 |
-| P4-1 | Variants model + tools | todo | |
+| P4-1 | Variants model + tools | done (groups on the doc, three tools wired; the tab badge was typechecked, not seen) | |
 | P4-2 | `render_variant_previews` | todo | P4-1 |
 | P4-3 | "Comparar versiones" dialog | todo | P4-2 |
 | P5-1 | Full Spanish dictionary | done (all modules translated; the brand.ts fold-in is left) | |
@@ -386,6 +386,7 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - Verifies: `scripts/sync-yt-dlp.verify.mjs` — the pin table is complete, a download is judged on size then digest before it is written, `--version` must run and name the pin, a GitHub payload either becomes a full table or throws, `rewritePins` is idempotent and replaces only the two constants, and every provisioning record is checked (stale version, other asset, placeholder, non-executable, digest drift, probe failure, override).
 - Proof on linux-x64: the first run downloaded `yt-dlp_linux` (41,166,968 bytes, sha256 `767b…`), the second printed `verified` with no download, and the binary reported `2026.10.26`.
 - Gates: `node scripts/sync-yt-dlp.verify.mjs`, `scripts/verify-registration.verify.mjs` (731 files) and `scripts/verify-gate-coverage.verify.mjs` (731) green.
+- Published in `68d03a7` together with P3-2..P3-4 (see the end of the P3-4 card).
 
 ### P3-2 · Platform import route + `import_from_platform` — done
 - Plan: Plan 1 › Phase 3 (route).
@@ -419,10 +420,19 @@ Done in commit `a3b6372` (plus `e5e8989`, which fixed the `tsc -b` error the fir
 - The dialog is rendered by `PoolImportDialogs` in `MediaPoolOverlays.tsx` together with the phone-upload dialog, because two more dialog renders pushed `MediaPoolPanel.tsx` past the 500-line gate. Focus restoration stays with the panel's `modalFocus`.
 - Verify: `npx tsc -b` clean, `npm run verify:i18n` green (new `素材来源`, `从链接导入`, `导入`, `链接`, `名称（可选）`, `从（秒）`, `到（秒）` and the error strings are in both dictionaries), gate coverage green at 733 verify files.
 - Limitation: never opened in a browser. The dialog's behaviour is read from the code and gated by types, not observed.
+- Publish: `bash scripts/sync-publish.sh` ran on 2026-10-28 over `566f940` + `c267b02` + `68d03a7`; `CC_RENDER_GL=swangle npm test` passed (the first two attempts stopped on `directoryImportIntegration`'s split-based line cap and on `stock-tools-check`'s tool list, both fixed in those commits) and the script printed `published 68d03a7` for `github main` and `origin cursor/video-editor-mvp-d191`.
 
-### P4-1 · Variants model + tools
+### P4-1 · Variants model + tools — done
 - Plan: Plan 1 › Phase 4.
-- Files: project types and persistence (`src/persist/`, check `npm run verify:sqlite-migration` if the stored shape changes), `src/components/timeline/TimelineTabs.tsx` (`duplicateTimeline`), new tools `create_variants`, `get_variant_choice`, `choose_variant`.
+- Files: `src/editor/timelineTypes.ts` (`TimelineVariant`), `src/editor/reducerActions.ts` + `src/editor/reducerProject.ts` (`tl.setVariant`, `tl.chooseVariant`), `src/editor/variants.ts`, `src/editor/storeCommands.ts` + `src/editor/storeCommandBuilder.ts`, `src/components/timeline/TimelineTabs.tsx`, `src/agent/tools/schemas/variant-tools.ts`, `src/agent/tools/variant-tools.ts`, `src/agent/tools.ts`, `src/agent/tool-routing.ts`, `src/agent/external-tool-policy.ts`, `server/external-agent/offline-executor.ts`.
+- A version is a sibling sequence tagged `variant: {groupId, label, note?, status}`, stored on the persisted `ProjectDoc.timelines[]`. That is what lets the tab bar, the compare dialog and a waiting `get_variant_choice` read the same document — no separate client store, and no webhook (the plan's `variant.chosen` has no implementation in this tree; the dialog writes through `commands.chooseVariant`).
+- `tl.duplicate` clears any inherited tag: a manual copy is never a comparison option, so `create_variants` is the only path into a group.
+- `create_variants` copies the base 2-4 times (`activate:false`, name `base · label`), default labels A, B, C… then A2…, unique notes cleaned to 160 chars, and allows adding to an existing group. Copy + tag goes through one `batch`, so it is one undo step.
+- `choose_variant` names the version by timeline id (prefix ok) or by case-insensitive label, and `tl.chooseVariant` makes it `chosen`, the siblings `discarded`, the note optional, and — unless the sequence is hidden — the active timeline. `get_variant_choice` polls the doc in 500 ms slices up to 20 s and returns `pending:true` with the group listing when nobody has picked.
+- `get_variant_choice` is read-only and deliberately not server-direct (a headless run has nobody to click); `create_variants`/`choose_variant` are draft edits and server-direct, with an explicit branch in `offline-executor.ts`.
+- The sequence tab shows the version label: accent for a candidate, filled for the chosen one, struck through for a discarded one, the note in the tooltip. Typechecked only — the editor was not started here.
+- Verify: `npx tsx src/editor/variants.verify.ts` and `npx tsx src/agent/tools/variant-tools.verify.ts`, both registered in `test:serial`. They cover the label rollover, note/label cleaning, the reducer (active pick, re-pick moves the choice, hidden pick does not steal focus, untagged timeline rejected), the one-batch undo step, the 2..4 clamp and label mismatch, and the pending→chosen path. `npx tsc -b` clean, policy/catalog/offline-mcp/mcp/exposure verifies green, gate coverage green at 735 verify files.
+- Limitation: `storeCommandBuilder.ts` sits at exactly 500 lines; the next change to it must split a responsibility first.
 
 ### P4-2 · `render_variant_previews`
 - Plan: Plan 1 › Phase 4. 480p server renders of each variant.
@@ -1181,4 +1191,4 @@ One import path for three formats: `src/captions/subtitles.ts` picks the parser 
 - Merge note: `p2-2-workbuddy` reached github/main with its own P2-2 first. The merge keeps its tool, lane helper, panel/library UI and server wiring, and takes this branch's word-level ASS/VTT parsers (whitespace-merged words, inline VTT stamps), the media-drop upgrade and `subtitles.verify.ts`; the duplicate `import_subtitles` schema from this branch was dropped so one tool name stays.
 - Gates: `tsc -b` clean; every step of `verify:captions` green; the agent-tools neighbours run one by one (`captions-tools`, `subtitles-tools`, `captions-lanes`, `captions-track-order`, `external-tool-policy`, `offline-runtime`, `mcp`, `mcp-tool-exposure`); `node scripts/check-i18n.mjs` green (162 UI files, 2,705 English, 2,743 Spanish); `generate:server-tool-catalog` then `--check` ("server tool catalog is current"); both registration gates green (730 verify files).
 - **Not checked**: the karaoke in the preview and in the export. The editor cannot be opened from the Windows side of the share, so the card's "Done when" is met in the data — a manual lane whose words carry the ASS timings, which is what the existing SRT import already renders — but nobody has watched it light up. `npm run lint` did not run either: the `oxlint` win32 binding is missing from this checkout (`Cannot find module './oxlint.win32-x64-msvc.node'`).
-- Nothing is pushed.
+- Published with the P3 work on 2026-10-28: `68d03a7` went to `github main` and `origin cursor/video-editor-mvp-d191` after `CC_RENDER_GL=swangle npm test` passed.

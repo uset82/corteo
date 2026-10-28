@@ -62,6 +62,23 @@ export interface TimelineState {
   fxDefs?: Record<string, SerializableFxDef>;
 }
 
+/** How one option in a comparison group stands: still being judged, the user's
+ * pick, or the ones the pick displaced. */
+export type VariantStatus = 'candidate' | 'chosen' | 'discarded';
+
+/** Marks a timeline as one option in a "compare versions" group (Plan 1 Phase 4).
+ * The group is a set of sibling sequences that share an ancestor; each carries
+ * the short label the tab and the compare dialog show, plus the agent's note. */
+export interface TimelineVariant {
+  /** ties the sibling timelines together; never empty */
+  groupId: string;
+  /** short tab label — "A", "B", "Coro largo" */
+  label: string;
+  /** one line on what this version changes, written by the agent */
+  note?: string;
+  status: VariantStatus;
+}
+
 /** one timeline/sequence within a project (a project holds many timelines).
  * A Timeline IS a TimelineState plus identity — so every component that consumes
  * a TimelineState keeps working when handed the active timeline. */
@@ -72,6 +89,8 @@ export interface Timeline extends TimelineState {
   order: number;
   /** hidden tab (manage_timelines update.hidden): data kept, tab not shown */
   hidden?: boolean;
+  /** set only when this sequence is one option of a comparison group */
+  variant?: TimelineVariant;
 }
 
 /** Track ids in visual top-to-bottom order. Legacy four-lane states still work. */

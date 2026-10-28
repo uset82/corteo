@@ -136,11 +136,11 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
       },
       switchTimeline: (id) => dispatch({ type: 'tl.switch', id }),
       duplicateTimeline: (id, opts) => {
-        const src = getDoc().timelines.find((t) => t.id === id);
-        const newId = uid('tl');
-        dispatch({ type: 'tl.duplicate', id, newId, name: opts?.name ?? sequenceCopyName(src?.name), retarget: opts?.retarget, activate: opts?.activate });
-        return newId;
+        const action = { type: 'tl.duplicate' as const, id, newId: uid('tl'), name: opts?.name ?? sequenceCopyName(getDoc().timelines.find((t) => t.id === id)?.name), retarget: opts?.retarget, activate: opts?.activate };
+        dispatch(opts?.variant ? { type: 'batch', label: 'Duplicate timeline', actions: [action, { type: 'tl.setVariant', id: action.newId, variant: opts.variant }] } : action);
+        return action.newId;
       },
+      chooseVariant: (groupId, id, note) => dispatch({ type: 'tl.chooseVariant', groupId, id, ...(note ? { note } : {}) }),
       deleteTimeline: (id) => dispatch({ type: 'tl.delete', id }),
       renameTimeline: (id, name) => dispatch({ type: 'tl.rename', id, name }),
       retargetTimeline: (id, width, height, fit) => dispatch({ type: 'tl.retarget', id, width, height, fit }),

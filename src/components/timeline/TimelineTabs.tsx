@@ -59,6 +59,18 @@ export function TimelineTabs({ doc, commands }: TimelineTabsProps) {
             ) : (
               <span style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{tl.name}</span>
             )}
+            {tl.variant && (
+              <span
+                title={tl.variant.note ? `${tl.variant.label} · ${tl.variant.note}` : tl.variant.label}
+                style={{
+                  fontSize: 10, fontWeight: 600, lineHeight: 1, borderRadius: 4, padding: '2px 5px',
+                  color: tl.variant.status === 'chosen' ? theme.bg : tl.variant.status === 'discarded' ? theme.textDim : theme.accent,
+                  background: tl.variant.status === 'chosen' ? theme.accent : 'transparent',
+                  border: `0.5px solid ${tl.variant.status === 'discarded' ? theme.border : theme.accent}`,
+                  textDecoration: tl.variant.status === 'discarded' ? 'line-through' : 'none',
+                }}
+              >{tl.variant.label}</span>
+            )}
             <span style={{ fontSize: 10, color: theme.textDim, fontVariantNumeric: 'tabular-nums', background: theme.bg, borderRadius: 4, padding: '0 4px' }}>{ratioLabel(tl.width, tl.height)}</span>
             {timelines.length > 1 && (
               <button

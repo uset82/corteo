@@ -13,6 +13,8 @@ const READ_ONLY_TOOL_NAMES = new Set([
   'search_catalog',
   'read_agent_artifact', 'browse_local_media', 'score_moments', 'calibrate_scores', 'write_social_copy',
   'find_duplicate_media',
+  // Waits (in slices) for the user's pick in the compare dialog; reads the doc only.
+  'get_variant_choice',
   'list_scheduled_publishes', 'score_performance',
 ]);
 
@@ -47,6 +49,9 @@ const DRAFT_EDIT_TOOL_NAMES = new Set([
   // itself is a library write, reviewed in offline-tool-authorization.ts.
   'import_asset', 'import_assets', 'import_folder',
   'detect_beats',
+  // Plan 1 Phase 4: sibling copies tagged as comparison versions, and the pick
+  // that flips their statuses — both plain tl.* commands on the draft.
+  'create_variants', 'choose_variant',
 ]);
 
 const SERVER_DIRECT_READ_TOOL_NAMES: Record<string, true> = {
@@ -131,6 +136,11 @@ const SERVER_DIRECT_EDIT_TOOL_NAMES: Record<string, true> = {
   // Music reactions: pure generator plus the draft's command batch, no media IO.
   apply_music_reaction: true,
   clear_music_reaction: true,
+  // Version groups: tl.duplicate/tl.setVariant/tl.chooseVariant through the
+  // draft's commands. get_variant_choice is deliberately absent — a headless
+  // run has no one to click in the compare dialog.
+  create_variants: true,
+  choose_variant: true,
 };
 
 const SERVER_DIRECT_BROWSER_ACTIONS: Record<string, true> = {
